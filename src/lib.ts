@@ -35,6 +35,14 @@ export function isShowingReachable(
   );
 }
 
+export function isShowingPast(
+  showing: Pick<Showing, "startsAt" | "endsAt">,
+  now: Date,
+): boolean {
+  const finishedAt = showing.endsAt ?? showing.startsAt;
+  return new Date(finishedAt).getTime() <= now.getTime();
+}
+
 export function filterShowings(
   showings: Showing[],
   options: {

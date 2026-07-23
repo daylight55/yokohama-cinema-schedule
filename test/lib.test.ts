@@ -4,6 +4,7 @@ import {
   filterShowings,
   groupByMovie,
   groupByScheduleHour,
+  isShowingPast,
   isShowingReachable,
   normalizeMovieTitle,
 } from "../src/lib";
@@ -67,6 +68,32 @@ describe("schedule filtering", () => {
       },
     );
     expect(result.map((entry) => entry.id)).toEqual(["show-2"]);
+  });
+
+  it("marks a showing past only after its known end time", () => {
+    const started = showing({
+      startsAt: "2026-07-24T08:00:00.000Z",
+      endsAt: "2026-07-24T10:00:00.000Z",
+    });
+    expect(isShowingPast(started, now)).toBe(false);
+    expect(
+      isShowingPast(
+        { ...started, endsAt: "2026-07-24T09:00:00.000Z" },
+        now,
+      ),
+    ).toBe(true);
+  });
+
+  it("falls back to start time when an end time is unavailable", () => {
+    expect(
+      isShowingPast(
+        showing({
+          startsAt: "2026-07-24T08:59:00.000Z",
+          endsAt: null,
+        }),
+        now,
+      ),
+    ).toBe(true);
   });
 });
 

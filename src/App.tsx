@@ -7,7 +7,7 @@ import {
   SignOutIcon,
   WarningCircleIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { todayInJst } from "../shared/date";
 import type {
   CinemaArea,
@@ -21,6 +21,7 @@ import {
   buildDates,
   filterShowings,
   groupByScheduleHour,
+  isShowingPast,
 } from "./lib";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
@@ -51,11 +52,13 @@ const updatedFormatter = new Intl.DateTimeFormat("ja-JP", {
 
 export function App() {
   const [now, setNow] = useState(() => new Date());
+  const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
+  const didInitialTimeScrollRef = useRef(false);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
   const [selectedDate, setSelectedDate] = useState(dates[0]);
   const [selectedArea, setSelectedArea] = useState<CinemaArea | "all">("all");
-  const [futureOnly, setFutureOnly] = useState(true);
+  const [futureOnly, setFutureOnly] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
   const [routes, setRoutes] = useState<RouteEstimate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,6 +150,42 @@ export function App() {
       ).size,
     [hourGroups],
   );
+  const currentHour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Tokyo",
+      hour: "2-digit",
+      hourCycle: "h23",
+    }).format(now),
+  );
+  const currentTimeMarkerIndex =
+    selectedDate === today
+      ? hourGroups.findIndex((group) => Number(group.hour) >= currentHour)
+      : -1;
+  const showCurrentTimeMarkerAtEnd =
+    selectedDate === today &&
+    hourGroups.length > 0 &&
+    currentTimeMarkerIndex === -1;
+
+  useEffect(() => {
+    if (
+      didInitialTimeScrollRef.current ||
+      loading ||
+      error ||
+      selectedDate !== today ||
+      !currentTimeMarkerRef.current
+    ) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      if (didInitialTimeScrollRef.current) return;
+      const marker = currentTimeMarkerRef.current;
+      if (!marker) return;
+      marker.scrollIntoView({ behavior: "auto", block: "start" });
+      didInitialTimeScrollRef.current = true;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [error, hourGroups, loading, selectedDate, today]);
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
@@ -355,49 +394,75 @@ export function App() {
           )}
           {!loading && !error && hourGroups.length > 0 && (
             <div className="timeline">
-              {hourGroups.map((group) => (
-                <section
-                  className="timeline-hour"
-                  id={`hour-${group.hour}`}
-                  key={group.hour}
-                  aria-labelledby={`hour-label-${group.hour}`}
-                >
-                  <div className="hour-label">
-                    <time
-                      id={`hour-label-${group.hour}`}
-                      dateTime={`${selectedDate}T${group.hour}:00:00+09:00`}
-                    >
-                      {group.label}
-                    </time>
-                    <small>{group.showingCount}上映</small>
-                  </div>
-                  <div className="hour-programs">
-                    {group.movies.map((movie) => (
-                      <article className="program-block" key={movie.key}>
-                        <div className="program-title">
-                          <h2>{movie.title}</h2>
-                          {movie.showings.length > 1 && (
-                            <span>横にスワイプ</span>
-                          )}
-                        </div>
-                        <div
-                          className="cinema-strip"
-                          role="list"
-                          aria-label={`${movie.title}の上映館`}
-                        >
-                          {movie.showings.map((showing) => (
-                            <CinemaSlot
-                              key={showing.id}
-                              showing={showing}
-                              route={routeByCinema.get(showing.cinemaId)}
-                            />
-                          ))}
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </section>
+              {hourGroups.map((group, index) => (
+                <Fragment key={group.hour}>
+                  {index === currentTimeMarkerIndex && (
+                    <CurrentTimeMarker
+                      markerRef={currentTimeMarkerRef}
+                      now={now}
+                    />
+                  )}
+                  <section
+                    className="timeline-hour"
+                    id={`hour-${group.hour}`}
+                    aria-labelledby={`hour-label-${group.hour}`}
+                  >
+                    <div className="hour-label">
+                      <time
+                        id={`hour-label-${group.hour}`}
+                        dateTime={`${selectedDate}T${group.hour}:00:00+09:00`}
+                      >
+                        {group.label}
+                      </time>
+                      <small>{group.showingCount}上映</small>
+                    </div>
+                    <div className="hour-programs">
+                      {group.movies.map((movie) => {
+                        const isPast = movie.showings.every((showing) =>
+                          isShowingPast(showing, now),
+                        );
+                        return (
+                          <article
+                            className={
+                              isPast
+                                ? "program-block past"
+                                : "program-block"
+                            }
+                            key={movie.key}
+                          >
+                            <div className="program-title">
+                              <h2>{movie.title}</h2>
+                              {movie.showings.length > 1 && (
+                                <span>横にスワイプ</span>
+                              )}
+                            </div>
+                            <div
+                              className="cinema-strip"
+                              role="list"
+                              aria-label={`${movie.title}の上映館`}
+                            >
+                              {movie.showings.map((showing) => (
+                                <CinemaSlot
+                                  key={showing.id}
+                                  showing={showing}
+                                  route={routeByCinema.get(showing.cinemaId)}
+                                  isPast={isShowingPast(showing, now)}
+                                />
+                              ))}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </Fragment>
               ))}
+              {showCurrentTimeMarkerAtEnd && (
+                <CurrentTimeMarker
+                  markerRef={currentTimeMarkerRef}
+                  now={now}
+                />
+              )}
             </div>
           )}
         </section>
@@ -412,12 +477,33 @@ export function App() {
   );
 }
 
+function CurrentTimeMarker({
+  markerRef,
+  now,
+}: {
+  markerRef: React.RefObject<HTMLDivElement | null>;
+  now: Date;
+}) {
+  return (
+    <div
+      className="current-time-marker"
+      ref={markerRef}
+      aria-label={`現在時刻 ${timeFormatter.format(now)}`}
+    >
+      <time dateTime={now.toISOString()}>現在 {timeFormatter.format(now)}</time>
+      <span aria-hidden="true" />
+    </div>
+  );
+}
+
 function CinemaSlot({
   showing,
   route,
+  isPast,
 }: {
   showing: Showing;
   route?: RouteEstimate;
+  isPast: boolean;
 }) {
   const start = timeFormatter.format(new Date(showing.startsAt));
   const end = showing.endsAt
@@ -427,16 +513,19 @@ function CinemaSlot({
 
   return (
     <a
-      className="cinema-slot"
+      className={isPast ? "cinema-slot past" : "cinema-slot"}
       href={showing.bookingUrl}
       target="_blank"
       rel="noreferrer"
       role="listitem"
-      aria-label={`${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+      aria-label={`${isPast ? "終了済み " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
     >
       <div className="slot-time">
         <strong>{start}</strong>
-        {end && <span>{end}終了</span>}
+        <span className="slot-time-details">
+          {end && <span>{end}終了</span>}
+          {isPast && <span className="ended-label">終了済み</span>}
+        </span>
       </div>
       <div className="slot-cinema">
         <strong>{showing.cinemaShortName}</strong>
