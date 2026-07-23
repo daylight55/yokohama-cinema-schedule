@@ -1,0 +1,94 @@
+import { describe, expect, it } from "vitest";
+import type { RouteEstimate, Showing } from "../shared/types";
+import {
+  filterShowings,
+  groupByMovie,
+  isShowingReachable,
+  normalizeMovieTitle,
+} from "../src/lib";
+
+const showing = (overrides: Partial<Showing> = {}): Showing => ({
+  id: "show-1",
+  sourceId: "tjoy-yokohama",
+  cinemaId: "tjoy-yokohama",
+  cinemaName: "T・ジョイ横浜",
+  cinemaShortName: "T・ジョイ横浜",
+  area: "yokohama",
+  movieKey: "movie-1",
+  title: "テスト映画",
+  startsAt: "2026-07-24T10:00:00.000Z",
+  endsAt: "2026-07-24T12:00:00.000Z",
+  screen: "シアター1",
+  format: null,
+  bookingUrl: "https://example.com",
+  purchasable: true,
+  fetchedAt: "2026-07-24T00:00:00.000Z",
+  ...overrides,
+});
+
+describe("schedule filtering", () => {
+  const now = new Date("2026-07-24T09:00:00.000Z");
+  const route: RouteEstimate = {
+    cinemaId: "tjoy-yokohama",
+    distanceMeters: 1800,
+    durationMinutes: 25,
+    mode: "estimate",
+  };
+
+  it("keeps a showing reachable after travel and preparation time", () => {
+    expect(
+      isShowingReachable(
+        showing(),
+        now,
+        new Map([[route.cinemaId, route]]),
+      ),
+    ).toBe(true);
+  });
+
+  it("removes a showing that cannot be reached", () => {
+    expect(
+      isShowingReachable(
+        showing({ startsAt: "2026-07-24T09:20:00.000Z" }),
+        now,
+        new Map([[route.cinemaId, route]]),
+      ),
+    ).toBe(false);
+  });
+
+  it("filters by area", () => {
+    const result = filterShowings(
+      [showing(), showing({ id: "show-2", area: "kannai" })],
+      {
+        selectedArea: "kannai",
+        futureOnly: false,
+        now,
+        routeByCinema: new Map(),
+      },
+    );
+    expect(result.map((entry) => entry.id)).toEqual(["show-2"]);
+  });
+});
+
+describe("movie grouping", () => {
+  it("normalizes common format labels across cinema sources", () => {
+    expect(normalizeMovieTitle("【IMAX 字幕】 テスト 映画")).toBe(
+      normalizeMovieTitle("テスト映画（2D）"),
+    );
+  });
+
+  it("groups normalized titles and sorts by earliest showing", () => {
+    const groups = groupByMovie([
+      showing({ id: "later", title: "作品B", startsAt: "2026-07-24T12:00:00Z" }),
+      showing({ id: "first", title: "作品A", startsAt: "2026-07-24T11:00:00Z" }),
+      showing({
+        id: "same",
+        title: "【字幕】作品A",
+        startsAt: "2026-07-24T13:00:00Z",
+      }),
+    ]);
+    expect(groups.map((group) => [group.title, group.showings.length])).toEqual([
+      ["作品A", 2],
+      ["作品B", 1],
+    ]);
+  });
+});

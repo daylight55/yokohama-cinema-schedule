@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "yokohama-cinema-schedule",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-07-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "yokohama-cinema-schedule",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "vars": {
+    "PUBLIC_MODE": "false",
+    "SESSION_TTL_DAYS": "30"
+  }
+}
