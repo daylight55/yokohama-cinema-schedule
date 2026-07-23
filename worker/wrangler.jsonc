@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "yokohama-cinema-schedule-refresh",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "triggers": {
+    "crons": ["7 15,21 * * *", "7 0,3,6,9,12 * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "yokohama-cinema-schedule",
+      "database_id": "e657eee0-8431-4641-a5b9-bd08cb70d191",
+      "migrations_dir": "../migrations"
+    }
+  ],
+  "vars": {
+    "SCHEDULE_DAYS": "7"
+  }
+}

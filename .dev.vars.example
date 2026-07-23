@@ -1,0 +1,5 @@
+APP_PASSWORD="replace-with-a-long-private-password"
+SESSION_SECRET="replace-with-at-least-32-random-characters"
+# Optional: OpenRouteService-compatible Matrix API
+# ROUTE_MATRIX_API_URL="https://api.openrouteservice.org/v2/matrix/foot-walking"
+# ROUTE_MATRIX_API_KEY="replace-with-api-key"

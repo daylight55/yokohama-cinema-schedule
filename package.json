@@ -1,0 +1,40 @@
+{
+  "name": "yokohama-cinema-schedule",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ci:pr": "npm run typecheck && npm run test && npm run build",
+    "pages:dev": "npm run build && wrangler pages dev dist --persist-to .wrangler/state",
+    "pages:deploy": "npm run build && wrangler pages deploy dist",
+    "worker:dev": "wrangler dev --config worker/wrangler.jsonc --persist-to .wrangler/state",
+    "worker:deploy": "wrangler deploy --config worker/wrangler.jsonc",
+    "db:migrate:local": "wrangler d1 migrations apply yokohama-cinema-schedule --local --config worker/wrangler.jsonc --persist-to .wrangler/state",
+    "db:migrate:remote": "wrangler d1 migrations apply yokohama-cinema-schedule --remote --config worker/wrangler.jsonc"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "cheerio": "^1.2.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260723.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.113.0"
+  },
+  "overrides": {
+    "sharp": "^0.35.3"
+  }
+}
