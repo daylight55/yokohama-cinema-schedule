@@ -27,4 +27,13 @@ describe("JST date helpers", () => {
       "2026-07-24T16:50:00.000Z",
     );
   });
+
+  it("accepts cinema times expressed beyond 24:00", () => {
+    expect(jstLocalToIso("2026-07-24", "25:10")).toBe(
+      "2026-07-24T16:10:00.000Z",
+    );
+    expect(jstEndToIso("2026-07-24", "23:40", "25:30")).toBe(
+      "2026-07-24T16:30:00.000Z",
+    );
+  });
 });

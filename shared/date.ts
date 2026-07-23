@@ -30,7 +30,23 @@ export function jstDateBounds(date: string): [string, string] {
 }
 
 export function jstLocalToIso(date: string, time: string): string {
-  return new Date(`${date}T${time}:00+09:00`).toISOString();
+  const match = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) throw new RangeError(`Invalid local time: ${time}`);
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute) ||
+    hour < 0 ||
+    minute < 0 ||
+    minute > 59
+  ) {
+    throw new RangeError(`Invalid local time: ${time}`);
+  }
+  const midnight = new Date(`${date}T00:00:00+09:00`);
+  return new Date(
+    midnight.getTime() + (hour * 60 + minute) * 60_000,
+  ).toISOString();
 }
 
 export function jstEndToIso(
