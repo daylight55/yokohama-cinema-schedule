@@ -107,6 +107,11 @@ export async function refreshAll(env: Env): Promise<{
       });
     } catch (error) {
       const message = safeError(error);
+      console.error("Schedule refresh failed", {
+        sourceId: source.id,
+        message,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       await recordRun(
         env.DB,
         source.id,
