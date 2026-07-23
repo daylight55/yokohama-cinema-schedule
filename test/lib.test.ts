@@ -3,6 +3,7 @@ import type { RouteEstimate, Showing } from "../shared/types";
 import {
   filterShowings,
   groupByMovie,
+  groupByScheduleHour,
   isShowingReachable,
   normalizeMovieTitle,
 } from "../src/lib";
@@ -90,5 +91,33 @@ describe("movie grouping", () => {
       ["作品A", 2],
       ["作品B", 1],
     ]);
+  });
+
+  it("groups the guide by JST hour and keeps the same movie together", () => {
+    const groups = groupByScheduleHour([
+      showing({
+        id: "first-cinema",
+        startsAt: "2026-07-24T00:10:00Z",
+        title: "作品A",
+      }),
+      showing({
+        id: "second-cinema",
+        cinemaId: "movil",
+        startsAt: "2026-07-24T00:45:00Z",
+        title: "【字幕】作品A",
+      }),
+      showing({
+        id: "later",
+        startsAt: "2026-07-24T01:00:00Z",
+        title: "作品B",
+      }),
+    ]);
+
+    expect(groups.map((group) => [group.label, group.showingCount])).toEqual([
+      ["09:00", 2],
+      ["10:00", 1],
+    ]);
+    expect(groups[0].movies).toHaveLength(1);
+    expect(groups[0].movies[0].showings).toHaveLength(2);
   });
 });

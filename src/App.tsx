@@ -20,7 +20,7 @@ import {
   AREA_OPTIONS,
   buildDates,
   filterShowings,
-  groupByMovie,
+  groupByScheduleHour,
 } from "./lib";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
@@ -29,9 +29,15 @@ const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   minute: "2-digit",
   hourCycle: "h23",
 });
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+const dayFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
   month: "numeric",
+  day: "numeric",
+  weekday: "short",
+});
+const fullDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  month: "long",
   day: "numeric",
   weekday: "short",
 });
@@ -128,9 +134,18 @@ export function App() {
       selectedDate,
     ],
   );
-  const movieGroups = useMemo(
-    () => groupByMovie(visibleShowings),
+  const hourGroups = useMemo(
+    () => groupByScheduleHour(visibleShowings),
     [visibleShowings],
+  );
+  const movieCount = useMemo(
+    () =>
+      new Set(
+        hourGroups.flatMap((group) =>
+          group.movies.map((movie) => movie.key),
+        ),
+      ).size,
+    [hourGroups],
   );
 
   const requestLocation = () => {
@@ -166,125 +181,160 @@ export function App() {
     );
   };
 
+  const selectedDateLabel =
+    selectedDate === dates[0]
+      ? "今日"
+      : fullDateFormatter.format(
+          new Date(`${selectedDate}T12:00:00+09:00`),
+        );
+
   return (
     <>
       <header className="site-header">
         <div className="header-inner">
-          <a className="brand" href="/" aria-label="今日の横浜映画 ホーム">
+          <a className="brand" href="/" aria-label="横浜映画番組表 ホーム">
             <span className="brand-mark" aria-hidden="true">
               Y
             </span>
-            <span>
-              <strong>今日の横浜映画</strong>
-              <small>PRIVATE SCHEDULE</small>
-            </span>
+            <strong>横浜映画</strong>
           </a>
-          <form method="post" action="/auth/logout">
-            <button
-              className="quiet-button"
-              type="submit"
-              aria-label="ログアウト"
-            >
-              <SignOutIcon size={18} aria-hidden="true" />
-              <span>ログアウト</span>
-            </button>
-          </form>
+          <div className="header-status">
+            <time dateTime={now.toISOString()}>{timeFormatter.format(now)}</time>
+            <form method="post" action="/auth/logout">
+              <button
+                className="icon-button"
+                type="submit"
+                aria-label="ログアウト"
+              >
+                <SignOutIcon size={19} aria-hidden="true" />
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
       <main id="main">
-        <section className="intro" aria-labelledby="page-heading">
-          <p className="eyebrow">Yokohama / Sakuragicho / Kannai</p>
-          <h1 id="page-heading">今から観られる映画</h1>
-          <p className="lead">
-            横浜周辺の映画館をまたいで、上映開始が近い順にまとめています。
-          </p>
-        </section>
+        <nav className="date-nav" aria-label="上映日">
+          <div className="date-strip">
+            {dates.map((date, index) => {
+              const displayDate = dayFormatter.format(
+                new Date(`${date}T12:00:00+09:00`),
+              );
+              const [monthDay, weekday = ""] = displayDate.split(/[()]/);
+              return (
+                <button
+                  key={date}
+                  className={
+                    date === selectedDate ? "day-button active" : "day-button"
+                  }
+                  type="button"
+                  aria-pressed={date === selectedDate}
+                  onClick={() => setSelectedDate(date)}
+                >
+                  <span>{index === 0 ? "今日" : monthDay}</span>
+                  <small>{weekday}</small>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
 
-        <section className="control-panel" aria-label="上映日の選択">
-          <div className="date-tabs" role="group" aria-label="日付">
-            {dates.map((date, index) => (
+        <section className="schedule-controls" aria-label="上映の絞り込み">
+          <div className="area-strip" role="group" aria-label="エリア">
+            {AREA_OPTIONS.map((area) => (
               <button
-                key={date}
-                className={date === selectedDate ? "date-tab active" : "date-tab"}
+                key={area.id}
                 type="button"
-                aria-pressed={date === selectedDate}
-                onClick={() => setSelectedDate(date)}
+                className={
+                  selectedArea === area.id ? "filter-chip active" : "filter-chip"
+                }
+                aria-pressed={selectedArea === area.id}
+                onClick={() => setSelectedArea(area.id)}
               >
-                <span>{index === 0 ? "今日" : dateFormatter.format(new Date(`${date}T12:00:00+09:00`)).split("(")[0]}</span>
-                <small>
-                  {dateFormatter
-                    .format(new Date(`${date}T12:00:00+09:00`))
-                    .match(/\((.+)\)/)?.[1] ?? ""}
-                </small>
+                {area.label}
               </button>
             ))}
           </div>
 
-          <div className="filters">
-            <div className="area-filters" role="group" aria-label="エリア">
-              {AREA_OPTIONS.map((area) => (
+          <div className="control-row">
+            {selectedDate === dates[0] ? (
+              <div className="time-filter" role="group" aria-label="時間">
                 <button
-                  key={area.id}
                   type="button"
-                  className={selectedArea === area.id ? "chip active" : "chip"}
-                  aria-pressed={selectedArea === area.id}
-                  onClick={() => setSelectedArea(area.id)}
+                  aria-pressed={futureOnly}
+                  className={futureOnly ? "active" : ""}
+                  onClick={() => setFutureOnly(true)}
                 >
-                  {area.label}
+                  これから
                 </button>
-              ))}
-            </div>
-            <div className="filter-actions">
-              {selectedDate === dates[0] && (
-                <label className="toggle">
-                  <input
-                    type="checkbox"
-                    checked={futureOnly}
-                    onChange={(event) => setFutureOnly(event.target.checked)}
-                  />
-                  <span>今から間に合う上映だけ</span>
-                </label>
-              )}
-              <button
-                type="button"
-                className="location-button"
-                onClick={requestLocation}
-                disabled={locationState === "loading"}
-              >
-                <CrosshairIcon size={18} aria-hidden="true" />
-                {locationState === "loading"
-                  ? "現在地を確認中…"
-                  : locationState === "ready"
-                    ? "現在地を再取得"
-                    : "現在地から探す"}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  aria-pressed={!futureOnly}
+                  className={!futureOnly ? "active" : ""}
+                  onClick={() => setFutureOnly(false)}
+                >
+                  全時間
+                </button>
+              </div>
+            ) : (
+              <span className="all-day-label">全時間を表示</span>
+            )}
+            <button
+              type="button"
+              className="location-button"
+              onClick={requestLocation}
+              disabled={locationState === "loading"}
+            >
+              <CrosshairIcon size={17} aria-hidden="true" />
+              {locationState === "loading"
+                ? "取得中"
+                : locationState === "ready"
+                  ? "現在地を更新"
+                  : "現在地"}
+            </button>
           </div>
+
           {locationState === "ready" && (
-            <p className="location-note" role="status">
-              <CheckCircleIcon size={17} weight="fill" aria-hidden="true" />
-              現在地からの徒歩時間を反映しました。表示は目安です。
+            <p className="inline-status" role="status">
+              <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
+              徒歩時間を反映しました
             </p>
           )}
           {locationState === "error" && (
-            <p className="location-note error" role="status">
-              <WarningCircleIcon size={17} aria-hidden="true" />
-              現在地を取得できませんでした。通常の上映一覧を表示します。
+            <p className="inline-status error" role="status">
+              <WarningCircleIcon size={16} aria-hidden="true" />
+              現在地を取得できませんでした
             </p>
           )}
         </section>
 
-        <section className="results" aria-live="polite" aria-busy={loading}>
-          <ResultsHeader
-            count={movieGroups.length}
-            schedule={schedule}
-            loading={loading}
-          />
-          {loading && <LoadingState />}
+        <section className="guide" aria-live="polite" aria-busy={loading}>
+          <div className="guide-heading">
+            <div>
+              <p>{selectedDateLabel}</p>
+              <h1>上映スケジュール</h1>
+            </div>
+            {!loading && !error && (
+              <span>
+                {movieCount}作品
+                <small>{visibleShowings.length}上映</small>
+              </span>
+            )}
+          </div>
+
+          {schedule?.lastUpdatedAt && !loading && (
+            <p className="update-status">
+              {updatedFormatter.format(new Date(schedule.lastUpdatedAt))}更新
+              {schedule.sourceHealth.total > 0 &&
+                schedule.sourceHealth.healthy < schedule.sourceHealth.total &&
+                ` / ${schedule.sourceHealth.total - schedule.sourceHealth.healthy}館は更新確認できず`}
+            </p>
+          )}
+
+          {loading && <LoadingTimeline />}
           {!loading && error && (
             <div className="state-card error-state" role="alert">
-              <WarningCircleIcon size={26} aria-hidden="true" />
+              <WarningCircleIcon size={25} aria-hidden="true" />
               <div>
                 <strong>読み込みに失敗しました</strong>
                 <p>{error}</p>
@@ -294,130 +344,133 @@ export function App() {
               </button>
             </div>
           )}
-          {!loading && !error && movieGroups.length === 0 && (
+          {!loading && !error && hourGroups.length === 0 && (
             <div className="state-card">
-              <ClockIcon size={26} aria-hidden="true" />
+              <ClockIcon size={25} aria-hidden="true" />
               <div>
                 <strong>条件に合う上映がありません</strong>
-                <p>
-                  エリアを広げるか、「今から間に合う上映だけ」を解除してみてください。
-                </p>
+                <p>エリアを広げるか、全時間に切り替えてください。</p>
               </div>
             </div>
           )}
-          {!loading &&
-            !error &&
-            movieGroups.map((group) => (
-              <article className="movie-card" key={group.key}>
-                <div className="movie-heading">
-                  <h2>{group.title}</h2>
-                  <span>{group.showings.length} 回</span>
-                </div>
-                <div className="showing-list">
-                  {group.showings.map((showing) => (
-                    <ShowingRow
-                      key={showing.id}
-                      showing={showing}
-                      route={routeByCinema.get(showing.cinemaId)}
-                    />
-                  ))}
-                </div>
-              </article>
-            ))}
+          {!loading && !error && hourGroups.length > 0 && (
+            <div className="timeline">
+              {hourGroups.map((group) => (
+                <section
+                  className="timeline-hour"
+                  id={`hour-${group.hour}`}
+                  key={group.hour}
+                  aria-labelledby={`hour-label-${group.hour}`}
+                >
+                  <div className="hour-label">
+                    <time
+                      id={`hour-label-${group.hour}`}
+                      dateTime={`${selectedDate}T${group.hour}:00:00+09:00`}
+                    >
+                      {group.label}
+                    </time>
+                    <small>{group.showingCount}上映</small>
+                  </div>
+                  <div className="hour-programs">
+                    {group.movies.map((movie) => (
+                      <article className="program-block" key={movie.key}>
+                        <div className="program-title">
+                          <h2>{movie.title}</h2>
+                          {movie.showings.length > 1 && (
+                            <span>横にスワイプ</span>
+                          )}
+                        </div>
+                        <div
+                          className="cinema-strip"
+                          role="list"
+                          aria-label={`${movie.title}の上映館`}
+                        >
+                          {movie.showings.map((showing) => (
+                            <CinemaSlot
+                              key={showing.id}
+                              showing={showing}
+                              route={routeByCinema.get(showing.cinemaId)}
+                            />
+                          ))}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
       <footer>
         <p>
-          上映時刻は各映画館の公式情報をもとにした参考情報です。購入前に公式サイトでご確認ください。
+          上映時刻は参考情報です。購入前に各映画館の公式サイトでご確認ください。
         </p>
       </footer>
     </>
   );
 }
 
-function ResultsHeader({
-  count,
-  schedule,
-  loading,
-}: {
-  count: number;
-  schedule: ScheduleResponse | null;
-  loading: boolean;
-}) {
-  return (
-    <div className="results-header">
-      <h2>{loading ? "上映情報を確認中" : `${count}作品`}</h2>
-      {schedule?.lastUpdatedAt && (
-        <p>
-          {updatedFormatter.format(new Date(schedule.lastUpdatedAt))} 更新
-          {schedule.sourceHealth.total > 0 &&
-            schedule.sourceHealth.healthy < schedule.sourceHealth.total &&
-            ` · ${schedule.sourceHealth.total - schedule.sourceHealth.healthy}館は更新確認できず`}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function ShowingRow({
+function CinemaSlot({
   showing,
   route,
 }: {
   showing: Showing;
   route?: RouteEstimate;
 }) {
+  const start = timeFormatter.format(new Date(showing.startsAt));
+  const end = showing.endsAt
+    ? timeFormatter.format(new Date(showing.endsAt))
+    : null;
+  const metadata = [showing.screen, showing.format].filter(Boolean).join(" / ");
+
   return (
-    <div className="showing-row">
-      <div className="showing-time">
-        <strong>{timeFormatter.format(new Date(showing.startsAt))}</strong>
-        {showing.endsAt && (
-          <span>– {timeFormatter.format(new Date(showing.endsAt))}</span>
-        )}
+    <a
+      className="cinema-slot"
+      href={showing.bookingUrl}
+      target="_blank"
+      rel="noreferrer"
+      role="listitem"
+      aria-label={`${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+    >
+      <div className="slot-time">
+        <strong>{start}</strong>
+        {end && <span>{end}終了</span>}
       </div>
-      <div className="showing-place">
+      <div className="slot-cinema">
         <strong>{showing.cinemaShortName}</strong>
-        <span>
-          {[showing.screen, showing.format].filter(Boolean).join(" · ") ||
-            showing.area}
-        </span>
+        <ArrowSquareOutIcon size={15} aria-hidden="true" />
       </div>
+      {metadata && <span className="slot-meta">{metadata}</span>}
       {route && (
-        <div
-          className="route-badge"
-          title={
-            route.mode === "route"
-              ? "経路検索による徒歩時間"
-              : "直線距離から計算した徒歩時間の目安"
-          }
-        >
-          <MapPinIcon size={15} aria-hidden="true" />
+        <span className="slot-route">
+          <MapPinIcon size={14} aria-hidden="true" />
           徒歩約{route.durationMinutes}分
           {route.mode === "estimate" && <small>目安</small>}
-        </div>
+        </span>
       )}
-      <a
-        className="booking-link"
-        href={showing.bookingUrl}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={`${showing.cinemaShortName} ${timeFormatter.format(new Date(showing.startsAt))}の公式予約ページを開く`}
-      >
-        公式サイト
-        <ArrowSquareOutIcon size={16} aria-hidden="true" />
-      </a>
-    </div>
+    </a>
   );
 }
 
-function LoadingState() {
+function LoadingTimeline() {
   return (
-    <div className="loading-list" aria-label="読み込み中">
-      {[0, 1, 2].map((item) => (
-        <div className="skeleton-card" key={item}>
-          <span />
-          <span />
-          <span />
+    <div className="timeline loading-timeline" aria-label="読み込み中">
+      {[9, 10, 11].map((hour) => (
+        <div className="timeline-hour" key={hour}>
+          <div className="hour-label">
+            <time>{hour}:00</time>
+          </div>
+          <div className="hour-programs">
+            <div className="program-block skeleton-program">
+              <span />
+              <div>
+                <span />
+                <span />
+              </div>
+            </div>
+          </div>
         </div>
       ))}
     </div>

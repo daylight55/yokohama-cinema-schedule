@@ -86,6 +86,38 @@ export function groupByMovie(showings: Showing[]): Array<{
     });
 }
 
+export interface ScheduleHourGroup {
+  hour: string;
+  label: string;
+  movies: ReturnType<typeof groupByMovie>;
+  showingCount: number;
+}
+
+const jstHourFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  hour: "2-digit",
+  hourCycle: "h23",
+});
+
+export function groupByScheduleHour(showings: Showing[]): ScheduleHourGroup[] {
+  const hours = new Map<string, Showing[]>();
+  for (const showing of showings) {
+    const hour =
+      jstHourFormatter
+        .formatToParts(new Date(showing.startsAt))
+        .find((part) => part.type === "hour")?.value ?? "00";
+    hours.set(hour, [...(hours.get(hour) ?? []), showing]);
+  }
+  return [...hours.entries()]
+    .sort(([hourA], [hourB]) => Number(hourA) - Number(hourB))
+    .map(([hour, entries]) => ({
+      hour,
+      label: `${hour}:00`,
+      movies: groupByMovie(entries),
+      showingCount: entries.length,
+    }));
+}
+
 export function normalizeMovieTitle(title: string): string {
   return title
     .normalize("NFKC")
