@@ -8,7 +8,7 @@
     {
       "binding": "DB",
       "database_name": "yokohama-cinema-schedule",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "e657eee0-8431-4641-a5b9-bd08cb70d191",
       "migrations_dir": "./migrations"
     }
   ],
