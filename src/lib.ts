@@ -96,36 +96,53 @@ export function groupByMovie(showings: Showing[]): Array<{
     });
 }
 
-export interface ScheduleHourGroup {
-  hour: string;
+export interface ScheduleTimeGroup {
+  time: string;
   label: string;
   movies: ReturnType<typeof groupByMovie>;
   showingCount: number;
 }
 
-const jstHourFormatter = new Intl.DateTimeFormat("ja-JP", {
+const jstTimeFormatter = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Tokyo",
   hour: "2-digit",
+  minute: "2-digit",
   hourCycle: "h23",
 });
 
-export function groupByScheduleHour(showings: Showing[]): ScheduleHourGroup[] {
-  const hours = new Map<string, Showing[]>();
+export function scheduleTimeSlot(date: Date): string {
+  const parts = jstTimeFormatter.formatToParts(date);
+  const hour =
+    parts.find((part) => part.type === "hour")?.value ?? "00";
+  const minute = Number(
+    parts.find((part) => part.type === "minute")?.value ?? "0",
+  );
+  const slotMinute = Math.floor(minute / 10) * 10;
+  return `${hour}:${String(slotMinute).padStart(2, "0")}`;
+}
+
+export function groupByScheduleTime(showings: Showing[]): ScheduleTimeGroup[] {
+  const slots = new Map<string, Showing[]>();
   for (const showing of showings) {
-    const hour =
-      jstHourFormatter
-        .formatToParts(new Date(showing.startsAt))
-        .find((part) => part.type === "hour")?.value ?? "00";
-    hours.set(hour, [...(hours.get(hour) ?? []), showing]);
+    const time = scheduleTimeSlot(new Date(showing.startsAt));
+    slots.set(time, [...(slots.get(time) ?? []), showing]);
   }
-  return [...hours.entries()]
-    .sort(([hourA], [hourB]) => Number(hourA) - Number(hourB))
-    .map(([hour, entries]) => ({
-      hour,
-      label: `${hour}:00`,
+  return [...slots.entries()]
+    .sort(([timeA], [timeB]) => timeA.localeCompare(timeB))
+    .map(([time, entries]) => ({
+      time,
+      label: time,
       movies: groupByMovie(entries),
       showingCount: entries.length,
     }));
+}
+
+export function findCurrentTimeMarkerIndex(
+  groups: Array<Pick<ScheduleTimeGroup, "time">>,
+  now: Date,
+): number {
+  const currentSlot = scheduleTimeSlot(now);
+  return groups.findIndex((group) => group.time >= currentSlot);
 }
 
 export function normalizeMovieTitle(title: string): string {
