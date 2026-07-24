@@ -249,24 +249,6 @@ export function App() {
     () => new Map(routes.map((route) => [route.cinemaId, route])),
     [routes],
   );
-  const cinemaTravelRows = useMemo(
-    () =>
-      (schedule?.cinemas ?? [])
-        .filter(
-          (cinema) =>
-            selectedArea === "all" || cinema.area === selectedArea,
-        )
-        .flatMap((cinema) => {
-          const route = routeByCinema.get(cinema.id);
-          return route ? [{ cinema, route }] : [];
-        })
-        .sort(
-          (rowA, rowB) =>
-            rowA.route.durationMinutes - rowB.route.durationMinutes ||
-            rowA.cinema.shortName.localeCompare(rowB.cinema.shortName, "ja"),
-        ),
-    [routeByCinema, schedule?.cinemas, selectedArea],
-  );
   const cinemaList = useMemo(
     () =>
       (schedule?.cinemas ?? [])
@@ -881,15 +863,6 @@ export function App() {
               プロフィールで自宅を登録
             </button>
           )}
-          {view === "schedule" &&
-            routeState === "ready" &&
-            routeOrigin &&
-            cinemaTravelRows.length > 0 && (
-              <CinemaTravelTimes
-                rows={cinemaTravelRows}
-                origin={routeOrigin}
-              />
-            )}
           {cinemaPreferenceError && (
             <p className="inline-status error" role="status">
               <WarningCircleIcon size={16} aria-hidden="true" />
@@ -1284,7 +1257,6 @@ export function App() {
                                   <CinemaSlot
                                     key={showing.id}
                                     showing={showing}
-                                    route={route}
                                     isPast={isShowingPast(showing, now)}
                                     isReachable={Boolean(
                                       route &&
@@ -1378,57 +1350,6 @@ function FavoriteButton({
         aria-hidden="true"
       />
     </button>
-  );
-}
-
-function CinemaTravelTimes({
-  rows,
-  origin,
-}: {
-  rows: Array<{ cinema: Cinema; route: RouteEstimate }>;
-  origin: { latitude: number; longitude: number };
-}) {
-  return (
-    <section
-      className="cinema-travel-times"
-      aria-labelledby="cinema-travel-times-title"
-    >
-      <div className="cinema-travel-heading">
-        <h2 id="cinema-travel-times-title">映画館までの目安</h2>
-        <span>自宅から</span>
-      </div>
-      <ul>
-        {rows.map(({ cinema, route }) => (
-          <li key={cinema.id}>
-            <span>{cinema.shortName}</span>
-            <div className="cinema-travel-route">
-              <strong>
-                {routeTravelLabel(route)} 約{route.durationMinutes}分
-                {route.customDurationMinutes !== undefined && "（設定）"}
-              </strong>
-              <GoogleMapsRouteLink
-                cinema={cinema}
-                origin={origin}
-                route={route}
-              />
-            </div>
-            {route.transitDetails && (
-              <small className="cinema-travel-breakdown">
-                {transitRouteSummary(route)}
-              </small>
-            )}
-          </li>
-        ))}
-      </ul>
-      <p>
-        電車は石川町駅・伊勢佐木長者町駅のうち早い方を起点に、自宅から駅までの
-        徒歩・平均待ち・乗換・映画館までの徒歩・余裕10分を含む固定目安です。
-        自宅から駅までの徒歩は登録時に保存し、通常表示ではGoogle APIを呼びません。
-        実際の公共交通経路は「Googleマップで案内」から確認できます。
-        「間に合う」は現在時刻＋移動時間＋20分を中心に前後10分、かつ開始60分以内の
-        上映です。
-      </p>
-    </section>
   );
 }
 
@@ -1574,12 +1495,10 @@ function GoogleMapsRouteLink({
 
 function CinemaSlot({
   showing,
-  route,
   isPast,
   isReachable,
 }: {
   showing: Showing;
-  route?: RouteEstimate;
   isPast: boolean;
   isReachable: boolean;
 }) {
@@ -1617,24 +1536,6 @@ function CinemaSlot({
         <ArrowSquareOutIcon size={15} aria-hidden="true" />
       </div>
       {metadata && <span className="slot-meta">{metadata}</span>}
-      {route && (
-        <span className="slot-route">
-          <MapPinIcon size={14} aria-hidden="true" />
-          {routeTravelLabel(route)} 約{route.durationMinutes}分
-          {route.customDurationMinutes !== undefined && "（設定）"}
-          {route.mode === "estimate" && (
-            <small>
-              {route.customDurationMinutes !== undefined
-                ? "ユーザー設定"
-                : route.transitDetails
-                ? `${route.transitDetails.originStationName}→${route.transitDetails.destinationStationName}`
-                : route.travelMode === "transit"
-                  ? "駅徒歩・余裕込"
-                  : "目安"}
-            </small>
-          )}
-        </span>
-      )}
     </a>
   );
 }
