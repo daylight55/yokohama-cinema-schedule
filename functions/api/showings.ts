@@ -1,5 +1,6 @@
 import { jstDateBounds, todayInJst } from "../../shared/date";
 import type { ScheduleResponse, Showing } from "../../shared/types";
+import { getLocationPreference } from "../_lib/app-preferences";
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
 import { listCinemaTravelPreferences } from "../_lib/cinema-travel-preferences";
@@ -72,12 +73,18 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
   ]);
-  const [preferences, cinemaTravelPreferences] = publicOnly
-    ? [[], []]
-    : await Promise.all([
-        listStarredPreferences(context.env.DB),
-        listCinemaTravelPreferences(context.env.DB, cinemas),
-      ]);
+  const [preferences, cinemaTravelPreferences, locationPreference] =
+    await Promise.all([
+      publicOnly
+        ? Promise.resolve([])
+        : listStarredPreferences(context.env.DB),
+      publicOnly
+        ? Promise.resolve([])
+        : listCinemaTravelPreferences(context.env.DB, cinemas),
+      publicOnly
+        ? Promise.resolve({ autoEnabled: false, updatedAt: null })
+        : getLocationPreference(context.env.DB),
+    ]);
 
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({
     id: row.id,
@@ -109,6 +116,8 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     preferencesEnabled: !publicOnly,
     cinemaTravelPreferences,
     cinemaTravelPreferencesEnabled: !publicOnly,
+    locationPreference,
+    locationPreferenceEnabled: !publicOnly,
     sourceHealth: {
       healthy: Number(health?.healthy ?? 0),
       total: Number(health?.total ?? 0),

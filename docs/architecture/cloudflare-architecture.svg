@@ -52,7 +52,7 @@
     <line x1="405" y1="263" x2="665" y2="263" stroke="#e2e8f0"/>
     <text class="card-title" x="405" y="295" style="font-size:15px">Pages Functions</text>
     <text class="body" x="405" y="321">認証ミドルウェア / 署名済みCookie</text>
-    <text class="body" x="405" y="344">上映 / 好み / 経路 / 映画館設定 API</text>
+    <text class="body" x="405" y="344">上映 / 好み / 経路 / 共有設定 API</text>
     <text class="muted" x="405" y="375">Secrets: Password / Session</text>
   </g>
 
@@ -64,8 +64,8 @@
     <text class="card-title" x="910" y="340">Cloudflare D1</text>
     <text class="muted" x="910" y="363">SQLite database</text>
     <text class="body" x="830" y="414">映画館 / 上映回 / 作品画像</text>
-    <text class="body" x="830" y="436">スター作品 / 移動方法 / 取得状態</text>
-    <text class="body" x="830" y="456">公開許諾 / 有効終了日</text>
+    <text class="body" x="830" y="436">スター / 移動方法 / 自動取得設定</text>
+    <text class="body" x="830" y="456">取得状態 / 公開許諾 / 有効終了日</text>
   </g>
 
   <g filter="url(#shadow)">

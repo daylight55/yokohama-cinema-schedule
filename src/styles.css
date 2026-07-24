@@ -450,6 +450,38 @@ footer {
   color: var(--danger);
 }
 
+.location-auto-row {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.location-auto-row .inline-status {
+  min-width: 0;
+  margin-top: 0;
+}
+
+.location-auto-stop {
+  flex: 0 0 auto;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.location-auto-stop:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .cinema-travel-times {
   margin-top: 14px;
   padding-top: 14px;

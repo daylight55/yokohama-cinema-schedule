@@ -50,6 +50,8 @@ export interface ScheduleResponse {
   preferencesEnabled: boolean;
   cinemaTravelPreferences: CinemaTravelPreference[];
   cinemaTravelPreferencesEnabled: boolean;
+  locationPreference: LocationPreference;
+  locationPreferenceEnabled: boolean;
   sourceHealth: {
     healthy: number;
     total: number;
@@ -82,6 +84,11 @@ export interface MoviePreference {
 export interface CinemaTravelPreference {
   cinemaId: string;
   travelMode: TravelMode;
+  updatedAt: string | null;
+}
+
+export interface LocationPreference {
+  autoEnabled: boolean;
   updatedAt: string | null;
 }
 
