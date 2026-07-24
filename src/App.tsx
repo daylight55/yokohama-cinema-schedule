@@ -22,7 +22,8 @@ import {
   AREA_OPTIONS,
   buildDates,
   filterShowings,
-  groupByScheduleHour,
+  findCurrentTimeMarkerIndex,
+  groupByScheduleTime,
   groupByMovie,
   isShowingPast,
   isShowingReachable,
@@ -179,8 +180,8 @@ export function App() {
       selectedDate,
     ],
   );
-  const hourGroups = useMemo(
-    () => groupByScheduleHour(visibleShowings),
+  const timeGroups = useMemo(
+    () => groupByScheduleTime(visibleShowings),
     [visibleShowings],
   );
   const movieList = useMemo(() => {
@@ -201,26 +202,19 @@ export function App() {
   const movieCount = useMemo(
     () =>
       new Set(
-        hourGroups.flatMap((group) =>
+        timeGroups.flatMap((group) =>
           group.movies.map((movie) => movie.key),
         ),
       ).size,
-    [hourGroups],
-  );
-  const currentHour = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Tokyo",
-      hour: "2-digit",
-      hourCycle: "h23",
-    }).format(now),
+    [timeGroups],
   );
   const currentTimeMarkerIndex =
     selectedDate === today
-      ? hourGroups.findIndex((group) => Number(group.hour) >= currentHour)
+      ? findCurrentTimeMarkerIndex(timeGroups, now)
       : -1;
   const showCurrentTimeMarkerAtEnd =
     selectedDate === today &&
-    hourGroups.length > 0 &&
+    timeGroups.length > 0 &&
     currentTimeMarkerIndex === -1;
 
   useEffect(() => {
@@ -243,7 +237,7 @@ export function App() {
       didInitialTimeScrollRef.current = true;
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [error, hourGroups, loading, selectedDate, today, view]);
+  }, [error, loading, selectedDate, timeGroups, today, view]);
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
@@ -541,7 +535,7 @@ export function App() {
           {!loading &&
             !error &&
             (view === "schedule"
-              ? hourGroups.length === 0
+              ? timeGroups.length === 0
               : movieList.length === 0) && (
             <div className="state-card">
               <ClockIcon size={25} aria-hidden="true" />
@@ -603,10 +597,10 @@ export function App() {
           {!loading &&
             !error &&
             view === "schedule" &&
-            hourGroups.length > 0 && (
+            timeGroups.length > 0 && (
             <div className="timeline">
-              {hourGroups.map((group, index) => (
-                <Fragment key={group.hour}>
+              {timeGroups.map((group, index) => (
+                <Fragment key={group.time}>
                   {index === currentTimeMarkerIndex && (
                     <CurrentTimeMarker
                       markerRef={currentTimeMarkerRef}
@@ -615,13 +609,13 @@ export function App() {
                   )}
                   <section
                     className="timeline-hour"
-                    id={`hour-${group.hour}`}
-                    aria-labelledby={`hour-label-${group.hour}`}
+                    id={`time-${group.time.replace(":", "-")}`}
+                    aria-labelledby={`time-label-${group.time.replace(":", "-")}`}
                   >
                     <div className="hour-label">
                       <time
-                        id={`hour-label-${group.hour}`}
-                        dateTime={`${selectedDate}T${group.hour}:00:00+09:00`}
+                        id={`time-label-${group.time.replace(":", "-")}`}
+                        dateTime={`${selectedDate}T${group.time}:00+09:00`}
                       >
                         {group.label}
                       </time>
