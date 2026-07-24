@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyCustomDuration,
   estimateRoute,
   TRANSIT_BUFFER_MINUTES,
   TRANSIT_STATION_WALK_MINUTES,
@@ -71,5 +72,22 @@ describe("route estimates", () => {
     expect(routes.get("bus")!.durationMinutes).not.toBe(
       routes.get("bicycle")!.durationMinutes,
     );
+  });
+
+  it("uses a user-specified cinema duration while keeping the calculated estimate", () => {
+    const calculated = estimateRoute(35.46, 139.61, cinema, "transit");
+    const customized = applyCustomDuration(calculated, 37);
+
+    expect(customized.durationMinutes).toBe(37);
+    expect(customized.customDurationMinutes).toBe(37);
+    expect(customized.calculatedDurationMinutes).toBe(
+      calculated.durationMinutes,
+    );
+  });
+
+  it("leaves the calculated estimate unchanged when no custom duration is set", () => {
+    const calculated = estimateRoute(35.46, 139.61, cinema, "transit");
+
+    expect(applyCustomDuration(calculated, null)).toBe(calculated);
   });
 });

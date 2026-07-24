@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1450" height="850" viewBox="0 0 1450 850" role="img" aria-labelledby="title description">
   <title id="title">横浜映画館スケジュールのCloudflareアーキテクチャ</title>
-  <desc id="description">スマートフォンからCloudflare PagesとPages Functionsを通じてD1の上映情報を参照し、Cron Triggersで起動するCloudflare Workersが映画館公式サイトから上映情報を収集する構成。</desc>
+  <desc id="description">スマートフォンから自宅位置を一度だけ登録し、Cloudflare Pages FunctionsがD1の固定位置と上映情報から移動時間を返し、Cron Triggersで起動するCloudflare Workersが映画館公式サイトから上映情報を収集する構成。</desc>
   <defs>
     <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
       <path d="M0 0 10 5 0 10z" fill="#475569"/>
@@ -38,7 +38,7 @@
     <circle cx="150" cy="381" r="1.5" fill="#475569"/>
     <text x="150" y="419" text-anchor="middle" class="card-title">利用者</text>
     <text x="150" y="443" text-anchor="middle" class="muted">スマートフォン / ブラウザ</text>
-    <text x="150" y="463" text-anchor="middle" class="muted">任意で現在地を送信</text>
+    <text x="150" y="463" text-anchor="middle" class="muted">自宅登録時だけGPS送信</text>
   </g>
 
   <g filter="url(#shadow)">
@@ -52,7 +52,7 @@
     <line x1="405" y1="263" x2="665" y2="263" stroke="#e2e8f0"/>
     <text class="card-title" x="405" y="295" style="font-size:15px">Pages Functions</text>
     <text class="body" x="405" y="321">認証ミドルウェア / 署名済みCookie</text>
-    <text class="body" x="405" y="344">上映 / 好み / 駅ベース経路 API</text>
+    <text class="body" x="405" y="344">上映 / 好み / プロフィール / 固定経路 API</text>
     <text class="muted" x="405" y="375">Secrets: Password / Session / Maps</text>
   </g>
 
@@ -64,8 +64,8 @@
     <text class="card-title" x="910" y="340">Cloudflare D1</text>
     <text class="muted" x="910" y="363">SQLite database</text>
     <text class="body" x="830" y="414">映画館 / 上映回 / 作品画像</text>
-    <text class="body" x="830" y="436">駅 / 駅間時間 / 映画館までの徒歩</text>
-    <text class="body" x="830" y="456">スター / 移動方法 / 公開・有効期間</text>
+    <text class="body" x="830" y="436">自宅位置 / 駅間・徒歩の固定時間</text>
+    <text class="body" x="830" y="456">スター / 移動方法・任意時間 / 公開・有効期間</text>
   </g>
 
   <g filter="url(#shadow)">
@@ -85,7 +85,7 @@
   <g filter="url(#shadow)">
     <rect x="1210" y="175" width="200" height="145" rx="18" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
     <text class="card-title" x="1310" y="220" text-anchor="middle" style="font-size:16px">Google マップ</text>
-    <text class="muted" x="1310" y="246" text-anchor="middle">GPS→起点駅の徒歩API</text>
+    <text class="muted" x="1310" y="246" text-anchor="middle">自宅登録時だけ徒歩API</text>
     <text class="body" x="1310" y="281" text-anchor="middle">実際の乗換案内リンク</text>
   </g>
 
@@ -111,7 +111,7 @@
 
   <path d="M690 230H1207" fill="none" stroke="#64748b" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-slate)"/>
   <rect x="790" y="204" width="234" height="22" rx="7" fill="#fff"/>
-  <text class="flow" x="907" y="219" text-anchor="middle">徒歩API / 経路リンク</text>
+  <text class="flow" x="907" y="219" text-anchor="middle">登録時徒歩API / 経路リンク</text>
 
   <path d="M690 605H1207" fill="none" stroke="#64748b" stroke-width="2.5" marker-start="url(#arrow-slate-start)" marker-end="url(#arrow-slate)"/>
   <rect x="864" y="579" width="126" height="22" rx="7" fill="#fff"/>

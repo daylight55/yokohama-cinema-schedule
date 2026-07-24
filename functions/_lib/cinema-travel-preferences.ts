@@ -16,10 +16,21 @@ const TRAVEL_MODES = new Set<TravelMode>([
 interface CinemaTravelPreferenceRow {
   cinema_id: string;
   travel_mode: TravelMode;
+  custom_duration_minutes: number | null;
   updated_at: string;
 }
+
 export function isTravelMode(value: unknown): value is TravelMode {
   return typeof value === "string" && TRAVEL_MODES.has(value as TravelMode);
+}
+
+export function isCustomDurationMinutes(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 1440
+  );
 }
 
 export async function listCinemaTravelPreferences(
@@ -30,7 +41,7 @@ export async function listCinemaTravelPreferences(
 
   const result = await db
     .prepare(
-      `SELECT cinema_id, travel_mode, updated_at
+      `SELECT cinema_id, travel_mode, custom_duration_minutes, updated_at
        FROM cinema_travel_preferences
        WHERE cinema_id IN (${cinemas.map(() => "?").join(", ")})`,
     )
@@ -45,6 +56,7 @@ export async function listCinemaTravelPreferences(
     return {
       cinemaId: cinema.id,
       travelMode: saved?.travel_mode ?? DEFAULT_TRAVEL_MODE,
+      customDurationMinutes: saved?.custom_duration_minutes ?? null,
       updatedAt: saved?.updated_at ?? null,
     };
   });

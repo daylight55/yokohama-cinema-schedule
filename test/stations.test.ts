@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   buildTransitRoutes,
-  estimateWalksToStations,
   TRANSIT_BUFFER_MINUTES,
 } from "../functions/api/routes";
-import { estimateStationTravel } from "../functions/_lib/stations";
+import {
+  estimateStationTravel,
+  estimateWalksToStations,
+} from "../functions/_lib/stations";
 import type {
   Cinema,
   Station,

@@ -13,7 +13,7 @@
         <mxCell id="cloudflare-label" value="CLOUDFLARE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#C65312;spacingLeft=4;" vertex="1" parent="1">
           <mxGeometry x="330" y="105" width="180" height="30" as="geometry"/>
         </mxCell>
-        <mxCell id="user-card" value="&lt;b&gt;利用者&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;スマートフォン / ブラウザ&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;任意で現在地を送信&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=2;align=center;verticalAlign=middle;fontSize=16;fontColor=#172033;spacing=12;" vertex="1" parent="1">
+        <mxCell id="user-card" value="&lt;b&gt;利用者&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;スマートフォン / ブラウザ&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;自宅登録時だけGPS送信&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=2;align=center;verticalAlign=middle;fontSize=16;fontColor=#172033;spacing=12;" vertex="1" parent="1">
           <mxGeometry x="40" y="330" width="220" height="150" as="geometry"/>
         </mxCell>
         <mxCell id="pages-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
@@ -28,7 +28,7 @@
         <mxCell id="pages-divider" value="" style="shape=line;strokeColor=#E2E8F0;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="405" y="258" width="260" height="10" as="geometry"/>
         </mxCell>
-        <mxCell id="pages-functions" value="&lt;b&gt;Pages Functions&lt;/b&gt;&lt;br&gt;認証ミドルウェア / 署名済みCookie&lt;br&gt;上映 / 好み / 駅ベース経路 API&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;Secrets: Password / Session / Maps&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;spacingTop=4;" vertex="1" parent="1">
+        <mxCell id="pages-functions" value="&lt;b&gt;Pages Functions&lt;/b&gt;&lt;br&gt;認証ミドルウェア / 署名済みCookie&lt;br&gt;上映 / 好み / プロフィール / 固定経路 API&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;Secrets: Password / Session / Maps&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;spacingTop=4;" vertex="1" parent="1">
           <mxGeometry x="405" y="278" width="260" height="105" as="geometry"/>
         </mxCell>
         <mxCell id="d1-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
@@ -40,7 +40,7 @@
         <mxCell id="d1-title" value="&lt;b&gt;Cloudflare D1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;SQLite database&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#172033;" vertex="1" parent="1">
           <mxGeometry x="910" y="315" width="145" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d1-content" value="映画館 / 上映回 / 作品画像&lt;br&gt;駅 / 駅間時間 / 映画館までの徒歩&lt;br&gt;スター / 移動方法 / 公開・有効期間" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
+        <mxCell id="d1-content" value="映画館 / 上映回 / 作品画像&lt;br&gt;自宅位置 / 駅間・徒歩の固定時間&lt;br&gt;スター / 移動方法・任意時間 / 公開・有効期間" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
           <mxGeometry x="830" y="395" width="220" height="60" as="geometry"/>
         </mxCell>
         <mxCell id="worker-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
@@ -55,7 +55,7 @@
         <mxCell id="worker-content" value="公式スケジュールを定期取得&lt;br&gt;8ソースを解析・正規化&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;手動更新はBearer tokenで保護&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
           <mxGeometry x="405" y="620" width="260" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="route-api" value="&lt;b&gt;Google マップ&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;GPS→起点駅の徒歩API&lt;/font&gt;&lt;br&gt;実際の乗換案内リンク" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
+        <mxCell id="route-api" value="&lt;b&gt;Google マップ&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;自宅登録時だけ徒歩API&lt;/font&gt;&lt;br&gt;実際の乗換案内リンク" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
           <mxGeometry x="1210" y="175" width="200" height="145" as="geometry"/>
         </mxCell>
         <mxCell id="cinema-sites" value="&lt;b&gt;映画館公式サイト&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;週間上映スケジュール&lt;/font&gt;&lt;br&gt;8ソース" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
@@ -70,7 +70,7 @@
         <mxCell id="worker-d1" value="正規化データをwrite" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#F6821F;fontSize=11;fontColor=#9A4310;labelBackgroundColor=#FFF8F1;" edge="1" parent="1" source="worker-card" target="d1-card">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="pages-route" value="徒歩API / 経路リンク" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#64748B;dashed=1;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="pages-card" target="route-api">
+        <mxCell id="pages-route" value="登録時徒歩API / 経路リンク" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#64748B;dashed=1;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="pages-card" target="route-api">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="worker-cinemas" value="HTTPS fetch / parse" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#64748B;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="worker-card" target="cinema-sites">

@@ -3,6 +3,8 @@ import type {
   TravelMode,
 } from "../../shared/types";
 import {
+  DEFAULT_TRAVEL_MODE,
+  isCustomDurationMinutes,
   isTravelMode,
   listCinemaTravelPreferences,
 } from "../_lib/cinema-travel-preferences";
@@ -13,6 +15,7 @@ import { todayInJst } from "../../shared/date";
 interface CinemaPreferenceRequest {
   cinemaId?: string;
   travelMode?: TravelMode;
+  customDurationMinutes?: number | null;
 }
 
 export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
@@ -31,7 +34,16 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   }
 
   const cinemaId = body.cinemaId?.trim();
-  if (!cinemaId || !isTravelMode(body.travelMode)) {
+  const hasTravelMode = body.travelMode !== undefined;
+  const hasCustomDuration = Object.hasOwn(body, "customDurationMinutes");
+  if (
+    !cinemaId ||
+    (!hasTravelMode && !hasCustomDuration) ||
+    (hasTravelMode && !isTravelMode(body.travelMode)) ||
+    (hasCustomDuration &&
+      body.customDurationMinutes !== null &&
+      !isCustomDurationMinutes(body.customDurationMinutes))
+  ) {
     return Response.json(
       { error: "invalid_cinema_preference" },
       { status: 400 },
@@ -48,21 +60,31 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     return Response.json({ error: "cinema_not_found" }, { status: 404 });
   }
 
+  const [current] = await listCinemaTravelPreferences(context.env.DB, [
+    cinema,
+  ]);
+  const travelMode =
+    body.travelMode ?? current?.travelMode ?? DEFAULT_TRAVEL_MODE;
+  const customDurationMinutes = hasCustomDuration
+    ? (body.customDurationMinutes ?? null)
+    : (current?.customDurationMinutes ?? null);
   const updatedAt = new Date().toISOString();
   await context.env.DB.prepare(
     `INSERT INTO cinema_travel_preferences
-      (cinema_id, travel_mode, updated_at)
-     VALUES (?, ?, ?)
+      (cinema_id, travel_mode, custom_duration_minutes, updated_at)
+     VALUES (?, ?, ?, ?)
      ON CONFLICT(cinema_id) DO UPDATE SET
        travel_mode = excluded.travel_mode,
+       custom_duration_minutes = excluded.custom_duration_minutes,
        updated_at = excluded.updated_at`,
   )
-    .bind(cinemaId, body.travelMode, updatedAt)
+    .bind(cinemaId, travelMode, customDurationMinutes, updatedAt)
     .run();
 
   const preference: CinemaTravelPreference = {
     cinemaId,
-    travelMode: body.travelMode,
+    travelMode,
+    customDurationMinutes,
     updatedAt,
   };
   return Response.json(preference, {
