@@ -2,6 +2,7 @@ import { jstDateBounds, todayInJst } from "../../shared/date";
 import type { ScheduleResponse, Showing } from "../../shared/types";
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
+import { listStarredPreferences } from "../_lib/preferences";
 
 interface ShowingRow {
   id: string;
@@ -12,6 +13,7 @@ interface ShowingRow {
   area: Showing["area"];
   movie_key: string;
   title: string;
+  image_url: string | null;
   starts_at: string;
   ends_at: string | null;
   screen: string | null;
@@ -39,11 +41,12 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     ? "c.approval = 'approved'"
     : "c.approval != 'disabled'";
 
-  const [showingResult, health, cinemas] = await Promise.all([
+  const [showingResult, health, cinemas, preferences] = await Promise.all([
     context.env.DB.prepare(
       `SELECT
         s.id, s.source_id, s.cinema_id, c.name AS cinema_name,
         c.short_name AS cinema_short_name, c.area, s.movie_key, s.title,
+        s.image_url,
         s.starts_at, s.ends_at, s.screen, s.format, s.booking_url,
         s.purchasable, s.fetched_at
       FROM showings s
@@ -67,6 +70,9 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       .bind(date)
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
+    publicOnly
+      ? Promise.resolve([])
+      : listStarredPreferences(context.env.DB),
   ]);
 
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({
@@ -78,6 +84,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     area: row.area,
     movieKey: row.movie_key,
     title: row.title,
+    imageUrl: row.image_url,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     screen: row.screen,
@@ -94,6 +101,8 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     lastUpdatedAt: health?.last_updated_at ?? null,
     cinemas,
     showings,
+    preferences,
+    preferencesEnabled: !publicOnly,
     sourceHealth: {
       healthy: Number(health?.healthy ?? 0),
       total: Number(health?.total ?? 0),

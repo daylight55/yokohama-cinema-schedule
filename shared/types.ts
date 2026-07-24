@@ -29,6 +29,7 @@ export interface Showing {
   area: CinemaArea;
   movieKey: string;
   title: string;
+  imageUrl: string | null;
   startsAt: string;
   endsAt: string | null;
   screen: string | null;
@@ -44,6 +45,8 @@ export interface ScheduleResponse {
   lastUpdatedAt: string | null;
   cinemas: Cinema[];
   showings: Showing[];
+  preferences: MoviePreference[];
+  preferencesEnabled: boolean;
   sourceHealth: {
     healthy: number;
     total: number;
@@ -55,11 +58,21 @@ export interface RouteEstimate {
   distanceMeters: number;
   durationMinutes: number;
   mode: "route" | "estimate";
+  provider: "google_maps" | "custom" | "estimate";
 }
 
 export interface RoutesResponse {
   generatedAt: string;
+  provider: RouteEstimate["provider"];
   routes: RouteEstimate[];
+}
+
+export interface MoviePreference {
+  movieKey: string;
+  title: string;
+  imageUrl: string | null;
+  starred: boolean;
+  updatedAt: string;
 }
 
 export interface NormalizedShowing {
@@ -67,6 +80,7 @@ export interface NormalizedShowing {
   cinemaId: string;
   movieKey: string;
   title: string;
+  imageUrl: string | null;
   startsAt: string;
   endsAt: string | null;
   screen: string | null;
@@ -74,4 +88,3 @@ export interface NormalizedShowing {
   bookingUrl: string;
   purchasable: boolean | null;
 }
-

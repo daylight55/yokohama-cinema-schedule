@@ -13,6 +13,14 @@ interface MatrixResponse {
   distances?: Array<Array<number | null>>;
 }
 
+interface GoogleMatrixElement {
+  destinationIndex?: number;
+  condition?: string;
+  distanceMeters?: number;
+  duration?: string;
+  status?: { code?: number; message?: string };
+}
+
 export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   let body: RouteRequest;
   try {
@@ -39,7 +47,14 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     context.env.PUBLIC_MODE === "true",
   );
   let routes: RouteEstimate[] | null = null;
-  if (context.env.ROUTE_MATRIX_API_URL) {
+  if (context.env.GOOGLE_MAPS_API_KEY) {
+    routes = await fetchGoogleRouteMatrix(
+      context.env.GOOGLE_MAPS_API_KEY,
+      latitude,
+      longitude,
+      allowedCinemas,
+    );
+  } else if (context.env.ROUTE_MATRIX_API_URL) {
     routes = await fetchRouteMatrix(
       context.env,
       latitude,
@@ -60,17 +75,101 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
       distanceMeters,
       durationMinutes: Math.max(1, Math.ceil(distanceMeters / 75)),
       mode: "estimate" as const,
+      provider: "estimate" as const,
     };
   });
 
   const response: RoutesResponse = {
     generatedAt: new Date().toISOString(),
+    provider: routes[0]?.provider ?? "estimate",
     routes,
   };
   return Response.json(response, {
     headers: { "cache-control": "private, max-age=120" },
   });
 };
+
+export async function fetchGoogleRouteMatrix(
+  apiKey: string,
+  latitude: number,
+  longitude: number,
+  cinemas: Cinema[],
+): Promise<RouteEstimate[] | null> {
+  if (cinemas.length === 0) return [];
+  try {
+    const response = await fetch(
+      "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-goog-api-key": apiKey,
+          "x-goog-fieldmask":
+            "destinationIndex,duration,distanceMeters,status,condition",
+        },
+        body: JSON.stringify({
+          origins: [
+            {
+              waypoint: {
+                location: {
+                  latLng: { latitude, longitude },
+                },
+              },
+            },
+          ],
+          destinations: cinemas.map((cinema) => ({
+            waypoint: {
+              location: {
+                latLng: {
+                  latitude: cinema.latitude,
+                  longitude: cinema.longitude,
+                },
+              },
+            },
+          })),
+          travelMode: "WALK",
+        }),
+      },
+    );
+    if (!response.ok) return null;
+    const matrix = await response.json<GoogleMatrixElement[]>();
+    const byDestination = new Map(
+      matrix
+        .filter(
+          (element) =>
+            element.condition === "ROUTE_EXISTS" &&
+            (element.status?.code === undefined || element.status.code === 0),
+        )
+        .map((element) => [element.destinationIndex, element]),
+    );
+    const routes = cinemas.flatMap((cinema, index) => {
+      const element = byDestination.get(index);
+      const durationSeconds = parseGoogleDuration(element?.duration);
+      if (!element || durationSeconds === null) return [];
+      return [
+        {
+          cinemaId: cinema.id,
+          distanceMeters: Math.round(element.distanceMeters ?? 0),
+          durationMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
+          mode: "route" as const,
+          provider: "google_maps" as const,
+        },
+      ];
+    });
+    return routes.length > 0 ? routes : null;
+  } catch {
+    return null;
+  }
+}
+
+export function parseGoogleDuration(
+  value: string | undefined,
+): number | null {
+  const match = value?.match(/^(\d+(?:\.\d+)?)s$/);
+  if (!match) return null;
+  const seconds = Number(match[1]);
+  return Number.isFinite(seconds) ? seconds : null;
+}
 
 async function fetchRouteMatrix(
   env: PagesEnv,
@@ -107,6 +206,7 @@ async function fetchRouteMatrix(
       distanceMeters: Math.round(distances[index] ?? 0),
       durationMinutes: Math.max(1, Math.ceil((durations[index] ?? 0) / 60)),
       mode: "route",
+      provider: "custom",
     }));
   } catch {
     return null;

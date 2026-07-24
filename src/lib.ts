@@ -1,4 +1,5 @@
 import { addDays, todayInJst } from "../shared/date";
+import { moviePreferenceKey } from "../shared/movie";
 import type {
   CinemaArea,
   RouteEstimate,
@@ -73,7 +74,9 @@ export function filterShowings(
 
 export function groupByMovie(showings: Showing[]): Array<{
   key: string;
+  preferenceKey: string;
   title: string;
+  imageUrl: string | null;
   showings: Showing[];
 }> {
   const groups = new Map<string, Showing[]>();
@@ -84,7 +87,10 @@ export function groupByMovie(showings: Showing[]): Array<{
   return [...groups.entries()]
     .map(([key, entries]) => ({
       key,
+      preferenceKey: key,
       title: entries[0].title,
+      imageUrl:
+        entries.find((showing) => showing.imageUrl)?.imageUrl ?? null,
       showings: entries.sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
     }))
     .sort((a, b) => {
@@ -127,10 +133,5 @@ export function groupByScheduleHour(showings: Showing[]): ScheduleHourGroup[] {
 }
 
 export function normalizeMovieTitle(title: string): string {
-  return title
-    .normalize("NFKC")
-    .replace(/\s+/g, "")
-    .replace(/[【（(].*?(?:】|）|\))/g, "")
-    .replace(/(?:字幕|吹替|日本語版|2D|3D|IMAX|4DX|DolbyCinema)/gi, "")
-    .toLowerCase();
+  return moviePreferenceKey(title);
 }

@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { parseAeonSchedule } from "../worker/src/parsers/aeon";
 import { parseEigalandSchedule } from "../worker/src/parsers/eigaland";
-import { parseMovilSchedule } from "../worker/src/parsers/movil";
+import {
+  parseKinoMovieImages,
+} from "../worker/src/parsers/kino";
+import {
+  parseMovilMovieImages,
+  parseMovilSchedule,
+} from "../worker/src/parsers/movil";
 import { parseTjoySchedule } from "../worker/src/parsers/tjoy";
+import { parseUnitedMovieImages } from "../worker/src/parsers/united";
 
 describe("schedule parsers", () => {
   it("normalizes AEON JSON", () => {
@@ -41,7 +48,11 @@ describe("schedule parsers", () => {
     const result = parseEigalandSchedule(
       [
         {
-          movieDetail: { movieId: "movie-1", movieName: "テスト映画" },
+          movieDetail: {
+            movieId: "movie-1",
+            movieName: "テスト映画",
+            posterUrl: "https://example.com/poster.jpg",
+          },
           houseList: [
             {
               houseName: "Jack",
@@ -65,6 +76,7 @@ describe("schedule parsers", () => {
     expect(result[0]).toMatchObject({
       sourceId: "jack-and-betty",
       title: "テスト映画",
+      imageUrl: "https://example.com/poster.jpg",
       screen: "Jack",
       purchasable: true,
     });
@@ -97,6 +109,9 @@ describe("schedule parsers", () => {
   it("normalizes T-Joy HTML", () => {
     const result = parseTjoySchedule(
       `<section class="section-container">
+        <div class="film-img">
+          <img src="https://example.com/tjoy.jpg">
+        </div>
         <a href="/film_detail/123"></a>
         <h2 class="js-title-film">【字幕】 テスト映画</h2>
         <div class="schedule-box">
@@ -113,9 +128,44 @@ describe("schedule parsers", () => {
     expect(result[0]).toMatchObject({
       movieKey: "123",
       title: "テスト映画",
+      imageUrl: "https://example.com/tjoy.jpg",
       format: "字幕",
       screen: "シアター3",
       purchasable: true,
     });
+  });
+
+  it("extracts one-page official movie images", () => {
+    expect(
+      parseKinoMovieImages(
+        `<article class="movie-list__item">
+          <a href="/minatomirai/movie/movie-detail/123">
+            <figure class="movie-list__img"
+              style="background-image:url('/poster.jpg')"></figure>
+          </a>
+        </article>`,
+      ).get("123"),
+    ).toBe("https://kinocinema.jp/poster.jpg");
+
+    expect(
+      parseMovilMovieImages(
+        `<article class="movies-list-movie">
+          <div class="main"><h1>テスト映画</h1>
+            <div class="thumb"><img src="/poster.jpg"></div>
+          </div>
+        </article>`,
+      ).get("テスト映画"),
+    ).toBe("https://109cinemas.net/poster.jpg");
+
+    expect(
+      parseUnitedMovieImages(
+        `<ul class="movieList"><li>
+          <div class="movieHead"><strong>テスト映画</strong></div>
+          <p class="movieImage">
+            <img src="https://example.com/united.jpg">
+          </p>
+        </li></ul>`,
+      ).get("テスト映画"),
+    ).toBe("https://example.com/united.jpg");
   });
 });

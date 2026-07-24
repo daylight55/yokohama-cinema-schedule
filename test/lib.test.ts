@@ -18,6 +18,7 @@ const showing = (overrides: Partial<Showing> = {}): Showing => ({
   area: "yokohama",
   movieKey: "movie-1",
   title: "テスト映画",
+  imageUrl: null,
   startsAt: "2026-07-24T10:00:00.000Z",
   endsAt: "2026-07-24T12:00:00.000Z",
   screen: "シアター1",
@@ -35,6 +36,7 @@ describe("schedule filtering", () => {
     distanceMeters: 1800,
     durationMinutes: 25,
     mode: "estimate",
+    provider: "estimate",
   };
 
   it("keeps a showing reachable after travel and preparation time", () => {

@@ -1,10 +1,12 @@
 import { load } from "cheerio";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
+import { moviePreferenceKey, safeImageUrl } from "../../../shared/movie";
 import type { NormalizedShowing } from "../../../shared/types";
 
 export function parseUnitedSchedule(
   html: string,
   date: string,
+  movieImages: ReadonlyMap<string, string> = new Map(),
 ): NormalizedShowing[] {
   const $ = load(html);
   const result: NormalizedShowing[] = [];
@@ -43,6 +45,7 @@ export function parseUnitedSchedule(
           cinemaId: "united-minatomirai",
           movieKey,
           title,
+          imageUrl: movieImages.get(moviePreferenceKey(title)) ?? null,
           startsAt: jstLocalToIso(date, start),
           endsAt: end ? jstEndToIso(date, start, end) : null,
           screen: screenName ? `スクリーン${screenName}` : null,
@@ -54,6 +57,23 @@ export function parseUnitedSchedule(
     });
   });
 
+  return result;
+}
+
+export function parseUnitedMovieImages(html: string): Map<string, string> {
+  const $ = load(html);
+  const result = new Map<string, string>();
+  $(".movieList > li").each((_, element) => {
+    const movie = $(element);
+    const title = cleanText(movie.find(".movieHead strong").first().text());
+    const rawImageUrl = movie.find(".movieImage img").first().attr("src");
+    const imageUrl = safeImageUrl(
+      rawImageUrl
+        ? new URL(rawImageUrl, "https://www.unitedcinemas.jp").toString()
+        : null,
+    );
+    if (title && imageUrl) result.set(moviePreferenceKey(title), imageUrl);
+  });
   return result;
 }
 

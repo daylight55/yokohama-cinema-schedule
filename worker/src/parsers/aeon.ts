@@ -51,6 +51,7 @@ export function parseAeonSchedule(
           cinemaId: "aeon-minatomirai",
           movieKey: String(movieKey),
           title: cleanTitle(show.name.ja),
+          imageUrl: null,
           startsAt: new Date(show.startDate).toISOString(),
           endsAt: show.endDate ? new Date(show.endDate).toISOString() : null,
           screen: show.location?.name?.ja ?? null,
@@ -81,4 +82,3 @@ function detectFormat(title: string): string | null {
 function cleanTitle(title: string): string {
   return title.replace(/^(字幕|吹替)\s+/, "").trim();
 }
-
