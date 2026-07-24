@@ -12,7 +12,6 @@ import {
   SignOutIcon,
   StarIcon,
   TrashIcon,
-  UserCircleIcon,
   WarningCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -107,6 +106,7 @@ export function App() {
   const [routes, setRoutes] = useState<RouteEstimate[]>([]);
   const [view, setView] = useState<AppView>("schedule");
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const [showJumpToNow, setShowJumpToNow] = useState(false);
   const [cinemaTravelModes, setCinemaTravelModes] = useState<
     Map<string, TravelMode>
   >(() => new Map());
@@ -334,6 +334,35 @@ export function App() {
     scrollToInitialTimeMarker(currentTimeMarkerRef.current);
     didInitialTimeScrollRef.current = true;
   }, [error, loading, selectedDate, timeGroups, today, view]);
+
+  useEffect(() => {
+    const marker = currentTimeMarkerRef.current;
+    if (
+      loading ||
+      error ||
+      selectedDate !== today ||
+      view !== "schedule" ||
+      !marker
+    ) {
+      setShowJumpToNow(false);
+      return;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowJumpToNow(!entry.isIntersecting);
+    });
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, [
+    currentTimeMarkerIndex,
+    error,
+    loading,
+    selectedDate,
+    showCurrentTimeMarkerAtEnd,
+    timeGroups.length,
+    today,
+    view,
+  ]);
 
   const fetchRoutes = useCallback(async () => {
     setRouteState("loading");
@@ -574,6 +603,18 @@ export function App() {
     closeNavigation();
   };
 
+  const jumpToCurrentTime = () => {
+    const marker = currentTimeMarkerRef.current;
+    if (!marker) return;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    marker.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
   const rememberMovieAnchor = (element: HTMLElement | null) => {
     if (!element) return;
     pendingMovieAnchorRef.current = {
@@ -740,12 +781,12 @@ export function App() {
             <button
               type="button"
               className={view === "profile" ? "active" : ""}
-              aria-current={view === "profile" ? "page" : undefined}
-              onClick={() => navigateTo("profile")}
-            >
-              <UserCircleIcon size={20} aria-hidden="true" />
-              プロフィール
-            </button>
+            aria-current={view === "profile" ? "page" : undefined}
+            onClick={() => navigateTo("profile")}
+          >
+            <CrosshairIcon size={20} aria-hidden="true" />
+            現在地・自宅設定
+          </button>
           </nav>
         </div>
       </dialog>
@@ -894,8 +935,8 @@ export function App() {
                   : view === "movies"
                     ? "上映中の作品"
                     : view === "cinemas"
-                      ? "映画館"
-                      : "プロフィール"}
+              ? "映画館"
+              : "現在地・自宅設定"}
               </h1>
             </div>
             {!loading && !error && view !== "profile" && (
@@ -1287,6 +1328,18 @@ export function App() {
           )}
         </section>
       </main>
+
+      {showJumpToNow && (
+        <button
+          type="button"
+          className="jump-to-now-button"
+          aria-label="現在時刻の上映位置へ移動"
+          onClick={jumpToCurrentTime}
+        >
+          <ClockIcon size={18} weight="bold" aria-hidden="true" />
+          今の上映へ
+        </button>
+      )}
 
       <footer>
         <p>

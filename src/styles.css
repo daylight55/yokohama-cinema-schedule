@@ -1252,6 +1252,32 @@ footer p {
   margin: 0;
 }
 
+.jump-to-now-button {
+  position: fixed;
+  z-index: 24;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 15px;
+  border: 1px solid #d6f7e5;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 38%);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.jump-to-now-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
 @keyframes pulse {
   50% {
     opacity: 0.42;
@@ -1259,6 +1285,10 @@ footer p {
 }
 
 @media (min-width: 720px) {
+  .jump-to-now-button {
+    display: none;
+  }
+
   .date-strip {
     padding-inline: 0;
   }
