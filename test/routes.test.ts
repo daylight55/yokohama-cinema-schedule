@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { estimateRoute } from "../functions/api/routes";
+import {
+  estimateRoute,
+  TRANSIT_BUFFER_MINUTES,
+  TRANSIT_STATION_WALK_MINUTES,
+} from "../functions/api/routes";
 import type { Cinema, TravelMode } from "../shared/types";
 
 const cinema: Cinema = {
@@ -30,8 +34,23 @@ describe("route estimates", () => {
       });
       expect(route.distanceMeters).toBeGreaterThan(0);
       expect(route.durationMinutes).toBeGreaterThan(0);
+      expect(route.accessMinutes).toBeGreaterThanOrEqual(0);
+      expect(route.bufferMinutes).toBeGreaterThanOrEqual(0);
     },
   );
+
+  it("includes both station walks and a ten-minute buffer for transit", () => {
+    const route = estimateRoute(
+      cinema.latitude,
+      cinema.longitude,
+      cinema,
+      "transit",
+    );
+
+    expect(route.accessMinutes).toBe(TRANSIT_STATION_WALK_MINUTES);
+    expect(route.bufferMinutes).toBe(TRANSIT_BUFFER_MINUTES);
+    expect(route.durationMinutes).toBe(25);
+  });
 
   it("applies a different travel profile for each mode", () => {
     const routes = new Map(

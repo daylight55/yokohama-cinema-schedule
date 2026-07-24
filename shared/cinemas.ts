@@ -13,6 +13,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://tjoy.jp/t-joy_yokohama",
     activeUntil: null,
     approval: "private_only",
+    nearestStationId: "yokohama",
+    stationWalkMinutes: 2,
+    stationWalkDistanceMeters: 80,
   },
   {
     id: "movil",
@@ -26,6 +29,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://109cinemas.net/movil/",
     activeUntil: "2026-09-30",
     approval: "private_only",
+    nearestStationId: "yokohama",
+    stationWalkMinutes: 10,
+    stationWalkDistanceMeters: 699,
   },
   {
     id: "yokohama-burg13",
@@ -39,6 +45,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://tjoy.jp/yokohama_burg13",
     activeUntil: null,
     approval: "private_only",
+    nearestStationId: "sakuragicho",
+    stationWalkMinutes: 2,
+    stationWalkDistanceMeters: 148,
   },
   {
     id: "aeon-minatomirai",
@@ -52,6 +61,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://theater.aeoncinema.com/theaters/minatomirai/",
     activeUntil: null,
     approval: "private_only",
+    nearestStationId: "minatomirai",
+    stationWalkMinutes: 11,
+    stationWalkDistanceMeters: 777,
   },
   {
     id: "united-minatomirai",
@@ -65,6 +77,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://www.unitedcinemas.jp/minatomirai/daily.php",
     activeUntil: null,
     approval: "private_only",
+    nearestStationId: "minatomirai",
+    stationWalkMinutes: 3,
+    stationWalkDistanceMeters: 163,
   },
   {
     id: "kino-minatomirai",
@@ -78,6 +93,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://kinocinema.jp/minatomirai/",
     activeUntil: null,
     approval: "private_only",
+    nearestStationId: "minatomirai",
+    stationWalkMinutes: 9,
+    stationWalkDistanceMeters: 601,
   },
   {
     id: "cinemarine",
@@ -91,6 +109,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://cinemarine.co.jp/",
     activeUntil: null,
     approval: "private_only",
+    nearestStationId: "isezakichojamachi",
+    stationWalkMinutes: 6,
+    stationWalkDistanceMeters: 350,
   },
   {
     id: "jack-and-betty",
@@ -104,6 +125,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://www.jackandbetty.net/",
     activeUntil: null,
     approval: "private_only",
+    nearestStationId: "koganecho",
+    stationWalkMinutes: 6,
+    stationWalkDistanceMeters: 395,
   },
   {
     id: "novecento",
@@ -117,6 +141,9 @@ export const CINEMAS: Cinema[] = [
     sourceUrl: "https://cinema1900.wixsite.com/home/filmtheater1900",
     activeUntil: "2026-08-31",
     approval: "private_only",
+    nearestStationId: "tobe",
+    stationWalkMinutes: 14,
+    stationWalkDistanceMeters: 925,
   },
 ];
 
@@ -127,4 +154,3 @@ export function getCinema(id: string): Cinema {
   }
   return cinema;
 }
-

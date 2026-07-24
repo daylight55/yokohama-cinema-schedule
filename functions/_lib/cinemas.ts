@@ -12,6 +12,9 @@ interface CinemaRow {
   source_url: string;
   active_until: string | null;
   approval: Cinema["approval"];
+  nearest_station_id: string | null;
+  station_walk_minutes: number | null;
+  station_walk_distance_meters: number | null;
 }
 
 export async function listActiveCinemas(
@@ -26,7 +29,8 @@ export async function listActiveCinemas(
     .prepare(
       `SELECT
         id, name, short_name, area, area_label, address, latitude, longitude,
-        source_url, active_until, approval
+         source_url, active_until, approval, nearest_station_id,
+         station_walk_minutes, station_walk_distance_meters
       FROM cinemas
       WHERE ${approvalClause}
         AND (active_until IS NULL OR active_until >= ?)
@@ -47,5 +51,8 @@ export async function listActiveCinemas(
     sourceUrl: row.source_url,
     activeUntil: row.active_until,
     approval: row.approval,
+    nearestStationId: row.nearest_station_id,
+    stationWalkMinutes: row.station_walk_minutes,
+    stationWalkDistanceMeters: row.station_walk_distance_meters,
   }));
 }

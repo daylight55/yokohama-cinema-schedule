@@ -513,11 +513,19 @@ footer {
 
 .cinema-travel-times li {
   display: grid;
-  min-height: 36px;
+  min-height: 42px;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid var(--line-soft);
+}
+
+.cinema-travel-breakdown {
+  grid-column: 1 / -1;
+  padding: 0 0 7px;
+  color: #819089;
+  font-size: 9px;
+  line-height: 1.45;
 }
 
 .cinema-travel-times li > span {
@@ -533,6 +541,36 @@ footer {
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.cinema-travel-route,
+.cinema-route-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.google-maps-route-link {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 7px;
+  border: 1px solid #52665c;
+  border-radius: 7px;
+  color: #c9d8d0;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.google-maps-route-link:hover {
+  border-color: #789284;
+  color: #fff;
 }
 
 .cinema-travel-times > p {
@@ -1050,8 +1088,19 @@ footer {
   font-weight: 500;
 }
 
+.cinema-route-actions {
+  flex: 0 0 auto;
+}
+
 .cinema-address {
   margin: 0;
+}
+
+.cinema-transit-breakdown {
+  margin: 8px 0 0;
+  color: #8f9e97;
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .cinema-preference-row {
