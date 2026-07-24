@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { RouteEstimate, Showing } from "../shared/types";
 import {
   filterShowings,
@@ -9,6 +9,7 @@ import {
   isShowingReachable,
   normalizeMovieTitle,
   scheduleTimeSlot,
+  scrollToInitialTimeMarker,
 } from "../src/lib";
 
 const showing = (overrides: Partial<Showing> = {}): Showing => ({
@@ -187,5 +188,16 @@ describe("movie grouping", () => {
         new Date("2026-07-24T01:00:00Z"),
       ),
     ).toBe(-1);
+  });
+
+  it("positions the initial current-time marker without animation", () => {
+    const scrollIntoView = vi.fn();
+
+    scrollToInitialTimeMarker({ scrollIntoView });
+
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "instant",
+      block: "start",
+    });
   });
 });
