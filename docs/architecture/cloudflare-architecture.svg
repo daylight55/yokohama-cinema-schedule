@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1450" height="850" viewBox="0 0 1450 850" role="img" aria-labelledby="title description">
+  <title id="title">横浜映画館スケジュールのCloudflareアーキテクチャ</title>
+  <desc id="description">スマートフォンからCloudflare PagesとPages Functionsを通じてD1の上映情報を参照し、Cron Triggersで起動するCloudflare Workersが映画館公式サイトから上映情報を収集する構成。</desc>
+  <defs>
+    <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 10 5 0 10z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 10 5 0 10z" fill="#f6821f"/>
+    </marker>
+    <marker id="arrow-slate-start" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto-start-reverse" markerUnits="strokeWidth">
+      <path d="M0 0 10 5 0 10z" fill="#64748b"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity=".08"/>
+    </filter>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif; fill: #172033; }
+      .title { font-size: 26px; font-weight: 750; }
+      .boundary-label { font-size: 14px; font-weight: 800; letter-spacing: 1.2px; fill: #c65312; }
+      .card-title { font-size: 18px; font-weight: 750; }
+      .body { font-size: 13px; fill: #334155; }
+      .muted { font-size: 12px; fill: #64748b; }
+      .flow { font-size: 11px; font-weight: 650; fill: #475569; }
+      .flow-orange { font-size: 11px; font-weight: 650; fill: #9a4310; }
+    </style>
+  </defs>
+  <rect width="1450" height="850" fill="#ffffff"/>
+  <text class="title" x="40" y="53">横浜映画館スケジュール — Cloudflare Architecture</text>
+
+  <rect x="300" y="90" width="850" height="660" rx="22" fill="#fff8f1" stroke="#f6821f" stroke-width="2" stroke-dasharray="10 8"/>
+  <text class="boundary-label" x="330" y="124">CLOUDFLARE</text>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="330" width="220" height="150" rx="18" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <circle cx="150" cy="370" r="20" fill="#e2e8f0"/>
+    <rect x="141" y="354" width="18" height="32" rx="4" fill="none" stroke="#475569" stroke-width="2"/>
+    <circle cx="150" cy="381" r="1.5" fill="#475569"/>
+    <text x="150" y="419" text-anchor="middle" class="card-title">利用者</text>
+    <text x="150" y="443" text-anchor="middle" class="muted">スマートフォン / ブラウザ</text>
+    <text x="150" y="463" text-anchor="middle" class="muted">任意で現在地を送信</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="380" y="165" width="310" height="240" rx="18" fill="#fff" stroke="#f6821f" stroke-width="2"/>
+    <g transform="translate(406 190) scale(1.12)" fill="#f6821f">
+      <path d="m21.375 7.5-1.95 3H9v27h8.7l-.525 3H7.5L6 39V9l1.5-1.5zm9.45 0H40.5L42 9v30l-1.5 1.5H26.625l1.95-3H39v-27h-8.7z"/>
+      <path d="M21.45 28.5h-8.7l-1.275-2.325 15.6-24 2.7 1.125-3.225 16.2h8.7l1.275 2.325-15.6 24-2.7-1.125zM11.175 13.725a1.05 1.05 0 1 0 0-2.1 1.05 1.05 0 0 0 0 2.1m2.775 0a1.05 1.05 0 1 0 0-2.1 1.05 1.05 0 0 0 0 2.1m2.775 0a1.05 1.05 0 1 0 0-2.1 1.05 1.05 0 0 0 0 2.1"/>
+    </g>
+    <text class="card-title" x="475" y="213">Cloudflare Pages</text>
+    <text class="muted" x="475" y="237">React + Vite static assets</text>
+    <line x1="405" y1="263" x2="665" y2="263" stroke="#e2e8f0"/>
+    <text class="card-title" x="405" y="295" style="font-size:15px">Pages Functions</text>
+    <text class="body" x="405" y="321">認証ミドルウェア / 署名済みCookie</text>
+    <text class="body" x="405" y="344">上映API / ステータスAPI / 経路API</text>
+    <text class="muted" x="405" y="375">Secrets: APP_PASSWORD, SESSION_SECRET</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="805" y="290" width="270" height="170" rx="18" fill="#fff" stroke="#f6821f" stroke-width="2"/>
+    <g transform="translate(830 314) scale(.95)" fill="#f6821f">
+      <path d="m23.6 22.2 3.03 1.75v3.5L23.6 29.2l-3.03-1.75v-3.5zM20.06 49l3.54-3.54L27.14 49l-3.54 3.54zm3.54-14.7c.593 0 1.17.176 1.67.506.493.33.878.798 1.1 1.35a3 3 0 0 1-.65 3.27c-.42.42-.954.705-1.54.821a3 3 0 0 1-1.73-.171 3.04 3.04 0 0 1-1.35-1.1 3 3 0 0 1-.506-1.67c0-.796.316-1.56.879-2.12a3 3 0 0 1 2.12-.879zM10.3 11.2l6.42-4.89 1.21-.37h29l1.19.39 6.61 4.89.82 1.61v38L55 52.21l-4.83 5.11-1.46.63h-31.7l-1.37-.54-5.48-5.11-.64-1.47v-38zm3.21 25.4 4.47 4.94h.056v4h-1.83l-2.7-3v7.39l4.26 4h30l3.7-3.91V42.3l-3.67 3.24h-18.6v-4h17.2l5.19-4.61v-7.44l-3.67 3.25h-18.7v-4h17.2l5.19-4.6v-6.92l-3.67 3.26h-31.6l-2.74-2.8v6.12l4.47 4.94h.056v4h-1.83l-2.7-3zm32.7-26.7h-27.6l-4.07 3.11 3.4 3.48h28.4l4-3.56z"/>
+    </g>
+    <text class="card-title" x="910" y="340">Cloudflare D1</text>
+    <text class="muted" x="910" y="363">SQLite database</text>
+    <text class="body" x="830" y="414">映画館 / 上映回</text>
+    <text class="body" x="830" y="436">取得状態 / 更新時刻 / 公開許諾</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="380" y="520" width="310" height="170" rx="18" fill="#fff" stroke="#f6821f" stroke-width="2"/>
+    <g transform="translate(407 550) scale(1.12)" fill="#f6821f">
+      <path d="m18.63 37.418-9.645-12.9 9.592-12.533-1.852-2.527L5.917 23.595l-.015 1.808 10.86 14.542z"/>
+      <path d="M21.997 6.503h-3.712l13.387 18.3-13.072 17.7h3.735L35.4 24.81z"/>
+      <path d="M29.175 6.503h-3.758l13.598 18.082-13.598 17.918h3.765l12.908-17.01v-1.808z"/>
+    </g>
+    <text class="card-title" x="480" y="572">Cloudflare Workers</text>
+    <text class="muted" x="480" y="596">Cron Triggers</text>
+    <text class="body" x="405" y="632">公式スケジュールを定期取得</text>
+    <text class="body" x="405" y="654">8ソースを解析・正規化</text>
+    <text class="muted" x="405" y="676">手動更新はBearer tokenで保護</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1210" y="175" width="200" height="145" rx="18" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+    <text class="card-title" x="1310" y="220" text-anchor="middle" style="font-size:16px">経路Matrix API</text>
+    <text class="muted" x="1310" y="246" text-anchor="middle">OpenRouteService互換</text>
+    <text class="body" x="1310" y="281" text-anchor="middle">未設定時は距離から推定</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1210" y="535" width="200" height="155" rx="18" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+    <text class="card-title" x="1310" y="580" text-anchor="middle" style="font-size:16px">映画館公式サイト</text>
+    <text class="muted" x="1310" y="607" text-anchor="middle">週間上映スケジュール</text>
+    <text class="body" x="1310" y="645" text-anchor="middle">8ソース</text>
+  </g>
+
+  <path d="M260 405H320V285H377" fill="none" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow-slate)"/>
+  <rect x="267" y="324" width="94" height="40" rx="7" fill="#fff"/>
+  <text class="flow" x="314" y="341" text-anchor="middle">HTTPS</text>
+  <text class="flow" x="314" y="356" text-anchor="middle">private session</text>
+
+  <path d="M690 355H802" fill="none" stroke="#f6821f" stroke-width="2.5" marker-end="url(#arrow-orange)"/>
+  <rect x="703" y="327" width="90" height="22" rx="7" fill="#fff8f1"/>
+  <text class="flow-orange" x="748" y="342" text-anchor="middle">上映・状態をread</text>
+
+  <path d="M690 610H755V430H802" fill="none" stroke="#f6821f" stroke-width="2.5" marker-end="url(#arrow-orange)"/>
+  <rect x="698" y="566" width="116" height="23" rx="7" fill="#fff8f1"/>
+  <text class="flow-orange" x="756" y="582" text-anchor="middle">正規化データをwrite</text>
+
+  <path d="M690 230H1207" fill="none" stroke="#64748b" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-slate)"/>
+  <rect x="825" y="204" width="164" height="22" rx="7" fill="#fff"/>
+  <text class="flow" x="907" y="219" text-anchor="middle">任意: 現在地から徒歩時間</text>
+
+  <path d="M690 605H1207" fill="none" stroke="#64748b" stroke-width="2.5" marker-start="url(#arrow-slate-start)" marker-end="url(#arrow-slate)"/>
+  <rect x="864" y="579" width="126" height="22" rx="7" fill="#fff"/>
+  <text class="flow" x="927" y="594" text-anchor="middle">HTTPS fetch / parse</text>
+</svg>
