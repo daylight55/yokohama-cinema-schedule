@@ -1,4 +1,5 @@
 import { CINEMAS } from "../../shared/cinemas";
+import { activeDatesForCinema } from "../../shared/cinema-availability";
 import {
   compactDate,
   dateRange,
@@ -22,6 +23,11 @@ interface Env {
 interface Source {
   id: string;
   fetch: (dates: string[]) => Promise<NormalizedShowing[]>;
+}
+
+interface ActiveCinemaWindow {
+  id: string;
+  active_until: string | null;
 }
 
 const USER_AGENT =
@@ -77,6 +83,10 @@ export async function refreshAll(env: Env): Promise<{
   const dates = dateRange(todayInJst(), days);
   await seedCinemas(env.DB);
 
+  const activeCinemaWindows = await listActiveCinemaWindows(
+    env.DB,
+    dates[0],
+  );
   const sources = buildSources();
   const results: Array<{
     sourceId: string;
@@ -86,13 +96,21 @@ export async function refreshAll(env: Env): Promise<{
   }> = [];
   // 取得元へ短時間に大量のリクエストを送らないよう、映画館単位で直列実行する。
   for (const source of sources) {
+    const cinemaWindow = activeCinemaWindows.get(source.id);
+    if (!cinemaWindow) continue;
+    const sourceDates = activeDatesForCinema(
+      dates,
+      cinemaWindow.active_until,
+    );
+    if (sourceDates.length === 0) continue;
+
     const sourceStartedAt = new Date().toISOString();
     try {
-      const showings = deduplicate(await source.fetch(dates));
+      const showings = deduplicate(await source.fetch(sourceDates));
       if (showings.length === 0) {
         throw new Error("上映回を1件も取得できませんでした");
       }
-      await replaceSourceWindow(env.DB, source.id, dates, showings);
+      await replaceSourceWindow(env.DB, source.id, sourceDates, showings);
       await recordRun(
         env.DB,
         source.id,
@@ -377,7 +395,6 @@ async function seedCinemas(db: D1Database): Promise<void> {
             latitude = excluded.latitude,
             longitude = excluded.longitude,
             source_url = excluded.source_url,
-            active_until = excluded.active_until,
             updated_at = excluded.updated_at`,
         )
         .bind(
@@ -395,6 +412,24 @@ async function seedCinemas(db: D1Database): Promise<void> {
           now,
         ),
     ),
+  );
+}
+
+async function listActiveCinemaWindows(
+  db: D1Database,
+  date: string,
+): Promise<Map<string, ActiveCinemaWindow>> {
+  const result = await db
+    .prepare(
+      `SELECT id, active_until
+      FROM cinemas
+      WHERE approval != 'disabled'
+        AND (active_until IS NULL OR active_until >= ?)`,
+    )
+    .bind(date)
+    .all<ActiveCinemaWindow>();
+  return new Map(
+    (result.results ?? []).map((cinema) => [cinema.id, cinema]),
   );
 }
 

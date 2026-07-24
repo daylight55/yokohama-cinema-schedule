@@ -1,5 +1,6 @@
-import { CINEMAS } from "../../shared/cinemas";
-import type { RouteEstimate, RoutesResponse } from "../../shared/types";
+import { todayInJst } from "../../shared/date";
+import type { Cinema, RouteEstimate, RoutesResponse } from "../../shared/types";
+import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
 
 interface RouteRequest {
@@ -32,10 +33,10 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     return Response.json({ error: "invalid_location" }, { status: 400 });
   }
 
-  const allowedCinemas = CINEMAS.filter((cinema) =>
-    context.env.PUBLIC_MODE === "true"
-      ? cinema.approval === "approved"
-      : cinema.approval !== "disabled",
+  const allowedCinemas = await listActiveCinemas(
+    context.env.DB,
+    todayInJst(),
+    context.env.PUBLIC_MODE === "true",
   );
   let routes: RouteEstimate[] | null = null;
   if (context.env.ROUTE_MATRIX_API_URL) {
@@ -75,7 +76,7 @@ async function fetchRouteMatrix(
   env: PagesEnv,
   latitude: number,
   longitude: number,
-  cinemas: typeof CINEMAS,
+  cinemas: Cinema[],
 ): Promise<RouteEstimate[] | null> {
   try {
     const response = await fetch(env.ROUTE_MATRIX_API_URL!, {

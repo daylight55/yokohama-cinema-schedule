@@ -1,6 +1,6 @@
-import { CINEMAS } from "../../shared/cinemas";
 import { jstDateBounds, todayInJst } from "../../shared/date";
 import type { ScheduleResponse, Showing } from "../../shared/types";
+import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
 
 interface ShowingRow {
@@ -39,7 +39,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     ? "c.approval = 'approved'"
     : "c.approval != 'disabled'";
 
-  const [showingResult, health] = await Promise.all([
+  const [showingResult, health, cinemas] = await Promise.all([
     context.env.DB.prepare(
       `SELECT
         s.id, s.source_id, s.cinema_id, c.name AS cinema_name,
@@ -49,9 +49,10 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       FROM showings s
       JOIN cinemas c ON c.id = s.cinema_id
       WHERE s.starts_at >= ? AND s.starts_at < ? AND ${approvalClause}
+        AND (c.active_until IS NULL OR c.active_until >= ?)
       ORDER BY s.starts_at ASC, c.name ASC`,
     )
-      .bind(from, to)
+      .bind(from, to, date)
       .all<ShowingRow>(),
     context.env.DB.prepare(
       `SELECT
@@ -60,15 +61,14 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
         MAX(sh.last_success_at) AS last_updated_at
       FROM source_health sh
       JOIN cinemas c ON c.id = sh.source_id
-      WHERE ${approvalClause}`,
-    ).first<HealthRow>(),
+      WHERE ${approvalClause}
+        AND (c.active_until IS NULL OR c.active_until >= ?)`,
+    )
+      .bind(date)
+      .first<HealthRow>(),
+    listActiveCinemas(context.env.DB, date, publicOnly),
   ]);
 
-  const cinemas = CINEMAS.filter((cinema) =>
-    publicOnly
-      ? cinema.approval === "approved"
-      : cinema.approval !== "disabled",
-  );
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({
     id: row.id,
     sourceId: row.source_id,
