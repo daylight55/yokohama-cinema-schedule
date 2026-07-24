@@ -11,6 +11,7 @@ import {
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { todayInJst } from "../shared/date";
 import type {
+  Cinema,
   CinemaArea,
   RouteEstimate,
   RoutesResponse,
@@ -141,19 +142,38 @@ export function App() {
     () => new Map(routes.map((route) => [route.cinemaId, route])),
     [routes],
   );
+  const cinemaTravelRows = useMemo(
+    () =>
+      (schedule?.cinemas ?? [])
+        .filter(
+          (cinema) =>
+            selectedArea === "all" || cinema.area === selectedArea,
+        )
+        .flatMap((cinema) => {
+          const route = routeByCinema.get(cinema.id);
+          return route ? [{ cinema, route }] : [];
+        })
+        .sort(
+          (rowA, rowB) =>
+            rowA.route.durationMinutes - rowB.route.durationMinutes ||
+            rowA.cinema.shortName.localeCompare(rowB.cinema.shortName, "ja"),
+        ),
+    [routeByCinema, schedule?.cinemas, selectedArea],
+  );
+  const hasTransitRoutes = routes.some(
+    (route) => route.travelMode === "transit",
+  );
   const visibleShowings = useMemo(
     () =>
       filterShowings(schedule?.showings ?? [], {
         selectedArea,
         futureOnly: futureOnly && selectedDate === dates[0],
         now,
-        routeByCinema,
       }),
     [
       dates,
       futureOnly,
       now,
-      routeByCinema,
       schedule?.showings,
       selectedArea,
       selectedDate,
@@ -452,11 +472,11 @@ export function App() {
           {view === "schedule" && locationState === "ready" && (
             <p className="inline-status" role="status">
               <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
-              {routeProvider === "google_maps"
-                ? "Google Mapsの徒歩時間を反映しました（10分の余裕込み）"
+              {hasTransitRoutes
+                ? "電車・徒歩の所要時間を反映しました"
                 : routeProvider === "custom"
-                  ? "経路に沿った徒歩時間を反映しました（10分の余裕込み）"
-                  : "徒歩時間の目安を反映しました（10分の余裕込み）"}
+                  ? "経路に沿った徒歩時間を反映しました"
+                  : "徒歩時間の目安を反映しました"}
             </p>
           )}
           {view === "schedule" && locationState === "error" && (
@@ -465,6 +485,11 @@ export function App() {
               現在地を取得できませんでした
             </p>
           )}
+          {view === "schedule" &&
+            locationState === "ready" &&
+            cinemaTravelRows.length > 0 && (
+              <CinemaTravelTimes rows={cinemaTravelRows} />
+            )}
           {preferenceError && (
             <p className="inline-status error" role="status">
               <WarningCircleIcon size={16} aria-hidden="true" />
@@ -745,6 +770,40 @@ function FavoriteButton({
   );
 }
 
+function CinemaTravelTimes({
+  rows,
+}: {
+  rows: Array<{ cinema: Cinema; route: RouteEstimate }>;
+}) {
+  return (
+    <section
+      className="cinema-travel-times"
+      aria-labelledby="cinema-travel-times-title"
+    >
+      <div className="cinema-travel-heading">
+        <h2 id="cinema-travel-times-title">映画館までの目安</h2>
+        <span>現在地から</span>
+      </div>
+      <ul>
+        {rows.map(({ cinema, route }) => (
+          <li key={cinema.id}>
+            <span>{cinema.shortName}</span>
+            <strong>
+              {routeTravelLabel(route)} 約{route.durationMinutes}分
+            </strong>
+          </li>
+        ))}
+      </ul>
+      <p>「間に合う」は開始60分以内かつ、移動時間＋準備10分に収まる上映です。</p>
+    </section>
+  );
+}
+
+function routeTravelLabel(route: RouteEstimate): string {
+  if (route.travelMode === "transit") return "電車・徒歩";
+  return route.mode === "estimate" ? "徒歩目安" : "徒歩";
+}
+
 function CinemaSlot({
   showing,
   route,
@@ -775,13 +834,13 @@ function CinemaSlot({
       target="_blank"
       rel="noreferrer"
       role="listitem"
-      aria-label={`${isPast ? "終了済み " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+      aria-label={`${isPast ? "開始済み " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
     >
       <div className="slot-time">
         <strong>{start}</strong>
         <span className="slot-time-details">
           {end && <span>{end}終了</span>}
-          {isPast && <span className="ended-label">終了済み</span>}
+          {isPast && <span className="started-label">開始済み</span>}
           {isReachable && <span className="reachable-label">間に合う</span>}
         </span>
       </div>
@@ -793,8 +852,7 @@ function CinemaSlot({
       {route && (
         <span className="slot-route">
           <MapPinIcon size={14} aria-hidden="true" />
-          {route.provider === "google_maps" && "Google Maps "}
-          徒歩約{route.durationMinutes}分
+          {routeTravelLabel(route)} 約{route.durationMinutes}分
           {route.mode === "estimate" && <small>目安</small>}
         </span>
       )}

@@ -59,6 +59,7 @@ export interface RouteEstimate {
   durationMinutes: number;
   mode: "route" | "estimate";
   provider: "google_maps" | "custom" | "estimate";
+  travelMode: "transit" | "walking";
 }
 
 export interface RoutesResponse {

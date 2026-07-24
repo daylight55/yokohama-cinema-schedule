@@ -27,21 +27,23 @@ export function isShowingReachable(
   now: Date,
   routeByCinema: Map<string, RouteEstimate>,
   preparationMinutes = 10,
+  reachableWindowMinutes = 60,
 ): boolean {
   const route = routeByCinema.get(showing.cinemaId);
   const travelMinutes = route?.durationMinutes ?? 0;
+  const startsInMinutes =
+    (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
   return (
-    new Date(showing.startsAt).getTime() >=
-    now.getTime() + (travelMinutes + preparationMinutes) * 60_000
+    startsInMinutes >= travelMinutes + preparationMinutes &&
+    startsInMinutes <= reachableWindowMinutes
   );
 }
 
 export function isShowingPast(
-  showing: Pick<Showing, "startsAt" | "endsAt">,
+  showing: Pick<Showing, "startsAt">,
   now: Date,
 ): boolean {
-  const finishedAt = showing.endsAt ?? showing.startsAt;
-  return new Date(finishedAt).getTime() <= now.getTime();
+  return new Date(showing.startsAt).getTime() < now.getTime();
 }
 
 export function filterShowings(
@@ -50,7 +52,6 @@ export function filterShowings(
     selectedArea: CinemaArea | "all";
     futureOnly: boolean;
     now: Date;
-    routeByCinema: Map<string, RouteEstimate>;
   },
 ): Showing[] {
   return showings.filter((showing) => {
@@ -62,12 +63,7 @@ export function filterShowings(
     }
     return (
       !options.futureOnly ||
-      isShowingReachable(
-        showing,
-        options.now,
-        options.routeByCinema,
-        options.routeByCinema.size > 0 ? 10 : 0,
-      )
+      new Date(showing.startsAt).getTime() >= options.now.getTime()
     );
   });
 }
