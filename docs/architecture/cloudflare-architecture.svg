@@ -64,7 +64,8 @@
     <text class="card-title" x="910" y="340">Cloudflare D1</text>
     <text class="muted" x="910" y="363">SQLite database</text>
     <text class="body" x="830" y="414">映画館 / 上映回</text>
-    <text class="body" x="830" y="436">取得状態 / 更新時刻 / 公開許諾</text>
+    <text class="body" x="830" y="436">取得状態 / 更新時刻</text>
+    <text class="body" x="830" y="456">公開許諾 / 有効終了日</text>
   </g>
 
   <g filter="url(#shadow)">
