@@ -117,8 +117,7 @@ export function scheduleTimeSlot(date: Date): string {
   const minute = Number(
     parts.find((part) => part.type === "minute")?.value ?? "0",
   );
-  const slotMinute = Math.floor(minute / 10) * 10;
-  return `${hour}:${String(slotMinute).padStart(2, "0")}`;
+  return `${hour}:${String(minute).padStart(2, "0")}`;
 }
 
 export function groupByScheduleTime(showings: Showing[]): ScheduleTimeGroup[] {

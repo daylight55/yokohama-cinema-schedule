@@ -132,7 +132,7 @@ describe("movie grouping", () => {
     ]);
   });
 
-  it("groups the guide by ten-minute JST slots", () => {
+  it("groups the guide by one-minute JST slots", () => {
     const groups = groupByScheduleTime([
       showing({
         id: "first-cinema",
@@ -142,8 +142,13 @@ describe("movie grouping", () => {
       showing({
         id: "second-cinema",
         cinemaId: "movil",
-        startsAt: "2026-07-24T00:18:00Z",
+        startsAt: "2026-07-24T00:10:00Z",
         title: "【字幕】作品A",
+      }),
+      showing({
+        id: "one-minute-later",
+        startsAt: "2026-07-24T00:11:00Z",
+        title: "作品A",
       }),
       showing({
         id: "next-slot",
@@ -159,21 +164,22 @@ describe("movie grouping", () => {
 
     expect(groups.map((group) => [group.label, group.showingCount])).toEqual([
       ["09:10", 2],
-      ["09:40", 1],
+      ["09:11", 1],
+      ["09:45", 1],
       ["10:00", 1],
     ]);
     expect(groups[0].movies).toHaveLength(1);
     expect(groups[0].movies[0].showings).toHaveLength(2);
   });
 
-  it("places the current-time marker at a ten-minute slot", () => {
+  it("places the current-time marker at the current minute", () => {
     const groups = groupByScheduleTime([
       showing({ id: "first", startsAt: "2026-07-24T00:20:00Z" }),
       showing({ id: "second", startsAt: "2026-07-24T00:40:00Z" }),
     ]);
     const now = new Date("2026-07-24T00:37:00Z");
 
-    expect(scheduleTimeSlot(now)).toBe("09:30");
+    expect(scheduleTimeSlot(now)).toBe("09:37");
     expect(findCurrentTimeMarkerIndex(groups, now)).toBe(1);
     expect(
       findCurrentTimeMarkerIndex(

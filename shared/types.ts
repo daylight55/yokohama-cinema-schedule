@@ -5,6 +5,7 @@ export type CinemaArea =
   | "tobe";
 
 export type SourceApproval = "private_only" | "approved" | "disabled";
+export type TravelMode = "walking" | "transit" | "bus" | "bicycle";
 
 export interface Cinema {
   id: string;
@@ -47,6 +48,8 @@ export interface ScheduleResponse {
   showings: Showing[];
   preferences: MoviePreference[];
   preferencesEnabled: boolean;
+  cinemaTravelPreferences: CinemaTravelPreference[];
+  cinemaTravelPreferencesEnabled: boolean;
   sourceHealth: {
     healthy: number;
     total: number;
@@ -59,7 +62,7 @@ export interface RouteEstimate {
   durationMinutes: number;
   mode: "route" | "estimate";
   provider: "google_maps" | "custom" | "estimate";
-  travelMode: "transit" | "walking";
+  travelMode: TravelMode;
 }
 
 export interface RoutesResponse {
@@ -74,6 +77,12 @@ export interface MoviePreference {
   imageUrl: string | null;
   starred: boolean;
   updatedAt: string;
+}
+
+export interface CinemaTravelPreference {
+  cinemaId: string;
+  travelMode: TravelMode;
+  updatedAt: string | null;
 }
 
 export interface NormalizedShowing {

@@ -1,9 +1,6 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  fetchGoogleRouteMatrix,
-  parseGoogleDuration,
-} from "../functions/api/routes";
-import type { Cinema } from "../shared/types";
+import { describe, expect, it } from "vitest";
+import { estimateRoute } from "../functions/api/routes";
+import type { Cinema, TravelMode } from "../shared/types";
 
 const cinema: Cinema = {
   id: "test-cinema",
@@ -19,64 +16,41 @@ const cinema: Cinema = {
   approval: "private_only",
 };
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+describe("route estimates", () => {
+  it.each<TravelMode>(["walking", "transit", "bus", "bicycle"])(
+    "returns a positive %s estimate",
+    (travelMode) => {
+      const route = estimateRoute(35.46, 139.61, cinema, travelMode);
 
-describe("Google Routes matrix", () => {
-  it("requests transit routes and normalizes the response", async () => {
-    const fetchMock = vi.fn(
-      async (_input: string | URL | Request, init?: RequestInit) => {
-        const headers = new Headers(init?.headers);
-        expect(headers.get("x-goog-api-key")).toBe("test-key");
-        expect(headers.get("x-goog-fieldmask")).toContain("duration");
-        expect(JSON.parse(String(init?.body))).toMatchObject({
-          travelMode: "TRANSIT",
-          origins: [
-            {
-              waypoint: {
-                location: {
-                  latLng: { latitude: 35.46, longitude: 139.61 },
-                },
-              },
-            },
-          ],
-        });
-        return Response.json([
-          {
-            destinationIndex: 0,
-            condition: "ROUTE_EXISTS",
-            distanceMeters: 1_250,
-            duration: "615s",
-          },
-        ]);
-      },
+      expect(route).toMatchObject({
+        cinemaId: cinema.id,
+        mode: "estimate",
+        provider: "estimate",
+        travelMode,
+      });
+      expect(route.distanceMeters).toBeGreaterThan(0);
+      expect(route.durationMinutes).toBeGreaterThan(0);
+    },
+  );
+
+  it("applies a different travel profile for each mode", () => {
+    const routes = new Map(
+      (["walking", "transit", "bus", "bicycle"] as const).map(
+        (travelMode) => [
+          travelMode,
+          estimateRoute(35.46, 139.61, cinema, travelMode),
+        ],
+      ),
     );
-    vi.stubGlobal("fetch", fetchMock);
 
-    await expect(
-      fetchGoogleRouteMatrix("test-key", 35.46, 139.61, [cinema]),
-    ).resolves.toEqual([
-      {
-        cinemaId: "test-cinema",
-        distanceMeters: 1_250,
-        durationMinutes: 11,
-        mode: "route",
-        provider: "google_maps",
-        travelMode: "transit",
-      },
-    ]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix",
-      expect.any(Object),
+    expect(routes.get("walking")!.durationMinutes).toBeGreaterThan(
+      routes.get("bicycle")!.durationMinutes,
     );
-  });
-
-  it("parses protobuf duration seconds", () => {
-    expect(parseGoogleDuration("615.5s")).toBe(615.5);
-  });
-
-  it("rejects invalid duration values", () => {
-    expect(parseGoogleDuration("10m")).toBeNull();
+    expect(routes.get("transit")!.durationMinutes).not.toBe(
+      routes.get("walking")!.durationMinutes,
+    );
+    expect(routes.get("bus")!.durationMinutes).not.toBe(
+      routes.get("bicycle")!.durationMinutes,
+    );
   });
 });

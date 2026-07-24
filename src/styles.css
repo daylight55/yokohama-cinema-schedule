@@ -92,6 +92,7 @@ a:active {
   width: min(100% - 28px, 760px);
   height: 100%;
   align-items: center;
+  gap: 4px;
   justify-content: space-between;
   margin-inline: auto;
 }
@@ -103,6 +104,7 @@ a:active {
   gap: 9px;
   color: inherit;
   text-decoration: none;
+  margin-right: auto;
 }
 
 .brand-mark {
@@ -157,6 +159,80 @@ a:active {
 .icon-button:hover {
   background: var(--surface);
   color: #fff;
+}
+
+.menu-button {
+  margin-left: -8px;
+}
+
+.navigation-drawer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.navigation-drawer::backdrop {
+  background: rgb(0 0 0 / 58%);
+}
+
+.navigation-sheet {
+  width: min(82vw, 320px);
+  height: 100%;
+  padding: max(16px, env(safe-area-inset-top)) 14px 20px;
+  border-right: 1px solid var(--line);
+  background: #111816;
+  box-shadow: 16px 0 48px rgb(0 0 0 / 40%);
+}
+
+.navigation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 16px 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.navigation-heading strong {
+  font-size: 18px;
+}
+
+.navigation-sheet nav {
+  display: grid;
+  gap: 4px;
+  padding-top: 12px;
+}
+
+.navigation-sheet nav button {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #c5d0ca;
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navigation-sheet nav button:hover {
+  background: var(--surface);
+}
+
+.navigation-sheet nav button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 main {
@@ -879,6 +955,119 @@ footer {
 .error-state > svg {
   flex: 0 0 auto;
   color: var(--danger);
+}
+
+.cinema-list {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cinema-list-item {
+  display: grid;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.cinema-list-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cinema-list-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.cinema-list-heading p,
+.cinema-address {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.cinema-list-heading p {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cinema-route-time {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.cinema-route-time small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.cinema-address {
+  margin: 0;
+}
+
+.cinema-preference-row {
+  display: grid;
+  grid-template-columns: auto minmax(112px, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.cinema-preference-row label {
+  color: #bdc9c3;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.cinema-preference-row select {
+  min-height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #45534c;
+  border-radius: 8px;
+  background: #18211e;
+  color: var(--text);
+  font: inherit;
+}
+
+.cinema-preference-row select:disabled {
+  opacity: 0.65;
+}
+
+.cinema-preference-row span {
+  min-width: 36px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: right;
+}
+
+.cinema-official-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.cinema-official-link:hover {
+  text-decoration: underline;
 }
 
 .loading-timeline {
