@@ -65,6 +65,8 @@ export interface RouteEstimate {
   cinemaId: string;
   distanceMeters: number;
   durationMinutes: number;
+  calculatedDurationMinutes?: number;
+  customDurationMinutes?: number;
   accessMinutes: number;
   bufferMinutes: number;
   mode: "route" | "estimate";
@@ -126,6 +128,7 @@ export interface MoviePreference {
 export interface CinemaTravelPreference {
   cinemaId: string;
   travelMode: TravelMode;
+  customDurationMinutes: number | null;
   updatedAt: string | null;
 }
 

@@ -1,6 +1,7 @@
 import { todayInJst } from "../../shared/date";
 import type {
   Cinema,
+  CinemaTravelPreference,
   RouteEstimate,
   RoutesResponse,
   Station,
@@ -102,6 +103,9 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       preference.travelMode,
     ]),
   );
+  const preferenceByCinema = new Map(
+    preferences.map((preference) => [preference.cinemaId, preference]),
+  );
   const transitCinemas = cinemas.filter(
     (cinema) =>
       (modeByCinema.get(cinema.id) ?? DEFAULT_TRAVEL_MODE) === "transit",
@@ -144,9 +148,12 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   const routes = cinemas.map((cinema) => {
     const travelMode =
       modeByCinema.get(cinema.id) ?? DEFAULT_TRAVEL_MODE;
-    return (
+    const route =
       transitRoutes.get(cinema.id) ??
-      estimateRoute(latitude, longitude, cinema, travelMode)
+      estimateRoute(latitude, longitude, cinema, travelMode);
+    return applyCustomDuration(
+      route,
+      preferenceByCinema.get(cinema.id)?.customDurationMinutes ?? null,
     );
   });
 
@@ -160,6 +167,19 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     headers: { "cache-control": "private, no-store" },
   });
 };
+
+export function applyCustomDuration(
+  route: RouteEstimate,
+  customDurationMinutes: CinemaTravelPreference["customDurationMinutes"],
+): RouteEstimate {
+  if (customDurationMinutes === null) return route;
+  return {
+    ...route,
+    calculatedDurationMinutes: route.durationMinutes,
+    customDurationMinutes,
+    durationMinutes: customDurationMinutes,
+  };
+}
 
 export function estimateRoute(
   latitude: number,

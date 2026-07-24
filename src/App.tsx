@@ -29,6 +29,7 @@ import { todayInJst } from "../shared/date";
 import type {
   Cinema,
   CinemaArea,
+  CinemaTravelPreference,
   RouteEstimate,
   RoutesResponse,
   ScheduleResponse,
@@ -92,6 +93,10 @@ export function App() {
     element: HTMLElement;
     top: number;
   } | null>(null);
+  const pendingCinemaAnchorRef = useRef<{
+    element: HTMLElement;
+    top: number;
+  } | null>(null);
   const didInitialTimeScrollRef = useRef(false);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
@@ -104,6 +109,12 @@ export function App() {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [cinemaTravelModes, setCinemaTravelModes] = useState<
     Map<string, TravelMode>
+  >(() => new Map());
+  const [cinemaCustomDurations, setCinemaCustomDurations] = useState<
+    Map<string, number | null>
+  >(() => new Map());
+  const [cinemaDurationDrafts, setCinemaDurationDrafts] = useState<
+    Map<string, string>
   >(() => new Map());
   const [savingCinemaIds, setSavingCinemaIds] = useState<Set<string>>(
     () => new Set(),
@@ -143,6 +154,14 @@ export function App() {
     window.scrollBy(0, nextTop - pendingAnchor.top);
     pendingMovieAnchorRef.current = null;
   }, [starredMovieKeys]);
+
+  useLayoutEffect(() => {
+    const pendingAnchor = pendingCinemaAnchorRef.current;
+    if (!pendingAnchor || !pendingAnchor.element.isConnected) return;
+    const nextTop = pendingAnchor.element.getBoundingClientRect().top;
+    window.scrollBy(0, nextTop - pendingAnchor.top);
+    pendingCinemaAnchorRef.current = null;
+  }, [routes]);
 
   useEffect(() => {
     const updateClock = () => setNow(new Date());
@@ -188,6 +207,22 @@ export function App() {
             data.cinemaTravelPreferences.map((preference) => [
               preference.cinemaId,
               preference.travelMode,
+            ]),
+          ),
+        );
+        setCinemaCustomDurations(
+          new Map(
+            data.cinemaTravelPreferences.map((preference) => [
+              preference.cinemaId,
+              preference.customDurationMinutes,
+            ]),
+          ),
+        );
+        setCinemaDurationDrafts(
+          new Map(
+            data.cinemaTravelPreferences.map((preference) => [
+              preference.cinemaId,
+              preference.customDurationMinutes?.toString() ?? "",
             ]),
           ),
         );
@@ -417,8 +452,10 @@ export function App() {
   const saveCinemaTravelMode = async (
     cinemaId: string,
     travelMode: TravelMode,
+    anchor: HTMLElement | null,
   ) => {
     if (savingCinemaIds.has(cinemaId)) return;
+    if (userProfile.homeRegistered) rememberCinemaAnchor(anchor);
     const previousMode = cinemaTravelModes.get(cinemaId) ?? "transit";
     setCinemaPreferenceError(null);
     setCinemaTravelModes((current) => {
@@ -435,11 +472,24 @@ export function App() {
           "content-type": "application/json",
           accept: "application/json",
         },
-        body: JSON.stringify({ cinemaId, travelMode }),
+        body: JSON.stringify({
+          cinemaId,
+          travelMode,
+          customDurationMinutes:
+            cinemaCustomDurations.get(cinemaId) ?? null,
+        }),
       });
       if (!response.ok) throw new Error();
+      const preference =
+        (await response.json()) as CinemaTravelPreference;
+      setCinemaTravelModes((current) => {
+        const next = new Map(current);
+        next.set(cinemaId, preference.travelMode);
+        return next;
+      });
       if (userProfile.homeRegistered) await fetchRoutes();
     } catch {
+      pendingCinemaAnchorRef.current = null;
       setCinemaTravelModes((current) => {
         const next = new Map(current);
         next.set(cinemaId, previousMode);
@@ -453,6 +503,79 @@ export function App() {
         return next;
       });
     }
+  };
+
+  const saveCinemaCustomDuration = async (
+    cinemaId: string,
+    customDurationMinutes: number | null,
+    anchor: HTMLElement | null,
+  ) => {
+    if (savingCinemaIds.has(cinemaId)) return;
+    if (userProfile.homeRegistered) rememberCinemaAnchor(anchor);
+    const travelMode = cinemaTravelModes.get(cinemaId) ?? "transit";
+    setCinemaPreferenceError(null);
+    setSavingCinemaIds((current) => new Set(current).add(cinemaId));
+
+    try {
+      const response = await fetch("/api/cinema-preferences", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          cinemaId,
+          travelMode,
+          customDurationMinutes,
+        }),
+      });
+      if (!response.ok) throw new Error();
+      const preference =
+        (await response.json()) as CinemaTravelPreference;
+      setCinemaCustomDurations((current) => {
+        const next = new Map(current);
+        next.set(cinemaId, preference.customDurationMinutes);
+        return next;
+      });
+      setCinemaDurationDrafts((current) => {
+        const next = new Map(current);
+        next.set(
+          cinemaId,
+          preference.customDurationMinutes?.toString() ?? "",
+        );
+        return next;
+      });
+      if (userProfile.homeRegistered) await fetchRoutes();
+    } catch {
+      pendingCinemaAnchorRef.current = null;
+      setCinemaPreferenceError("自分の所要時間を保存できませんでした");
+    } finally {
+      setSavingCinemaIds((current) => {
+        const next = new Set(current);
+        next.delete(cinemaId);
+        return next;
+      });
+    }
+  };
+
+  const saveCinemaDurationDraft = (
+    cinemaId: string,
+    anchor: HTMLElement | null,
+  ) => {
+    const value = cinemaDurationDrafts.get(cinemaId)?.trim() ?? "";
+    const durationMinutes = Number(value);
+    if (
+      value === "" ||
+      !Number.isInteger(durationMinutes) ||
+      durationMinutes < 1 ||
+      durationMinutes > 1440
+    ) {
+      setCinemaPreferenceError(
+        "自分の所要時間は1〜1440分の整数で入力してください",
+      );
+      return;
+    }
+    void saveCinemaCustomDuration(cinemaId, durationMinutes, anchor);
   };
 
   const openNavigation = () => {
@@ -472,6 +595,14 @@ export function App() {
   const rememberMovieAnchor = (element: HTMLElement | null) => {
     if (!element) return;
     pendingMovieAnchorRef.current = {
+      element,
+      top: element.getBoundingClientRect().top,
+    };
+  };
+
+  const rememberCinemaAnchor = (element: HTMLElement | null) => {
+    if (!element) return;
+    pendingCinemaAnchorRef.current = {
       element,
       top: element.getBoundingClientRect().top,
     };
@@ -712,7 +843,9 @@ export function App() {
                   : "作品名順に表示"}
               </span>
             ) : (
-              <span className="all-day-label">移動方法を映画館ごとに保存</span>
+              <span className="all-day-label">
+                移動方法と自分の所要時間を保存
+              </span>
             )}
           </div>
 
@@ -925,6 +1058,10 @@ export function App() {
                   const route = routeByCinema.get(cinema.id);
                   const travelMode =
                     cinemaTravelModes.get(cinema.id) ?? "transit";
+                  const customDuration =
+                    cinemaCustomDurations.get(cinema.id) ?? null;
+                  const durationDraft =
+                    cinemaDurationDrafts.get(cinema.id) ?? "";
                   const isSaving = savingCinemaIds.has(cinema.id);
                   return (
                     <li className="cinema-list-item" key={cinema.id}>
@@ -971,6 +1108,9 @@ export function App() {
                             void saveCinemaTravelMode(
                               cinema.id,
                               event.target.value as TravelMode,
+                              event.currentTarget.closest<HTMLElement>(
+                                ".cinema-list-item",
+                              ),
                             )
                           }
                         >
@@ -983,6 +1123,79 @@ export function App() {
                         <span aria-live="polite">
                           {isSaving ? "保存中" : "保存済み"}
                         </span>
+                      </div>
+                      <div className="cinema-duration-row">
+                        <label htmlFor={`custom-duration-${cinema.id}`}>
+                          自分の所要時間
+                        </label>
+                        <div className="duration-input">
+                          <input
+                            id={`custom-duration-${cinema.id}`}
+                            type="number"
+                            inputMode="numeric"
+                            min="1"
+                            max="1440"
+                            step="1"
+                            placeholder={
+                              route?.calculatedDurationMinutes?.toString() ??
+                              route?.durationMinutes.toString() ??
+                              "30"
+                            }
+                            value={durationDraft}
+                            disabled={
+                              isSaving ||
+                              !schedule?.cinemaTravelPreferencesEnabled
+                            }
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              setCinemaDurationDrafts((current) => {
+                                const next = new Map(current);
+                                next.set(cinema.id, value);
+                                return next;
+                              });
+                            }}
+                          />
+                          <span>分</span>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={
+                            isSaving ||
+                            !schedule?.cinemaTravelPreferencesEnabled ||
+                            durationDraft === customDuration?.toString()
+                          }
+                          onClick={(event) =>
+                            saveCinemaDurationDraft(
+                              cinema.id,
+                              event.currentTarget.closest<HTMLElement>(
+                                ".cinema-list-item",
+                              ),
+                            )
+                          }
+                        >
+                          保存
+                        </button>
+                        {customDuration !== null && (
+                          <button
+                            type="button"
+                            className="duration-reset"
+                            disabled={isSaving}
+                            onClick={(event) =>
+                              void saveCinemaCustomDuration(
+                                cinema.id,
+                                null,
+                                event.currentTarget.closest<HTMLElement>(
+                                  ".cinema-list-item",
+                                ),
+                              )
+                            }
+                          >
+                            自動に戻す
+                          </button>
+                        )}
+                        <small>
+                          保存した分数を表示と「間に合う」判定に使います
+                        </small>
                       </div>
                       <a
                         className="cinema-official-link"
@@ -1191,6 +1404,7 @@ function CinemaTravelTimes({
             <div className="cinema-travel-route">
               <strong>
                 {routeTravelLabel(route)} 約{route.durationMinutes}分
+                {route.customDurationMinutes !== undefined && "（設定）"}
               </strong>
               <GoogleMapsRouteLink
                 cinema={cinema}
@@ -1305,6 +1519,11 @@ function routeTravelLabel(route: RouteEstimate): string {
 }
 
 function routeEstimateDetail(route: RouteEstimate): string {
+  if (route.customDurationMinutes !== undefined) {
+    return route.calculatedDurationMinutes === undefined
+      ? "ユーザー設定"
+      : `ユーザー設定 / 自動目安${route.calculatedDurationMinutes}分`;
+  }
   if (route.transitDetails) {
     return `${route.transitDetails.originStationName}→${route.transitDetails.destinationStationName}`;
   }
@@ -1322,7 +1541,12 @@ function transitRouteSummary(route: RouteEstimate): string {
     details.stationTravelMinutes === 0
       ? `${details.destinationStationName}を利用`
       : `${details.originStationName}→${details.destinationStationName} ${details.stationTravelMinutes}分（平均待ち込）`;
-  return `駅まで徒歩${details.originWalkMinutes}分・${stationSegment}・映画館まで徒歩${details.destinationWalkMinutes}分・余裕${details.bufferMinutes}分`;
+  const calculatedLabel =
+    route.customDurationMinutes !== undefined &&
+    route.calculatedDurationMinutes !== undefined
+      ? `自動目安${route.calculatedDurationMinutes}分：`
+      : "";
+  return `${calculatedLabel}駅まで徒歩${details.originWalkMinutes}分・${stationSegment}・映画館まで徒歩${details.destinationWalkMinutes}分・余裕${details.bufferMinutes}分`;
 }
 
 function GoogleMapsRouteLink({
@@ -1397,9 +1621,12 @@ function CinemaSlot({
         <span className="slot-route">
           <MapPinIcon size={14} aria-hidden="true" />
           {routeTravelLabel(route)} 約{route.durationMinutes}分
+          {route.customDurationMinutes !== undefined && "（設定）"}
           {route.mode === "estimate" && (
             <small>
-              {route.transitDetails
+              {route.customDurationMinutes !== undefined
+                ? "ユーザー設定"
+                : route.transitDetails
                 ? `${route.transitDetails.originStationName}→${route.transitDetails.destinationStationName}`
                 : route.travelMode === "transit"
                   ? "駅徒歩・余裕込"

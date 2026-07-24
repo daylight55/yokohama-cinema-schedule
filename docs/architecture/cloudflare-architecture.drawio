@@ -40,7 +40,7 @@
         <mxCell id="d1-title" value="&lt;b&gt;Cloudflare D1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;SQLite database&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#172033;" vertex="1" parent="1">
           <mxGeometry x="910" y="315" width="145" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d1-content" value="映画館 / 上映回 / 作品画像&lt;br&gt;自宅位置 / 駅間・徒歩の固定時間&lt;br&gt;スター / 移動方法 / 公開・有効期間" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
+        <mxCell id="d1-content" value="映画館 / 上映回 / 作品画像&lt;br&gt;自宅位置 / 駅間・徒歩の固定時間&lt;br&gt;スター / 移動方法・任意時間 / 公開・有効期間" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
           <mxGeometry x="830" y="395" width="220" height="60" as="geometry"/>
         </mxCell>
         <mxCell id="worker-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">

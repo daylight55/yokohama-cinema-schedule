@@ -65,7 +65,7 @@
     <text class="muted" x="910" y="363">SQLite database</text>
     <text class="body" x="830" y="414">映画館 / 上映回 / 作品画像</text>
     <text class="body" x="830" y="436">自宅位置 / 駅間・徒歩の固定時間</text>
-    <text class="body" x="830" y="456">スター / 移動方法 / 公開・有効期間</text>
+    <text class="body" x="830" y="456">スター / 移動方法・任意時間 / 公開・有効期間</text>
   </g>
 
   <g filter="url(#shadow)">
