@@ -6,11 +6,13 @@ import {
   buildGoogleMapsDirectionsUrl,
   groupByMovie,
   groupByScheduleTime,
+  groupScheduleTimeBuckets,
   isShowingPast,
   isShowingReachable,
   normalizeMovieTitle,
   scheduleTimeSlot,
   scrollToInitialTimeMarker,
+  shouldDefaultExpandScheduleBucket,
 } from "../src/lib";
 
 const showing = (overrides: Partial<Showing> = {}): Showing => ({
@@ -31,6 +33,83 @@ const showing = (overrides: Partial<Showing> = {}): Showing => ({
   purchasable: true,
   fetchedAt: "2026-07-24T00:00:00.000Z",
   ...overrides,
+});
+
+describe("schedule collapse windows", () => {
+  it("groups minute rows into one-hour windows", () => {
+    const groups = groupByScheduleTime([
+      showing({ id: "a", startsAt: "2026-07-24T00:05:00Z", title: "作品A" }),
+      showing({ id: "b", startsAt: "2026-07-24T00:40:00Z", title: "作品B" }),
+      showing({ id: "c", startsAt: "2026-07-24T01:10:00Z", title: "作品A" }),
+    ]);
+
+    const buckets = groupScheduleTimeBuckets(groups, 60);
+
+    expect(
+      buckets.map((bucket) => [
+        bucket.label,
+        bucket.movieCount,
+        bucket.showingCount,
+      ]),
+    ).toEqual([
+      ["09:00〜10:00", 2, 2],
+      ["10:00〜11:00", 1, 1],
+    ]);
+  });
+
+  it("groups minute rows into thirty-minute windows", () => {
+    const groups = groupByScheduleTime([
+      showing({ id: "a", startsAt: "2026-07-24T00:05:00Z" }),
+      showing({ id: "b", startsAt: "2026-07-24T00:40:00Z" }),
+      showing({ id: "c", startsAt: "2026-07-24T01:10:00Z" }),
+    ]);
+
+    expect(
+      groupScheduleTimeBuckets(groups, 30).map((bucket) => bucket.label),
+    ).toEqual(["09:00〜09:30", "09:30〜10:00", "10:00〜10:30"]);
+  });
+
+  it("opens the current window through the following hour", () => {
+    const groups = groupByScheduleTime([
+      showing({ id: "a", startsAt: "2026-07-24T00:40:00Z" }),
+      showing({ id: "b", startsAt: "2026-07-24T01:10:00Z" }),
+      showing({ id: "c", startsAt: "2026-07-24T01:40:00Z" }),
+      showing({ id: "d", startsAt: "2026-07-24T02:10:00Z" }),
+    ]);
+    const now = new Date("2026-07-24T00:37:00Z");
+    const buckets = groupScheduleTimeBuckets(groups, 30);
+
+    expect(
+      buckets.map((bucket) =>
+        shouldDefaultExpandScheduleBucket(
+          bucket,
+          now,
+          "2026-07-24",
+          "2026-07-24",
+        ),
+      ),
+    ).toEqual([true, true, true, false]);
+    expect(
+      shouldDefaultExpandScheduleBucket(
+        buckets[0],
+        now,
+        "2026-07-25",
+        "2026-07-24",
+      ),
+    ).toBe(false);
+
+    const hourlyBuckets = groupScheduleTimeBuckets(groups, 60);
+    expect(
+      hourlyBuckets.map((bucket) =>
+        shouldDefaultExpandScheduleBucket(
+          bucket,
+          now,
+          "2026-07-24",
+          "2026-07-24",
+        ),
+      ),
+    ).toEqual([true, true, false]);
+  });
 });
 
 describe("schedule filtering", () => {

@@ -1,4 +1,8 @@
-import type { RouteOrigin, UserProfile } from "../../shared/types";
+import type {
+  RouteOrigin,
+  ScheduleCollapseMinutes,
+  UserProfile,
+} from "../../shared/types";
 import type { StationWalkEstimate } from "./stations";
 
 interface UserProfileRow {
@@ -12,6 +16,18 @@ interface HomeStationAccessRow {
   walk_minutes: number;
   distance_meters: number;
   provider: StationWalkEstimate["provider"];
+}
+
+interface DisplayPreferenceRow {
+  preference_value: string;
+}
+
+export const DEFAULT_SCHEDULE_COLLAPSE_MINUTES = 60;
+
+export function isScheduleCollapseMinutes(
+  value: unknown,
+): value is ScheduleCollapseMinutes {
+  return value === 0 || value === 30 || value === 60;
 }
 
 export interface HomeLocation extends RouteOrigin {
@@ -68,11 +84,51 @@ export async function getHomeLocation(
 }
 
 export async function getUserProfile(db: D1Database): Promise<UserProfile> {
-  const home = await getHomeLocation(db);
+  const [home, scheduleCollapseMinutes] = await Promise.all([
+    getHomeLocation(db),
+    getScheduleCollapseMinutes(db),
+  ]);
   return {
     homeRegistered: Boolean(home),
     homeUpdatedAt: home?.updatedAt ?? null,
+    scheduleCollapseMinutes,
   };
+}
+
+export async function getScheduleCollapseMinutes(
+  db: D1Database,
+): Promise<ScheduleCollapseMinutes> {
+  const row = await db
+    .prepare(
+      `SELECT preference_value
+       FROM app_preferences
+       WHERE preference_key = 'schedule_collapse_minutes'`,
+    )
+    .first<DisplayPreferenceRow>();
+  const value = row ? Number(row.preference_value) : null;
+  return isScheduleCollapseMinutes(value)
+    ? value
+    : DEFAULT_SCHEDULE_COLLAPSE_MINUTES;
+}
+
+export async function saveScheduleCollapseMinutes(
+  db: D1Database,
+  value: ScheduleCollapseMinutes,
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO app_preferences (
+         preference_key,
+         preference_value,
+         updated_at
+       )
+       VALUES ('schedule_collapse_minutes', ?, ?)
+       ON CONFLICT(preference_key) DO UPDATE SET
+         preference_value = excluded.preference_value,
+         updated_at = excluded.updated_at`,
+    )
+    .bind(String(value), new Date().toISOString())
+    .run();
 }
 
 export async function saveHomeLocation(
@@ -111,7 +167,7 @@ export async function saveHomeLocation(
     ),
   ]);
 
-  return { homeRegistered: true, homeUpdatedAt: updatedAt };
+  return getUserProfile(db);
 }
 
 export async function listHomeStationAccess(

@@ -6,6 +6,7 @@ export type CinemaArea =
 
 export type SourceApproval = "private_only" | "approved" | "disabled";
 export type TravelMode = "walking" | "transit" | "bus" | "bicycle";
+export type ScheduleCollapseMinutes = 0 | 30 | 60;
 
 export interface Cinema {
   id: string;
@@ -135,6 +136,7 @@ export interface CinemaTravelPreference {
 export interface UserProfile {
   homeRegistered: boolean;
   homeUpdatedAt: string | null;
+  scheduleCollapseMinutes: ScheduleCollapseMinutes;
 }
 
 export interface NormalizedShowing {

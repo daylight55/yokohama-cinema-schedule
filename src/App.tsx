@@ -31,6 +31,7 @@ import type {
   CinemaTravelPreference,
   RouteEstimate,
   RoutesResponse,
+  ScheduleCollapseMinutes,
   ScheduleResponse,
   Showing,
   TravelMode,
@@ -43,10 +44,12 @@ import {
   filterShowings,
   findCurrentTimeMarkerIndex,
   groupByScheduleTime,
+  groupScheduleTimeBuckets,
   groupByMovie,
   isShowingPast,
   isShowingReachable,
   scrollToInitialTimeMarker,
+  shouldDefaultExpandScheduleBucket,
 } from "./lib";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
@@ -136,11 +139,15 @@ export function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>({
     homeRegistered: false,
     homeUpdatedAt: null,
+    scheduleCollapseMinutes: 60,
   });
   const [profileState, setProfileState] = useState<
     "idle" | "saving" | "deleting"
   >("idle");
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [collapsePreferenceState, setCollapsePreferenceState] = useState<
+    "idle" | "saving" | "saved"
+  >("idle");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [routeState, setRouteState] = useState<
@@ -285,6 +292,16 @@ export function App() {
   const timeGroups = useMemo(
     () => groupByScheduleTime(visibleShowings),
     [visibleShowings],
+  );
+  const scheduleTimeBuckets = useMemo(
+    () =>
+      userProfile.scheduleCollapseMinutes === 0
+        ? []
+        : groupScheduleTimeBuckets(
+            timeGroups,
+            userProfile.scheduleCollapseMinutes,
+          ),
+    [timeGroups, userProfile.scheduleCollapseMinutes],
   );
   const movieList = useMemo(() => {
     const areaShowings = (schedule?.showings ?? []).filter(
@@ -457,6 +474,66 @@ export function App() {
       setProfileError("自宅情報を削除できませんでした");
     } finally {
       setProfileState("idle");
+    }
+  };
+
+  const saveScheduleCollapsePreference = async (
+    scheduleCollapseMinutes: ScheduleCollapseMinutes,
+  ) => {
+    const previousValue = userProfile.scheduleCollapseMinutes;
+    setProfileError(null);
+    setCollapsePreferenceState("saving");
+    setUserProfile((current) => ({
+      ...current,
+      scheduleCollapseMinutes,
+    }));
+    setSchedule((current) =>
+      current
+        ? {
+            ...current,
+            userProfile: {
+              ...current.userProfile,
+              scheduleCollapseMinutes,
+            },
+          }
+        : current,
+    );
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({ scheduleCollapseMinutes }),
+      });
+      if (!response.ok) throw new Error();
+      const profile = (await response.json()) as UserProfile;
+      setUserProfile(profile);
+      setSchedule((current) =>
+        current ? { ...current, userProfile: profile } : current,
+      );
+      setCollapsePreferenceState("saved");
+      window.setTimeout(() => setCollapsePreferenceState("idle"), 1_500);
+    } catch {
+      setUserProfile((current) => ({
+        ...current,
+        scheduleCollapseMinutes: previousValue,
+      }));
+      setSchedule((current) =>
+        current
+          ? {
+              ...current,
+              userProfile: {
+                ...current.userProfile,
+                scheduleCollapseMinutes: previousValue,
+              },
+            }
+          : current,
+      );
+      setCollapsePreferenceState("idle");
+      setProfileError("折りたたみ設定を保存できませんでした");
     }
   };
 
@@ -692,6 +769,89 @@ export function App() {
       : fullDateFormatter.format(
           new Date(`${selectedDate}T12:00:00+09:00`),
         );
+
+  const renderScheduleTimeGroup = (
+    group: (typeof timeGroups)[number],
+    index: number,
+  ) => (
+    <Fragment key={group.time}>
+      {index === currentTimeMarkerIndex && (
+        <CurrentTimeMarker markerRef={currentTimeMarkerRef} now={now} />
+      )}
+      <section
+        className="timeline-hour"
+        id={`time-${group.time.replace(":", "-")}`}
+        aria-labelledby={`time-label-${group.time.replace(":", "-")}`}
+      >
+        <div className="hour-label">
+          <time
+            id={`time-label-${group.time.replace(":", "-")}`}
+            dateTime={`${selectedDate}T${group.time}:00+09:00`}
+          >
+            {group.label}
+          </time>
+          <small>{group.showingCount}上映</small>
+        </div>
+        <div className="hour-programs">
+          {group.movies.map((movie) => {
+            const isPast = movie.showings.every((showing) =>
+              isShowingPast(showing, now),
+            );
+            const isStarred = starredMovieKeys.has(movie.preferenceKey);
+            return (
+              <article
+                className={[
+                  "program-block",
+                  isPast ? "past" : "",
+                  isStarred ? "starred" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                key={movie.key}
+              >
+                <div className="program-title">
+                  <h2>{movie.title}</h2>
+                  {schedule?.preferencesEnabled && (
+                    <FavoriteButton
+                      title={movie.title}
+                      isStarred={isStarred}
+                      isSaving={savingMovieKeys.has(movie.preferenceKey)}
+                      compact
+                      onClick={() => void toggleMovieStar(movie, null)}
+                    />
+                  )}
+                </div>
+                <div
+                  className="cinema-strip"
+                  role="list"
+                  aria-label={`${movie.title}の上映館`}
+                >
+                  {movie.showings.map((showing) => {
+                    const route = routeByCinema.get(showing.cinemaId);
+                    return (
+                      <CinemaSlot
+                        key={showing.id}
+                        showing={showing}
+                        isPast={isShowingPast(showing, now)}
+                        isReachable={Boolean(
+                          route &&
+                            isShowingReachable(
+                              showing,
+                              now,
+                              routeByCinema,
+                            ),
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </Fragment>
+  );
 
   return (
     <>
@@ -1006,9 +1166,13 @@ export function App() {
               enabled={Boolean(schedule?.userProfileEnabled)}
               profile={userProfile}
               state={profileState}
+              collapseState={collapsePreferenceState}
               error={profileError}
               onRegister={() => void registerHomeLocation()}
               onDelete={() => void deleteHomeProfile()}
+              onCollapseChange={(value) =>
+                void saveScheduleCollapsePreference(value)
+              }
             />
           )}
           {!loading && !error && view === "movies" && movieList.length > 0 && (
@@ -1230,94 +1394,50 @@ export function App() {
             view === "schedule" &&
             timeGroups.length > 0 && (
             <div className="timeline">
-              {timeGroups.map((group, index) => (
-                <Fragment key={group.time}>
-                  {index === currentTimeMarkerIndex && (
-                    <CurrentTimeMarker
-                      markerRef={currentTimeMarkerRef}
-                      now={now}
-                    />
-                  )}
-                  <section
-                    className="timeline-hour"
-                    id={`time-${group.time.replace(":", "-")}`}
-                    aria-labelledby={`time-label-${group.time.replace(":", "-")}`}
-                  >
-                    <div className="hour-label">
-                      <time
-                        id={`time-label-${group.time.replace(":", "-")}`}
-                        dateTime={`${selectedDate}T${group.time}:00+09:00`}
+              {userProfile.scheduleCollapseMinutes === 0
+                ? timeGroups.map(renderScheduleTimeGroup)
+                : scheduleTimeBuckets.map((bucket) => {
+                    const markerGroup =
+                      currentTimeMarkerIndex >= 0
+                        ? timeGroups[currentTimeMarkerIndex]
+                        : null;
+                    const containsCurrentMarker = Boolean(
+                      markerGroup &&
+                        bucket.groups.some(
+                          (group) => group.time === markerGroup.time,
+                        ),
+                    );
+                    const defaultOpen =
+                      containsCurrentMarker ||
+                      shouldDefaultExpandScheduleBucket(
+                        bucket,
+                        now,
+                        selectedDate,
+                        today,
+                      );
+                    return (
+                      <details
+                        className="schedule-window"
+                        key={`${selectedDate}-${userProfile.scheduleCollapseMinutes}-${bucket.key}`}
+                        open={defaultOpen || undefined}
                       >
-                        {group.label}
-                      </time>
-                      <small>{group.showingCount}上映</small>
-                    </div>
-                    <div className="hour-programs">
-                      {group.movies.map((movie) => {
-                        const isPast = movie.showings.every((showing) =>
-                          isShowingPast(showing, now),
-                        );
-                        const isStarred = starredMovieKeys.has(
-                          movie.preferenceKey,
-                        );
-                        return (
-                          <article
-                            className={[
-                              "program-block",
-                              isPast ? "past" : "",
-                              isStarred ? "starred" : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
-                            key={movie.key}
-                          >
-                            <div className="program-title">
-                              <h2>{movie.title}</h2>
-                              {schedule?.preferencesEnabled && (
-                                <FavoriteButton
-                                  title={movie.title}
-                                  isStarred={isStarred}
-                                  isSaving={savingMovieKeys.has(
-                                    movie.preferenceKey,
-                                  )}
-                                  compact
-                                  onClick={() => void toggleMovieStar(movie, null)}
-                                />
-                              )}
-                            </div>
-                            <div
-                              className="cinema-strip"
-                              role="list"
-                              aria-label={`${movie.title}の上映館`}
-                            >
-                              {movie.showings.map((showing) => {
-                                const route = routeByCinema.get(
-                                  showing.cinemaId,
-                                );
-                                return (
-                                  <CinemaSlot
-                                    key={showing.id}
-                                    showing={showing}
-                                    isPast={isShowingPast(showing, now)}
-                                    isReachable={Boolean(
-                                      route &&
-                                        isShowingReachable(
-                                          showing,
-                                          now,
-                                          routeByCinema,
-                                        ),
-                                    )}
-                                  />
-                                );
-                              })}
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  </section>
-                </Fragment>
-              ))}
+                        <summary>
+                          <span>{bucket.label}</span>
+                          <small>
+                            {bucket.movieCount}作品 / {bucket.showingCount}上映
+                          </small>
+                        </summary>
+                        <div className="schedule-window-content">
+                          {bucket.groups.map((group) =>
+                            renderScheduleTimeGroup(
+                              group,
+                              timeGroups.indexOf(group),
+                            ),
+                          )}
+                        </div>
+                      </details>
+                    );
+                  })}
               {showCurrentTimeMarkerAtEnd && (
                 <CurrentTimeMarker
                   markerRef={currentTimeMarkerRef}
@@ -1410,16 +1530,20 @@ function ProfilePanel({
   enabled,
   profile,
   state,
+  collapseState,
   error,
   onRegister,
   onDelete,
+  onCollapseChange,
 }: {
   enabled: boolean;
   profile: UserProfile;
   state: "idle" | "saving" | "deleting";
+  collapseState: "idle" | "saving" | "saved";
   error: string | null;
   onRegister: () => void;
   onDelete: () => void;
+  onCollapseChange: (value: ScheduleCollapseMinutes) => void;
 }) {
   const isBusy = state !== "idle";
   return (
@@ -1441,6 +1565,32 @@ function ProfilePanel({
             {updatedFormatter.format(new Date(profile.homeUpdatedAt))}登録
           </small>
         )}
+      </div>
+      <div className="profile-display-setting">
+        <label htmlFor="schedule-collapse-minutes">
+          上映時間の折りたたみ
+        </label>
+        <select
+          id="schedule-collapse-minutes"
+          value={profile.scheduleCollapseMinutes}
+          disabled={!enabled || collapseState === "saving"}
+          onChange={(event) =>
+            onCollapseChange(
+              Number(event.currentTarget.value) as ScheduleCollapseMinutes,
+            )
+          }
+        >
+          <option value={0}>なし</option>
+          <option value={30}>30分</option>
+          <option value={60}>1時間</option>
+        </select>
+        <small className="profile-save-status" aria-live="polite">
+          {collapseState === "saving"
+            ? "保存中"
+            : collapseState === "saved"
+              ? "保存しました"
+              : "端末間で共有されます"}
+        </small>
       </div>
       <button
         type="button"
