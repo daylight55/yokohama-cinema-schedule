@@ -1,14 +1,26 @@
 import {
   ArrowSquareOutIcon,
+  BuildingsIcon,
+  CalendarDotsIcon,
   CheckCircleIcon,
   ClockIcon,
   CrosshairIcon,
+  FilmSlateIcon,
+  ListIcon,
   MapPinIcon,
   SignOutIcon,
   StarIcon,
   WarningCircleIcon,
+  XIcon,
 } from "@phosphor-icons/react";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { todayInJst } from "../shared/date";
 import type {
   Cinema,
@@ -17,6 +29,7 @@ import type {
   RoutesResponse,
   ScheduleResponse,
   Showing,
+  TravelMode,
 } from "../shared/types";
 import {
   AREA_OPTIONS,
@@ -55,9 +68,23 @@ const updatedFormatter = new Intl.DateTimeFormat("ja-JP", {
   minute: "2-digit",
 });
 
+const TRAVEL_MODE_OPTIONS: Array<{ value: TravelMode; label: string }> = [
+  { value: "walking", label: "徒歩" },
+  { value: "transit", label: "電車" },
+  { value: "bus", label: "バス" },
+  { value: "bicycle", label: "自転車" },
+];
+
+type AppView = "schedule" | "movies" | "cinemas";
+
 export function App() {
   const [now, setNow] = useState(() => new Date());
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
+  const navigationDialogRef = useRef<HTMLDialogElement>(null);
+  const pendingMovieAnchorRef = useRef<{
+    element: HTMLElement;
+    top: number;
+  } | null>(null);
   const didInitialTimeScrollRef = useRef(false);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
@@ -66,9 +93,21 @@ export function App() {
   const [futureOnly, setFutureOnly] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
   const [routes, setRoutes] = useState<RouteEstimate[]>([]);
-  const [routeProvider, setRouteProvider] =
-    useState<RoutesResponse["provider"]>("estimate");
-  const [view, setView] = useState<"schedule" | "movies">("schedule");
+  const [view, setView] = useState<AppView>("schedule");
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const [cinemaTravelModes, setCinemaTravelModes] = useState<
+    Map<string, TravelMode>
+  >(() => new Map());
+  const [savingCinemaIds, setSavingCinemaIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [cinemaPreferenceError, setCinemaPreferenceError] = useState<
+    string | null
+  >(null);
+  const [lastLocation, setLastLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [starredMovieKeys, setStarredMovieKeys] = useState<Set<string>>(
     () => new Set(),
   );
@@ -81,6 +120,14 @@ export function App() {
   const [locationState, setLocationState] = useState<
     "idle" | "loading" | "ready" | "error"
   >("idle");
+
+  useLayoutEffect(() => {
+    const pendingAnchor = pendingMovieAnchorRef.current;
+    if (!pendingAnchor || !pendingAnchor.element.isConnected) return;
+    const nextTop = pendingAnchor.element.getBoundingClientRect().top;
+    window.scrollBy(0, nextTop - pendingAnchor.top);
+    pendingMovieAnchorRef.current = null;
+  }, [starredMovieKeys]);
 
   useEffect(() => {
     const updateClock = () => setNow(new Date());
@@ -119,6 +166,14 @@ export function App() {
             data.preferences
               .filter((preference) => preference.starred)
               .map((preference) => preference.movieKey),
+          ),
+        );
+        setCinemaTravelModes(
+          new Map(
+            data.cinemaTravelPreferences.map((preference) => [
+              preference.cinemaId,
+              preference.travelMode,
+            ]),
           ),
         );
       })
@@ -161,8 +216,22 @@ export function App() {
         ),
     [routeByCinema, schedule?.cinemas, selectedArea],
   );
-  const hasTransitRoutes = routes.some(
-    (route) => route.travelMode === "transit",
+  const cinemaList = useMemo(
+    () =>
+      (schedule?.cinemas ?? [])
+        .filter(
+          (cinema) =>
+            selectedArea === "all" || cinema.area === selectedArea,
+        )
+        .sort(
+          (cinemaA, cinemaB) =>
+            (routeByCinema.get(cinemaA.id)?.durationMinutes ??
+              Number.POSITIVE_INFINITY) -
+              (routeByCinema.get(cinemaB.id)?.durationMinutes ??
+                Number.POSITIVE_INFINITY) ||
+            cinemaA.name.localeCompare(cinemaB.name, "ja"),
+        ),
+    [routeByCinema, schedule?.cinemas, selectedArea],
   );
   const visibleShowings = useMemo(
     () =>
@@ -239,6 +308,23 @@ export function App() {
     return () => window.cancelAnimationFrame(frame);
   }, [error, loading, selectedDate, timeGroups, today, view]);
 
+  const fetchRoutes = async (location: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    const response = await fetch("/api/routes", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify(location),
+    });
+    if (!response.ok) throw new Error();
+    const data = (await response.json()) as RoutesResponse;
+    setRoutes(data.routes);
+  };
+
   const requestLocation = () => {
     if (!navigator.geolocation) {
       setLocationState("error");
@@ -248,21 +334,12 @@ export function App() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          const response = await fetch("/api/routes", {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-              accept: "application/json",
-            },
-            body: JSON.stringify({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            }),
-          });
-          if (!response.ok) throw new Error();
-          const data = (await response.json()) as RoutesResponse;
-          setRoutes(data.routes);
-          setRouteProvider(data.provider);
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+          setLastLocation(location);
+          await fetchRoutes(location);
           setLocationState("ready");
         } catch {
           setLocationState("error");
@@ -273,12 +350,79 @@ export function App() {
     );
   };
 
-  const toggleMovieStar = async (movie: {
-    preferenceKey: string;
-    title: string;
-    imageUrl: string | null;
-  }) => {
+  const saveCinemaTravelMode = async (
+    cinemaId: string,
+    travelMode: TravelMode,
+  ) => {
+    if (savingCinemaIds.has(cinemaId)) return;
+    const previousMode = cinemaTravelModes.get(cinemaId) ?? "transit";
+    setCinemaPreferenceError(null);
+    setCinemaTravelModes((current) => {
+      const next = new Map(current);
+      next.set(cinemaId, travelMode);
+      return next;
+    });
+    setSavingCinemaIds((current) => new Set(current).add(cinemaId));
+
+    try {
+      const response = await fetch("/api/cinema-preferences", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({ cinemaId, travelMode }),
+      });
+      if (!response.ok) throw new Error();
+      if (lastLocation) await fetchRoutes(lastLocation);
+    } catch {
+      setCinemaTravelModes((current) => {
+        const next = new Map(current);
+        next.set(cinemaId, previousMode);
+        return next;
+      });
+      setCinemaPreferenceError("移動方法を保存できませんでした");
+    } finally {
+      setSavingCinemaIds((current) => {
+        const next = new Set(current);
+        next.delete(cinemaId);
+        return next;
+      });
+    }
+  };
+
+  const openNavigation = () => {
+    navigationDialogRef.current?.showModal();
+    setIsNavigationOpen(true);
+  };
+
+  const closeNavigation = () => {
+    navigationDialogRef.current?.close();
+  };
+
+  const navigateTo = (nextView: AppView) => {
+    setView(nextView);
+    closeNavigation();
+  };
+
+  const rememberMovieAnchor = (element: HTMLElement | null) => {
+    if (!element) return;
+    pendingMovieAnchorRef.current = {
+      element,
+      top: element.getBoundingClientRect().top,
+    };
+  };
+
+  const toggleMovieStar = async (
+    movie: {
+      preferenceKey: string;
+      title: string;
+      imageUrl: string | null;
+    },
+    anchorElement: HTMLElement | null,
+  ) => {
     if (savingMovieKeys.has(movie.preferenceKey)) return;
+    rememberMovieAnchor(anchorElement);
     const wasStarred = starredMovieKeys.has(movie.preferenceKey);
     const nextStarred = !wasStarred;
     setPreferenceError(null);
@@ -307,6 +451,7 @@ export function App() {
       });
       if (!response.ok) throw new Error();
     } catch {
+      rememberMovieAnchor(anchorElement);
       setStarredMovieKeys((current) => {
         const next = new Set(current);
         if (wasStarred) next.add(movie.preferenceKey);
@@ -334,6 +479,16 @@ export function App() {
     <>
       <header className="site-header">
         <div className="header-inner">
+          <button
+            className="icon-button menu-button"
+            type="button"
+            aria-label="メニューを開く"
+            aria-controls="primary-navigation"
+            aria-expanded={isNavigationOpen}
+            onClick={openNavigation}
+          >
+            <ListIcon size={21} aria-hidden="true" />
+          </button>
           <a className="brand" href="/" aria-label="横浜映画番組表 ホーム">
             <span className="brand-mark" aria-hidden="true">
               Y
@@ -355,7 +510,62 @@ export function App() {
         </div>
       </header>
 
+      <dialog
+        className="navigation-drawer"
+        id="primary-navigation"
+        ref={navigationDialogRef}
+        aria-labelledby="navigation-title"
+        onClose={() => setIsNavigationOpen(false)}
+        onClick={(event) => {
+          if (event.currentTarget === event.target) closeNavigation();
+        }}
+      >
+        <div className="navigation-sheet">
+          <div className="navigation-heading">
+            <strong id="navigation-title">メニュー</strong>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="メニューを閉じる"
+              onClick={closeNavigation}
+            >
+              <XIcon size={20} aria-hidden="true" />
+            </button>
+          </div>
+          <nav aria-label="メイン">
+            <button
+              type="button"
+              className={view === "schedule" ? "active" : ""}
+              aria-current={view === "schedule" ? "page" : undefined}
+              onClick={() => navigateTo("schedule")}
+            >
+              <CalendarDotsIcon size={20} aria-hidden="true" />
+              上映時間
+            </button>
+            <button
+              type="button"
+              className={view === "movies" ? "active" : ""}
+              aria-current={view === "movies" ? "page" : undefined}
+              onClick={() => navigateTo("movies")}
+            >
+              <FilmSlateIcon size={20} aria-hidden="true" />
+              上映作品
+            </button>
+            <button
+              type="button"
+              className={view === "cinemas" ? "active" : ""}
+              aria-current={view === "cinemas" ? "page" : undefined}
+              onClick={() => navigateTo("cinemas")}
+            >
+              <BuildingsIcon size={20} aria-hidden="true" />
+              映画館
+            </button>
+          </nav>
+        </div>
+      </dialog>
+
       <main id="main">
+        {view !== "cinemas" && (
         <nav className="date-nav" aria-label="上映日">
           <div className="date-strip">
             {dates.map((date, index) => {
@@ -380,6 +590,7 @@ export function App() {
             })}
           </div>
         </nav>
+        )}
 
         <section className="schedule-controls" aria-label="上映の絞り込み">
           <div className="area-strip" role="group" aria-label="エリア">
@@ -396,25 +607,6 @@ export function App() {
                 {area.label}
               </button>
             ))}
-          </div>
-
-          <div className="view-switch" role="group" aria-label="表示形式">
-            <button
-              type="button"
-              className={view === "schedule" ? "active" : ""}
-              aria-pressed={view === "schedule"}
-              onClick={() => setView("schedule")}
-            >
-              番組表
-            </button>
-            <button
-              type="button"
-              className={view === "movies" ? "active" : ""}
-              aria-pressed={view === "movies"}
-              onClick={() => setView("movies")}
-            >
-              作品一覧
-            </button>
           </div>
 
           <div className="control-row">
@@ -439,14 +631,16 @@ export function App() {
               </div>
             ) : view === "schedule" ? (
               <span className="all-day-label">全時間を表示</span>
-            ) : (
+            ) : view === "movies" ? (
               <span className="all-day-label">
                 {schedule?.preferencesEnabled
                   ? "スター済みを先頭に表示"
                   : "作品名順に表示"}
               </span>
+            ) : (
+              <span className="all-day-label">移動方法を映画館ごとに保存</span>
             )}
-            {view === "schedule" && (
+            {view !== "movies" && (
               <button
                 type="button"
                 className="location-button"
@@ -463,17 +657,13 @@ export function App() {
             )}
           </div>
 
-          {view === "schedule" && locationState === "ready" && (
+          {view !== "movies" && locationState === "ready" && (
             <p className="inline-status" role="status">
               <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
-              {hasTransitRoutes
-                ? "電車・徒歩の所要時間を反映しました"
-                : routeProvider === "custom"
-                  ? "経路に沿った徒歩時間を反映しました"
-                  : "徒歩時間の目安を反映しました"}
+              映画館ごとの移動方法で目安時間を反映しました
             </p>
           )}
-          {view === "schedule" && locationState === "error" && (
+          {view !== "movies" && locationState === "error" && (
             <p className="inline-status error" role="status">
               <WarningCircleIcon size={16} aria-hidden="true" />
               現在地を取得できませんでした
@@ -484,6 +674,12 @@ export function App() {
             cinemaTravelRows.length > 0 && (
               <CinemaTravelTimes rows={cinemaTravelRows} />
             )}
+          {cinemaPreferenceError && (
+            <p className="inline-status error" role="status">
+              <WarningCircleIcon size={16} aria-hidden="true" />
+              {cinemaPreferenceError}
+            </p>
+          )}
           {preferenceError && (
             <p className="inline-status error" role="status">
               <WarningCircleIcon size={16} aria-hidden="true" />
@@ -495,14 +691,22 @@ export function App() {
         <section className="guide" aria-live="polite" aria-busy={loading}>
           <div className="guide-heading">
             <div>
-              <p>{selectedDateLabel}</p>
+              <p>{view === "cinemas" ? "対象エリア" : selectedDateLabel}</p>
               <h1>
-                {view === "schedule" ? "上映スケジュール" : "上映中の作品"}
+                {view === "schedule"
+                  ? "上映スケジュール"
+                  : view === "movies"
+                    ? "上映中の作品"
+                    : "映画館"}
               </h1>
             </div>
             {!loading && !error && (
               <span>
-                {view === "schedule" ? movieCount : movieList.length}作品
+                {view === "schedule"
+                  ? `${movieCount}作品`
+                  : view === "movies"
+                    ? `${movieList.length}作品`
+                    : `${cinemaList.length}館`}
                 {view === "schedule" && (
                   <small>{visibleShowings.length}上映</small>
                 )}
@@ -536,19 +740,27 @@ export function App() {
             !error &&
             (view === "schedule"
               ? timeGroups.length === 0
-              : movieList.length === 0) && (
-            <div className="state-card">
-              <ClockIcon size={25} aria-hidden="true" />
-              <div>
-                <strong>
-                  {view === "schedule"
-                    ? "条件に合う上映がありません"
-                    : "上映中の作品がありません"}
-                </strong>
-                <p>エリアを広げるか、別の日を選んでください。</p>
+              : view === "movies"
+                ? movieList.length === 0
+                : cinemaList.length === 0) && (
+              <div className="state-card">
+                <ClockIcon size={25} aria-hidden="true" />
+                <div>
+                  <strong>
+                    {view === "schedule"
+                      ? "条件に合う上映がありません"
+                      : view === "movies"
+                        ? "上映中の作品がありません"
+                        : "対象の映画館がありません"}
+                  </strong>
+                  <p>
+                    {view === "cinemas"
+                      ? "エリアを広げてください。"
+                      : "エリアを広げるか、別の日を選んでください。"}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           {!loading && !error && view === "movies" && movieList.length > 0 && (
             <ul className="movie-list">
               {movieList.map((movie, index) => {
@@ -586,7 +798,14 @@ export function App() {
                         title={movie.title}
                         isStarred={isStarred}
                         isSaving={savingMovieKeys.has(movie.preferenceKey)}
-                        onClick={() => void toggleMovieStar(movie)}
+                        onClick={(event) =>
+                          void toggleMovieStar(
+                            movie,
+                            event.currentTarget.closest<HTMLElement>(
+                              ".movie-list-item",
+                            ),
+                          )
+                        }
                       />
                     )}
                   </li>
@@ -594,6 +813,76 @@ export function App() {
               })}
             </ul>
           )}
+          {!loading &&
+            !error &&
+            view === "cinemas" &&
+            cinemaList.length > 0 && (
+              <ul className="cinema-list">
+                {cinemaList.map((cinema) => {
+                  const route = routeByCinema.get(cinema.id);
+                  const travelMode =
+                    cinemaTravelModes.get(cinema.id) ?? "transit";
+                  const isSaving = savingCinemaIds.has(cinema.id);
+                  return (
+                    <li className="cinema-list-item" key={cinema.id}>
+                      <div className="cinema-list-heading">
+                        <div>
+                          <h2>{cinema.name}</h2>
+                          <p>
+                            <MapPinIcon size={15} aria-hidden="true" />
+                            {cinema.areaLabel}
+                          </p>
+                        </div>
+                        {route && (
+                          <strong className="cinema-route-time">
+                            約{route.durationMinutes}分
+                            <small>{routeTravelLabel(route)}の目安</small>
+                          </strong>
+                        )}
+                      </div>
+                      <p className="cinema-address">{cinema.address}</p>
+                      <div className="cinema-preference-row">
+                        <label htmlFor={`travel-mode-${cinema.id}`}>
+                          移動方法
+                        </label>
+                        <select
+                          id={`travel-mode-${cinema.id}`}
+                          value={travelMode}
+                          disabled={
+                            isSaving ||
+                            !schedule?.cinemaTravelPreferencesEnabled
+                          }
+                          onChange={(event) =>
+                            void saveCinemaTravelMode(
+                              cinema.id,
+                              event.target.value as TravelMode,
+                            )
+                          }
+                        >
+                          {TRAVEL_MODE_OPTIONS.map((option) => (
+                            <option value={option.value} key={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <span aria-live="polite">
+                          {isSaving ? "保存中" : "保存済み"}
+                        </span>
+                      </div>
+                      <a
+                        className="cinema-official-link"
+                        href={cinema.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        公式サイト
+                        <ArrowSquareOutIcon size={16} aria-hidden="true" />
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           {!loading &&
             !error &&
             view === "schedule" &&
@@ -650,7 +939,7 @@ export function App() {
                                     movie.preferenceKey,
                                   )}
                                   compact
-                                  onClick={() => void toggleMovieStar(movie)}
+                                  onClick={() => void toggleMovieStar(movie, null)}
                                 />
                               )}
                             </div>
@@ -738,7 +1027,7 @@ function FavoriteButton({
   isStarred: boolean;
   isSaving: boolean;
   compact?: boolean;
-  onClick: () => void;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 }) {
   return (
     <button
@@ -794,8 +1083,13 @@ function CinemaTravelTimes({
 }
 
 function routeTravelLabel(route: RouteEstimate): string {
-  if (route.travelMode === "transit") return "電車・徒歩";
-  return route.mode === "estimate" ? "徒歩目安" : "徒歩";
+  const labels: Record<TravelMode, string> = {
+    walking: "徒歩",
+    transit: "電車",
+    bus: "バス",
+    bicycle: "自転車",
+  };
+  return labels[route.travelMode];
 }
 
 function CinemaSlot({

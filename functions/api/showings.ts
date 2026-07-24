@@ -2,6 +2,7 @@ import { jstDateBounds, todayInJst } from "../../shared/date";
 import type { ScheduleResponse, Showing } from "../../shared/types";
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
+import { listCinemaTravelPreferences } from "../_lib/cinema-travel-preferences";
 import { listStarredPreferences } from "../_lib/preferences";
 
 interface ShowingRow {
@@ -41,7 +42,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     ? "c.approval = 'approved'"
     : "c.approval != 'disabled'";
 
-  const [showingResult, health, cinemas, preferences] = await Promise.all([
+  const [showingResult, health, cinemas] = await Promise.all([
     context.env.DB.prepare(
       `SELECT
         s.id, s.source_id, s.cinema_id, c.name AS cinema_name,
@@ -70,10 +71,13 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       .bind(date)
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
-    publicOnly
-      ? Promise.resolve([])
-      : listStarredPreferences(context.env.DB),
   ]);
+  const [preferences, cinemaTravelPreferences] = publicOnly
+    ? [[], []]
+    : await Promise.all([
+        listStarredPreferences(context.env.DB),
+        listCinemaTravelPreferences(context.env.DB, cinemas),
+      ]);
 
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({
     id: row.id,
@@ -103,6 +107,8 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     showings,
     preferences,
     preferencesEnabled: !publicOnly,
+    cinemaTravelPreferences,
+    cinemaTravelPreferencesEnabled: !publicOnly,
     sourceHealth: {
       healthy: Number(health?.healthy ?? 0),
       total: Number(health?.total ?? 0),

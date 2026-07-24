@@ -28,7 +28,7 @@
         <mxCell id="pages-divider" value="" style="shape=line;strokeColor=#E2E8F0;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="405" y="258" width="260" height="10" as="geometry"/>
         </mxCell>
-        <mxCell id="pages-functions" value="&lt;b&gt;Pages Functions&lt;/b&gt;&lt;br&gt;認証ミドルウェア / 署名済みCookie&lt;br&gt;上映 / 好み / 経路 API&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;Secrets: Password / Session / Google Maps&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;spacingTop=4;" vertex="1" parent="1">
+        <mxCell id="pages-functions" value="&lt;b&gt;Pages Functions&lt;/b&gt;&lt;br&gt;認証ミドルウェア / 署名済みCookie&lt;br&gt;上映 / 好み / 経路 / 映画館設定 API&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;Secrets: Password / Session&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;spacingTop=4;" vertex="1" parent="1">
           <mxGeometry x="405" y="278" width="260" height="105" as="geometry"/>
         </mxCell>
         <mxCell id="d1-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
@@ -40,7 +40,7 @@
         <mxCell id="d1-title" value="&lt;b&gt;Cloudflare D1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;SQLite database&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#172033;" vertex="1" parent="1">
           <mxGeometry x="910" y="315" width="145" height="65" as="geometry"/>
         </mxCell>
-        <mxCell id="d1-content" value="映画館 / 上映回 / 作品画像&lt;br&gt;スターした作品 / 取得状態&lt;br&gt;公開許諾 / 有効終了日" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
+        <mxCell id="d1-content" value="映画館 / 上映回 / 作品画像&lt;br&gt;スター作品 / 移動方法 / 取得状態&lt;br&gt;公開許諾 / 有効終了日" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
           <mxGeometry x="830" y="395" width="220" height="60" as="geometry"/>
         </mxCell>
         <mxCell id="worker-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
@@ -55,7 +55,7 @@
         <mxCell id="worker-content" value="公式スケジュールを定期取得&lt;br&gt;8ソースを解析・正規化&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;手動更新はBearer tokenで保護&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
           <mxGeometry x="405" y="620" width="260" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="route-api" value="&lt;b&gt;Google Maps Routes API&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;公共交通経路Matrix&lt;/font&gt;&lt;br&gt;未設定時は徒歩時間を推定" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
+        <mxCell id="route-api" value="&lt;b&gt;移動時間の目安計算&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;徒歩 / 電車 / バス / 自転車&lt;/font&gt;&lt;br&gt;距離・速度・待ち時間から推定" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
           <mxGeometry x="1210" y="175" width="200" height="145" as="geometry"/>
         </mxCell>
         <mxCell id="cinema-sites" value="&lt;b&gt;映画館公式サイト&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;週間上映スケジュール&lt;/font&gt;&lt;br&gt;8ソース" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
@@ -70,7 +70,7 @@
         <mxCell id="worker-d1" value="正規化データをwrite" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#F6821F;fontSize=11;fontColor=#9A4310;labelBackgroundColor=#FFF8F1;" edge="1" parent="1" source="worker-card" target="d1-card">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="pages-route" value="任意: 現在地から電車・徒歩時間" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#64748B;dashed=1;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="pages-card" target="route-api">
+        <mxCell id="pages-route" value="任意: 現在地から移動時間の目安" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#64748B;dashed=1;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="pages-card" target="route-api">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="worker-cinemas" value="HTTPS fetch / parse" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#64748B;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="worker-card" target="cinema-sites">
