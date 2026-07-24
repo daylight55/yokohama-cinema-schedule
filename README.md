@@ -2,12 +2,16 @@
 
 横浜駅、桜木町、みなとみらい、関内、伊勢佐木町周辺の公式上映スケジュールを横断して、「今日、今から観られる映画」を確認する個人用サイトです。
 
+[サイトを開く](https://yokohama-cinema-schedule.pages.dev)
+
 ## 現在できること
 
 - 8館・7日分を、縦の時間軸と横スワイプの映画館枠で見る番組表
 - 当日は、現在時刻から間に合う上映だけを初期表示
 - 日付とエリアで絞り込み
-- 任意で現在地を取得し、徒歩時間を含めて間に合う上映を判定
+- 任意で現在地を取得し、Google Mapsの徒歩時間で間に合う上映を強調
+- 公式画像と作品名だけの作品一覧
+- スターした好みの作品をD1へ保存し、番組表でも強調
 - 公式予約ページへのリンク
 - 映画館ごとの取得失敗を隔離し、前回正常データを保持
 - D1の映画館ごとの有効終了日を使い、閉館後は収集・表示対象から除外
@@ -85,6 +89,7 @@ npm run pages:dev
    npx wrangler pages project create yokohama-cinema-schedule
    npx wrangler pages secret put APP_PASSWORD
    npx wrangler pages secret put SESSION_SECRET
+   npx wrangler pages secret put GOOGLE_MAPS_API_KEY
    ```
 
 4. Workerの手動実行トークンを登録します。
@@ -104,12 +109,29 @@ npm run pages:dev
 
 ## 経路検索
 
-APIキーを設定しない場合は、現在地と映画館の直線距離に道路係数を掛けた徒歩時間の目安を表示します。OpenRouteService互換のMatrix APIを使う場合は、Pagesの環境変数に以下を設定します。
+Google Maps PlatformでRoutes APIを有効にし、PagesのSecret
+`GOOGLE_MAPS_API_KEY`を設定すると、現在地から全映画館までの徒歩経路を
+`computeRouteMatrix`で一括計算します。移動時間に10分の余裕を加えても
+間に合う上映を緑色で強調します。
+
+Google Mapsのキーを設定しない場合は、OpenRouteService互換のMatrix API、
+それも未設定の場合は直線距離に道路係数を掛けた徒歩時間の目安へ
+フォールバックします。
 
 - `ROUTE_MATRIX_API_URL`
 - `ROUTE_MATRIX_API_KEY`
 
 位置情報はブラウザから経路APIへ送信する1回のリクエストにのみ使用し、D1には保存しません。
+
+## 作品画像とスター
+
+作品画像は各映画館の公式スケジュールまたは公式上映作品一覧から取得します。
+公式ページに画像がない作品にはプレースホルダーを表示します。
+
+現在は単一オーナー向けのプライベートサイトのため、スターは
+`movie_preferences`にサイト共通の好みとして保存します。公開モードでは
+好みを返さず、スター更新APIも無効化します。複数ユーザー対応時はこのテーブルへ
+ユーザーIDを追加して分離します。
 
 ## 検証
 
@@ -117,4 +139,4 @@ APIキーを設定しない場合は、現在地と映画館の直線距離に�
 npm run ci:pr
 ```
 
-型検査、15件以上の単体テスト、プロダクションビルドを順に実行します。
+型検査、29件以上の単体テスト、プロダクションビルドを順に実行します。

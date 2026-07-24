@@ -1,4 +1,5 @@
 import type { NormalizedShowing } from "../../../shared/types";
+import { safeImageUrl } from "../../../shared/movie";
 
 interface EigalandShow {
   showId?: string;
@@ -18,6 +19,7 @@ interface EigalandMovie {
   movieDetail?: {
     movieId?: string;
     movieName?: string;
+    posterUrl?: string;
   };
   houseList?: EigalandHouse[];
 }
@@ -42,6 +44,7 @@ export function parseEigalandSchedule(
           cinemaId,
           movieKey: movie.movieId ?? movie.movieName,
           title: normalizeJapanese(movie.movieName),
+          imageUrl: safeImageUrl(movie.posterUrl),
           startsAt: new Date(show.startTime).toISOString(),
           endsAt: show.endTime ? new Date(show.endTime).toISOString() : null,
           screen: house.houseName ? normalizeJapanese(house.houseName) : null,
@@ -64,4 +67,3 @@ function detectFormat(title: string): string | null {
   const match = title.match(/(?:字幕|吹替|4K|3D|2D)/g);
   return match ? [...new Set(match)].join(" / ") : null;
 }
-

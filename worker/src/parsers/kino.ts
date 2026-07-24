@@ -5,10 +5,12 @@ import {
   jstLocalToIso,
 } from "../../../shared/date";
 import type { NormalizedShowing } from "../../../shared/types";
+import { safeImageUrl } from "../../../shared/movie";
 
 export function parseKinoSchedule(
   html: string,
   firstDate: string,
+  movieImages: ReadonlyMap<string, string> = new Map(),
 ): NormalizedShowing[] {
   const $ = load(html);
   const dates = $(".schedule__day-btn button:not([disabled])")
@@ -56,6 +58,7 @@ export function parseKinoSchedule(
             cinemaId: "kino-minatomirai",
             movieKey,
             title,
+            imageUrl: movieImages.get(movieKey) ?? null,
             startsAt: jstLocalToIso(date, start),
             endsAt: end ? jstEndToIso(date, start, end) : null,
             screen: screenName,
@@ -68,6 +71,24 @@ export function parseKinoSchedule(
     });
   });
 
+  return result;
+}
+
+export function parseKinoMovieImages(html: string): Map<string, string> {
+  const $ = load(html);
+  const result = new Map<string, string>();
+  $(".movie-list__item").each((_, element) => {
+    const item = $(element);
+    const detailUrl = item.find("a[href*='movie-detail']").first().attr("href");
+    const movieKey = detailUrl?.match(/movie-detail\/(\d+)/)?.[1];
+    const style = item.find(".movie-list__img").first().attr("style") ?? "";
+    const imagePath = style.match(/url\(['"]?([^'")]+)['"]?\)/)?.[1];
+    if (!movieKey || !imagePath) return;
+    const imageUrl = safeImageUrl(
+      new URL(imagePath, "https://kinocinema.jp").toString(),
+    );
+    if (imageUrl) result.set(movieKey, imageUrl);
+  });
   return result;
 }
 

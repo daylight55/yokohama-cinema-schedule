@@ -1,5 +1,6 @@
 import { load } from "cheerio";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
+import { safeImageUrl } from "../../../shared/movie";
 import type { NormalizedShowing } from "../../../shared/types";
 
 export function parseTjoySchedule(
@@ -17,9 +18,18 @@ export function parseTjoySchedule(
     const rawTitle = cleanText(section.find(".js-title-film").first().text());
     const title = rawTitle.replace(/^【[^】]+】\s*/, "");
     if (!title) return;
-    const movieHref = section.find("a[href*='film_detail']").first().attr("href");
+    const detailOnclick =
+      section.find("a[onclick*='cinema_detail']").first().attr("onclick") ?? "";
+    const movieHref =
+      section.find("a[href*='film_detail']").first().attr("href") ??
+      detailOnclick.match(/['"]([^'"]*cinema_detail[^'"]*)['"]/)?.[1];
     const movieKey =
-      movieHref?.match(/film_detail\/(\d+)/)?.[1] ?? rawTitle;
+      movieHref?.match(/(?:film_detail|cinema_detail)\/([^/?#]+)/)?.[1] ??
+      rawTitle;
+    const rawImageUrl = section.find(".film-img img").first().attr("src");
+    const imageUrl = safeImageUrl(
+      rawImageUrl ? new URL(rawImageUrl, origin).toString() : null,
+    );
 
     section.find(".schedule-box").each((__, boxElement) => {
       const box = $(boxElement);
@@ -39,6 +49,7 @@ export function parseTjoySchedule(
         cinemaId,
         movieKey,
         title,
+        imageUrl,
         startsAt: jstLocalToIso(date, match[1]),
         endsAt: jstEndToIso(date, match[1], match[2]),
         screen,

@@ -1,10 +1,12 @@
 import { load } from "cheerio";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
+import { moviePreferenceKey, safeImageUrl } from "../../../shared/movie";
 import type { NormalizedShowing } from "../../../shared/types";
 
 export function parseMovilSchedule(
   html: string,
   date: string,
+  movieImages: ReadonlyMap<string, string> = new Map(),
 ): NormalizedShowing[] {
   const $ = load(html);
   const result: NormalizedShowing[] = [];
@@ -13,7 +15,11 @@ export function parseMovilSchedule(
     const article = $(element);
     const title = cleanText(article.find("h2").first().text());
     if (!title) return;
-    const movieKey = article.attr("class")?.split(/\s+/)[0] ?? title;
+    const detailUrl = article.find("header a[href*='/movies/']").attr("href");
+    const movieKey =
+      detailUrl?.match(/\/movies\/(\d+)/)?.[1] ??
+      article.attr("class")?.split(/\s+/)[0] ??
+      title;
 
     article.find("ul.timetable").each((__, timetableElement) => {
       const timetable = $(timetableElement);
@@ -36,6 +42,7 @@ export function parseMovilSchedule(
           cinemaId: "movil",
           movieKey,
           title,
+          imageUrl: movieImages.get(moviePreferenceKey(title)) ?? null,
           startsAt: jstLocalToIso(date, start),
           endsAt: end ? jstEndToIso(date, start, end) : null,
           screen: screen ? `ムービル${screen}` : theatreText || null,
@@ -47,6 +54,26 @@ export function parseMovilSchedule(
     });
   });
 
+  return result;
+}
+
+export function parseMovilMovieImages(html: string): Map<string, string> {
+  const $ = load(html);
+  const result = new Map<string, string>();
+  $(".movies-list-movie").each((_, element) => {
+    const movie = $(element);
+    const title = cleanText(
+      movie.find(".main h1, .main h2, .main h3, .title").first().text() ||
+        movie.find("img").first().attr("alt") ||
+        "",
+    );
+    const imagePath = movie.find(".thumb img, img").first().attr("src");
+    if (!title || !imagePath) return;
+    const imageUrl = safeImageUrl(
+      new URL(imagePath, "https://109cinemas.net").toString(),
+    );
+    if (imageUrl) result.set(moviePreferenceKey(title), imageUrl);
+  });
   return result;
 }
 

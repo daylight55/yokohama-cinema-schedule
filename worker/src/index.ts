@@ -9,10 +9,13 @@ import {
 import type { NormalizedShowing } from "../../shared/types";
 import { parseAeonSchedule } from "./parsers/aeon";
 import { parseEigalandSchedule } from "./parsers/eigaland";
-import { parseKinoSchedule } from "./parsers/kino";
-import { parseMovilSchedule } from "./parsers/movil";
+import { parseKinoMovieImages, parseKinoSchedule } from "./parsers/kino";
+import { parseMovilMovieImages, parseMovilSchedule } from "./parsers/movil";
 import { parseTjoySchedule } from "./parsers/tjoy";
-import { parseUnitedSchedule } from "./parsers/united";
+import {
+  parseUnitedMovieImages,
+  parseUnitedSchedule,
+} from "./parsers/united";
 
 interface Env {
   DB: D1Database;
@@ -231,17 +234,28 @@ async function fetchAeon(dates: string[]): Promise<NormalizedShowing[]> {
 }
 
 async function fetchMovil(dates: string[]): Promise<NormalizedShowing[]> {
+  const movieImages = await fetchOptionalMovieImages(
+    "https://109cinemas.net/nowshowing/",
+    parseMovilMovieImages,
+  );
   const showings: NormalizedShowing[] = [];
   for (const date of dates) {
     const url = `https://109cinemas.net/movil/schedules/${compactDate(date)}.html?theater_code=72`;
     const response = await checkedFetch(url);
-    showings.push(...parseMovilSchedule(await response.text(), date));
+    showings.push(
+      ...parseMovilSchedule(await response.text(), date, movieImages),
+    );
   }
   return showings;
 }
 
 async function fetchUnited(dates: string[]): Promise<NormalizedShowing[]> {
   const decoder = new TextDecoder("shift_jis");
+  const movieImages = await fetchOptionalMovieImages(
+    "https://www.unitedcinemas.jp/minatomirai/film.php",
+    parseUnitedMovieImages,
+    async (response) => decoder.decode(await response.arrayBuffer()),
+  );
   const showings: NormalizedShowing[] = [];
   for (const date of dates) {
     const url = `https://www.unitedcinemas.jp/minatomirai/daily.php?date=${date}`;
@@ -250,6 +264,7 @@ async function fetchUnited(dates: string[]): Promise<NormalizedShowing[]> {
       ...parseUnitedSchedule(
         decoder.decode(await response.arrayBuffer()),
         date,
+        movieImages,
       ),
     );
   }
@@ -257,8 +272,36 @@ async function fetchUnited(dates: string[]): Promise<NormalizedShowing[]> {
 }
 
 async function fetchKino(dates: string[]): Promise<NormalizedShowing[]> {
-  const response = await checkedFetch("https://kinocinema.jp/minatomirai/");
-  return parseKinoSchedule(await response.text(), dates[0]);
+  const [scheduleResponse, movieImages] = await Promise.all([
+    checkedFetch("https://kinocinema.jp/minatomirai/"),
+    fetchOptionalMovieImages(
+      "https://kinocinema.jp/minatomirai/movie/",
+      parseKinoMovieImages,
+    ),
+  ]);
+  return parseKinoSchedule(
+    await scheduleResponse.text(),
+    dates[0],
+    movieImages,
+  );
+}
+
+async function fetchOptionalMovieImages(
+  url: string,
+  parse: (html: string) => Map<string, string>,
+  decode: (response: Response) => Promise<string> = (response) =>
+    response.text(),
+): Promise<Map<string, string>> {
+  try {
+    const response = await checkedFetch(url);
+    return parse(await decode(response));
+  } catch (error) {
+    console.warn("Movie image enrichment failed", {
+      host: new URL(url).hostname,
+      message: safeError(error),
+    });
+    return new Map();
+  }
 }
 
 async function fetchEigaland(
@@ -455,9 +498,10 @@ async function replaceSourceWindow(
       return db
         .prepare(
           `INSERT INTO showings (
-            id, source_id, cinema_id, movie_key, title, starts_at, ends_at,
+            id, source_id, cinema_id, movie_key, title, image_url,
+            starts_at, ends_at,
             screen, format, booking_url, purchasable, fetched_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id,
@@ -465,6 +509,7 @@ async function replaceSourceWindow(
           showing.cinemaId,
           showing.movieKey,
           showing.title,
+          showing.imageUrl,
           showing.startsAt,
           showing.endsAt,
           showing.screen,
