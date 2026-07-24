@@ -4,6 +4,7 @@ import type {
   Cinema,
   CinemaArea,
   RouteEstimate,
+  ScheduleCollapseMinutes,
   Showing,
   TravelMode,
 } from "../shared/types";
@@ -138,6 +139,16 @@ export interface ScheduleTimeGroup {
   showingCount: number;
 }
 
+export interface ScheduleTimeBucket {
+  key: string;
+  label: string;
+  startMinutes: number;
+  endMinutes: number;
+  groups: ScheduleTimeGroup[];
+  showingCount: number;
+  movieCount: number;
+}
+
 const jstTimeFormatter = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Tokyo",
   hour: "2-digit",
@@ -169,6 +180,70 @@ export function groupByScheduleTime(showings: Showing[]): ScheduleTimeGroup[] {
       movies: groupByMovie(entries),
       showingCount: entries.length,
     }));
+}
+
+function minutesFromTime(time: string): number {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function timeFromMinutes(minutes: number): string {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+export function groupScheduleTimeBuckets(
+  groups: ScheduleTimeGroup[],
+  collapseMinutes: Exclude<ScheduleCollapseMinutes, 0>,
+): ScheduleTimeBucket[] {
+  const buckets = new Map<number, ScheduleTimeGroup[]>();
+  for (const group of groups) {
+    const startMinutes =
+      Math.floor(minutesFromTime(group.time) / collapseMinutes) *
+      collapseMinutes;
+    buckets.set(startMinutes, [...(buckets.get(startMinutes) ?? []), group]);
+  }
+
+  return [...buckets.entries()]
+    .sort(([startA], [startB]) => startA - startB)
+    .map(([startMinutes, bucketGroups]) => {
+      const endMinutes = startMinutes + collapseMinutes;
+      return {
+        key: timeFromMinutes(startMinutes),
+        label: `${timeFromMinutes(startMinutes)}〜${timeFromMinutes(endMinutes)}`,
+        startMinutes,
+        endMinutes,
+        groups: bucketGroups,
+        showingCount: bucketGroups.reduce(
+          (count, group) => count + group.showingCount,
+          0,
+        ),
+        movieCount: new Set(
+          bucketGroups.flatMap((group) =>
+            group.movies.map((movie) => movie.key),
+          ),
+        ).size,
+      };
+    });
+}
+
+export function shouldDefaultExpandScheduleBucket(
+  bucket: Pick<ScheduleTimeBucket, "startMinutes" | "endMinutes">,
+  now: Date,
+  selectedDate: string,
+  today: string,
+): boolean {
+  if (selectedDate !== today) return false;
+
+  const bucketDuration = bucket.endMinutes - bucket.startMinutes;
+  const currentMinutes = minutesFromTime(scheduleTimeSlot(now));
+  const currentBucketStart =
+    Math.floor(currentMinutes / bucketDuration) * bucketDuration;
+  return (
+    bucket.startMinutes >= currentBucketStart &&
+    bucket.startMinutes <= currentBucketStart + 60
+  );
 }
 
 export function findCurrentTimeMarkerIndex(

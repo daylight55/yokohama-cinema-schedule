@@ -8,13 +8,19 @@ import {
 import {
   deleteHomeLocation,
   getUserProfile,
+  isScheduleCollapseMinutes,
   normalizeHomeCoordinates,
+  saveScheduleCollapseMinutes,
   saveHomeLocation,
 } from "../_lib/user-profile";
 
 interface ProfileRequest {
   latitude?: number;
   longitude?: number;
+}
+
+interface DisplayPreferenceRequest {
+  scheduleCollapseMinutes?: unknown;
 }
 
 function unavailable() {
@@ -70,6 +76,32 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   );
 
   return Response.json(profile, {
+    headers: { "cache-control": "private, no-store" },
+  });
+};
+
+export const onRequestPatch: PagesFunction<PagesEnv> = async (context) => {
+  if (context.env.PUBLIC_MODE === "true") return unavailable();
+
+  let body: DisplayPreferenceRequest;
+  try {
+    body = await context.request.json<DisplayPreferenceRequest>();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  if (!isScheduleCollapseMinutes(body.scheduleCollapseMinutes)) {
+    return Response.json(
+      { error: "invalid_schedule_collapse_minutes" },
+      { status: 400 },
+    );
+  }
+
+  await saveScheduleCollapseMinutes(
+    context.env.DB,
+    body.scheduleCollapseMinutes,
+  );
+  return Response.json(await getUserProfile(context.env.DB), {
     headers: { "cache-control": "private, no-store" },
   });
 };

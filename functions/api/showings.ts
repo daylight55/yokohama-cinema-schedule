@@ -85,6 +85,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
         ? Promise.resolve({
             homeRegistered: false,
             homeUpdatedAt: null,
+            scheduleCollapseMinutes: 60 as const,
           })
         : getUserProfile(context.env.DB),
     ]);
