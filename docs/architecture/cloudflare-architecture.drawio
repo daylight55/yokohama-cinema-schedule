@@ -1,0 +1,82 @@
+<mxfile host="app.diagrams.net" modified="2026-07-24T00:00:00.000Z" agent="Codex" version="26.0.16">
+  <diagram id="cloudflare-architecture" name="Cloudflare architecture">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1450" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="横浜映画館スケジュール — Cloudflare Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#172033;" vertex="1" parent="1">
+          <mxGeometry x="40" y="25" width="720" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="cloudflare-boundary" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#FFF8F1;strokeColor=#F6821F;strokeWidth=2;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+          <mxGeometry x="300" y="90" width="850" height="660" as="geometry"/>
+        </mxCell>
+        <mxCell id="cloudflare-label" value="CLOUDFLARE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#C65312;spacingLeft=4;" vertex="1" parent="1">
+          <mxGeometry x="330" y="105" width="180" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="user-card" value="&lt;b&gt;利用者&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;スマートフォン / ブラウザ&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;任意で現在地を送信&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=2;align=center;verticalAlign=middle;fontSize=16;fontColor=#172033;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="330" width="220" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="pages-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="380" y="165" width="310" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="pages-icon" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://raw.githubusercontent.com/cloudflare/cloudflare-docs/7aab48be1a0accec2f792739d3e7a9f2ccf596bc/src/icons/pages.svg;" vertex="1" parent="1">
+          <mxGeometry x="405" y="190" width="54" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="pages-title" value="&lt;b&gt;Cloudflare Pages&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;React + Vite static assets&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#172033;" vertex="1" parent="1">
+          <mxGeometry x="475" y="188" width="190" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="pages-divider" value="" style="shape=line;strokeColor=#E2E8F0;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="405" y="258" width="260" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="pages-functions" value="&lt;b&gt;Pages Functions&lt;/b&gt;&lt;br&gt;認証ミドルウェア / 署名済みCookie&lt;br&gt;上映API / ステータスAPI / 経路API&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;Secrets: APP_PASSWORD, SESSION_SECRET&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="405" y="278" width="260" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="805" y="290" width="270" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1-icon" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://raw.githubusercontent.com/cloudflare/cloudflare-docs/7aab48be1a0accec2f792739d3e7a9f2ccf596bc/src/icons/d1.svg;" vertex="1" parent="1">
+          <mxGeometry x="830" y="320" width="62" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1-title" value="&lt;b&gt;Cloudflare D1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;SQLite database&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#172033;" vertex="1" parent="1">
+          <mxGeometry x="910" y="315" width="145" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1-content" value="映画館 / 上映回&lt;br&gt;取得状態 / 更新時刻&lt;br&gt;公開許諾ステータス" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="830" y="395" width="220" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker-card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#F6821F;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="380" y="520" width="310" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker-icon" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://raw.githubusercontent.com/cloudflare/cloudflare-docs/7aab48be1a0accec2f792739d3e7a9f2ccf596bc/src/icons/workers.svg;" vertex="1" parent="1">
+          <mxGeometry x="405" y="550" width="56" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker-title" value="&lt;b&gt;Cloudflare Workers&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;Cron Triggers&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#172033;" vertex="1" parent="1">
+          <mxGeometry x="480" y="545" width="185" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker-content" value="公式スケジュールを定期取得&lt;br&gt;8ソースを解析・正規化&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;手動更新はBearer tokenで保護&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="405" y="620" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="route-api" value="&lt;b&gt;経路Matrix API&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;OpenRouteService互換&lt;/font&gt;&lt;br&gt;未設定時は距離から推定" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="175" width="200" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="cinema-sites" value="&lt;b&gt;映画館公式サイト&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot;&gt;週間上映スケジュール&lt;/font&gt;&lt;br&gt;8ソース" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;align=center;verticalAlign=middle;fontSize=14;fontColor=#172033;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="535" width="200" height="155" as="geometry"/>
+        </mxCell>
+        <mxCell id="user-pages" value="HTTPS&lt;br&gt;private session" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="user-card" target="pages-card">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="pages-d1" value="上映・状態をread" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#F6821F;fontSize=11;fontColor=#9A4310;labelBackgroundColor=#FFF8F1;" edge="1" parent="1" source="pages-card" target="d1-card">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker-d1" value="正規化データをwrite" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#F6821F;fontSize=11;fontColor=#9A4310;labelBackgroundColor=#FFF8F1;" edge="1" parent="1" source="worker-card" target="d1-card">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="pages-route" value="任意: 現在地から徒歩時間" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#64748B;dashed=1;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="pages-card" target="route-api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker-cinemas" value="HTTPS fetch / parse" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#64748B;fontSize=11;fontColor=#475569;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="worker-card" target="cinema-sites">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

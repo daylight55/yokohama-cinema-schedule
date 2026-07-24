@@ -17,15 +17,10 @@
 
 ## 構成
 
-```text
-React + Vite
-  └─ Cloudflare Pages
-       ├─ Pages Functions: 認証 / 上映API / 経路API
-       └─ D1: 映画館 / 上映回 / 取得状態
+[![横浜映画館スケジュールのCloudflareアーキテクチャ](docs/architecture/cloudflare-architecture.svg)](docs/architecture/cloudflare-architecture.drawio)
 
-Cloudflare Cron Worker
-  └─ 各映画館の公式スケジュールを取得・正規化してD1へ保存
-```
+[編集用draw.ioファイル](docs/architecture/cloudflare-architecture.drawio) /
+[図のソースとアイコンについて](docs/architecture/README.md)
 
 Workerは日本時間の0時・6時・9時・12時・15時・18時・21時台に実行する設定です。
 
