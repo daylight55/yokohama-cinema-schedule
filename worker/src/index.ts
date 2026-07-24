@@ -427,8 +427,9 @@ async function seedCinemas(db: D1Database): Promise<void> {
         .prepare(
           `INSERT INTO cinemas (
             id, name, short_name, area, area_label, address, latitude, longitude,
-            source_url, active_until, approval, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            source_url, active_until, approval, nearest_station_id,
+            station_walk_minutes, station_walk_distance_meters, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             short_name = excluded.short_name,
@@ -452,6 +453,9 @@ async function seedCinemas(db: D1Database): Promise<void> {
           cinema.sourceUrl,
           cinema.activeUntil,
           cinema.approval,
+          cinema.nearestStationId,
+          cinema.stationWalkMinutes,
+          cinema.stationWalkDistanceMeters,
           now,
         ),
     ),

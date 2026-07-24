@@ -1,9 +1,11 @@
 import { addDays, todayInJst } from "../shared/date";
 import { moviePreferenceKey } from "../shared/movie";
 import type {
+  Cinema,
   CinemaArea,
   RouteEstimate,
   Showing,
+  TravelMode,
 } from "../shared/types";
 
 export const AREA_OPTIONS: Array<{
@@ -26,17 +28,50 @@ export function isShowingReachable(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
   routeByCinema: Map<string, RouteEstimate>,
-  preparationMinutes = 10,
+  arrivalMarginMinutes = 20,
+  marginToleranceMinutes = 10,
   reachableWindowMinutes = 60,
 ): boolean {
   const route = routeByCinema.get(showing.cinemaId);
-  const travelMinutes = route?.durationMinutes ?? 0;
+  if (!route) {
+    return false;
+  }
+  const targetStartMinutes = route.durationMinutes + arrivalMarginMinutes;
+  const earliestStartMinutes =
+    targetStartMinutes - marginToleranceMinutes;
+  const latestStartMinutes = Math.min(
+    targetStartMinutes + marginToleranceMinutes,
+    reachableWindowMinutes,
+  );
   const startsInMinutes =
     (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
   return (
-    startsInMinutes >= travelMinutes + preparationMinutes &&
-    startsInMinutes <= reachableWindowMinutes
+    startsInMinutes >= earliestStartMinutes &&
+    startsInMinutes <= latestStartMinutes
   );
+}
+
+export function buildGoogleMapsDirectionsUrl(
+  origin: { latitude: number; longitude: number },
+  destination: Pick<Cinema, "name" | "address">,
+  travelMode: TravelMode,
+): string {
+  const googleTravelMode: Record<
+    TravelMode,
+    "walking" | "transit" | "bicycling"
+  > = {
+    walking: "walking",
+    transit: "transit",
+    bus: "transit",
+    bicycle: "bicycling",
+  };
+  const params = new URLSearchParams({
+    api: "1",
+    origin: `${origin.latitude},${origin.longitude}`,
+    destination: `${destination.name} ${destination.address}`,
+    travelmode: googleTravelMode[travelMode],
+  });
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 export function isShowingPast(

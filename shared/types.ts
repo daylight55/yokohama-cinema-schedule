@@ -19,6 +19,9 @@ export interface Cinema {
   sourceUrl: string;
   activeUntil: string | null;
   approval: SourceApproval;
+  nearestStationId?: string | null;
+  stationWalkMinutes?: number | null;
+  stationWalkDistanceMeters?: number | null;
 }
 
 export interface Showing {
@@ -62,9 +65,42 @@ export interface RouteEstimate {
   cinemaId: string;
   distanceMeters: number;
   durationMinutes: number;
+  accessMinutes: number;
+  bufferMinutes: number;
   mode: "route" | "estimate";
   provider: "google_maps" | "custom" | "estimate";
   travelMode: TravelMode;
+  transitDetails?: TransitEstimateDetails;
+}
+
+export interface TransitEstimateDetails {
+  originStationId: string;
+  originStationName: string;
+  destinationStationId: string;
+  destinationStationName: string;
+  originWalkMinutes: number;
+  stationTravelMinutes: number;
+  destinationWalkMinutes: number;
+  bufferMinutes: number;
+  lines: string[];
+  originWalkProvider: "google_maps" | "estimate";
+}
+
+export interface Station {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface StationConnection {
+  stationAId: string;
+  stationBId: string;
+  lineName: string;
+  transportMode: "train" | "walk";
+  rideMinutes: number;
+  headwayMinutes: number;
+  transferMinutes: number;
 }
 
 export interface RoutesResponse {

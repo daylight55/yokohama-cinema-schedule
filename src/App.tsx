@@ -34,6 +34,7 @@ import type {
 } from "../shared/types";
 import {
   AREA_OPTIONS,
+  buildGoogleMapsDirectionsUrl,
   buildDates,
   filterShowings,
   findCurrentTimeMarkerIndex,
@@ -806,8 +807,12 @@ export function App() {
           )}
           {view === "schedule" &&
             locationState === "ready" &&
+            lastLocation &&
             cinemaTravelRows.length > 0 && (
-              <CinemaTravelTimes rows={cinemaTravelRows} />
+              <CinemaTravelTimes
+                rows={cinemaTravelRows}
+                origin={lastLocation}
+              />
             )}
           {cinemaPreferenceError && (
             <p className="inline-status error" role="status">
@@ -974,14 +979,26 @@ export function App() {
                             {cinema.areaLabel}
                           </p>
                         </div>
-                        {route && (
-                          <strong className="cinema-route-time">
-                            約{route.durationMinutes}分
-                            <small>{routeTravelLabel(route)}の目安</small>
-                          </strong>
+                        {route && lastLocation && (
+                          <div className="cinema-route-actions">
+                            <strong className="cinema-route-time">
+                              約{route.durationMinutes}分
+                              <small>{routeEstimateDetail(route)}</small>
+                            </strong>
+                            <GoogleMapsRouteLink
+                              cinema={cinema}
+                              origin={lastLocation}
+                              route={route}
+                            />
+                          </div>
                         )}
                       </div>
                       <p className="cinema-address">{cinema.address}</p>
+                      {route?.transitDetails && (
+                        <p className="cinema-transit-breakdown">
+                          {transitRouteSummary(route)}
+                        </p>
+                      )}
                       <div className="cinema-preference-row">
                         <label htmlFor={`travel-mode-${cinema.id}`}>
                           移動方法
@@ -1196,8 +1213,10 @@ function FavoriteButton({
 
 function CinemaTravelTimes({
   rows,
+  origin,
 }: {
   rows: Array<{ cinema: Cinema; route: RouteEstimate }>;
+  origin: { latitude: number; longitude: number };
 }) {
   return (
     <section
@@ -1212,13 +1231,31 @@ function CinemaTravelTimes({
         {rows.map(({ cinema, route }) => (
           <li key={cinema.id}>
             <span>{cinema.shortName}</span>
-            <strong>
-              {routeTravelLabel(route)} 約{route.durationMinutes}分
-            </strong>
-          </li>
+            <div className="cinema-travel-route">
+              <strong>
+                {routeTravelLabel(route)} 約{route.durationMinutes}分
+              </strong>
+            <GoogleMapsRouteLink
+              cinema={cinema}
+              origin={origin}
+              route={route}
+            />
+          </div>
+          {route.transitDetails && (
+            <small className="cinema-travel-breakdown">
+              {transitRouteSummary(route)}
+            </small>
+          )}
+        </li>
         ))}
       </ul>
-      <p>「間に合う」は開始60分以内かつ、移動時間＋準備10分に収まる上映です。</p>
+      <p>
+        電車は石川町駅・伊勢佐木長者町駅のうち早い方を起点に、現在地から駅までの
+        徒歩・平均待ち・乗換・映画館までの徒歩・余裕10分を含む目安です。
+        実際の公共交通経路は「Googleマップで案内」から確認できます。
+        「間に合う」は現在時刻＋移動時間＋20分を中心に前後10分、かつ開始60分以内の
+        上映です。
+      </p>
     </section>
   );
 }
@@ -1231,6 +1268,50 @@ function routeTravelLabel(route: RouteEstimate): string {
     bicycle: "自転車",
   };
   return labels[route.travelMode];
+}
+
+function routeEstimateDetail(route: RouteEstimate): string {
+  if (route.transitDetails) {
+    return `${route.transitDetails.originStationName}→${route.transitDetails.destinationStationName}`;
+  }
+  return route.travelMode === "transit"
+    ? "駅徒歩・待ち・余裕10分込みの目安"
+    : `${routeTravelLabel(route)}の目安`;
+}
+
+function transitRouteSummary(route: RouteEstimate): string {
+  const details = route.transitDetails;
+  if (!details) {
+    return "";
+  }
+  const stationSegment =
+    details.stationTravelMinutes === 0
+      ? `${details.destinationStationName}を利用`
+      : `${details.originStationName}→${details.destinationStationName} ${details.stationTravelMinutes}分（平均待ち込）`;
+  return `駅まで徒歩${details.originWalkMinutes}分・${stationSegment}・映画館まで徒歩${details.destinationWalkMinutes}分・余裕${details.bufferMinutes}分`;
+}
+
+function GoogleMapsRouteLink({
+  cinema,
+  origin,
+  route,
+}: {
+  cinema: Cinema;
+  origin: { latitude: number; longitude: number };
+  route: RouteEstimate;
+}) {
+  return (
+    <a
+      className="google-maps-route-link"
+      href={buildGoogleMapsDirectionsUrl(origin, cinema, route.travelMode)}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`${cinema.name}までの${routeTravelLabel(route)}経路をGoogle マップで開く`}
+    >
+      Googleマップで案内
+      <ArrowSquareOutIcon size={12} aria-hidden="true" />
+    </a>
+  );
 }
 
 function CinemaSlot({
@@ -1282,7 +1363,15 @@ function CinemaSlot({
         <span className="slot-route">
           <MapPinIcon size={14} aria-hidden="true" />
           {routeTravelLabel(route)} 約{route.durationMinutes}分
-          {route.mode === "estimate" && <small>目安</small>}
+          {route.mode === "estimate" && (
+            <small>
+              {route.transitDetails
+                ? `${route.transitDetails.originStationName}→${route.transitDetails.destinationStationName}`
+                : route.travelMode === "transit"
+                  ? "駅徒歩・余裕込"
+                  : "目安"}
+            </small>
+          )}
         </span>
       )}
     </a>

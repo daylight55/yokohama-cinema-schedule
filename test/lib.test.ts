@@ -3,6 +3,7 @@ import type { RouteEstimate, Showing } from "../shared/types";
 import {
   filterShowings,
   findCurrentTimeMarkerIndex,
+  buildGoogleMapsDirectionsUrl,
   groupByMovie,
   groupByScheduleTime,
   isShowingPast,
@@ -38,39 +39,61 @@ describe("schedule filtering", () => {
     cinemaId: "tjoy-yokohama",
     distanceMeters: 1800,
     durationMinutes: 25,
+    accessMinutes: 0,
+    bufferMinutes: 0,
     mode: "estimate",
     provider: "estimate",
     travelMode: "walking",
   };
 
-  it("keeps a showing reachable after travel and preparation time", () => {
+  it("marks a showing around travel time plus twenty minutes", () => {
     expect(
       isShowingReachable(
-        showing(),
+        showing({ startsAt: "2026-07-24T09:45:00.000Z" }),
         now,
         new Map([[route.cinemaId, route]]),
       ),
     ).toBe(true);
   });
 
-  it("removes a showing that cannot be reached", () => {
+  it("does not mark a showing less than ten minutes after arrival", () => {
     expect(
       isShowingReachable(
-        showing({ startsAt: "2026-07-24T09:20:00.000Z" }),
+        showing({ startsAt: "2026-07-24T09:34:00.000Z" }),
         now,
         new Map([[route.cinemaId, route]]),
       ),
     ).toBe(false);
   });
 
-  it("only marks reachable showings within the next hour", () => {
+  it("does not mark a showing more than thirty minutes after arrival", () => {
     expect(
       isShowingReachable(
-        showing({ startsAt: "2026-07-24T10:01:00.000Z" }),
+        showing({ startsAt: "2026-07-24T09:56:00.000Z" }),
         now,
         new Map([[route.cinemaId, route]]),
       ),
     ).toBe(false);
+  });
+
+  it("uses the displayed transit time including its route buffer", () => {
+    const transitRoute: RouteEstimate = {
+      ...route,
+      durationMinutes: 25,
+      bufferMinutes: 10,
+      travelMode: "transit",
+    };
+    expect(
+      isShowingReachable(
+        showing({ startsAt: "2026-07-24T09:35:00.000Z" }),
+        now,
+        new Map([[transitRoute.cinemaId, transitRoute]]),
+      ),
+    ).toBe(true);
+  });
+
+  it("does not mark a showing when no travel time exists", () => {
+    expect(isShowingReachable(showing(), now, new Map())).toBe(false);
   });
 
   it("filters by area", () => {
@@ -107,6 +130,45 @@ describe("schedule filtering", () => {
         now,
       ),
     ).toBe(false);
+  });
+});
+
+describe("Google Maps directions links", () => {
+  it("builds an encoded transit route from the current location", () => {
+    const url = new URL(
+      buildGoogleMapsDirectionsUrl(
+        { latitude: 35.4658, longitude: 139.6223 },
+        {
+          name: "横浜ブルク13",
+          address: "横浜市中区桜木町1-1-7 コレットマーレ6F",
+        },
+        "transit",
+      ),
+    );
+
+    expect(url.origin).toBe("https://www.google.com");
+    expect(url.pathname).toBe("/maps/dir/");
+    expect(url.searchParams.get("api")).toBe("1");
+    expect(url.searchParams.get("origin")).toBe("35.4658,139.6223");
+    expect(url.searchParams.get("destination")).toBe(
+      "横浜ブルク13 横浜市中区桜木町1-1-7 コレットマーレ6F",
+    );
+    expect(url.searchParams.get("travelmode")).toBe("transit");
+  });
+
+  it("uses Google Maps transit mode for bus routes", () => {
+    const url = new URL(
+      buildGoogleMapsDirectionsUrl(
+        { latitude: 35.4658, longitude: 139.6223 },
+        {
+          name: "横浜ブルク13",
+          address: "横浜市中区桜木町1-1-7 コレットマーレ6F",
+        },
+        "bus",
+      ),
+    );
+
+    expect(url.searchParams.get("travelmode")).toBe("transit");
   });
 });
 
