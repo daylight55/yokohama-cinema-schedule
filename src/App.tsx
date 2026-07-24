@@ -15,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   Fragment,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -87,6 +88,7 @@ export function App() {
     top: number;
   } | null>(null);
   const didInitialTimeScrollRef = useRef(false);
+  const autoLocationRequestedRef = useRef(false);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
   const [selectedDate, setSelectedDate] = useState(dates[0]);
@@ -116,6 +118,12 @@ export function App() {
     () => new Set(),
   );
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
+  const [locationAutoEnabled, setLocationAutoEnabled] = useState(false);
+  const [locationPreferenceError, setLocationPreferenceError] = useState<
+    string | null
+  >(null);
+  const [savingLocationPreference, setSavingLocationPreference] =
+    useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [locationState, setLocationState] = useState<
@@ -177,6 +185,7 @@ export function App() {
             ]),
           ),
         );
+        setLocationAutoEnabled(data.locationPreference.autoEnabled);
       })
       .catch((reason: unknown) => {
         if ((reason as Error).name !== "AbortError") {
@@ -303,46 +312,128 @@ export function App() {
     didInitialTimeScrollRef.current = true;
   }, [error, loading, selectedDate, timeGroups, today, view]);
 
-  const fetchRoutes = async (location: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    const response = await fetch("/api/routes", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify(location),
-    });
-    if (!response.ok) throw new Error();
-    const data = (await response.json()) as RoutesResponse;
-    setRoutes(data.routes);
-  };
+  const fetchRoutes = useCallback(
+    async (location: { latitude: number; longitude: number }) => {
+      const response = await fetch("/api/routes", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify(location),
+      });
+      if (!response.ok) throw new Error();
+      const data = (await response.json()) as RoutesResponse;
+      setRoutes(data.routes);
+    },
+    [],
+  );
 
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationState("error");
+  const saveLocationPreference = useCallback(async (autoEnabled: boolean) => {
+    setSavingLocationPreference(true);
+    setLocationPreferenceError(null);
+    try {
+      const response = await fetch("/api/location-preference", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({ autoEnabled }),
+      });
+      if (!response.ok) throw new Error();
+      const preference: unknown = await response.json();
+      if (
+        typeof preference !== "object" ||
+        preference === null ||
+        !("autoEnabled" in preference) ||
+        typeof preference.autoEnabled !== "boolean"
+      ) {
+        throw new Error();
+      }
+      setLocationAutoEnabled(preference.autoEnabled);
+    } catch {
+      setLocationPreferenceError("現在地の自動取得設定を保存できませんでした");
+      throw new Error("location_preference_save_failed");
+    } finally {
+      setSavingLocationPreference(false);
+    }
+  }, []);
+
+  const requestLocation = useCallback(
+    async ({ persistAutoEnabled }: { persistAutoEnabled: boolean }) => {
+      autoLocationRequestedRef.current = true;
+      setLocationPreferenceError(null);
+      if (!navigator.geolocation) {
+        setLocationState("error");
+        return;
+      }
+      setLocationState("loading");
+      try {
+        const position = await new Promise<GeolocationPosition>(
+          (resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: false,
+              timeout: 10_000,
+              maximumAge: 300_000,
+            });
+          },
+        );
+        const location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+        setLastLocation(location);
+        await fetchRoutes(location);
+        setLocationState("ready");
+
+        if (persistAutoEnabled) {
+          try {
+            await saveLocationPreference(true);
+          } catch {
+            // Route estimates remain usable even if the shared opt-in fails.
+          }
+        }
+      } catch {
+        setLocationState("error");
+      }
+    },
+    [fetchRoutes, saveLocationPreference],
+  );
+
+  useEffect(() => {
+    if (
+      !schedule?.locationPreferenceEnabled ||
+      !locationAutoEnabled ||
+      autoLocationRequestedRef.current
+    ) {
       return;
     }
-    setLocationState("loading");
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const location = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          setLastLocation(location);
-          await fetchRoutes(location);
-          setLocationState("ready");
-        } catch {
-          setLocationState("error");
-        }
-      },
-      () => setLocationState("error"),
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 },
-    );
+
+    autoLocationRequestedRef.current = true;
+    void requestLocation({ persistAutoEnabled: false });
+  }, [
+    locationAutoEnabled,
+    requestLocation,
+    schedule?.locationPreferenceEnabled,
+  ]);
+
+  const stopAutomaticLocation = async () => {
+    try {
+      await saveLocationPreference(false);
+      autoLocationRequestedRef.current = false;
+      setRoutes([]);
+      setLastLocation(null);
+      setLocationState("idle");
+    } catch {
+      // Keep the current shared setting and route estimates on save failure.
+    }
+  };
+
+  const requestLocationManually = () => {
+    void requestLocation({
+      persistAutoEnabled: Boolean(schedule?.locationPreferenceEnabled),
+    });
   };
 
   const saveCinemaTravelMode = async (
@@ -639,8 +730,12 @@ export function App() {
               <button
                 type="button"
                 className="location-button"
-                onClick={requestLocation}
-                disabled={locationState === "loading"}
+                onClick={requestLocationManually}
+                disabled={
+                  loading ||
+                  locationState === "loading" ||
+                  savingLocationPreference
+                }
               >
                 <CrosshairIcon size={17} aria-hidden="true" />
                 {locationState === "loading"
@@ -652,13 +747,58 @@ export function App() {
             )}
           </div>
 
-          {view !== "movies" && locationState === "ready" && (
+          {view !== "movies" &&
+            schedule?.locationPreferenceEnabled &&
+            locationAutoEnabled && (
+              <div className="location-auto-row">
+                <p
+                  className={[
+                    "inline-status",
+                    locationState === "error" ? "error" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  role="status"
+                >
+                  {locationState === "error" ? (
+                    <WarningCircleIcon size={16} aria-hidden="true" />
+                  ) : (
+                    <CheckCircleIcon
+                      size={16}
+                      weight="fill"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {locationState === "loading"
+                    ? "現在地を自動取得しています"
+                    : locationState === "ready"
+                      ? "現在地を自動反映しています"
+                      : locationState === "error"
+                        ? "自動取得は有効ですが、この端末では取得できませんでした"
+                        : "現在地の自動取得が有効です"}
+                </p>
+                <button
+                  type="button"
+                  className="location-auto-stop"
+                  disabled={savingLocationPreference}
+                  onClick={() => void stopAutomaticLocation()}
+                >
+                  {savingLocationPreference ? "停止中" : "自動取得を停止"}
+                </button>
+              </div>
+            )}
+
+          {view !== "movies" &&
+            !locationAutoEnabled &&
+            locationState === "ready" && (
             <p className="inline-status" role="status">
               <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
               映画館ごとの移動方法で目安時間を反映しました
             </p>
           )}
-          {view !== "movies" && locationState === "error" && (
+          {view !== "movies" &&
+            !locationAutoEnabled &&
+            locationState === "error" && (
             <p className="inline-status error" role="status">
               <WarningCircleIcon size={16} aria-hidden="true" />
               現在地を取得できませんでした
@@ -673,6 +813,12 @@ export function App() {
             <p className="inline-status error" role="status">
               <WarningCircleIcon size={16} aria-hidden="true" />
               {cinemaPreferenceError}
+            </p>
+          )}
+          {locationPreferenceError && (
+            <p className="inline-status error" role="status">
+              <WarningCircleIcon size={16} aria-hidden="true" />
+              {locationPreferenceError}
             </p>
           )}
           {preferenceError && (
