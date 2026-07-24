@@ -37,6 +37,7 @@ describe("schedule filtering", () => {
     durationMinutes: 25,
     mode: "estimate",
     provider: "estimate",
+    travelMode: "walking",
   };
 
   it("keeps a showing reachable after travel and preparation time", () => {
@@ -59,6 +60,16 @@ describe("schedule filtering", () => {
     ).toBe(false);
   });
 
+  it("only marks reachable showings within the next hour", () => {
+    expect(
+      isShowingReachable(
+        showing({ startsAt: "2026-07-24T10:01:00.000Z" }),
+        now,
+        new Map([[route.cinemaId, route]]),
+      ),
+    ).toBe(false);
+  });
+
   it("filters by area", () => {
     const result = filterShowings(
       [showing(), showing({ id: "show-2", area: "kannai" })],
@@ -66,36 +77,33 @@ describe("schedule filtering", () => {
         selectedArea: "kannai",
         futureOnly: false,
         now,
-        routeByCinema: new Map(),
       },
     );
     expect(result.map((entry) => entry.id)).toEqual(["show-2"]);
   });
 
-  it("marks a showing past only after its known end time", () => {
-    const started = showing({
-      startsAt: "2026-07-24T08:00:00.000Z",
-      endsAt: "2026-07-24T10:00:00.000Z",
-    });
-    expect(isShowingPast(started, now)).toBe(false);
-    expect(
-      isShowingPast(
-        { ...started, endsAt: "2026-07-24T09:00:00.000Z" },
-        now,
-      ),
-    ).toBe(true);
-  });
-
-  it("falls back to start time when an end time is unavailable", () => {
+  it("marks a showing past as soon as its start time has passed", () => {
     expect(
       isShowingPast(
         showing({
           startsAt: "2026-07-24T08:59:00.000Z",
-          endsAt: null,
+          endsAt: "2026-07-24T11:00:00.000Z",
         }),
         now,
       ),
     ).toBe(true);
+    expect(
+      isShowingPast(
+        showing({ startsAt: "2026-07-24T09:00:00.000Z" }),
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      isShowingPast(
+        showing({ startsAt: "2026-07-24T09:01:00.000Z" }),
+        now,
+      ),
+    ).toBe(false);
   });
 });
 

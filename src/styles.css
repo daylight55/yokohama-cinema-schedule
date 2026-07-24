@@ -374,6 +374,66 @@ footer {
   color: var(--danger);
 }
 
+.cinema-travel-times {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.cinema-travel-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cinema-travel-heading h2 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.cinema-travel-heading span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.cinema-travel-times ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cinema-travel-times li {
+  display: grid;
+  min-height: 36px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.cinema-travel-times li > span {
+  overflow: hidden;
+  color: #cdd7d2;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cinema-travel-times li strong {
+  color: var(--accent);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cinema-travel-times > p {
+  margin: 9px 0 0;
+  color: #7f8d86;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
 .guide {
   padding: 25px 0 48px;
 }
@@ -663,7 +723,7 @@ footer {
   white-space: nowrap;
 }
 
-.slot-time-details .ended-label {
+.slot-time-details .started-label {
   color: #d1d5d2;
   font-size: 9px;
   font-weight: 800;

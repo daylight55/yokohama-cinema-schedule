@@ -62,26 +62,20 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
       allowedCinemas,
     );
   }
-  routes ??= allowedCinemas.map((cinema) => {
-    const straightLine = haversineMeters(
-      latitude,
-      longitude,
-      cinema.latitude,
-      cinema.longitude,
-    );
-    const distanceMeters = Math.round(straightLine * 1.25);
-    return {
-      cinemaId: cinema.id,
-      distanceMeters,
-      durationMinutes: Math.max(1, Math.ceil(distanceMeters / 75)),
-      mode: "estimate" as const,
-      provider: "estimate" as const,
-    };
-  });
+  const routeByCinema = new Map(
+    (routes ?? []).map((route) => [route.cinemaId, route]),
+  );
+  routes = allowedCinemas.map(
+    (cinema) =>
+      routeByCinema.get(cinema.id) ??
+      estimateWalkingRoute(latitude, longitude, cinema),
+  );
 
   const response: RoutesResponse = {
     generatedAt: new Date().toISOString(),
-    provider: routes[0]?.provider ?? "estimate",
+    provider:
+      routes.find((route) => route.provider !== "estimate")?.provider ??
+      "estimate",
     routes,
   };
   return Response.json(response, {
@@ -127,7 +121,7 @@ export async function fetchGoogleRouteMatrix(
               },
             },
           })),
-          travelMode: "WALK",
+          travelMode: "TRANSIT",
         }),
       },
     );
@@ -153,6 +147,7 @@ export async function fetchGoogleRouteMatrix(
           durationMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
           mode: "route" as const,
           provider: "google_maps" as const,
+          travelMode: "transit" as const,
         },
       ];
     });
@@ -207,10 +202,33 @@ async function fetchRouteMatrix(
       durationMinutes: Math.max(1, Math.ceil((durations[index] ?? 0) / 60)),
       mode: "route",
       provider: "custom",
+      travelMode: "walking",
     }));
   } catch {
     return null;
   }
+}
+
+export function estimateWalkingRoute(
+  latitude: number,
+  longitude: number,
+  cinema: Cinema,
+): RouteEstimate {
+  const straightLine = haversineMeters(
+    latitude,
+    longitude,
+    cinema.latitude,
+    cinema.longitude,
+  );
+  const distanceMeters = Math.round(straightLine * 1.25);
+  return {
+    cinemaId: cinema.id,
+    distanceMeters,
+    durationMinutes: Math.max(1, Math.ceil(distanceMeters / 75)),
+    mode: "estimate",
+    provider: "estimate",
+    travelMode: "walking",
+  };
 }
 
 function haversineMeters(

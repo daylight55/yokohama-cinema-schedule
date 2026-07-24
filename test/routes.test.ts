@@ -24,14 +24,14 @@ afterEach(() => {
 });
 
 describe("Google Routes matrix", () => {
-  it("requests walking routes and normalizes the response", async () => {
+  it("requests transit routes and normalizes the response", async () => {
     const fetchMock = vi.fn(
       async (_input: string | URL | Request, init?: RequestInit) => {
         const headers = new Headers(init?.headers);
         expect(headers.get("x-goog-api-key")).toBe("test-key");
         expect(headers.get("x-goog-fieldmask")).toContain("duration");
         expect(JSON.parse(String(init?.body))).toMatchObject({
-          travelMode: "WALK",
+          travelMode: "TRANSIT",
           origins: [
             {
               waypoint: {
@@ -63,6 +63,7 @@ describe("Google Routes matrix", () => {
         durationMinutes: 11,
         mode: "route",
         provider: "google_maps",
+        travelMode: "transit",
       },
     ]);
     expect(fetchMock).toHaveBeenCalledWith(
