@@ -415,28 +415,6 @@ footer {
   font-size: 12px;
 }
 
-.location-button {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 0 13px;
-  border: 1px solid #789284;
-  border-radius: 9px;
-  background: transparent;
-  color: #d8e6de;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.location-button:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-
 .inline-status {
   display: flex;
   align-items: center;
@@ -450,36 +428,20 @@ footer {
   color: var(--danger);
 }
 
-.location-auto-row {
-  display: flex;
+.home-profile-link {
+  display: inline-flex;
   min-height: 36px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.location-auto-row .inline-status {
-  min-width: 0;
-  margin-top: 0;
-}
-
-.location-auto-stop {
-  flex: 0 0 auto;
-  padding: 6px 0;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0;
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--accent);
   font: inherit;
-  font-size: 10px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
-}
-
-.location-auto-stop:disabled {
-  cursor: wait;
-  opacity: 0.6;
 }
 
 .cinema-travel-times {
@@ -619,6 +581,97 @@ footer {
   color: var(--muted);
   font-size: 10px;
   font-weight: 400;
+}
+
+.profile-panel {
+  display: grid;
+  max-width: 560px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px 12px;
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.profile-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  color: var(--accent);
+}
+
+.profile-copy h2 {
+  margin: 1px 0 5px;
+  font-size: 17px;
+}
+
+.profile-copy p,
+.profile-privacy-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.profile-copy small {
+  display: block;
+  margin-top: 7px;
+  color: #819089;
+  font-size: 10px;
+}
+
+.profile-primary-action {
+  display: inline-flex;
+  min-height: 48px;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.profile-primary-action:disabled,
+.profile-delete-action:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.profile-privacy-note {
+  grid-column: 1 / -1;
+  padding-top: 2px;
+}
+
+.profile-delete-action {
+  display: inline-flex;
+  width: fit-content;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+  color: #c8aaa6;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.profile-panel > .inline-status {
+  grid-column: 1 / -1;
+  margin-top: 0;
 }
 
 .update-status {

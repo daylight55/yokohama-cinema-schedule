@@ -13,16 +13,17 @@ import {
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
 import {
+  estimateStationWalkFallbacks,
   estimateStationTravel,
   listPreferredOriginStationIds,
   listStationConnections,
   listStations,
+  type StationWalkEstimate,
 } from "../_lib/stations";
-
-interface RouteRequest {
-  latitude?: number;
-  longitude?: number;
-}
+import {
+  getHomeLocation,
+  listHomeStationAccess,
+} from "../_lib/user-profile";
 
 interface EstimateProfile {
   distanceFactor: number;
@@ -32,26 +33,9 @@ interface EstimateProfile {
   bufferMinutes: number;
 }
 
-interface StationWalkEstimate {
-  station: Station;
-  distanceMeters: number;
-  durationMinutes: number;
-  provider: "google_maps" | "estimate";
-}
-
-interface GoogleRouteMatrixElement {
-  destinationIndex?: number;
-  distanceMeters?: number;
-  duration?: string;
-  condition?: string;
-  status?: { code?: number };
-}
-
 export const TRANSIT_STATION_WALK_MINUTES = 10;
 export const TRANSIT_BUFFER_MINUTES = 10;
 export const ORIGIN_STATION_WALK_TOLERANCE_MINUTES = 8;
-const GOOGLE_ROUTE_MATRIX_URL =
-  "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix";
 
 const ESTIMATE_PROFILES: Record<TravelMode, EstimateProfile> = {
   walking: {
@@ -84,36 +68,34 @@ const ESTIMATE_PROFILES: Record<TravelMode, EstimateProfile> = {
   },
 };
 
-export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
-  let body: RouteRequest;
-  try {
-    body = await context.request.json<RouteRequest>();
-  } catch {
-    return Response.json({ error: "invalid_json" }, { status: 400 });
+export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+  if (context.env.PUBLIC_MODE === "true") {
+    return Response.json({ error: "routes_unavailable" }, { status: 403 });
   }
 
-  const latitude = Number(body.latitude);
-  const longitude = Number(body.longitude);
-  if (
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude) ||
-    latitude < -90 ||
-    latitude > 90 ||
-    longitude < -180 ||
-    longitude > 180
-  ) {
-    return Response.json({ error: "invalid_location" }, { status: 400 });
+  const home = await getHomeLocation(context.env.DB);
+  if (!home) {
+    const response: RoutesResponse = {
+      generatedAt: new Date().toISOString(),
+      provider: "estimate",
+      origin: null,
+      routes: [],
+    };
+    return Response.json(response, {
+      headers: { "cache-control": "private, no-store" },
+    });
   }
 
-  const publicOnly = context.env.PUBLIC_MODE === "true";
+  const { latitude, longitude } = home;
   const cinemas = await listActiveCinemas(
     context.env.DB,
     todayInJst(),
-    publicOnly,
+    false,
   );
-  const preferences = publicOnly
-    ? []
-    : await listCinemaTravelPreferences(context.env.DB, cinemas);
+  const preferences = await listCinemaTravelPreferences(
+    context.env.DB,
+    cinemas,
+  );
   const modeByCinema = new Map(
     preferences.map((preference) => [
       preference.cinemaId,
@@ -137,11 +119,17 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
             preferredOriginStationIds.has(station.id),
           )
         : stations;
-    const stationWalks = await estimateWalksToStations(
-      latitude,
-      longitude,
-      originStations,
-      context.env.GOOGLE_MAPS_API_KEY,
+    const storedWalks = await listHomeStationAccess(
+      context.env.DB,
+      new Map(stations.map((station) => [station.id, station])),
+    );
+    const storedWalkByStationId = new Map(
+      storedWalks.map((walk) => [walk.station.id, walk]),
+    );
+    const stationWalks = originStations.map(
+      (station) =>
+        storedWalkByStationId.get(station.id) ??
+        estimateStationWalkFallbacks(latitude, longitude, [station])[0],
     );
     transitRoutes = buildTransitRoutes(
       latitude,
@@ -165,10 +153,11 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   const response: RoutesResponse = {
     generatedAt: new Date().toISOString(),
     provider: "estimate",
+    origin: { latitude, longitude },
     routes,
   };
   return Response.json(response, {
-    headers: { "cache-control": "private, max-age=120" },
+    headers: { "cache-control": "private, no-store" },
   });
 };
 
@@ -208,87 +197,6 @@ export function estimateRoute(
     provider: "estimate",
     travelMode,
   };
-}
-
-export async function estimateWalksToStations(
-  latitude: number,
-  longitude: number,
-  stations: Station[],
-  apiKey: string | undefined,
-  fetcher: typeof fetch = fetch,
-): Promise<StationWalkEstimate[]> {
-  if (!apiKey || stations.length === 0) {
-    return estimateStationWalkFallbacks(latitude, longitude, stations);
-  }
-
-  try {
-    const response = await fetcher(GOOGLE_ROUTE_MATRIX_URL, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-goog-api-key": apiKey,
-        "x-goog-fieldmask":
-          "originIndex,destinationIndex,distanceMeters,duration,condition,status",
-      },
-      body: JSON.stringify({
-        origins: [
-          {
-            waypoint: {
-              location: {
-                latLng: { latitude, longitude },
-              },
-            },
-          },
-        ],
-        destinations: stations.map((station) => ({
-          waypoint: {
-            location: {
-              latLng: {
-                latitude: station.latitude,
-                longitude: station.longitude,
-              },
-            },
-          },
-        })),
-        travelMode: "WALK",
-      }),
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (!response.ok) {
-      return estimateStationWalkFallbacks(latitude, longitude, stations);
-    }
-
-    const payload = await response.json<GoogleRouteMatrixElement[]>();
-    const routeByDestination = new Map(
-      payload
-        .filter(
-          (item) =>
-            item.condition === "ROUTE_EXISTS" &&
-            (item.status?.code ?? 0) === 0 &&
-            item.destinationIndex !== undefined,
-        )
-        .map((item) => [item.destinationIndex!, item]),
-    );
-    return stations.map((station, index) => {
-      const route = routeByDestination.get(index);
-      const durationSeconds = parseGoogleDurationSeconds(route?.duration);
-      if (
-        !route ||
-        route.distanceMeters === undefined ||
-        durationSeconds === null
-      ) {
-        return estimateStationWalkFallback(latitude, longitude, station);
-      }
-      return {
-        station,
-        distanceMeters: route.distanceMeters,
-        durationMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
-        provider: "google_maps" as const,
-      };
-    });
-  } catch {
-    return estimateStationWalkFallbacks(latitude, longitude, stations);
-  }
 }
 
 export function buildTransitRoutes(
@@ -388,46 +296,6 @@ export function buildTransitRoutes(
   }
 
   return routes;
-}
-
-function estimateStationWalkFallbacks(
-  latitude: number,
-  longitude: number,
-  stations: Station[],
-): StationWalkEstimate[] {
-  return stations.map((station) =>
-    estimateStationWalkFallback(latitude, longitude, station),
-  );
-}
-
-function estimateStationWalkFallback(
-  latitude: number,
-  longitude: number,
-  station: Station,
-): StationWalkEstimate {
-  const distanceMeters = Math.round(
-    haversineMeters(
-      latitude,
-      longitude,
-      station.latitude,
-      station.longitude,
-    ) * 1.25,
-  );
-  return {
-    station,
-    distanceMeters,
-    durationMinutes: Math.max(1, Math.ceil(distanceMeters / 75)),
-    provider: "estimate",
-  };
-}
-
-function parseGoogleDurationSeconds(value: string | undefined): number | null {
-  const match = value?.match(/^(\d+(?:\.\d+)?)s$/);
-  if (!match) {
-    return null;
-  }
-  const seconds = Number(match[1]);
-  return Number.isFinite(seconds) ? seconds : null;
 }
 
 function haversineMeters(

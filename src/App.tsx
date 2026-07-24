@@ -6,10 +6,13 @@ import {
   ClockIcon,
   CrosshairIcon,
   FilmSlateIcon,
+  HouseLineIcon,
   ListIcon,
   MapPinIcon,
   SignOutIcon,
   StarIcon,
+  TrashIcon,
+  UserCircleIcon,
   WarningCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -31,6 +34,7 @@ import type {
   ScheduleResponse,
   Showing,
   TravelMode,
+  UserProfile,
 } from "../shared/types";
 import {
   AREA_OPTIONS,
@@ -78,7 +82,7 @@ const TRAVEL_MODE_OPTIONS: Array<{ value: TravelMode; label: string }> = [
   { value: "bicycle", label: "自転車" },
 ];
 
-type AppView = "schedule" | "movies" | "cinemas";
+type AppView = "schedule" | "movies" | "cinemas" | "profile";
 
 export function App() {
   const [now, setNow] = useState(() => new Date());
@@ -89,7 +93,6 @@ export function App() {
     top: number;
   } | null>(null);
   const didInitialTimeScrollRef = useRef(false);
-  const autoLocationRequestedRef = useRef(false);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
   const [selectedDate, setSelectedDate] = useState(dates[0]);
@@ -108,7 +111,7 @@ export function App() {
   const [cinemaPreferenceError, setCinemaPreferenceError] = useState<
     string | null
   >(null);
-  const [lastLocation, setLastLocation] = useState<{
+  const [routeOrigin, setRouteOrigin] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
@@ -119,15 +122,17 @@ export function App() {
     () => new Set(),
   );
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
-  const [locationAutoEnabled, setLocationAutoEnabled] = useState(false);
-  const [locationPreferenceError, setLocationPreferenceError] = useState<
-    string | null
-  >(null);
-  const [savingLocationPreference, setSavingLocationPreference] =
-    useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    homeRegistered: false,
+    homeUpdatedAt: null,
+  });
+  const [profileState, setProfileState] = useState<
+    "idle" | "saving" | "deleting"
+  >("idle");
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [locationState, setLocationState] = useState<
+  const [routeState, setRouteState] = useState<
     "idle" | "loading" | "ready" | "error"
   >("idle");
 
@@ -186,7 +191,7 @@ export function App() {
             ]),
           ),
         );
-        setLocationAutoEnabled(data.locationPreference.autoEnabled);
+        setUserProfile(data.userProfile);
       })
       .catch((reason: unknown) => {
         if ((reason as Error).name !== "AbortError") {
@@ -313,128 +318,100 @@ export function App() {
     didInitialTimeScrollRef.current = true;
   }, [error, loading, selectedDate, timeGroups, today, view]);
 
-  const fetchRoutes = useCallback(
-    async (location: { latitude: number; longitude: number }) => {
+  const fetchRoutes = useCallback(async () => {
+    setRouteState("loading");
+    try {
       const response = await fetch("/api/routes", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify(location),
+        headers: { accept: "application/json" },
       });
       if (!response.ok) throw new Error();
       const data = (await response.json()) as RoutesResponse;
       setRoutes(data.routes);
-    },
-    [],
-  );
+      setRouteOrigin(data.origin);
+      setRouteState(data.origin ? "ready" : "idle");
+    } catch {
+      setRoutes([]);
+      setRouteOrigin(null);
+      setRouteState("error");
+    }
+  }, []);
 
-  const saveLocationPreference = useCallback(async (autoEnabled: boolean) => {
-    setSavingLocationPreference(true);
-    setLocationPreferenceError(null);
+  useEffect(() => {
+    if (!userProfile.homeRegistered) {
+      setRoutes([]);
+      setRouteOrigin(null);
+      setRouteState("idle");
+      return;
+    }
+    void fetchRoutes();
+  }, [
+    fetchRoutes,
+    userProfile.homeRegistered,
+    userProfile.homeUpdatedAt,
+  ]);
+
+  const registerHomeLocation = async () => {
+    setProfileError(null);
+    if (!navigator.geolocation) {
+      setProfileError("このブラウザでは位置情報を利用できません");
+      return;
+    }
+
+    setProfileState("saving");
     try {
-      const response = await fetch("/api/location-preference", {
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false,
+            timeout: 10_000,
+            maximumAge: 0,
+          });
+        },
+      );
+      const response = await fetch("/api/profile", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           accept: "application/json",
         },
-        body: JSON.stringify({ autoEnabled }),
-      });
-      if (!response.ok) throw new Error();
-      const preference: unknown = await response.json();
-      if (
-        typeof preference !== "object" ||
-        preference === null ||
-        !("autoEnabled" in preference) ||
-        typeof preference.autoEnabled !== "boolean"
-      ) {
-        throw new Error();
-      }
-      setLocationAutoEnabled(preference.autoEnabled);
-    } catch {
-      setLocationPreferenceError("現在地の自動取得設定を保存できませんでした");
-      throw new Error("location_preference_save_failed");
-    } finally {
-      setSavingLocationPreference(false);
-    }
-  }, []);
-
-  const requestLocation = useCallback(
-    async ({ persistAutoEnabled }: { persistAutoEnabled: boolean }) => {
-      autoLocationRequestedRef.current = true;
-      setLocationPreferenceError(null);
-      if (!navigator.geolocation) {
-        setLocationState("error");
-        return;
-      }
-      setLocationState("loading");
-      try {
-        const position = await new Promise<GeolocationPosition>(
-          (resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: false,
-              timeout: 10_000,
-              maximumAge: 300_000,
-            });
-          },
-        );
-        const location = {
+        body: JSON.stringify({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-        };
-        setLastLocation(location);
-        await fetchRoutes(location);
-        setLocationState("ready");
-
-        if (persistAutoEnabled) {
-          try {
-            await saveLocationPreference(true);
-          } catch {
-            // Route estimates remain usable even if the shared opt-in fails.
-          }
-        }
-      } catch {
-        setLocationState("error");
-      }
-    },
-    [fetchRoutes, saveLocationPreference],
-  );
-
-  useEffect(() => {
-    if (
-      !schedule?.locationPreferenceEnabled ||
-      !locationAutoEnabled ||
-      autoLocationRequestedRef.current
-    ) {
-      return;
-    }
-
-    autoLocationRequestedRef.current = true;
-    void requestLocation({ persistAutoEnabled: false });
-  }, [
-    locationAutoEnabled,
-    requestLocation,
-    schedule?.locationPreferenceEnabled,
-  ]);
-
-  const stopAutomaticLocation = async () => {
-    try {
-      await saveLocationPreference(false);
-      autoLocationRequestedRef.current = false;
-      setRoutes([]);
-      setLastLocation(null);
-      setLocationState("idle");
+        }),
+      });
+      if (!response.ok) throw new Error();
+      const profile = (await response.json()) as UserProfile;
+      setUserProfile(profile);
+      setSchedule((current) =>
+        current ? { ...current, userProfile: profile } : current,
+      );
     } catch {
-      // Keep the current shared setting and route estimates on save failure.
+      setProfileError(
+        "自宅を登録できませんでした。位置情報の許可を確認してください",
+      );
+    } finally {
+      setProfileState("idle");
     }
   };
 
-  const requestLocationManually = () => {
-    void requestLocation({
-      persistAutoEnabled: Boolean(schedule?.locationPreferenceEnabled),
-    });
+  const deleteHomeProfile = async () => {
+    if (!window.confirm("登録した自宅位置を削除しますか？")) return;
+
+    setProfileState("deleting");
+    setProfileError(null);
+    try {
+      const response = await fetch("/api/profile", { method: "DELETE" });
+      if (!response.ok) throw new Error();
+      const profile = (await response.json()) as UserProfile;
+      setUserProfile(profile);
+      setSchedule((current) =>
+        current ? { ...current, userProfile: profile } : current,
+      );
+    } catch {
+      setProfileError("自宅情報を削除できませんでした");
+    } finally {
+      setProfileState("idle");
+    }
   };
 
   const saveCinemaTravelMode = async (
@@ -461,7 +438,7 @@ export function App() {
         body: JSON.stringify({ cinemaId, travelMode }),
       });
       if (!response.ok) throw new Error();
-      if (lastLocation) await fetchRoutes(lastLocation);
+      if (userProfile.homeRegistered) await fetchRoutes();
     } catch {
       setCinemaTravelModes((current) => {
         const next = new Map(current);
@@ -647,12 +624,21 @@ export function App() {
               <BuildingsIcon size={20} aria-hidden="true" />
               映画館
             </button>
+            <button
+              type="button"
+              className={view === "profile" ? "active" : ""}
+              aria-current={view === "profile" ? "page" : undefined}
+              onClick={() => navigateTo("profile")}
+            >
+              <UserCircleIcon size={20} aria-hidden="true" />
+              プロフィール
+            </button>
           </nav>
         </div>
       </dialog>
 
       <main id="main">
-        {view !== "cinemas" && (
+        {(view === "schedule" || view === "movies") && (
         <nav className="date-nav" aria-label="上映日">
           <div className="date-strip">
             {dates.map((date, index) => {
@@ -679,6 +665,7 @@ export function App() {
         </nav>
         )}
 
+        {view !== "profile" && (
         <section className="schedule-controls" aria-label="上映の絞り込み">
           <div className="area-strip" role="group" aria-label="エリア">
             {AREA_OPTIONS.map((area) => (
@@ -727,103 +714,53 @@ export function App() {
             ) : (
               <span className="all-day-label">移動方法を映画館ごとに保存</span>
             )}
-            {view !== "movies" && (
-              <button
-                type="button"
-                className="location-button"
-                onClick={requestLocationManually}
-                disabled={
-                  loading ||
-                  locationState === "loading" ||
-                  savingLocationPreference
-                }
-              >
-                <CrosshairIcon size={17} aria-hidden="true" />
-                {locationState === "loading"
-                  ? "取得中"
-                  : locationState === "ready"
-                    ? "現在地を更新"
-                    : "現在地"}
-              </button>
-            )}
           </div>
 
-          {view !== "movies" &&
-            schedule?.locationPreferenceEnabled &&
-            locationAutoEnabled && (
-              <div className="location-auto-row">
-                <p
-                  className={[
-                    "inline-status",
-                    locationState === "error" ? "error" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  role="status"
-                >
-                  {locationState === "error" ? (
-                    <WarningCircleIcon size={16} aria-hidden="true" />
-                  ) : (
-                    <CheckCircleIcon
-                      size={16}
-                      weight="fill"
-                      aria-hidden="true"
-                    />
-                  )}
-                  {locationState === "loading"
-                    ? "現在地を自動取得しています"
-                    : locationState === "ready"
-                      ? "現在地を自動反映しています"
-                      : locationState === "error"
-                        ? "自動取得は有効ですが、この端末では取得できませんでした"
-                        : "現在地の自動取得が有効です"}
-                </p>
-                <button
-                  type="button"
-                  className="location-auto-stop"
-                  disabled={savingLocationPreference}
-                  onClick={() => void stopAutomaticLocation()}
-                >
-                  {savingLocationPreference ? "停止中" : "自動取得を停止"}
-                </button>
-              </div>
-            )}
-
-          {view !== "movies" &&
-            !locationAutoEnabled &&
-            locationState === "ready" && (
-            <p className="inline-status" role="status">
-              <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
-              映画館ごとの移動方法で目安時間を反映しました
+          {view !== "movies" && userProfile.homeRegistered && (
+            <p
+              className={[
+                "inline-status",
+                routeState === "error" ? "error" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              role="status"
+            >
+              {routeState === "error" ? (
+                <WarningCircleIcon size={16} aria-hidden="true" />
+              ) : (
+                <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
+              )}
+              {routeState === "loading"
+                ? "自宅からの移動時間を読み込んでいます"
+                : routeState === "error"
+                  ? "自宅からの移動時間を読み込めませんでした"
+                  : "自宅からの固定移動時間を反映しています"}
             </p>
           )}
-          {view !== "movies" &&
-            !locationAutoEnabled &&
-            locationState === "error" && (
-            <p className="inline-status error" role="status">
-              <WarningCircleIcon size={16} aria-hidden="true" />
-              現在地を取得できませんでした
-            </p>
+          {view !== "movies" && !userProfile.homeRegistered && (
+            <button
+              type="button"
+              className="home-profile-link"
+              onClick={() => setView("profile")}
+            >
+              <HouseLineIcon size={16} aria-hidden="true" />
+              プロフィールで自宅を登録
+            </button>
           )}
           {view === "schedule" &&
-            locationState === "ready" &&
-            lastLocation &&
+            routeState === "ready" &&
+            routeOrigin &&
             cinemaTravelRows.length > 0 && (
               <CinemaTravelTimes
                 rows={cinemaTravelRows}
-                origin={lastLocation}
+                origin={routeOrigin}
               />
             )}
           {cinemaPreferenceError && (
             <p className="inline-status error" role="status">
               <WarningCircleIcon size={16} aria-hidden="true" />
               {cinemaPreferenceError}
-            </p>
-          )}
-          {locationPreferenceError && (
-            <p className="inline-status error" role="status">
-              <WarningCircleIcon size={16} aria-hidden="true" />
-              {locationPreferenceError}
             </p>
           )}
           {preferenceError && (
@@ -833,20 +770,29 @@ export function App() {
             </p>
           )}
         </section>
+        )}
 
         <section className="guide" aria-live="polite" aria-busy={loading}>
           <div className="guide-heading">
             <div>
-              <p>{view === "cinemas" ? "対象エリア" : selectedDateLabel}</p>
+              <p>
+                {view === "cinemas"
+                  ? "対象エリア"
+                  : view === "profile"
+                    ? "設定"
+                    : selectedDateLabel}
+              </p>
               <h1>
                 {view === "schedule"
                   ? "上映スケジュール"
                   : view === "movies"
                     ? "上映中の作品"
-                    : "映画館"}
+                    : view === "cinemas"
+                      ? "映画館"
+                      : "プロフィール"}
               </h1>
             </div>
-            {!loading && !error && (
+            {!loading && !error && view !== "profile" && (
               <span>
                 {view === "schedule"
                   ? `${movieCount}作品`
@@ -860,7 +806,7 @@ export function App() {
             )}
           </div>
 
-          {schedule?.lastUpdatedAt && !loading && (
+          {schedule?.lastUpdatedAt && !loading && view !== "profile" && (
             <p className="update-status">
               {updatedFormatter.format(new Date(schedule.lastUpdatedAt))}更新
               {schedule.sourceHealth.total > 0 &&
@@ -884,6 +830,7 @@ export function App() {
           )}
           {!loading &&
             !error &&
+            view !== "profile" &&
             (view === "schedule"
               ? timeGroups.length === 0
               : view === "movies"
@@ -907,6 +854,16 @@ export function App() {
                 </div>
               </div>
             )}
+          {!loading && !error && view === "profile" && (
+            <ProfilePanel
+              enabled={Boolean(schedule?.userProfileEnabled)}
+              profile={userProfile}
+              state={profileState}
+              error={profileError}
+              onRegister={() => void registerHomeLocation()}
+              onDelete={() => void deleteHomeProfile()}
+            />
+          )}
           {!loading && !error && view === "movies" && movieList.length > 0 && (
             <ul className="movie-list">
               {movieList.map((movie, index) => {
@@ -979,7 +936,7 @@ export function App() {
                             {cinema.areaLabel}
                           </p>
                         </div>
-                        {route && lastLocation && (
+                        {route && routeOrigin && (
                           <div className="cinema-route-actions">
                             <strong className="cinema-route-time">
                               約{route.durationMinutes}分
@@ -987,7 +944,7 @@ export function App() {
                             </strong>
                             <GoogleMapsRouteLink
                               cinema={cinema}
-                              origin={lastLocation}
+                              origin={routeOrigin}
                               route={route}
                             />
                           </div>
@@ -1225,7 +1182,7 @@ function CinemaTravelTimes({
     >
       <div className="cinema-travel-heading">
         <h2 id="cinema-travel-times-title">映画館までの目安</h2>
-        <span>現在地から</span>
+        <span>自宅から</span>
       </div>
       <ul>
         {rows.map(({ cinema, route }) => (
@@ -1235,27 +1192,104 @@ function CinemaTravelTimes({
               <strong>
                 {routeTravelLabel(route)} 約{route.durationMinutes}分
               </strong>
-            <GoogleMapsRouteLink
-              cinema={cinema}
-              origin={origin}
-              route={route}
-            />
-          </div>
-          {route.transitDetails && (
-            <small className="cinema-travel-breakdown">
-              {transitRouteSummary(route)}
-            </small>
-          )}
-        </li>
+              <GoogleMapsRouteLink
+                cinema={cinema}
+                origin={origin}
+                route={route}
+              />
+            </div>
+            {route.transitDetails && (
+              <small className="cinema-travel-breakdown">
+                {transitRouteSummary(route)}
+              </small>
+            )}
+          </li>
         ))}
       </ul>
       <p>
-        電車は石川町駅・伊勢佐木長者町駅のうち早い方を起点に、現在地から駅までの
-        徒歩・平均待ち・乗換・映画館までの徒歩・余裕10分を含む目安です。
+        電車は石川町駅・伊勢佐木長者町駅のうち早い方を起点に、自宅から駅までの
+        徒歩・平均待ち・乗換・映画館までの徒歩・余裕10分を含む固定目安です。
+        自宅から駅までの徒歩は登録時に保存し、通常表示ではGoogle APIを呼びません。
         実際の公共交通経路は「Googleマップで案内」から確認できます。
         「間に合う」は現在時刻＋移動時間＋20分を中心に前後10分、かつ開始60分以内の
         上映です。
       </p>
+    </section>
+  );
+}
+
+function ProfilePanel({
+  enabled,
+  profile,
+  state,
+  error,
+  onRegister,
+  onDelete,
+}: {
+  enabled: boolean;
+  profile: UserProfile;
+  state: "idle" | "saving" | "deleting";
+  error: string | null;
+  onRegister: () => void;
+  onDelete: () => void;
+}) {
+  const isBusy = state !== "idle";
+  return (
+    <section className="profile-panel" aria-labelledby="home-profile-title">
+      <div className="profile-icon" aria-hidden="true">
+        <HouseLineIcon size={27} />
+      </div>
+      <div className="profile-copy">
+        <h2 id="home-profile-title">
+          {profile.homeRegistered ? "自宅を登録済み" : "自宅を登録"}
+        </h2>
+        <p>
+          {profile.homeRegistered
+            ? "映画館までの時間は、登録した自宅位置を基準に固定して表示します。"
+            : "今いる場所を自宅として一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。"}
+        </p>
+        {profile.homeUpdatedAt && (
+          <small>
+            {updatedFormatter.format(new Date(profile.homeUpdatedAt))}登録
+          </small>
+        )}
+      </div>
+      <button
+        type="button"
+        className="profile-primary-action"
+        disabled={!enabled || isBusy}
+        onClick={onRegister}
+      >
+        <CrosshairIcon size={18} aria-hidden="true" />
+        {state === "saving"
+          ? "登録中"
+          : profile.homeRegistered
+            ? "現在地で自宅を更新"
+            : "現在地を自宅として登録"}
+      </button>
+      <p className="profile-privacy-note">
+        GPSはこの操作時だけ使用します。保存する座標は約10m単位に丸め、画面には表示しません。
+      </p>
+      {profile.homeRegistered && (
+        <button
+          type="button"
+          className="profile-delete-action"
+          disabled={isBusy}
+          onClick={onDelete}
+        >
+          <TrashIcon size={15} aria-hidden="true" />
+          {state === "deleting" ? "削除中" : "自宅情報を削除"}
+        </button>
+      )}
+      {!enabled && (
+        <p className="inline-status error">公開モードでは利用できません</p>
+      )}
+      {error && (
+        <p className="inline-status error" role="status">
+          <WarningCircleIcon size={16} aria-hidden="true" />
+          {error}
+        </p>
+      )}
     </section>
   );
 }

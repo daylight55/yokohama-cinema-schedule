@@ -1,5 +1,13 @@
 import type { Station, StationConnection } from "../../shared/types";
 
+interface GoogleRouteMatrixElement {
+  destinationIndex?: number;
+  distanceMeters?: number;
+  duration?: string;
+  condition?: string;
+  status?: { code?: number };
+}
+
 interface StationRow {
   id: string;
   name: string;
@@ -21,6 +29,16 @@ export interface StationTravelEstimate {
   minutes: number;
   lines: string[];
 }
+
+export interface StationWalkEstimate {
+  station: Station;
+  distanceMeters: number;
+  durationMinutes: number;
+  provider: "google_maps" | "estimate";
+}
+
+const GOOGLE_ROUTE_MATRIX_URL =
+  "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix";
 
 export async function listStations(db: D1Database): Promise<Station[]> {
   const result = await db
@@ -150,4 +168,141 @@ export function estimateStationTravel(
   }
 
   return null;
+}
+
+export async function estimateWalksToStations(
+  latitude: number,
+  longitude: number,
+  stations: Station[],
+  apiKey: string | undefined,
+  fetcher: typeof fetch = fetch,
+): Promise<StationWalkEstimate[]> {
+  if (!apiKey || stations.length === 0) {
+    return estimateStationWalkFallbacks(latitude, longitude, stations);
+  }
+
+  try {
+    const response = await fetcher(GOOGLE_ROUTE_MATRIX_URL, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-goog-api-key": apiKey,
+        "x-goog-fieldmask":
+          "originIndex,destinationIndex,distanceMeters,duration,condition,status",
+      },
+      body: JSON.stringify({
+        origins: [
+          {
+            waypoint: {
+              location: {
+                latLng: { latitude, longitude },
+              },
+            },
+          },
+        ],
+        destinations: stations.map((station) => ({
+          waypoint: {
+            location: {
+              latLng: {
+                latitude: station.latitude,
+                longitude: station.longitude,
+              },
+            },
+          },
+        })),
+        travelMode: "WALK",
+      }),
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) {
+      return estimateStationWalkFallbacks(latitude, longitude, stations);
+    }
+
+    const payload = await response.json<GoogleRouteMatrixElement[]>();
+    const routeByDestination = new Map(
+      payload
+        .filter(
+          (item) =>
+            item.condition === "ROUTE_EXISTS" &&
+            (item.status?.code ?? 0) === 0 &&
+            item.destinationIndex !== undefined,
+        )
+        .map((item) => [item.destinationIndex!, item]),
+    );
+    return stations.map((station, index) => {
+      const route = routeByDestination.get(index);
+      const durationSeconds = parseGoogleDurationSeconds(route?.duration);
+      if (
+        !route ||
+        route.distanceMeters === undefined ||
+        durationSeconds === null
+      ) {
+        return estimateStationWalkFallback(latitude, longitude, station);
+      }
+      return {
+        station,
+        distanceMeters: route.distanceMeters,
+        durationMinutes: Math.max(1, Math.ceil(durationSeconds / 60)),
+        provider: "google_maps" as const,
+      };
+    });
+  } catch {
+    return estimateStationWalkFallbacks(latitude, longitude, stations);
+  }
+}
+
+export function estimateStationWalkFallbacks(
+  latitude: number,
+  longitude: number,
+  stations: Station[],
+): StationWalkEstimate[] {
+  return stations.map((station) =>
+    estimateStationWalkFallback(latitude, longitude, station),
+  );
+}
+
+function estimateStationWalkFallback(
+  latitude: number,
+  longitude: number,
+  station: Station,
+): StationWalkEstimate {
+  const distanceMeters = Math.round(
+    haversineMeters(
+      latitude,
+      longitude,
+      station.latitude,
+      station.longitude,
+    ) * 1.25,
+  );
+  return {
+    station,
+    distanceMeters,
+    durationMinutes: Math.max(1, Math.ceil(distanceMeters / 75)),
+    provider: "estimate",
+  };
+}
+
+function parseGoogleDurationSeconds(value: string | undefined): number | null {
+  const match = value?.match(/^(\d+(?:\.\d+)?)s$/);
+  if (!match) return null;
+  const seconds = Number(match[1]);
+  return Number.isFinite(seconds) ? seconds : null;
+}
+
+function haversineMeters(
+  latitudeA: number,
+  longitudeA: number,
+  latitudeB: number,
+  longitudeB: number,
+): number {
+  const radius = 6_371_000;
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const deltaLatitude = toRadians(latitudeB - latitudeA);
+  const deltaLongitude = toRadians(longitudeB - longitudeA);
+  const a =
+    Math.sin(deltaLatitude / 2) ** 2 +
+    Math.cos(toRadians(latitudeA)) *
+      Math.cos(toRadians(latitudeB)) *
+      Math.sin(deltaLongitude / 2) ** 2;
+  return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

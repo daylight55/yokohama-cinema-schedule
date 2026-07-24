@@ -1,10 +1,10 @@
 import { jstDateBounds, todayInJst } from "../../shared/date";
 import type { ScheduleResponse, Showing } from "../../shared/types";
-import { getLocationPreference } from "../_lib/app-preferences";
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
 import { listCinemaTravelPreferences } from "../_lib/cinema-travel-preferences";
 import { listStarredPreferences } from "../_lib/preferences";
+import { getUserProfile } from "../_lib/user-profile";
 
 interface ShowingRow {
   id: string;
@@ -73,7 +73,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
   ]);
-  const [preferences, cinemaTravelPreferences, locationPreference] =
+  const [preferences, cinemaTravelPreferences, userProfile] =
     await Promise.all([
       publicOnly
         ? Promise.resolve([])
@@ -82,8 +82,11 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
         ? Promise.resolve([])
         : listCinemaTravelPreferences(context.env.DB, cinemas),
       publicOnly
-        ? Promise.resolve({ autoEnabled: false, updatedAt: null })
-        : getLocationPreference(context.env.DB),
+        ? Promise.resolve({
+            homeRegistered: false,
+            homeUpdatedAt: null,
+          })
+        : getUserProfile(context.env.DB),
     ]);
 
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({
@@ -116,8 +119,8 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     preferencesEnabled: !publicOnly,
     cinemaTravelPreferences,
     cinemaTravelPreferencesEnabled: !publicOnly,
-    locationPreference,
-    locationPreferenceEnabled: !publicOnly,
+    userProfile,
+    userProfileEnabled: !publicOnly,
     sourceHealth: {
       healthy: Number(health?.healthy ?? 0),
       total: Number(health?.total ?? 0),

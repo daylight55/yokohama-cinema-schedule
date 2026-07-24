@@ -53,8 +53,8 @@ export interface ScheduleResponse {
   preferencesEnabled: boolean;
   cinemaTravelPreferences: CinemaTravelPreference[];
   cinemaTravelPreferencesEnabled: boolean;
-  locationPreference: LocationPreference;
-  locationPreferenceEnabled: boolean;
+  userProfile: UserProfile;
+  userProfileEnabled: boolean;
   sourceHealth: {
     healthy: number;
     total: number;
@@ -106,7 +106,13 @@ export interface StationConnection {
 export interface RoutesResponse {
   generatedAt: string;
   provider: RouteEstimate["provider"];
+  origin: RouteOrigin | null;
   routes: RouteEstimate[];
+}
+
+export interface RouteOrigin {
+  latitude: number;
+  longitude: number;
 }
 
 export interface MoviePreference {
@@ -123,9 +129,9 @@ export interface CinemaTravelPreference {
   updatedAt: string | null;
 }
 
-export interface LocationPreference {
-  autoEnabled: boolean;
-  updatedAt: string | null;
+export interface UserProfile {
+  homeRegistered: boolean;
+  homeUpdatedAt: string | null;
 }
 
 export interface NormalizedShowing {
