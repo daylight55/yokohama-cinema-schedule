@@ -144,6 +144,17 @@ export function findCurrentTimeMarkerIndex(
   return groups.findIndex((group) => group.time >= currentSlot);
 }
 
+export function scrollToInitialTimeMarker(
+  marker: {
+    scrollIntoView(options: {
+      behavior: "instant";
+      block: "start";
+    }): void;
+  },
+): void {
+  marker.scrollIntoView({ behavior: "instant", block: "start" });
+}
+
 export function normalizeMovieTitle(title: string): string {
   return moviePreferenceKey(title);
 }

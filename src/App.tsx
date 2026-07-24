@@ -40,6 +40,7 @@ import {
   groupByMovie,
   isShowingPast,
   isShowingReachable,
+  scrollToInitialTimeMarker,
 } from "./lib";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
@@ -286,7 +287,7 @@ export function App() {
     timeGroups.length > 0 &&
     currentTimeMarkerIndex === -1;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (
       didInitialTimeScrollRef.current ||
       loading ||
@@ -298,14 +299,8 @@ export function App() {
       return;
     }
 
-    const frame = window.requestAnimationFrame(() => {
-      if (didInitialTimeScrollRef.current) return;
-      const marker = currentTimeMarkerRef.current;
-      if (!marker) return;
-      marker.scrollIntoView({ behavior: "auto", block: "start" });
-      didInitialTimeScrollRef.current = true;
-    });
-    return () => window.cancelAnimationFrame(frame);
+    scrollToInitialTimeMarker(currentTimeMarkerRef.current);
+    didInitialTimeScrollRef.current = true;
   }, [error, loading, selectedDate, timeGroups, today, view]);
 
   const fetchRoutes = async (location: {
