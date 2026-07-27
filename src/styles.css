@@ -101,29 +101,35 @@ a:active {
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
   color: inherit;
   text-decoration: none;
   margin-right: auto;
 }
 
 .brand-mark {
-  display: grid;
-  width: 28px;
-  height: 28px;
+  display: block;
+  width: 34px;
+  height: 34px;
   flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #60746a;
-  border-radius: 50%;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
+  border-radius: 10px;
+  filter: drop-shadow(0 2px 5px rgb(0 0 0 / 30%));
 }
 
-.brand strong {
+.brand-wordmark {
   overflow: hidden;
-  font-size: 14px;
+  color: #fff4d4;
+  font-family:
+    "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Yu Gothic UI",
+    sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  line-height: 1;
   text-overflow: ellipsis;
+  text-shadow:
+    0 2px 0 #3a5d4f,
+    0 0 12px rgb(255 214 107 / 18%);
   white-space: nowrap;
 }
 

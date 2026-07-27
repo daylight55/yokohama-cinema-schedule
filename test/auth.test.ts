@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   createSession,
   hasValidSession,
+  loginPage,
   passwordMatches,
   sessionCookie,
 } from "../functions/_lib/auth";
+import { isPublicBrandAssetPath } from "../functions/_middleware";
 import type { PagesEnv } from "../functions/_lib/env";
 
 const env = {
@@ -38,5 +40,24 @@ describe("private site authentication", () => {
     expect(sessionCookie("signed", 3600)).toContain(
       "HttpOnly; Secure; SameSite=Strict",
     );
+  });
+
+  it("renders the Hamamubi brand on the private login page", async () => {
+    const response = loginPage();
+    const html = await response.text();
+
+    expect(html).toContain("<title>はまむび！ — ログイン</title>");
+    expect(html).toContain('src="/brand/hamamubi-icon.svg"');
+    expect(html).toContain("<h1>はまむび！</h1>");
+    expect(response.headers.get("content-security-policy")).toContain(
+      "img-src 'self'",
+    );
+  });
+
+  it("allows only brand assets needed before login", () => {
+    expect(isPublicBrandAssetPath("/brand/hamamubi-icon.svg")).toBe(true);
+    expect(isPublicBrandAssetPath("/site.webmanifest")).toBe(true);
+    expect(isPublicBrandAssetPath("/api/showings")).toBe(false);
+    expect(isPublicBrandAssetPath("/assets/index.js")).toBe(false);
   });
 });
