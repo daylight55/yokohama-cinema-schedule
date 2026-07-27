@@ -3,7 +3,7 @@ import type { ScheduleResponse, Showing } from "../../shared/types";
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { PagesEnv } from "../_lib/env";
 import { listCinemaTravelPreferences } from "../_lib/cinema-travel-preferences";
-import { listStarredPreferences } from "../_lib/preferences";
+import { listMoviePreferences } from "../_lib/preferences";
 import { getUserProfile } from "../_lib/user-profile";
 
 interface ShowingRow {
@@ -77,7 +77,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     await Promise.all([
       publicOnly
         ? Promise.resolve([])
-        : listStarredPreferences(context.env.DB),
+        : listMoviePreferences(context.env.DB),
       publicOnly
         ? Promise.resolve([])
         : listCinemaTravelPreferences(context.env.DB, cinemas),

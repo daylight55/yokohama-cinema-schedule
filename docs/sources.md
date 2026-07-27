@@ -8,6 +8,7 @@
 |---|---|---|---|
 | T・ジョイ横浜 | `https://tjoy.jp/t-joy_yokohama` | 初回GETでCookieとCSRFを取得後、`https://tjoy.jp/theaterTop/scheduleGetHtmlApi`へ日付とtheaterId `190`をPOST。返却HTMLの作品セクションと上映枠をCheerioで解析 | private_only |
 | ムービル | `https://109cinemas.net/movil/schedules/YYYYMMDD.html?theater_code=72` | 日別HTMLの`article`、`ul.timetable`、`li.check_date`、`time.start/end`を解析 | private_only。2026-09-30閉館予定 |
+| TOHOシネマズ 上大岡 | `https://api2.tohotheater.jp/api/schedule/v1/schedule/066/TNPI3050J02?...&show_day=YYYYMMDD` | 公式劇場ページが利用する日別JSON APIを取得し、作品・スクリーン・上映枠・販売状態を解析。公式週間ページは`https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do` | private_only |
 | 横浜ブルク13 | `https://tjoy.jp/yokohama_burg13` | T・ジョイ横浜と同じAPI。theaterIdは`170` | private_only |
 | イオンシネマみなとみらい | `https://theater.aeoncinema.com/schedule/v2/data/minatomirai/schedule.json?v=YYYYMMDDHHmm` | 日付キーを持つJSONを解析。上映時刻はISO 8601 | private_only |
 | ローソン・ユナイテッドシネマ STYLE-S みなとみらい | `https://www.unitedcinemas.jp/minatomirai/daily.php?date=YYYY-MM-DD` | PC版の日別HTMLをShift_JISでデコードし、作品・スクリーン・開始終了時刻を解析 | private_only |

@@ -2,11 +2,13 @@ export type CinemaArea =
   | "yokohama"
   | "minatomirai"
   | "kannai"
-  | "tobe";
+  | "tobe"
+  | "kamiooka";
 
 export type SourceApproval = "private_only" | "approved" | "disabled";
 export type TravelMode = "walking" | "transit" | "bus" | "bicycle";
 export type ScheduleCollapseMinutes = 0 | 30 | 60;
+export type MoviePreferenceStatus = "watched" | "not_interested";
 
 export interface Cinema {
   id: string;
@@ -123,6 +125,7 @@ export interface MoviePreference {
   title: string;
   imageUrl: string | null;
   starred: boolean;
+  status: MoviePreferenceStatus | null;
   updatedAt: string;
 }
 

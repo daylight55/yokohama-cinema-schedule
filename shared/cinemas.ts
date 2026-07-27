@@ -130,6 +130,23 @@ export const CINEMAS: Cinema[] = [
     stationWalkDistanceMeters: 395,
   },
   {
+    id: "toho-kamiooka",
+    name: "TOHOシネマズ 上大岡",
+    shortName: "TOHO上大岡",
+    area: "kamiooka",
+    areaLabel: "上大岡",
+    address: "横浜市港南区上大岡西1-18-5 mioka 3F",
+    latitude: 35.4075,
+    longitude: 139.59494,
+    sourceUrl:
+      "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
+    activeUntil: null,
+    approval: "private_only",
+    nearestStationId: "kamiooka",
+    stationWalkMinutes: 3,
+    stationWalkDistanceMeters: 200,
+  },
+  {
     id: "novecento",
     name: "シネマノヴェチェント",
     shortName: "ノヴェチェント",
