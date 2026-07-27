@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouteEstimate, Showing } from "../shared/types";
 import {
+  appViewFromHash,
   buildMovieExternalLinks,
   filterShowings,
   findCurrentTimeMarkerIndex,
@@ -11,6 +12,7 @@ import {
   groupScheduleTimeBuckets,
   isShowingPast,
   isShowingReachable,
+  hashForAppView,
   normalizeMovieTitle,
   scheduleTimeSlot,
   scrollToInitialTimeMarker,
@@ -35,6 +37,23 @@ const showing = (overrides: Partial<Showing> = {}): Showing => ({
   purchasable: true,
   fetchedAt: "2026-07-24T00:00:00.000Z",
   ...overrides,
+});
+
+describe("app view hash navigation", () => {
+  it("maps every view to a stable hash URL", () => {
+    expect(hashForAppView("schedule")).toBe("#schedule");
+    expect(hashForAppView("movies")).toBe("#movies");
+    expect(hashForAppView("cinemas")).toBe("#cinemas");
+    expect(hashForAppView("profile")).toBe("#profile");
+  });
+
+  it("opens a directly linked view and falls back to the schedule", () => {
+    expect(appViewFromHash("#movies")).toBe("movies");
+    expect(appViewFromHash("#CINEMAS")).toBe("cinemas");
+    expect(appViewFromHash("#profile")).toBe("profile");
+    expect(appViewFromHash("")).toBe("schedule");
+    expect(appViewFromHash("#unknown")).toBe("schedule");
+  });
 });
 
 describe("schedule collapse windows", () => {

@@ -58,10 +58,13 @@ export async function passwordMatches(
   );
 }
 
-export function loginPage(error = false): Response {
+export function loginPage(error = false, returnHash = ""): Response {
   const errorMarkup = error
     ? '<p class="error" role="alert">パスワードが違います。</p>'
     : "";
+  const escapedReturnHash = returnHash
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;");
   const html = `<!doctype html>
 <html lang="ja">
 <head>
@@ -71,6 +74,7 @@ export function loginPage(error = false): Response {
   <title>はまむび！ — ログイン</title>
   <link rel="icon" href="/brand/hamamubi-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/brand/hamamubi-icon-180.png">
+  <script src="/login-route.js" defer></script>
   <style>
     :root{color-scheme:dark;font-family:Inter,"Noto Sans JP",system-ui,sans-serif;background:#101414;color:#f3f5ef}
     *{box-sizing:border-box}
@@ -100,6 +104,7 @@ export function loginPage(error = false): Response {
     <p>個人利用の準備中サイトです。閲覧用パスワードを入力してください。</p>
     ${errorMarkup}
     <form method="post" action="/auth/login">
+      <input name="returnHash" type="hidden" value="${escapedReturnHash}">
       <input class="sr-only" name="username" type="text" value="private-site" autocomplete="username" tabindex="-1" aria-hidden="true">
       <label for="password">パスワード</label>
       <input id="password" name="password" type="password" required autofocus autocomplete="current-password">
@@ -115,7 +120,7 @@ export function loginPage(error = false): Response {
       "cache-control": "no-store",
       "x-robots-tag": "noindex, nofollow, noarchive",
       "content-security-policy":
-        "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+        "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     },
   });
 }

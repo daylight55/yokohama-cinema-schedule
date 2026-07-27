@@ -6,7 +6,8 @@ import {
   passwordMatches,
   sessionCookie,
 } from "../functions/_lib/auth";
-import { isPublicBrandAssetPath } from "../functions/_middleware";
+import { normalizeReturnHash } from "../functions/auth/login";
+import { isPublicShellAssetPath } from "../functions/_middleware";
 import type { PagesEnv } from "../functions/_lib/env";
 
 const env = {
@@ -49,15 +50,36 @@ describe("private site authentication", () => {
     expect(html).toContain("<title>はまむび！ — ログイン</title>");
     expect(html).toContain('src="/brand/hamamubi-icon.svg"');
     expect(html).toContain("<h1>はまむび！</h1>");
+    expect(html).toContain('src="/login-route.js"');
+    expect(html).toContain('name="returnHash"');
     expect(response.headers.get("content-security-policy")).toContain(
       "img-src 'self'",
     );
+    expect(response.headers.get("content-security-policy")).toContain(
+      "script-src 'self'",
+    );
   });
 
-  it("allows only brand assets needed before login", () => {
-    expect(isPublicBrandAssetPath("/brand/hamamubi-icon.svg")).toBe(true);
-    expect(isPublicBrandAssetPath("/site.webmanifest")).toBe(true);
-    expect(isPublicBrandAssetPath("/api/showings")).toBe(false);
-    expect(isPublicBrandAssetPath("/assets/index.js")).toBe(false);
+  it("allows only shell assets needed before login", () => {
+    expect(isPublicShellAssetPath("/brand/hamamubi-icon.svg")).toBe(true);
+    expect(isPublicShellAssetPath("/site.webmanifest")).toBe(true);
+    expect(isPublicShellAssetPath("/login-route.js")).toBe(true);
+    expect(isPublicShellAssetPath("/api/showings")).toBe(false);
+    expect(isPublicShellAssetPath("/assets/index.js")).toBe(false);
+  });
+
+  it("accepts only known view hashes after login", () => {
+    expect(normalizeReturnHash("#movies")).toBe("#movies");
+    expect(normalizeReturnHash("#CINEMAS")).toBe("#cinemas");
+    expect(normalizeReturnHash("#unknown")).toBe("");
+    expect(normalizeReturnHash("https://example.com")).toBe("");
+    expect(normalizeReturnHash(null)).toBe("");
+  });
+
+  it("keeps a valid view hash after a failed login", async () => {
+    const response = loginPage(true, normalizeReturnHash("#movies"));
+    const html = await response.text();
+
+    expect(html).toContain('name="returnHash" type="hidden" value="#movies"');
   });
 });

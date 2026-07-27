@@ -41,6 +41,7 @@ import type {
 } from "../shared/types";
 import {
   AREA_OPTIONS,
+  appViewFromHash,
   buildMovieExternalLinks,
   buildGoogleMapsDirectionsUrl,
   buildDates,
@@ -50,11 +51,13 @@ import {
   groupScheduleTimeBuckets,
   groupByMovie,
   getDateSwipeDirection,
+  hashForAppView,
   isShowingPast,
   isShowingReachable,
   normalizeMovieTitle,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
+  type AppView,
 } from "./lib";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
@@ -90,8 +93,6 @@ const TRAVEL_MODE_OPTIONS: Array<{ value: TravelMode; label: string }> = [
   { value: "bicycle", label: "自転車" },
 ];
 
-type AppView = "schedule" | "movies" | "cinemas" | "profile";
-
 export function App() {
   const [now, setNow] = useState(() => new Date());
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
@@ -113,7 +114,9 @@ export function App() {
   const [futureOnly, setFutureOnly] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
   const [routes, setRoutes] = useState<RouteEstimate[]>([]);
-  const [view, setView] = useState<AppView>("schedule");
+  const [view, setView] = useState<AppView>(() =>
+    appViewFromHash(window.location.hash),
+  );
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [showJumpToNow, setShowJumpToNow] = useState(false);
   const [cinemaTravelModes, setCinemaTravelModes] = useState<
@@ -192,6 +195,23 @@ export function App() {
     return () => {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", updateClock);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncViewFromHash = () => {
+      const nextView = appViewFromHash(window.location.hash);
+      const canonicalHash = hashForAppView(nextView);
+      if (window.location.hash !== canonicalHash) {
+        window.history.replaceState(null, "", canonicalHash);
+      }
+      setView(nextView);
+    };
+
+    syncViewFromHash();
+    window.addEventListener("hashchange", syncViewFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncViewFromHash);
     };
   }, []);
 
@@ -710,11 +730,6 @@ export function App() {
     navigationDialogRef.current?.close();
   };
 
-  const navigateTo = (nextView: AppView) => {
-    setView(nextView);
-    closeNavigation();
-  };
-
   const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
     dateSwipeStartRef.current = null;
     if (view !== "schedule" || loading || event.touches.length !== 1) {
@@ -1008,7 +1023,11 @@ export function App() {
           >
             <ListIcon size={21} aria-hidden="true" />
           </button>
-          <a className="brand" href="/" aria-label="はまむび！ ホーム">
+          <a
+            className="brand"
+            href={hashForAppView("schedule")}
+            aria-label="はまむび！ ホーム"
+          >
             <img
               className="brand-mark"
               src="/brand/hamamubi-icon.svg"
@@ -1060,42 +1079,42 @@ export function App() {
             </button>
           </div>
           <nav aria-label="メイン">
-            <button
-              type="button"
+            <a
+              href={hashForAppView("schedule")}
               className={view === "schedule" ? "active" : ""}
               aria-current={view === "schedule" ? "page" : undefined}
-              onClick={() => navigateTo("schedule")}
+              onClick={closeNavigation}
             >
               <CalendarDotsIcon size={20} aria-hidden="true" />
               上映時間
-            </button>
-            <button
-              type="button"
+            </a>
+            <a
+              href={hashForAppView("movies")}
               className={view === "movies" ? "active" : ""}
               aria-current={view === "movies" ? "page" : undefined}
-              onClick={() => navigateTo("movies")}
+              onClick={closeNavigation}
             >
               <FilmSlateIcon size={20} aria-hidden="true" />
               上映作品
-            </button>
-            <button
-              type="button"
+            </a>
+            <a
+              href={hashForAppView("cinemas")}
               className={view === "cinemas" ? "active" : ""}
               aria-current={view === "cinemas" ? "page" : undefined}
-              onClick={() => navigateTo("cinemas")}
+              onClick={closeNavigation}
             >
               <BuildingsIcon size={20} aria-hidden="true" />
               映画館
-            </button>
-            <button
-              type="button"
+            </a>
+            <a
+              href={hashForAppView("profile")}
               className={view === "profile" ? "active" : ""}
-            aria-current={view === "profile" ? "page" : undefined}
-            onClick={() => navigateTo("profile")}
-          >
-            <CrosshairIcon size={20} aria-hidden="true" />
-            現在地・自宅設定
-          </button>
+              aria-current={view === "profile" ? "page" : undefined}
+              onClick={closeNavigation}
+            >
+              <CrosshairIcon size={20} aria-hidden="true" />
+              現在地・自宅設定
+            </a>
           </nav>
         </div>
       </dialog>
@@ -1211,14 +1230,13 @@ export function App() {
             </p>
           )}
           {view !== "movies" && !userProfile.homeRegistered && (
-            <button
-              type="button"
+            <a
               className="home-profile-link"
-              onClick={() => setView("profile")}
+              href={hashForAppView("profile")}
             >
               <HouseLineIcon size={16} aria-hidden="true" />
               プロフィールで自宅を登録
-            </button>
+            </a>
           )}
           {cinemaPreferenceError && (
             <p className="inline-status error" role="status">
