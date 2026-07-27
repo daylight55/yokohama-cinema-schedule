@@ -70,6 +70,7 @@ describe("private site authentication", () => {
 
   it("accepts only known view hashes after login", () => {
     expect(normalizeReturnHash("#movies")).toBe("#movies");
+    expect(normalizeReturnHash("#planner")).toBe("#planner");
     expect(normalizeReturnHash("#CINEMAS")).toBe("#cinemas");
     expect(normalizeReturnHash("#unknown")).toBe("");
     expect(normalizeReturnHash("https://example.com")).toBe("");

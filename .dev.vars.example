@@ -1,3 +1,6 @@
 APP_PASSWORD="replace-with-a-long-private-password"
 SESSION_SECRET="replace-with-at-least-32-random-characters"
 GOOGLE_MAPS_API_KEY="replace-with-a-restricted-google-routes-api-key"
+GOOGLE_CLIENT_ID="replace-with-google-oauth-client-id"
+GOOGLE_CLIENT_SECRET="replace-with-google-oauth-client-secret"
+GOOGLE_TOKEN_ENCRYPTION_KEY="replace-with-at-least-32-random-characters"

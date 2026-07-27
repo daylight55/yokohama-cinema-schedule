@@ -44,7 +44,7 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
 export function normalizeReturnHash(value: FormDataEntryValue | null): string {
   if (typeof value !== "string") return "";
   const normalized = value.toLowerCase();
-  return ["#schedule", "#movies", "#cinemas", "#profile"].includes(
+  return ["#schedule", "#movies", "#cinemas", "#planner", "#profile"].includes(
     normalized,
   )
     ? normalized
