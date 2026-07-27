@@ -1,3 +1,11 @@
+import type { MoviePreferenceStatus } from "./types";
+
+export function isMoviePreferenceStatus(
+  value: unknown,
+): value is MoviePreferenceStatus {
+  return value === "watched" || value === "not_interested";
+}
+
 export function moviePreferenceKey(title: string): string {
   return title
     .normalize("NFKC")

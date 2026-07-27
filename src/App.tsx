@@ -17,6 +17,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   Fragment,
+  type TouchEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -29,6 +30,7 @@ import type {
   Cinema,
   CinemaArea,
   CinemaTravelPreference,
+  MoviePreferenceStatus,
   RouteEstimate,
   RoutesResponse,
   ScheduleCollapseMinutes,
@@ -39,6 +41,7 @@ import type {
 } from "../shared/types";
 import {
   AREA_OPTIONS,
+  buildMovieExternalLinks,
   buildGoogleMapsDirectionsUrl,
   buildDates,
   filterShowings,
@@ -46,8 +49,10 @@ import {
   groupByScheduleTime,
   groupScheduleTimeBuckets,
   groupByMovie,
+  getDateSwipeDirection,
   isShowingPast,
   isShowingReachable,
+  normalizeMovieTitle,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
 } from "./lib";
@@ -90,6 +95,7 @@ type AppView = "schedule" | "movies" | "cinemas" | "profile";
 export function App() {
   const [now, setNow] = useState(() => new Date());
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
+  const dateSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const navigationDialogRef = useRef<HTMLDialogElement>(null);
   const pendingMovieAnchorRef = useRef<{
     element: HTMLElement;
@@ -132,6 +138,9 @@ export function App() {
   const [starredMovieKeys, setStarredMovieKeys] = useState<Set<string>>(
     () => new Set(),
   );
+  const [movieStatusByKey, setMovieStatusByKey] = useState<
+    Map<string, MoviePreferenceStatus>
+  >(() => new Map());
   const [savingMovieKeys, setSavingMovieKeys] = useState<Set<string>>(
     () => new Set(),
   );
@@ -160,7 +169,13 @@ export function App() {
     const nextTop = pendingAnchor.element.getBoundingClientRect().top;
     window.scrollBy(0, nextTop - pendingAnchor.top);
     pendingMovieAnchorRef.current = null;
-  }, [starredMovieKeys]);
+  }, [movieStatusByKey, starredMovieKeys]);
+
+  useLayoutEffect(() => {
+    if (view === "movies") {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }, [view]);
 
   useLayoutEffect(() => {
     const pendingAnchor = pendingCinemaAnchorRef.current;
@@ -207,6 +222,22 @@ export function App() {
             data.preferences
               .filter((preference) => preference.starred)
               .map((preference) => preference.movieKey),
+          ),
+        );
+        setMovieStatusByKey(
+          new Map(
+            data.preferences
+              .filter(
+                (
+                  preference,
+                ): preference is typeof preference & {
+                  status: MoviePreferenceStatus;
+                } => preference.status !== null,
+              )
+              .map((preference) => [
+                preference.movieKey,
+                preference.status,
+              ]),
           ),
         );
         setCinemaTravelModes(
@@ -279,11 +310,15 @@ export function App() {
         selectedArea,
         futureOnly: futureOnly && selectedDate === dates[0],
         now,
-      }),
+      }).filter(
+        (showing) =>
+          !movieStatusByKey.has(normalizeMovieTitle(showing.title)),
+      ),
     [
       dates,
       futureOnly,
       now,
+      movieStatusByKey,
       schedule?.showings,
       selectedArea,
       selectedDate,
@@ -680,6 +715,43 @@ export function App() {
     closeNavigation();
   };
 
+  const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
+    dateSwipeStartRef.current = null;
+    if (view !== "schedule" || loading || event.touches.length !== 1) {
+      return;
+    }
+    const target = event.target;
+    if (
+      !(target instanceof Element) ||
+      target.closest(
+        "a, button, input, select, textarea, .date-strip, .area-strip, .cinema-strip",
+      )
+    ) {
+      return;
+    }
+    const touch = event.touches[0];
+    dateSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleScheduleTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const start = dateSwipeStartRef.current;
+    dateSwipeStartRef.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch) return;
+
+    const direction = getDateSwipeDirection(
+      touch.clientX - start.x,
+      touch.clientY - start.y,
+    );
+    if (!direction) return;
+    const currentIndex = dates.indexOf(selectedDate);
+    const nextIndex =
+      direction === "next" ? currentIndex + 1 : currentIndex - 1;
+    if (nextIndex >= 0 && nextIndex < dates.length) {
+      setSelectedDate(dates[nextIndex]);
+    }
+  };
+
   const jumpToCurrentTime = () => {
     const marker = currentTimeMarkerRef.current;
     if (!marker) return;
@@ -754,6 +826,75 @@ export function App() {
         return next;
       });
       setPreferenceError("スターを保存できませんでした");
+    } finally {
+      setSavingMovieKeys((current) => {
+        const next = new Set(current);
+        next.delete(movie.preferenceKey);
+        return next;
+      });
+    }
+  };
+
+  const updateMovieStatus = async (
+    movie: {
+      preferenceKey: string;
+      title: string;
+      imageUrl: string | null;
+    },
+    requestedStatus: MoviePreferenceStatus,
+    anchorElement: HTMLElement | null,
+  ) => {
+    if (savingMovieKeys.has(movie.preferenceKey)) return;
+    const previousStatus = movieStatusByKey.get(movie.preferenceKey) ?? null;
+    const nextStatus =
+      previousStatus === requestedStatus ? null : requestedStatus;
+    if (nextStatus) {
+      const statusLabel =
+        nextStatus === "watched" ? "鑑賞済み" : "興味なし";
+      const confirmed = window.confirm(
+        `「${movie.title}」を${statusLabel}に設定すると、上映時間一覧の表示対象外になります。設定しますか？`,
+      );
+      if (!confirmed) return;
+    }
+
+    rememberMovieAnchor(anchorElement);
+    setPreferenceError(null);
+    setMovieStatusByKey((current) => {
+      const next = new Map(current);
+      if (nextStatus) next.set(movie.preferenceKey, nextStatus);
+      else next.delete(movie.preferenceKey);
+      return next;
+    });
+    setSavingMovieKeys((current) =>
+      new Set(current).add(movie.preferenceKey),
+    );
+
+    try {
+      const response = await fetch("/api/preferences", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          title: movie.title,
+          imageUrl: movie.imageUrl,
+          status: nextStatus,
+        }),
+      });
+      if (!response.ok) throw new Error();
+    } catch {
+      rememberMovieAnchor(anchorElement);
+      setMovieStatusByKey((current) => {
+        const next = new Map(current);
+        if (previousStatus) {
+          next.set(movie.preferenceKey, previousStatus);
+        } else {
+          next.delete(movie.preferenceKey);
+        }
+        return next;
+      });
+      setPreferenceError("作品の状態を保存できませんでした");
     } finally {
       setSavingMovieKeys((current) => {
         const next = new Set(current);
@@ -951,7 +1092,14 @@ export function App() {
         </div>
       </dialog>
 
-      <main id="main">
+      <main
+        id="main"
+        onTouchStart={handleScheduleTouchStart}
+        onTouchEnd={handleScheduleTouchEnd}
+        onTouchCancel={() => {
+          dateSwipeStartRef.current = null;
+        }}
+      >
         {(view === "schedule" || view === "movies") && (
         <nav className="date-nav" aria-label="上映日">
           <div className="date-strip">
@@ -1179,11 +1327,18 @@ export function App() {
             <ul className="movie-list">
               {movieList.map((movie, index) => {
                 const isStarred = starredMovieKeys.has(movie.preferenceKey);
+                const status =
+                  movieStatusByKey.get(movie.preferenceKey) ?? null;
+                const externalLinks = buildMovieExternalLinks(movie.title);
                 return (
                   <li
                     className={[
                       "movie-list-item",
                       isStarred ? "starred" : "",
+                      status === "watched" ? "watched" : "",
+                      status === "not_interested"
+                        ? "not-interested"
+                        : "",
                       schedule?.preferencesEnabled
                         ? ""
                         : "preferences-disabled",
@@ -1206,7 +1361,36 @@ export function App() {
                         {movie.title.slice(0, 1)}
                       </div>
                     )}
-                    <strong>{movie.title}</strong>
+                    <div className="movie-list-copy">
+                      <strong>{movie.title}</strong>
+                      <div
+                        className="movie-external-links"
+                        aria-label={`${movie.title}の作品情報`}
+                      >
+                        <a
+                          href={externalLinks.eiga}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          映画.com
+                          <ArrowSquareOutIcon
+                            size={12}
+                            aria-hidden="true"
+                          />
+                        </a>
+                        <a
+                          href={externalLinks.filmarks}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Filmarks
+                          <ArrowSquareOutIcon
+                            size={12}
+                            aria-hidden="true"
+                          />
+                        </a>
+                      </div>
+                    </div>
                     {schedule?.preferencesEnabled && (
                       <FavoriteButton
                         title={movie.title}
@@ -1221,6 +1405,58 @@ export function App() {
                           )
                         }
                       />
+                    )}
+                    {schedule?.preferencesEnabled && (
+                      <div
+                        className="movie-status-actions"
+                        role="group"
+                        aria-label={`${movie.title}の鑑賞状態`}
+                      >
+                        <button
+                          type="button"
+                          className={
+                            status === "watched" ? "active" : ""
+                          }
+                          aria-pressed={status === "watched"}
+                          disabled={savingMovieKeys.has(
+                            movie.preferenceKey,
+                          )}
+                          onClick={(event) =>
+                            void updateMovieStatus(
+                              movie,
+                              "watched",
+                              event.currentTarget.closest<HTMLElement>(
+                                ".movie-list-item",
+                              ),
+                            )
+                          }
+                        >
+                          鑑賞済み
+                        </button>
+                        <button
+                          type="button"
+                          className={
+                            status === "not_interested"
+                              ? "active"
+                              : ""
+                          }
+                          aria-pressed={status === "not_interested"}
+                          disabled={savingMovieKeys.has(
+                            movie.preferenceKey,
+                          )}
+                          onClick={(event) =>
+                            void updateMovieStatus(
+                              movie,
+                              "not_interested",
+                              event.currentTarget.closest<HTMLElement>(
+                                ".movie-list-item",
+                              ),
+                            )
+                          }
+                        >
+                          興味なし
+                        </button>
+                      </div>
                     )}
                   </li>
                 );

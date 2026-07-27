@@ -1,16 +1,36 @@
-import { moviePreferenceKey, safeImageUrl } from "../../shared/movie";
-import type { MoviePreference } from "../../shared/types";
+import {
+  isMoviePreferenceStatus,
+  moviePreferenceKey,
+  safeImageUrl,
+} from "../../shared/movie";
+import type {
+  MoviePreference,
+  MoviePreferenceStatus,
+} from "../../shared/types";
 import type { PagesEnv } from "../_lib/env";
 
 interface PreferenceRequest {
   title?: string;
   imageUrl?: string | null;
   starred?: boolean;
+  status?: MoviePreferenceStatus | null;
+}
+
+interface PreferenceRow {
+  movie_key: string;
+  title: string;
+  image_url: string | null;
+  starred: number;
+  status: MoviePreferenceStatus | null;
+  updated_at: string;
 }
 
 export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") {
-    return Response.json({ error: "preferences_unavailable" }, { status: 403 });
+    return Response.json(
+      { error: "preferences_unavailable" },
+      { status: 403 },
+    );
   }
 
   let body: PreferenceRequest;
@@ -21,49 +41,95 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   }
 
   const title = body.title?.trim() ?? "";
+  const starredProvided = typeof body.starred === "boolean";
+  const statusProvided = Object.hasOwn(body, "status");
+  const validStatus =
+    body.status === null || isMoviePreferenceStatus(body.status);
   if (
     title.length === 0 ||
     title.length > 300 ||
-    typeof body.starred !== "boolean"
+    (!starredProvided && !statusProvided) ||
+    (statusProvided && !validStatus)
   ) {
-    return Response.json({ error: "invalid_preference" }, { status: 400 });
+    return Response.json(
+      { error: "invalid_preference" },
+      { status: 400 },
+    );
   }
 
   const movieKey = moviePreferenceKey(title);
   if (!movieKey || movieKey.length > 300) {
-    return Response.json({ error: "invalid_preference" }, { status: 400 });
+    return Response.json(
+      { error: "invalid_preference" },
+      { status: 400 },
+    );
   }
 
   const imageUrl = safeImageUrl(body.imageUrl);
   const updatedAt = new Date().toISOString();
-  if (body.starred) {
-    await context.env.DB.prepare(
-      `INSERT INTO movie_preferences (
-        movie_key, title, image_url, starred, updated_at
-      ) VALUES (?, ?, ?, 1, ?)
-      ON CONFLICT(movie_key) DO UPDATE SET
-        title = excluded.title,
-        image_url = COALESCE(excluded.image_url, movie_preferences.image_url),
-        starred = 1,
-        updated_at = excluded.updated_at`,
+  await context.env.DB.prepare(
+    `INSERT INTO movie_preferences (
+       movie_key, title, image_url, starred, status, updated_at
+     )
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(movie_key) DO UPDATE SET
+       title = excluded.title,
+       image_url = COALESCE(excluded.image_url, movie_preferences.image_url),
+       starred = CASE
+         WHEN ? = 1 THEN excluded.starred
+         ELSE movie_preferences.starred
+       END,
+       status = CASE
+         WHEN ? = 1 THEN excluded.status
+         ELSE movie_preferences.status
+       END,
+       updated_at = excluded.updated_at`,
+  )
+    .bind(
+      movieKey,
+      title,
+      imageUrl,
+      body.starred ? 1 : 0,
+      statusProvided ? body.status : null,
+      updatedAt,
+      starredProvided ? 1 : 0,
+      statusProvided ? 1 : 0,
     )
-      .bind(movieKey, title, imageUrl, updatedAt)
-      .run();
-  } else {
-    await context.env.DB.prepare(
-      "DELETE FROM movie_preferences WHERE movie_key = ?",
-    )
-      .bind(movieKey)
-      .run();
-  }
+    .run();
 
-  const preference: MoviePreference = {
-    movieKey,
-    title,
-    imageUrl,
-    starred: body.starred,
-    updatedAt,
-  };
+  await context.env.DB.prepare(
+    `DELETE FROM movie_preferences
+     WHERE movie_key = ?
+       AND starred = 0
+       AND status IS NULL`,
+  )
+    .bind(movieKey)
+    .run();
+
+  const row = await context.env.DB.prepare(
+    `SELECT movie_key, title, image_url, starred, status, updated_at
+     FROM movie_preferences
+     WHERE movie_key = ?`,
+  )
+    .bind(movieKey)
+    .first<PreferenceRow>();
+  const preference: MoviePreference = row
+    ? {
+        movieKey: row.movie_key,
+        title: row.title,
+        imageUrl: row.image_url,
+        starred: Boolean(row.starred),
+        status: row.status,
+        updatedAt: row.updated_at,
+      }
+    : {
+        movieKey,
+        title,
+        imageUrl,
+        starred: false,
+        status: null,
+        updatedAt,
+      };
   return Response.json(preference, {
     headers: { "cache-control": "private, no-store" },
   });

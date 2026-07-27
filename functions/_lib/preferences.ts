@@ -5,18 +5,18 @@ interface PreferenceRow {
   title: string;
   image_url: string | null;
   starred: number;
+  status: MoviePreference["status"];
   updated_at: string;
 }
 
-export async function listStarredPreferences(
+export async function listMoviePreferences(
   db: D1Database,
 ): Promise<MoviePreference[]> {
   const result = await db
     .prepare(
-      `SELECT movie_key, title, image_url, starred, updated_at
-      FROM movie_preferences
-      WHERE starred = 1
-      ORDER BY updated_at DESC`,
+      `SELECT movie_key, title, image_url, starred, status, updated_at
+       FROM movie_preferences
+       ORDER BY updated_at DESC`,
     )
     .all<PreferenceRow>();
   return (result.results ?? []).map((row) => ({
@@ -24,6 +24,7 @@ export async function listStarredPreferences(
     title: row.title,
     imageUrl: row.image_url,
     starred: Boolean(row.starred),
+    status: row.status,
     updatedAt: row.updated_at,
   }));
 }

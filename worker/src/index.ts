@@ -11,6 +11,7 @@ import { parseAeonSchedule } from "./parsers/aeon";
 import { parseEigalandSchedule } from "./parsers/eigaland";
 import { parseKinoMovieImages, parseKinoSchedule } from "./parsers/kino";
 import { parseMovilMovieImages, parseMovilSchedule } from "./parsers/movil";
+import { parseTohoSchedule } from "./parsers/toho";
 import { parseTjoySchedule } from "./parsers/tjoy";
 import {
   parseUnitedMovieImages,
@@ -177,6 +178,10 @@ function buildSources(): Source[] {
       fetch: fetchMovil,
     },
     {
+      id: "toho-kamiooka",
+      fetch: fetchTohoKamiooka,
+    },
+    {
       id: "yokohama-burg13",
       fetch: (dates) =>
         fetchTjoy(
@@ -244,6 +249,43 @@ async function fetchMovil(dates: string[]): Promise<NormalizedShowing[]> {
     const response = await checkedFetch(url);
     showings.push(
       ...parseMovilSchedule(await response.text(), date, movieImages),
+    );
+  }
+  return showings;
+}
+
+async function fetchTohoKamiooka(
+  dates: string[],
+): Promise<NormalizedShowing[]> {
+  const showings: NormalizedShowing[] = [];
+  const bookingUrl =
+    "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do";
+  for (const date of dates) {
+    const url = new URL(
+      "https://api2.tohotheater.jp/api/schedule/v1/schedule/066/TNPI3050J02",
+    );
+    url.searchParams.set("__type__", "html");
+    url.searchParams.set("__useResultInfo__", "no");
+    url.searchParams.set("vg_cd", "066");
+    url.searchParams.set("show_day", compactDate(date));
+    url.searchParams.set("term", "99");
+    url.searchParams.set("isMember", "");
+    url.searchParams.set("enter_kbn", "");
+    url.searchParams.set("_dc", String(Date.now()));
+    const response = await checkedFetch(url, {
+      headers: {
+        accept: "application/json",
+        referer: "https://hlo.tohotheater.jp/",
+      },
+    });
+    showings.push(
+      ...parseTohoSchedule(
+        await response.json(),
+        date,
+        "toho-kamiooka",
+        "toho-kamiooka",
+        bookingUrl,
+      ),
     );
   }
   return showings;

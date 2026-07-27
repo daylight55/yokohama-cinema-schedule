@@ -995,7 +995,7 @@ footer {
   display: grid;
   min-height: 82px;
   grid-template-columns: 104px minmax(0, 1fr) 44px;
-  align-items: center;
+  align-items: start;
   gap: 12px;
   overflow: hidden;
   padding: 8px;
@@ -1017,6 +1017,7 @@ footer {
 .movie-image-placeholder {
   width: 104px;
   height: 66px;
+  grid-row: 1 / span 2;
   border-radius: 7px;
 }
 
@@ -1037,10 +1038,77 @@ footer {
   font-weight: 800;
 }
 
-.movie-list-item > strong {
+.movie-list-copy {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.movie-list-copy > strong {
+  display: block;
   min-width: 0;
   font-size: 13px;
   line-height: 1.55;
+}
+
+.movie-external-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 11px;
+  margin-top: 5px;
+}
+
+.movie-external-links a {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 3px;
+  color: #aebdb5;
+  font-size: 10px;
+  text-decoration: underline;
+  text-decoration-color: #59675f;
+  text-underline-offset: 3px;
+}
+
+.movie-status-actions {
+  display: flex;
+  min-width: 0;
+  grid-column: 2 / -1;
+  gap: 6px;
+}
+
+.movie-status-actions button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #46534d;
+  border-radius: 999px;
+  background: #151d19;
+  color: #aeb9b3;
+  font: inherit;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.movie-status-actions button.active {
+  border-color: #5f9f7b;
+  background: #193426;
+  color: #b9e9ce;
+}
+
+.movie-list-item.not-interested .movie-status-actions button.active {
+  border-color: #94785c;
+  background: #33271d;
+  color: #ead0b7;
+}
+
+.movie-status-actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.movie-list-item.preferences-disabled > img,
+.movie-list-item.preferences-disabled > .movie-image-placeholder {
+  grid-row: auto;
 }
 
 .state-card {

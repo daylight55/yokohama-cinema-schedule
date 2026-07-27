@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouteEstimate, Showing } from "../shared/types";
 import {
+  buildMovieExternalLinks,
   filterShowings,
   findCurrentTimeMarkerIndex,
   buildGoogleMapsDirectionsUrl,
+  getDateSwipeDirection,
   groupByMovie,
   groupByScheduleTime,
   groupScheduleTimeBuckets,
@@ -52,8 +54,8 @@ describe("schedule collapse windows", () => {
         bucket.showingCount,
       ]),
     ).toEqual([
-      ["09:00〜10:00", 2, 2],
-      ["10:00〜11:00", 1, 1],
+      ["09:00〜", 2, 2],
+      ["10:00〜", 1, 1],
     ]);
   });
 
@@ -66,7 +68,7 @@ describe("schedule collapse windows", () => {
 
     expect(
       groupScheduleTimeBuckets(groups, 30).map((bucket) => bucket.label),
-    ).toEqual(["09:00〜09:30", "09:30〜10:00", "10:00〜10:30"]);
+    ).toEqual(["09:00〜", "09:30〜", "10:00〜"]);
   });
 
   it("opens the current window through the following hour", () => {
@@ -109,6 +111,35 @@ describe("schedule collapse windows", () => {
         ),
       ),
     ).toEqual([true, true, false]);
+  });
+});
+
+describe("date swipe gestures", () => {
+  it("moves to the next date on a clear left swipe", () => {
+    expect(getDateSwipeDirection(-80, 12)).toBe("next");
+  });
+
+  it("moves to the previous date on a clear right swipe", () => {
+    expect(getDateSwipeDirection(80, -12)).toBe("previous");
+  });
+
+  it("ignores short, vertical, and diagonal gestures", () => {
+    expect(getDateSwipeDirection(-40, 0)).toBeNull();
+    expect(getDateSwipeDirection(20, 90)).toBeNull();
+    expect(getDateSwipeDirection(80, 70)).toBeNull();
+  });
+});
+
+describe("movie external links", () => {
+  it("builds encoded title searches for 映画.com and Filmarks", () => {
+    const links = buildMovieExternalLinks("テスト 映画");
+
+    expect(links.eiga).toBe(
+      "https://eiga.com/search/?t=%E3%83%86%E3%82%B9%E3%83%88+%E6%98%A0%E7%94%BB",
+    );
+    expect(links.filmarks).toBe(
+      "https://filmarks.com/search/movies?q=%E3%83%86%E3%82%B9%E3%83%88+%E6%98%A0%E7%94%BB",
+    );
   });
 });
 

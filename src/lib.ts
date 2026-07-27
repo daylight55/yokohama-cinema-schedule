@@ -18,7 +18,36 @@ export const AREA_OPTIONS: Array<{
   { id: "minatomirai", label: "桜木町・みなとみらい" },
   { id: "kannai", label: "関内・伊勢佐木町" },
   { id: "tobe", label: "戸部" },
+  { id: "kamiooka", label: "上大岡" },
 ];
+
+export type DateSwipeDirection = "previous" | "next";
+
+export function getDateSwipeDirection(
+  deltaX: number,
+  deltaY: number,
+  minimumDistance = 64,
+): DateSwipeDirection | null {
+  const horizontalDistance = Math.abs(deltaX);
+  if (
+    horizontalDistance < minimumDistance ||
+    horizontalDistance <= Math.abs(deltaY) * 1.25
+  ) {
+    return null;
+  }
+  return deltaX < 0 ? "next" : "previous";
+}
+
+export function buildMovieExternalLinks(title: string): {
+  eiga: string;
+  filmarks: string;
+} {
+  const eiga = new URL("https://eiga.com/search/");
+  eiga.searchParams.set("t", title);
+  const filmarks = new URL("https://filmarks.com/search/movies");
+  filmarks.searchParams.set("q", title);
+  return { eiga: eiga.toString(), filmarks: filmarks.toString() };
+}
 
 export function buildDates(now = new Date(), days = 7): string[] {
   const today = todayInJst(now);
@@ -211,7 +240,7 @@ export function groupScheduleTimeBuckets(
       const endMinutes = startMinutes + collapseMinutes;
       return {
         key: timeFromMinutes(startMinutes),
-        label: `${timeFromMinutes(startMinutes)}〜${timeFromMinutes(endMinutes)}`,
+        label: `${timeFromMinutes(startMinutes)}〜`,
         startMinutes,
         endMinutes,
         groups: bucketGroups,

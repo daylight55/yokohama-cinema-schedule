@@ -9,6 +9,7 @@ import {
   parseMovilSchedule,
 } from "../worker/src/parsers/movil";
 import { parseTjoySchedule } from "../worker/src/parsers/tjoy";
+import { parseTohoSchedule } from "../worker/src/parsers/toho";
 import { parseUnitedMovieImages } from "../worker/src/parsers/united";
 
 describe("schedule parsers", () => {
@@ -133,6 +134,69 @@ describe("schedule parsers", () => {
       screen: "シアター3",
       purchasable: true,
     });
+  });
+
+  it("normalizes TOHO JSON and maps seat availability", () => {
+    const result = parseTohoSchedule(
+      {
+        status: "0",
+        data: [
+          {
+            list: [
+              {
+                list: [
+                  {
+                    code: "movie-1",
+                    name: " テスト　映画 ",
+                    icon: "字幕",
+                    list: [
+                      {
+                        name: "スクリーン１",
+                        iconNm1: "IMAX",
+                        list: [
+                          {
+                            code: 1,
+                            showingStart: "23:40",
+                            showingEnd: "1:50",
+                            unsoldSeatInfo: {
+                              unsoldSeatStatus: "B",
+                            },
+                          },
+                          {
+                            code: 2,
+                            showingStart: "18:10",
+                            showingEnd: "20:20",
+                            unsoldSeatInfo: {
+                              unsoldSeatStatus: "G",
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      "2026-07-24",
+      "toho-kamiooka",
+      "toho-kamiooka",
+      "https://example.com/toho",
+    );
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({
+      movieKey: "movie-1",
+      title: "テスト 映画",
+      startsAt: "2026-07-24T14:40:00.000Z",
+      endsAt: "2026-07-24T16:50:00.000Z",
+      screen: "スクリーン1",
+      format: "字幕 / IMAX",
+      purchasable: true,
+    });
+    expect(result[1].purchasable).toBe(false);
   });
 
   it("extracts one-page official movie images", () => {
