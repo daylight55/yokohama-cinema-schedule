@@ -492,6 +492,78 @@ footer {
   padding: 25px 0 48px;
 }
 
+.about-page {
+  padding: 28px 0 56px;
+}
+
+.about-heading {
+  max-width: 620px;
+}
+
+.about-heading > p:first-child {
+  margin: 0 0 4px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.about-heading h1 {
+  margin: 0;
+  font-size: clamp(26px, 7vw, 36px);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.about-lead {
+  margin: 16px 0 0;
+  color: #c2cdc7;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.about-feature-list {
+  display: grid;
+  max-width: 620px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-feature-list li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+
+.about-feature-list li > svg {
+  margin-top: 1px;
+  color: var(--accent);
+}
+
+.about-feature-list h2,
+.about-note h2 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.about-feature-list p,
+.about-note p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.about-note {
+  max-width: 620px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
 .guide-heading {
   display: flex;
   align-items: flex-end;

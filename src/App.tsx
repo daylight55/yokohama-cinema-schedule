@@ -7,6 +7,7 @@ import {
   CrosshairIcon,
   FilmSlateIcon,
   HouseLineIcon,
+  InfoIcon,
   ListIcon,
   MapPinIcon,
   PathIcon,
@@ -64,6 +65,7 @@ import {
 } from "./lib";
 import { PlannerPage } from "./PlannerPage";
 import { AccountPage } from "./AccountPage";
+import { AboutPage } from "./AboutPage";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -117,6 +119,7 @@ export function App() {
   } | null>(null);
   const lastMovieDeepLinkRef = useRef<string | null>(null);
   const didInitialTimeScrollRef = useRef(false);
+  const pendingHomeScrollRef = useRef(false);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
   const plannerMaxDate = addDays(today, 365);
@@ -215,7 +218,7 @@ export function App() {
   }, [starredMovieKeys]);
 
   useLayoutEffect(() => {
-    if (view === "movies" || view === "account") {
+    if (view === "movies" || view === "account" || view === "about") {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
   }, [view]);
@@ -894,6 +897,54 @@ export function App() {
     });
   };
 
+  const goHomeToCurrentTime = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    pendingHomeScrollRef.current = true;
+    didInitialTimeScrollRef.current = false;
+    setSelectedArea("all");
+    setFutureOnly(false);
+    setSelectedMovieKey(null);
+
+    const homeHash = hashForAppView("schedule", { date: today });
+    if (window.location.hash !== homeHash) {
+      window.location.hash = homeHash;
+      return;
+    }
+
+    const marker = currentTimeMarkerRef.current;
+    if (marker) {
+      scrollToInitialTimeMarker(marker);
+      pendingHomeScrollRef.current = false;
+      didInitialTimeScrollRef.current = true;
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (
+      !pendingHomeScrollRef.current ||
+      loading ||
+      error ||
+      view !== "schedule" ||
+      selectedDate !== today ||
+      !currentTimeMarkerRef.current
+    ) {
+      return;
+    }
+
+    scrollToInitialTimeMarker(currentTimeMarkerRef.current);
+    pendingHomeScrollRef.current = false;
+    didInitialTimeScrollRef.current = true;
+  }, [error, loading, selectedDate, timeGroups, today, view]);
+
   const rememberMovieAnchor = (element: HTMLElement | null) => {
     if (!element) return;
     pendingMovieAnchorRef.current = {
@@ -1156,13 +1207,11 @@ export function App() {
           >
             <ListIcon size={21} aria-hidden="true" />
           </button>
-          <a
-            className="brand"
-            href={hashForAppView("schedule", {
-              date: selectedDate,
-              movie: selectedMovieKey,
-            })}
-            aria-label="はまむび！ ホーム"
+        <a
+          className="brand"
+          href={hashForAppView("schedule", { date: today })}
+          aria-label="今日の現在時刻の上映へ戻る"
+          onClick={goHomeToCurrentTime}
           >
             <img
               className="brand-mark"
@@ -1259,15 +1308,24 @@ export function App() {
               <PathIcon size={20} aria-hidden="true" />
               映画はしごガチャ
             </a>
-            <a
-              href={hashForAppView("account")}
+          <a
+            href={hashForAppView("account")}
               className={view === "account" ? "active" : ""}
               aria-current={view === "account" ? "page" : undefined}
               onClick={closeNavigation}
             >
-              <UserCircleIcon size={20} aria-hidden="true" />
-              マイページ
-            </a>
+            <UserCircleIcon size={20} aria-hidden="true" />
+            マイページ
+          </a>
+          <a
+            href={hashForAppView("about")}
+            className={view === "about" ? "active" : ""}
+            aria-current={view === "about" ? "page" : undefined}
+            onClick={closeNavigation}
+          >
+            <InfoIcon size={20} aria-hidden="true" />
+            このサイトについて
+          </a>
           </nav>
         </div>
       </dialog>
@@ -1306,7 +1364,9 @@ export function App() {
         </nav>
         )}
 
-        {view !== "planner" && view !== "account" && (
+      {(view === "schedule" ||
+        view === "movies" ||
+        view === "cinemas") && (
         <section className="schedule-controls" aria-label="上映の絞り込み">
           <div className="area-strip" role="group" aria-label="エリア">
             {AREA_OPTIONS.map((area) => (
@@ -1405,8 +1465,8 @@ export function App() {
         </section>
         )}
 
-        {view === "account" ? (
-          <AccountPage
+      {view === "account" ? (
+        <AccountPage
             profileSettings={
               !loading && !error ? (
                 <ProfilePanel
@@ -1424,14 +1484,16 @@ export function App() {
               ) : null
             }
           />
-        ) : view === "planner" ? (
-          <PlannerPage
+      ) : view === "planner" ? (
+        <PlannerPage
             selectedDate={plannerDate}
             onSelectedDateChange={(date) => {
               window.location.hash = hashForAppView("planner", { date });
             }}
           />
-        ) : (
+      ) : view === "about" ? (
+        <AboutPage />
+      ) : (
         <section className="guide" aria-live="polite" aria-busy={loading}>
           <div className="guide-heading">
             <div>

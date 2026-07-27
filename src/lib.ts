@@ -14,7 +14,8 @@ export type AppView =
   | "movies"
   | "cinemas"
   | "planner"
-  | "account";
+  | "account"
+  | "about";
 
 const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#schedule": "schedule",
@@ -23,6 +24,7 @@ const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#planner": "planner",
   "#profile": "account",
   "#account": "account",
+  "#about": "about",
 };
 
 const HASH_BY_APP_VIEW: Record<AppView, string> = {
@@ -31,6 +33,7 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   cinemas: "#cinemas",
   planner: "#planner",
   account: "#account",
+  about: "#about",
 };
 
 export interface AppHashState {

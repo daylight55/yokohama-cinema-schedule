@@ -47,6 +47,7 @@ describe("app view hash navigation", () => {
     expect(hashForAppView("cinemas")).toBe("#cinemas");
     expect(hashForAppView("planner")).toBe("#planner");
     expect(hashForAppView("account")).toBe("#account");
+    expect(hashForAppView("about")).toBe("#about");
     expect(
       hashForAppView("movies", {
         date: "2026-07-27",
@@ -63,6 +64,7 @@ describe("app view hash navigation", () => {
     expect(appViewFromHash("#CINEMAS")).toBe("cinemas");
     expect(appViewFromHash("#planner")).toBe("planner");
     expect(appViewFromHash("#account")).toBe("account");
+    expect(appViewFromHash("#about")).toBe("about");
     expect(appViewFromHash("#profile")).toBe("account");
     expect(appViewFromHash("")).toBe("schedule");
     expect(appViewFromHash("#unknown")).toBe("schedule");
