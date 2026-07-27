@@ -62,10 +62,14 @@ npm run db:migrate:local
 npm run worker:dev
 ```
 
-別ターミナルから、`worker/.dev.vars`のトークンで初回取得を実行します。
+別ターミナルから、`worker/.dev.vars`のトークンで2つの取得バッチを実行します。
+Cloudflare Freeプランの1実行あたり外部リクエスト上限を超えないよう、
+映画館を2バッチに分けています。
 
 ```bash
-curl -X POST http://localhost:8787/refresh \
+curl -X POST "http://localhost:8787/refresh?batch=0" \
+  -H "Authorization: Bearer replace-with-a-long-random-token"
+curl -X POST "http://localhost:8787/refresh?batch=1" \
   -H "Authorization: Bearer replace-with-a-long-random-token"
 ```
 

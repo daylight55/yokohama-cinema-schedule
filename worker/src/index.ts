@@ -34,16 +34,34 @@ interface ActiveCinemaWindow {
   active_until: string | null;
 }
 
+type SourceBatch = 0 | 1;
+
+const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
+  0: new Set([
+    "tjoy-yokohama",
+    "movil",
+    "toho-kamiooka",
+    "yokohama-burg13",
+    "aeon-minatomirai",
+  ]),
+  1: new Set([
+    "united-minatomirai",
+    "kino-minatomirai",
+    "jack-and-betty",
+    "cinemarine",
+  ]),
+};
+
 const USER_AGENT =
   "YokohamaCinemaSchedule/0.1 (private personal schedule viewer)";
 
 export default {
   async scheduled(
-    _controller: ScheduledController,
+    controller: ScheduledController,
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    ctx.waitUntil(refreshAll(env));
+    ctx.waitUntil(refreshBatch(env, sourceBatchForCron(controller.cron)));
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -62,7 +80,14 @@ export default {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const result = await refreshAll(env);
+    const batch = parseSourceBatch(url.searchParams.get("batch"));
+    if (batch === null) {
+      return Response.json(
+        { error: "batch_must_be_0_or_1" },
+        { status: 400 },
+      );
+    }
+    const result = await refreshBatch(env, batch);
     return Response.json(result, {
       status: result.failed === 0 ? 200 : 207,
       headers: { "cache-control": "no-store" },
@@ -70,7 +95,20 @@ export default {
   },
 } satisfies ExportedHandler<Env>;
 
-export async function refreshAll(env: Env): Promise<{
+export function sourceBatchForCron(cron: string): SourceBatch {
+  return cron.trimStart().startsWith("17 ") ? 1 : 0;
+}
+
+export function parseSourceBatch(value: string | null): SourceBatch | null {
+  if (value === "0") return 0;
+  if (value === "1") return 1;
+  return null;
+}
+
+export async function refreshBatch(
+  env: Env,
+  batch: SourceBatch,
+): Promise<{
   startedAt: string;
   completedAt: string;
   succeeded: number;
@@ -91,7 +129,10 @@ export async function refreshAll(env: Env): Promise<{
     env.DB,
     dates[0],
   );
-  const sources = buildSources();
+  const sourceIds = SOURCE_BATCH_IDS[batch];
+  const sources = buildSources().filter((source) =>
+    sourceIds.has(source.id),
+  );
   const results: Array<{
     sourceId: string;
     status: "success" | "failed";
