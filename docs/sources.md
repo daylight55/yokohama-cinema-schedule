@@ -15,10 +15,10 @@
 | kino cinéma 横浜みなとみらい | `https://kinocinema.jp/minatomirai/` | 1ページ内の有効な日付タブと`.schedule__item`を対応させて解析 | private_only。Node環境では証明書チェーンエラーが起きることがあり、Cloudflareでの実運用確認が必要 |
 | シネマ・ジャック＆ベティ | `https://schedule.eigaland.com/api/schedulePage/show/listByCinemaIdAndDate?webKey=f005657d-7131-479e-a734-c42c14d98f9f&date=YYYY-MM-DD` | Eigalandの日別JSON API。作品、スクリーン、上映回、購入URLを解析 | private_only |
 | 横浜シネマリン | `https://schedule.eigaland.com/api/schedulePage/show/listByCinemaIdAndDate?webKey=4d6c9e5f-bcca-4635-abe4-6f0db498a8bc&date=YYYY-MM-DD` | Eigalandの日別JSON API | private_only |
+| シネマノヴェチェント | `https://cinema1900.wixsite.com/home/filmtheater1900` | Wixページから対象週のスケジュール画像を抽出し、閉館まで公開済みの6週分を目視確認した上映回へ対応付ける。公式画像URLが差し替わった場合は未確認データを取り込まず収集エラーとして検知 | private_only。2026-08-31閉館予定 |
 
 ## 今回の対象外
 
-- シネマノヴェチェント: 2026年8月閉館予定で、Wixの月間ページとEUC-JPのチケットショップをまたぐ不安定な取得になるため初期版では無効化。
 - あらすじ、座席残数: 事実としての上映時刻と公式購入リンクに限定し、権利や利用条件の確認前は保存・転載しない。
 
 ## 作品画像

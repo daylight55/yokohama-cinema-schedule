@@ -7,7 +7,8 @@
   "triggers": {
     "crons": [
       "7 0,3,6,9,12,15,21 * * *",
-      "17 0,3,6,9,12,15,21 * * *"
+      "17 0,3,6,9,12,15,21 * * *",
+      "27 0,3,6,9,12,15,21 * * *"
     ]
   },
   "d1_databases": [
@@ -20,5 +21,15 @@
   ],
   "vars": {
     "SCHEDULE_DAYS": "7"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
   }
 }

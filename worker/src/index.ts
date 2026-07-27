@@ -12,6 +12,10 @@ import { parseAeonSchedule } from "./parsers/aeon";
 import { parseEigalandSchedule } from "./parsers/eigaland";
 import { parseKinoMovieImages, parseKinoSchedule } from "./parsers/kino";
 import { parseMovilMovieImages, parseMovilSchedule } from "./parsers/movil";
+import {
+  parseReviewedNovecentoSchedule,
+  parseNovecentoScheduleImages,
+} from "./parsers/novecento";
 import { parseTohoSchedule } from "./parsers/toho";
 import { parseTjoySchedule } from "./parsers/tjoy";
 import {
@@ -35,7 +39,7 @@ interface ActiveCinemaWindow {
   active_until: string | null;
 }
 
-type SourceBatch = 0 | 1;
+type SourceBatch = 0 | 1 | 2;
 
 const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
   0: new Set([
@@ -49,7 +53,10 @@ const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
     "united-minatomirai",
     "kino-minatomirai",
     "jack-and-betty",
+  ]),
+  2: new Set([
     "cinemarine",
+    "novecento",
   ]),
 };
 
@@ -84,7 +91,7 @@ export default {
     const batch = parseSourceBatch(url.searchParams.get("batch"));
     if (batch === null) {
       return Response.json(
-        { error: "batch_must_be_0_or_1" },
+        { error: "batch_must_be_0_1_or_2" },
         { status: 400 },
       );
     }
@@ -97,12 +104,14 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 export function sourceBatchForCron(cron: string): SourceBatch {
+  if (cron.trimStart().startsWith("27 ")) return 2;
   return cron.trimStart().startsWith("17 ") ? 1 : 0;
 }
 
 export function parseSourceBatch(value: string | null): SourceBatch | null {
   if (value === "0") return 0;
   if (value === "1") return 1;
+  if (value === "2") return 2;
   return null;
 }
 
@@ -171,6 +180,11 @@ export async function refreshBatch(
         status: "success",
         count: showings.length,
       });
+      console.log("Schedule source refreshed", {
+        sourceId: source.id,
+        showingCount: showings.length,
+        startedAt: sourceStartedAt,
+      });
     } catch (error) {
       const message = safeError(error);
       console.error("Schedule refresh failed", {
@@ -195,13 +209,21 @@ export async function refreshBatch(
     }
   }
 
-  return {
+  const summary = {
     startedAt,
     completedAt: new Date().toISOString(),
     succeeded: results.filter((result) => result.status === "success").length,
     failed: results.filter((result) => result.status === "failed").length,
     sources: results,
   };
+  console.log("Schedule batch completed", {
+    batch,
+    startedAt: summary.startedAt,
+    completedAt: summary.completedAt,
+    succeeded: summary.succeeded,
+    failed: summary.failed,
+  });
+  return summary;
 }
 
 function buildSources(): Source[] {
@@ -269,6 +291,10 @@ function buildSources(): Source[] {
           "4d6c9e5f-bcca-4635-abe4-6f0db498a8bc",
           "https://cinemarine.co.jp/",
         ),
+    },
+    {
+      id: "novecento",
+      fetch: fetchNovecento,
     },
   ];
 }
@@ -370,6 +396,19 @@ async function fetchKino(dates: string[]): Promise<NormalizedShowing[]> {
     dates[0],
     movieImages,
   );
+}
+
+async function fetchNovecento(
+  dates: string[],
+): Promise<NormalizedShowing[]> {
+  const scheduleUrl =
+    "https://cinema1900.wixsite.com/home/filmtheater1900";
+  const response = await checkedFetch(scheduleUrl);
+  const images = parseNovecentoScheduleImages(await response.text(), dates);
+  if (images.length === 0) {
+    throw new Error("ノヴェチェントの週間スケジュール画像を取得できませんでした");
+  }
+  return parseReviewedNovecentoSchedule(images, dates);
 }
 
 async function fetchOptionalMovieImages(

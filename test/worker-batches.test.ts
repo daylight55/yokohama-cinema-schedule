@@ -14,9 +14,14 @@ describe("worker source batches", () => {
     expect(sourceBatchForCron("17 0,3,6,9,12,15,21 * * *")).toBe(1);
   });
 
+  it("uses third batch for minute 27 cron triggers", () => {
+    expect(sourceBatchForCron("27 0,3,6,9,12,15,21 * * *")).toBe(2);
+  });
+
   it("accepts only explicit manual batch values", () => {
     expect(parseSourceBatch("0")).toBe(0);
     expect(parseSourceBatch("1")).toBe(1);
+    expect(parseSourceBatch("2")).toBe(2);
     expect(parseSourceBatch(null)).toBeNull();
     expect(parseSourceBatch("all")).toBeNull();
   });
