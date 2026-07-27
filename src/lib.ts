@@ -144,6 +144,19 @@ export function isShowingReachable(
   );
 }
 
+export function isShowingUnreachable(
+  showing: Pick<Showing, "startsAt" | "cinemaId">,
+  now: Date,
+  routeByCinema: Map<string, RouteEstimate>,
+): boolean {
+  const route = routeByCinema.get(showing.cinemaId);
+  if (!route) return false;
+
+  const startsInMinutes =
+    (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
+  return startsInMinutes >= 0 && startsInMinutes < route.durationMinutes;
+}
+
 export function buildGoogleMapsDirectionsUrl(
   origin: { latitude: number; longitude: number },
   destination: Pick<Cinema, "name" | "address">,

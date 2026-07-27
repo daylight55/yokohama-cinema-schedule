@@ -1036,6 +1036,19 @@ footer {
   opacity: 0.68;
 }
 
+.cinema-slot.unreachable {
+  border-color: #303936;
+  background: #181d1b;
+  filter: grayscale(1);
+  opacity: 0.58;
+}
+
+.cinema-slot.unreachable:hover {
+  border-color: #4b5651;
+  background: #1c2220;
+  opacity: 0.72;
+}
+
 .slot-time {
   display: flex;
   align-items: baseline;
@@ -1074,6 +1087,12 @@ footer {
   color: var(--reachable-ink);
   font-size: 8px;
   font-weight: 900;
+}
+
+.slot-time-details .unreachable-label {
+  color: #d1d5d2;
+  font-size: 9px;
+  font-weight: 800;
 }
 
 .slot-cinema {

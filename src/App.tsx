@@ -58,6 +58,7 @@ import {
   hashForAppView,
   isShowingPast,
   isShowingReachable,
+  isShowingUnreachable,
   normalizeMovieTitle,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
@@ -1169,11 +1170,12 @@ export function App() {
                 >
                   {movie.showings.map((showing) => {
                     const route = routeByCinema.get(showing.cinemaId);
+                    const isPast = isShowingPast(showing, now);
                     return (
                       <CinemaSlot
                         key={showing.id}
                         showing={showing}
-                        isPast={isShowingPast(showing, now)}
+                        isPast={isPast}
                         isReachable={Boolean(
                           route &&
                             isShowingReachable(
@@ -1182,6 +1184,10 @@ export function App() {
                               routeByCinema,
                             ),
                         )}
+                        isUnreachable={
+                          !isPast &&
+                          isShowingUnreachable(showing, now, routeByCinema)
+                        }
                       />
                     );
                   })}
@@ -2191,10 +2197,12 @@ function CinemaSlot({
   showing,
   isPast,
   isReachable,
+  isUnreachable,
 }: {
   showing: Showing;
   isPast: boolean;
   isReachable: boolean;
+  isUnreachable: boolean;
 }) {
   const start = timeFormatter.format(new Date(showing.startsAt));
   const end = showing.endsAt
@@ -2208,6 +2216,7 @@ function CinemaSlot({
         "cinema-slot",
         isPast ? "past" : "",
         isReachable ? "reachable" : "",
+        isUnreachable ? "unreachable" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -2215,7 +2224,7 @@ function CinemaSlot({
       target="_blank"
       rel="noreferrer"
       role="listitem"
-      aria-label={`${isPast ? "開始済み " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+      aria-label={`${isPast ? "開始済み " : ""}${isUnreachable ? "移動時間では間に合わない " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
     >
       <div className="slot-time">
         <strong>{start}</strong>
@@ -2223,6 +2232,9 @@ function CinemaSlot({
           {end && <span>{end}終了</span>}
           {isPast && <span className="started-label">開始済み</span>}
           {isReachable && <span className="reachable-label">間に合う</span>}
+          {isUnreachable && (
+            <span className="unreachable-label">間に合わない</span>
+          )}
         </span>
       </div>
       <div className="slot-cinema">

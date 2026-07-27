@@ -13,6 +13,7 @@ import {
   groupScheduleTimeBuckets,
   isShowingPast,
   isShowingReachable,
+  isShowingUnreachable,
   hashForAppView,
   normalizeMovieTitle,
   scheduleTimeSlot,
@@ -271,6 +272,30 @@ describe("schedule filtering", () => {
 
   it("does not mark a showing when no travel time exists", () => {
     expect(isShowingReachable(showing(), now, new Map())).toBe(false);
+  });
+
+  it("marks an upcoming showing unreachable when travel takes too long", () => {
+    expect(
+      isShowingUnreachable(
+        showing({ startsAt: "2026-07-24T09:24:00.000Z" }),
+        now,
+        new Map([[route.cinemaId, route]]),
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps a showing available when arrival is exactly on time", () => {
+    expect(
+      isShowingUnreachable(
+        showing({ startsAt: "2026-07-24T09:25:00.000Z" }),
+        now,
+        new Map([[route.cinemaId, route]]),
+      ),
+    ).toBe(false);
+  });
+
+  it("does not infer unreachable without a saved travel time", () => {
+    expect(isShowingUnreachable(showing(), now, new Map())).toBe(false);
   });
 
   it("filters by area", () => {
