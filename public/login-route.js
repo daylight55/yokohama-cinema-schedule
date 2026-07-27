@@ -4,15 +4,17 @@ const allowedHashes = new Set([
   "#cinemas",
   "#planner",
   "#profile",
+  "#account",
 ]);
-const returnHashInput = document.querySelector(
+const returnHashInputs = document.querySelectorAll(
   'input[name="returnHash"]',
 );
 const currentHash = window.location.hash.toLowerCase();
 
 if (
-  returnHashInput instanceof HTMLInputElement &&
   allowedHashes.has(currentHash)
 ) {
-  returnHashInput.value = currentHash;
+  for (const input of returnHashInputs) {
+    if (input instanceof HTMLInputElement) input.value = currentHash;
+  }
 }

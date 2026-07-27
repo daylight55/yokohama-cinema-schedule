@@ -14,7 +14,8 @@ export type AppView =
   | "movies"
   | "cinemas"
   | "planner"
-  | "profile";
+  | "profile"
+  | "account";
 
 const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#schedule": "schedule",
@@ -22,6 +23,7 @@ const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#cinemas": "cinemas",
   "#planner": "planner",
   "#profile": "profile",
+  "#account": "account",
 };
 
 const HASH_BY_APP_VIEW: Record<AppView, string> = {
@@ -30,6 +32,7 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   cinemas: "#cinemas",
   planner: "#planner",
   profile: "#profile",
+  account: "#account",
 };
 
 export function appViewFromHash(hash: string): AppView {

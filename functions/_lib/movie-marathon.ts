@@ -145,10 +145,15 @@ export async function listPlannerShowings(
 async function homeTravelMinutes(
   env: PagesEnv,
   cinemas: Cinema[],
+  userId: string,
 ): Promise<Map<string, number>> {
-  const home = await getHomeLocation(env.DB);
+  const home = await getHomeLocation(env.DB, userId);
   if (!home) return new Map();
-  const preferences = await listCinemaTravelPreferences(env.DB, cinemas);
+  const preferences = await listCinemaTravelPreferences(
+    env.DB,
+    cinemas,
+    userId,
+  );
   const preferenceByCinema = new Map(
     preferences.map((preference) => [preference.cinemaId, preference]),
   );
@@ -171,7 +176,11 @@ async function homeTravelMinutes(
   const stationById = new Map(
     stations.map((station) => [station.id, station]),
   );
-  const storedWalks = await listHomeStationAccess(env.DB, stationById);
+  const storedWalks = await listHomeStationAccess(
+    env.DB,
+    stationById,
+    userId,
+  );
   const originStations =
     preferredOriginStationIds.size > 0
       ? stations.filter((station) =>
@@ -229,12 +238,13 @@ export async function generateMovieMarathonProposal(
   date: string,
   startTime: string,
   endTime: string,
+  userId = "legacy-local",
 ): Promise<MovieMarathonProposal> {
   const window = plannerWindow(date, startTime, endTime);
   const [showings, cinemas, preferences, connections] = await Promise.all([
     listPlannerShowings(env, date),
     listActiveCinemas(env.DB, date, env.PUBLIC_MODE === "true"),
-    listMoviePreferences(env.DB),
+    listMoviePreferences(env.DB, userId),
     listStationConnections(env.DB),
   ]);
   const hiddenMovieKeys = new Set(
@@ -254,7 +264,7 @@ export async function generateMovieMarathonProposal(
     (showing) => !hiddenMovieKeys.has(showing.movieKey),
   );
   const [homeTravel, transfers] = await Promise.all([
-    homeTravelMinutes(env, cinemas),
+    homeTravelMinutes(env, cinemas, userId),
     Promise.resolve(buildCinemaTransferMinutes(cinemas, connections)),
   ]);
 
@@ -272,14 +282,17 @@ export async function generateMovieMarathonProposal(
 
 export async function listMovieMarathonPlans(
   db: D1Database,
+  userId = "legacy-local",
   date?: string,
 ): Promise<MovieMarathonPlan[]> {
   const query = date
     ? `SELECT * FROM movie_marathon_plans
-        WHERE plan_date = ? ORDER BY updated_at DESC`
+        WHERE user_id = ? AND plan_date = ? ORDER BY updated_at DESC`
     : `SELECT * FROM movie_marathon_plans
-        ORDER BY plan_date, updated_at DESC`;
-  const statement = date ? db.prepare(query).bind(date) : db.prepare(query);
+        WHERE user_id = ? ORDER BY plan_date, updated_at DESC`;
+  const statement = date
+    ? db.prepare(query).bind(userId, date)
+    : db.prepare(query).bind(userId);
   const result = await statement.all<PlanRow>();
   const rows = result.results ?? [];
   if (rows.length === 0) return [];
@@ -325,21 +338,24 @@ export async function listMovieMarathonPlans(
 export async function getMovieMarathonPlan(
   db: D1Database,
   planId: string,
+  userId = "legacy-local",
 ): Promise<MovieMarathonPlan | null> {
   const row = await db
     .prepare(
-      `SELECT plan_date FROM movie_marathon_plans WHERE id = ?`,
+      `SELECT plan_date FROM movie_marathon_plans
+        WHERE id = ? AND user_id = ?`,
     )
-    .bind(planId)
+    .bind(planId, userId)
     .first<{ plan_date: string }>();
   if (!row) return null;
-  const plans = await listMovieMarathonPlans(db, row.plan_date);
+  const plans = await listMovieMarathonPlans(db, userId, row.plan_date);
   return plans.find((plan) => plan.id === planId) ?? null;
 }
 
 export async function saveMovieMarathonPlan(
   db: D1Database,
   proposal: MovieMarathonProposal,
+  userId = "legacy-local",
 ): Promise<MovieMarathonPlan> {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
@@ -348,12 +364,13 @@ export async function saveMovieMarathonPlan(
     db
       .prepare(
         `INSERT INTO movie_marathon_plans (
-           id, plan_date, available_start, available_end, status,
+           id, user_id, plan_date, available_start, available_end, status,
            google_calendar_event_id, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, NULL, ?, ?)`,
+         ) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
       )
       .bind(
         id,
+        userId,
         proposal.planDate,
         proposal.availableStart,
         proposal.availableEnd,
@@ -402,10 +419,11 @@ export async function saveMovieMarathonPlan(
 export async function deleteMovieMarathonPlan(
   db: D1Database,
   planId: string,
+  userId = "legacy-local",
 ): Promise<boolean> {
   const result = await db
-    .prepare("DELETE FROM movie_marathon_plans WHERE id = ?")
-    .bind(planId)
+    .prepare("DELETE FROM movie_marathon_plans WHERE id = ? AND user_id = ?")
+    .bind(planId, userId)
     .run();
   return (result.meta.changes ?? 0) > 0;
 }
@@ -414,13 +432,14 @@ export async function markPlanCalendarEvent(
   db: D1Database,
   planId: string,
   eventId: string,
+  userId = "legacy-local",
 ): Promise<void> {
   await db
     .prepare(
       `UPDATE movie_marathon_plans
           SET google_calendar_event_id = ?, updated_at = ?
-        WHERE id = ?`,
+        WHERE id = ? AND user_id = ?`,
     )
-    .bind(eventId, new Date().toISOString(), planId)
+    .bind(eventId, new Date().toISOString(), planId, userId)
     .run();
 }

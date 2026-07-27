@@ -36,6 +36,7 @@ export function isCustomDurationMinutes(value: unknown): value is number {
 export async function listCinemaTravelPreferences(
   db: D1Database,
   cinemas: Pick<Cinema, "id">[],
+  userId = "legacy-local",
 ): Promise<CinemaTravelPreference[]> {
   if (cinemas.length === 0) return [];
 
@@ -43,9 +44,10 @@ export async function listCinemaTravelPreferences(
     .prepare(
       `SELECT cinema_id, travel_mode, custom_duration_minutes, updated_at
        FROM cinema_travel_preferences
-       WHERE cinema_id IN (${cinemas.map(() => "?").join(", ")})`,
+       WHERE user_id = ?
+         AND cinema_id IN (${cinemas.map(() => "?").join(", ")})`,
     )
-    .bind(...cinemas.map((cinema) => cinema.id))
+    .bind(userId, ...cinemas.map((cinema) => cinema.id))
     .all<CinemaTravelPreferenceRow>();
   const savedByCinema = new Map(
     (result.results ?? []).map((row) => [row.cinema_id, row]),

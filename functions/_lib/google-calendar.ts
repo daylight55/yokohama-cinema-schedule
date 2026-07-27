@@ -37,6 +37,21 @@ export interface GoogleCalendarCredentials {
   encryptionKey: string;
 }
 
+export type GoogleOAuthCredentials = Pick<
+  GoogleCalendarCredentials,
+  "clientId" | "clientSecret"
+>;
+
+export function getGoogleOAuthCredentials(
+  env: PagesEnv,
+): GoogleOAuthCredentials | null {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return null;
+  return {
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+  };
+}
+
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -116,6 +131,7 @@ export function getGoogleCalendarCredentials(
 
 export async function getGoogleCalendarStatus(
   env: PagesEnv,
+  userId = "legacy-local",
 ): Promise<GoogleCalendarConnectionStatus> {
   const configured = Boolean(getGoogleCalendarCredentials(env));
   if (!configured || env.PUBLIC_MODE === "true") {
@@ -130,8 +146,10 @@ export async function getGoogleCalendarStatus(
     `SELECT email, refresh_token_ciphertext, refresh_token_iv, scopes,
             created_at, updated_at
        FROM google_calendar_connections
-      WHERE id = 1`,
-  ).first<CalendarConnectionRow>();
+      WHERE user_id = ?`,
+  )
+    .bind(userId)
+    .first<CalendarConnectionRow>();
   return {
     configured: true,
     connected: Boolean(row),
@@ -142,6 +160,7 @@ export async function getGoogleCalendarStatus(
 
 export async function saveGoogleCalendarConnection(
   env: PagesEnv,
+  userId: string,
   email: string,
   refreshToken: string,
   scopes: string,
@@ -155,10 +174,10 @@ export async function saveGoogleCalendarConnection(
   const now = new Date().toISOString();
   await env.DB.prepare(
     `INSERT INTO google_calendar_connections (
-       id, email, refresh_token_ciphertext, refresh_token_iv,
+       user_id, email, refresh_token_ciphertext, refresh_token_iv,
        scopes, created_at, updated_at
-     ) VALUES (1, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET
        email = excluded.email,
        refresh_token_ciphertext = excluded.refresh_token_ciphertext,
        refresh_token_iv = excluded.refresh_token_iv,
@@ -166,6 +185,7 @@ export async function saveGoogleCalendarConnection(
        updated_at = excluded.updated_at`,
   )
     .bind(
+      userId,
       email,
       encrypted.ciphertext,
       encrypted.iv,
@@ -176,22 +196,28 @@ export async function saveGoogleCalendarConnection(
     .run();
 }
 
-export async function disconnectGoogleCalendar(db: D1Database): Promise<void> {
+export async function disconnectGoogleCalendar(
+  db: D1Database,
+  userId = "legacy-local",
+): Promise<void> {
   await db
-    .prepare("DELETE FROM google_calendar_connections WHERE id = 1")
+    .prepare("DELETE FROM google_calendar_connections WHERE user_id = ?")
+    .bind(userId)
     .run();
 }
 
 async function getConnectionRow(
   db: D1Database,
+  userId: string,
 ): Promise<CalendarConnectionRow> {
   const row = await db
     .prepare(
       `SELECT email, refresh_token_ciphertext, refresh_token_iv, scopes,
               created_at, updated_at
          FROM google_calendar_connections
-        WHERE id = 1`,
+        WHERE user_id = ?`,
     )
+    .bind(userId)
     .first<CalendarConnectionRow>();
   if (!row) throw new Error("google_calendar_not_connected");
   return row;
@@ -199,11 +225,12 @@ async function getConnectionRow(
 
 export async function refreshGoogleAccessToken(
   env: PagesEnv,
+  userId = "legacy-local",
   fetcher: typeof fetch = fetch,
 ): Promise<string> {
   const credentials = getGoogleCalendarCredentials(env);
   if (!credentials) throw new Error("google_calendar_not_configured");
-  const connection = await getConnectionRow(env.DB);
+  const connection = await getConnectionRow(env.DB, userId);
   const refreshToken = await decryptGoogleToken(
     connection.refresh_token_ciphertext,
     connection.refresh_token_iv,
@@ -227,7 +254,7 @@ export async function refreshGoogleAccessToken(
 }
 
 export async function exchangeGoogleAuthorizationCode(
-  credentials: GoogleCalendarCredentials,
+  credentials: GoogleOAuthCredentials,
   code: string,
   codeVerifier: string,
   redirectUri: string,

@@ -3,7 +3,7 @@ import type {
   MovieMarathonPlannerResponse,
   MovieMarathonProposal,
 } from "../../shared/types";
-import type { PagesEnv } from "../_lib/env";
+import type { AuthContextData, PagesEnv } from "../_lib/env";
 import {
   getGoogleCalendarStatus,
   refreshGoogleAccessToken,
@@ -29,7 +29,11 @@ function unavailable(): Response {
   return Response.json({ error: "planner_unavailable" }, { status: 403 });
 }
 
-export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestGet: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
   const url = new URL(context.request.url);
   const date = url.searchParams.get("date") ?? todayInJst();
@@ -38,8 +42,8 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   }
   const [showings, savedPlans, calendar] = await Promise.all([
     listPlannerShowings(context.env, date),
-    listMovieMarathonPlans(context.env.DB),
-    getGoogleCalendarStatus(context.env),
+    listMovieMarathonPlans(context.env.DB, context.data.userId),
+    getGoogleCalendarStatus(context.env, context.data.userId),
   ]);
   const response: MovieMarathonPlannerResponse = {
     date,
@@ -53,7 +57,11 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   });
 };
 
-export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestPost: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
   const body = (await context.request.json()) as PlannerRequest;
   const date = body.date ?? "";
@@ -73,6 +81,7 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
       date,
       startTime,
       endTime,
+      context.data.userId,
     );
   } catch (error) {
     if (error instanceof RangeError) {
@@ -90,25 +99,40 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   }
   if (body.action === "save") {
     return Response.json(
-      await saveMovieMarathonPlan(context.env.DB, proposal),
+      await saveMovieMarathonPlan(
+        context.env.DB,
+        proposal,
+        context.data.userId,
+      ),
       { status: 201 },
     );
   }
   return Response.json({ error: "invalid_action" }, { status: 400 });
 };
 
-export const onRequestDelete: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestDelete: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
   const planId = new URL(context.request.url).searchParams.get("id");
   if (!planId) {
     return Response.json({ error: "missing_plan_id" }, { status: 400 });
   }
-  const plan = await getMovieMarathonPlan(context.env.DB, planId);
+  const plan = await getMovieMarathonPlan(
+    context.env.DB,
+    planId,
+    context.data.userId,
+  );
   if (!plan) {
     return Response.json({ error: "plan_not_found" }, { status: 404 });
   }
   if (plan.googleCalendarEventId) {
-    const accessToken = await refreshGoogleAccessToken(context.env);
+    const accessToken = await refreshGoogleAccessToken(
+      context.env,
+      context.data.userId,
+    );
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(plan.googleCalendarEventId)}`,
       {
@@ -123,7 +147,11 @@ export const onRequestDelete: PagesFunction<PagesEnv> = async (context) => {
       );
     }
   }
-  const deleted = await deleteMovieMarathonPlan(context.env.DB, planId);
+  const deleted = await deleteMovieMarathonPlan(
+    context.env.DB,
+    planId,
+    context.data.userId,
+  );
   return deleted
     ? new Response(null, { status: 204 })
     : Response.json({ error: "plan_not_found" }, { status: 404 });

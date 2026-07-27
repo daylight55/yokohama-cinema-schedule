@@ -9,3 +9,9 @@ export interface PagesEnv {
   SESSION_TTL_DAYS?: string;
   PUBLIC_MODE?: string;
 }
+
+export interface AuthContextData extends Record<string, unknown> {
+  userId: string;
+  authUser: import("./auth").AuthUser;
+  legacySession: boolean;
+}

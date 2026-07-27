@@ -4,7 +4,7 @@ import type {
   CalendarAvailabilityResponse,
   CalendarBusyPeriod,
 } from "../../../shared/types";
-import type { PagesEnv } from "../../_lib/env";
+import type { AuthContextData, PagesEnv } from "../../_lib/env";
 import { refreshGoogleAccessToken } from "../../_lib/google-calendar";
 import { isPlannerDateAllowed } from "../../_lib/movie-marathon";
 
@@ -17,7 +17,11 @@ interface FreeBusyPayload {
   };
 }
 
-export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestGet: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") {
     return Response.json({ error: "calendar_unavailable" }, { status: 403 });
   }
@@ -27,7 +31,10 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   }
   const windowStart = jstLocalToIso(date, "08:00");
   const windowEnd = jstLocalToIso(date, "23:59");
-  const accessToken = await refreshGoogleAccessToken(context.env);
+  const accessToken = await refreshGoogleAccessToken(
+    context.env,
+    context.data.userId,
+  );
   const googleResponse = await fetch(
     "https://www.googleapis.com/calendar/v3/freeBusy",
     {

@@ -1,5 +1,5 @@
 import type { RouteOrigin } from "../../shared/types";
-import type { PagesEnv } from "../_lib/env";
+import type { AuthContextData, PagesEnv } from "../_lib/env";
 import {
   estimateWalksToStations,
   listPreferredOriginStationIds,
@@ -27,15 +27,26 @@ function unavailable() {
   return Response.json({ error: "profile_unavailable" }, { status: 403 });
 }
 
-export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestGet: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
 
-  return Response.json(await getUserProfile(context.env.DB), {
+  return Response.json(
+    await getUserProfile(context.env.DB, context.data.userId),
+    {
     headers: { "cache-control": "private, no-store" },
-  });
+    },
+  );
 };
 
-export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestPost: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
 
   let body: ProfileRequest;
@@ -73,6 +84,7 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     context.env.DB,
     home,
     stationWalks,
+    context.data.userId,
   );
 
   return Response.json(profile, {
@@ -80,7 +92,11 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   });
 };
 
-export const onRequestPatch: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestPatch: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
 
   let body: DisplayPreferenceRequest;
@@ -100,16 +116,24 @@ export const onRequestPatch: PagesFunction<PagesEnv> = async (context) => {
   await saveScheduleCollapseMinutes(
     context.env.DB,
     body.scheduleCollapseMinutes,
+    context.data.userId,
   );
-  return Response.json(await getUserProfile(context.env.DB), {
-    headers: { "cache-control": "private, no-store" },
-  });
+  return Response.json(
+    await getUserProfile(context.env.DB, context.data.userId),
+    {
+      headers: { "cache-control": "private, no-store" },
+    },
+  );
 };
 
-export const onRequestDelete: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestDelete: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
 
-  await deleteHomeLocation(context.env.DB);
+  await deleteHomeLocation(context.env.DB, context.data.userId);
   return Response.json(
     { homeRegistered: false, homeUpdatedAt: null },
     { headers: { "cache-control": "private, no-store" } },

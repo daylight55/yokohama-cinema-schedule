@@ -1,4 +1,5 @@
-import type { PagesEnv } from "../../_lib/env";
+import type { AuthContextData, PagesEnv } from "../../_lib/env";
+import { parseCookies, SESSION_COOKIE } from "../../_lib/auth";
 import {
   getGoogleCalendarCredentials,
   GOOGLE_CALENDAR_SCOPES,
@@ -9,7 +10,11 @@ import {
   randomOauthValue,
 } from "../../_lib/google-oauth";
 
-export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestGet: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") {
     return new Response("Google Calendar connection is unavailable", {
       status: 403,
@@ -52,6 +57,18 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   headers.append(
     "set-cookie",
     oauthCookie("google_oauth_verifier", verifier, secure),
+  );
+  const session = parseCookies(
+    context.request.headers.get("cookie") ?? "",
+  ).get(SESSION_COOKIE);
+  if (!session) {
+    return new Response("Authenticated session is required", {
+      status: 401,
+    });
+  }
+  headers.append(
+    "set-cookie",
+    oauthCookie("google_oauth_session", session, secure),
   );
   return new Response(null, { status: 302, headers });
 };
