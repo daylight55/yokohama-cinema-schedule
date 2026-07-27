@@ -19,6 +19,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   Fragment,
+  type MouseEvent,
   type TouchEvent,
   useCallback,
   useEffect,
@@ -27,7 +28,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { todayInJst } from "../shared/date";
+import { addDays, todayInJst } from "../shared/date";
 import type {
   Cinema,
   CinemaArea,
@@ -43,7 +44,7 @@ import type {
 } from "../shared/types";
 import {
   AREA_OPTIONS,
-  appViewFromHash,
+  appHashStateFromHash,
   buildMovieExternalLinks,
   buildGoogleMapsDirectionsUrl,
   buildDates,
@@ -114,17 +115,37 @@ export function App() {
     element: HTMLElement;
     top: number;
   } | null>(null);
+  const lastMovieDeepLinkRef = useRef<string | null>(null);
   const didInitialTimeScrollRef = useRef(false);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
-  const [selectedDate, setSelectedDate] = useState(dates[0]);
+  const plannerMaxDate = addDays(today, 365);
+  const [initialHashState] = useState(() =>
+    appHashStateFromHash(window.location.hash),
+  );
+  const initialScheduleDate =
+    initialHashState.date && dates.includes(initialHashState.date)
+      ? initialHashState.date
+      : dates[0];
+  const initialPlannerDate =
+    initialHashState.date &&
+    initialHashState.date >= today &&
+    initialHashState.date <= plannerMaxDate
+      ? initialHashState.date
+      : today;
+  const [selectedDate, setSelectedDate] = useState(initialScheduleDate);
+  const [plannerDate, setPlannerDate] = useState(initialPlannerDate);
+  const [selectedMovieKey, setSelectedMovieKey] = useState<string | null>(
+    initialHashState.view === "schedule" ||
+      initialHashState.view === "movies"
+      ? initialHashState.movie
+      : null,
+  );
   const [selectedArea, setSelectedArea] = useState<CinemaArea | "all">("all");
   const [futureOnly, setFutureOnly] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
   const [routes, setRoutes] = useState<RouteEstimate[]>([]);
-  const [view, setView] = useState<AppView>(() =>
-    appViewFromHash(window.location.hash),
-  );
+  const [view, setView] = useState<AppView>(initialHashState.view);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [showJumpToNow, setShowJumpToNow] = useState(false);
   const [cinemaTravelModes, setCinemaTravelModes] = useState<
@@ -219,12 +240,36 @@ export function App() {
 
   useEffect(() => {
     const syncViewFromHash = () => {
-      const nextView = appViewFromHash(window.location.hash);
-      const canonicalHash = hashForAppView(nextView);
+      const hashState = appHashStateFromHash(window.location.hash);
+      const nextView = hashState.view;
+      const usesWeeklyDate =
+        nextView === "schedule" || nextView === "movies";
+      const nextScheduleDate =
+        hashState.date && dates.includes(hashState.date)
+          ? hashState.date
+          : dates[0];
+      const nextPlannerDate =
+        hashState.date &&
+        hashState.date >= today &&
+        hashState.date <= plannerMaxDate
+          ? hashState.date
+          : today;
+      const nextMovieKey = usesWeeklyDate ? hashState.movie : null;
+      const canonicalHash = hashForAppView(nextView, {
+        date: usesWeeklyDate
+          ? nextScheduleDate
+          : nextView === "planner"
+            ? nextPlannerDate
+            : null,
+        movie: nextMovieKey,
+      });
       if (window.location.hash !== canonicalHash) {
         window.history.replaceState(null, "", canonicalHash);
       }
       setView(nextView);
+      setSelectedDate(nextScheduleDate);
+      setPlannerDate(nextPlannerDate);
+      setSelectedMovieKey(nextMovieKey);
     };
 
     syncViewFromHash();
@@ -232,11 +277,7 @@ export function App() {
     return () => {
       window.removeEventListener("hashchange", syncViewFromHash);
     };
-  }, []);
-
-  useEffect(() => {
-    if (!dates.includes(selectedDate)) setSelectedDate(dates[0]);
-  }, [dates, selectedDate]);
+  }, [dates, plannerMaxDate, today]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -412,9 +453,41 @@ export function App() {
 
   useLayoutEffect(() => {
     if (
+      loading ||
+      error ||
+      !selectedMovieKey ||
+      (view !== "schedule" && view !== "movies")
+    ) {
+      return;
+    }
+    const deepLinkKey = `${view}:${selectedDate}:${selectedMovieKey}`;
+    if (lastMovieDeepLinkRef.current === deepLinkKey) return;
+    const target = [
+      ...document.querySelectorAll<HTMLElement>("[data-movie-key]"),
+    ].find((element) => element.dataset.movieKey === selectedMovieKey);
+    if (!target) return;
+    const collapsedWindow = target.closest<HTMLDetailsElement>(
+      "details.schedule-window",
+    );
+    if (collapsedWindow) collapsedWindow.open = true;
+    target.scrollIntoView({ behavior: "auto", block: "center" });
+    lastMovieDeepLinkRef.current = deepLinkKey;
+  }, [
+    error,
+    loading,
+    movieList,
+    selectedDate,
+    selectedMovieKey,
+    timeGroups,
+    view,
+  ]);
+
+  useLayoutEffect(() => {
+    if (
       didInitialTimeScrollRef.current ||
       loading ||
       error ||
+      selectedMovieKey ||
       selectedDate !== today ||
       view !== "schedule" ||
       !currentTimeMarkerRef.current
@@ -424,7 +497,15 @@ export function App() {
 
     scrollToInitialTimeMarker(currentTimeMarkerRef.current);
     didInitialTimeScrollRef.current = true;
-  }, [error, loading, selectedDate, timeGroups, today, view]);
+  }, [
+    error,
+    loading,
+    selectedDate,
+    selectedMovieKey,
+    timeGroups,
+    today,
+    view,
+  ]);
 
   useEffect(() => {
     const marker = currentTimeMarkerRef.current;
@@ -749,6 +830,19 @@ export function App() {
     navigationDialogRef.current?.close();
   };
 
+  const navigateHashLink = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+    event.preventDefault();
+    window.location.hash = event.currentTarget.hash;
+  };
+
   const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
     dateSwipeStartRef.current = null;
     if (view !== "schedule" || loading || event.touches.length !== 1) {
@@ -782,7 +876,9 @@ export function App() {
     const nextIndex =
       direction === "next" ? currentIndex + 1 : currentIndex - 1;
     if (nextIndex >= 0 && nextIndex < dates.length) {
-      setSelectedDate(dates[nextIndex]);
+      window.location.hash = hashForAppView("schedule", {
+        date: dates[nextIndex],
+      });
     }
   };
 
@@ -985,13 +1081,25 @@ export function App() {
                   "program-block",
                   isPast ? "past" : "",
                   isStarred ? "starred" : "",
+                  selectedMovieKey === movie.preferenceKey ? "linked" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
+                data-movie-key={movie.preferenceKey}
                 key={movie.key}
               >
                 <div className="program-title">
-                  <h2>{movie.title}</h2>
+                  <h2>
+                    <a
+                      href={hashForAppView("movies", {
+                        date: selectedDate,
+                        movie: movie.preferenceKey,
+                      })}
+                      onClick={navigateHashLink}
+                    >
+                      {movie.title}
+                    </a>
+                  </h2>
                   {schedule?.preferencesEnabled && (
                     <FavoriteButton
                       title={movie.title}
@@ -1050,7 +1158,10 @@ export function App() {
           </button>
           <a
             className="brand"
-            href={hashForAppView("schedule")}
+            href={hashForAppView("schedule", {
+              date: selectedDate,
+              movie: selectedMovieKey,
+            })}
             aria-label="はまむび！ ホーム"
           >
             <img
@@ -1105,16 +1216,22 @@ export function App() {
           </div>
           <nav aria-label="メイン">
             <a
-              href={hashForAppView("schedule")}
+              href={hashForAppView("schedule", {
+                date: selectedDate,
+                movie: selectedMovieKey,
+              })}
               className={view === "schedule" ? "active" : ""}
               aria-current={view === "schedule" ? "page" : undefined}
               onClick={closeNavigation}
             >
               <CalendarDotsIcon size={20} aria-hidden="true" />
-              上映時間
+              上映スケジュール
             </a>
             <a
-              href={hashForAppView("movies")}
+              href={hashForAppView("movies", {
+                date: selectedDate,
+                movie: selectedMovieKey,
+              })}
               className={view === "movies" ? "active" : ""}
               aria-current={view === "movies" ? "page" : undefined}
               onClick={closeNavigation}
@@ -1132,13 +1249,15 @@ export function App() {
               映画館
             </a>
             <a
-              href={hashForAppView("planner")}
+              href={hashForAppView("planner", {
+                date: view === "planner" ? plannerDate : selectedDate,
+              })}
               className={view === "planner" ? "active" : ""}
               aria-current={view === "planner" ? "page" : undefined}
               onClick={closeNavigation}
             >
               <PathIcon size={20} aria-hidden="true" />
-              映画はしご
+              映画はしごガチャ
             </a>
             <a
               href={hashForAppView("account")}
@@ -1170,18 +1289,17 @@ export function App() {
               );
               const [monthDay, weekday = ""] = displayDate.split(/[()]/);
               return (
-                <button
+                <a
                   key={date}
                   className={
                     date === selectedDate ? "day-button active" : "day-button"
                   }
-                  type="button"
-                  aria-pressed={date === selectedDate}
-                  onClick={() => setSelectedDate(date)}
+                  href={hashForAppView(view, { date })}
+                  aria-current={date === selectedDate ? "date" : undefined}
                 >
                   <span>{index === 0 ? "今日" : monthDay}</span>
                   <small>{weekday}</small>
-                </button>
+                </a>
               );
             })}
           </div>
@@ -1307,7 +1425,12 @@ export function App() {
             }
           />
         ) : view === "planner" ? (
-          <PlannerPage />
+          <PlannerPage
+            selectedDate={plannerDate}
+            onSelectedDateChange={(date) => {
+              window.location.hash = hashForAppView("planner", { date });
+            }}
+          />
         ) : (
         <section className="guide" aria-live="polite" aria-busy={loading}>
           <div className="guide-heading">
@@ -1402,12 +1525,14 @@ export function App() {
                       status === "not_interested"
                         ? "not-interested"
                         : "",
+                      selectedMovieKey === movie.preferenceKey ? "linked" : "",
                       schedule?.preferencesEnabled
                         ? ""
                         : "preferences-disabled",
                     ]
                       .filter(Boolean)
                       .join(" ")}
+                    data-movie-key={movie.preferenceKey}
                     key={movie.preferenceKey}
                   >
                     {movie.imageUrl ? (
@@ -1425,7 +1550,22 @@ export function App() {
                       </div>
                     )}
                     <div className="movie-list-copy">
-                      <strong>{movie.title}</strong>
+                      <strong>
+                        <a
+                          href={hashForAppView("movies", {
+                            date: selectedDate,
+                            movie: movie.preferenceKey,
+                          })}
+                          onClick={navigateHashLink}
+                          aria-current={
+                            selectedMovieKey === movie.preferenceKey
+                              ? "location"
+                              : undefined
+                          }
+                        >
+                          {movie.title}
+                        </a>
+                      </strong>
                       <div
                         className="movie-external-links"
                         aria-label={`${movie.title}の作品情報`}

@@ -47,10 +47,15 @@ async function readError(response: Response, fallback: string): Promise<Error> {
   return new Error(payload?.error ?? fallback);
 }
 
-export function PlannerPage() {
+export function PlannerPage({
+  selectedDate,
+  onSelectedDateChange,
+}: {
+  selectedDate: string;
+  onSelectedDateChange: (date: string) => void;
+}) {
   const today = todayInJst();
   const maxDate = addDays(today, 365);
-  const [selectedDate, setSelectedDate] = useState(today);
   const [startTime, setStartTime] = useState("10:00");
   const [endTime, setEndTime] = useState("23:00");
   const [data, setData] = useState<MovieMarathonPlannerResponse | null>(
@@ -269,7 +274,7 @@ export function PlannerPage() {
     <section className="planner-page" aria-busy={busy}>
       <div className="planner-heading">
         <p>1年先まで予定を記録</p>
-        <h1>おすすめ映画はしご</h1>
+        <h1>映画はしごガチャ</h1>
         <span>気になる作品を優先</span>
       </div>
 
@@ -288,7 +293,9 @@ export function PlannerPage() {
             min={today}
             max={maxDate}
             value={selectedDate}
-            onChange={(event) => setSelectedDate(event.currentTarget.value)}
+            onChange={(event) =>
+              onSelectedDateChange(event.currentTarget.value)
+            }
           />
         </label>
         <div className="planner-time-fields">

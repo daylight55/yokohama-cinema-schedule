@@ -33,12 +33,44 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   account: "#account",
 };
 
-export function appViewFromHash(hash: string): AppView {
-  return APP_VIEW_BY_HASH[hash.toLowerCase()] ?? "schedule";
+export interface AppHashState {
+  view: AppView;
+  date: string | null;
+  movie: string | null;
 }
 
-export function hashForAppView(view: AppView): string {
-  return HASH_BY_APP_VIEW[view];
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export function appHashStateFromHash(hash: string): AppHashState {
+  const [routeHash = "", query = ""] = hash.split("?", 2);
+  const view = APP_VIEW_BY_HASH[routeHash.toLowerCase()] ?? "schedule";
+  const params = new URLSearchParams(query);
+  const date = params.get("date");
+  const movie = params.get("movie")?.trim();
+  return {
+    view,
+    date: date && ISO_DATE_PATTERN.test(date) ? date : null,
+    movie: movie ? movie.slice(0, 240) : null,
+  };
+}
+
+export function appViewFromHash(hash: string): AppView {
+  return appHashStateFromHash(hash).view;
+}
+
+export function hashForAppView(
+  view: AppView,
+  state: { date?: string | null; movie?: string | null } = {},
+): string {
+  const params = new URLSearchParams();
+  if (state.date && ISO_DATE_PATTERN.test(state.date)) {
+    params.set("date", state.date);
+  }
+  if (state.movie?.trim()) {
+    params.set("movie", state.movie.trim().slice(0, 240));
+  }
+  const query = params.toString();
+  return `${HASH_BY_APP_VIEW[view]}${query ? `?${query}` : ""}`;
 }
 
 export const AREA_OPTIONS: Array<{

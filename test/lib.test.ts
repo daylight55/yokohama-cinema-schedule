@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouteEstimate, Showing } from "../shared/types";
 import {
+  appHashStateFromHash,
   appViewFromHash,
   buildMovieExternalLinks,
   filterShowings,
@@ -46,16 +47,44 @@ describe("app view hash navigation", () => {
     expect(hashForAppView("cinemas")).toBe("#cinemas");
     expect(hashForAppView("planner")).toBe("#planner");
     expect(hashForAppView("account")).toBe("#account");
+    expect(
+      hashForAppView("movies", {
+        date: "2026-07-27",
+        movie: "劇場版 テスト",
+      }),
+    ).toBe(
+      "#movies?date=2026-07-27&movie=%E5%8A%87%E5%A0%B4%E7%89%88+%E3%83%86%E3%82%B9%E3%83%88",
+    );
   });
 
   it("opens a directly linked view and falls back to the schedule", () => {
     expect(appViewFromHash("#movies")).toBe("movies");
+    expect(appViewFromHash("#movies?date=2026-07-27")).toBe("movies");
     expect(appViewFromHash("#CINEMAS")).toBe("cinemas");
     expect(appViewFromHash("#planner")).toBe("planner");
     expect(appViewFromHash("#account")).toBe("account");
     expect(appViewFromHash("#profile")).toBe("account");
     expect(appViewFromHash("")).toBe("schedule");
     expect(appViewFromHash("#unknown")).toBe("schedule");
+  });
+
+  it("restores a linked date and movie from the hash", () => {
+    expect(
+      appHashStateFromHash(
+        "#schedule?date=2026-07-27&movie=%E5%8A%87%E5%A0%B4%E7%89%88+%E3%83%86%E3%82%B9%E3%83%88",
+      ),
+    ).toEqual({
+      view: "schedule",
+      date: "2026-07-27",
+      movie: "劇場版 テスト",
+    });
+    expect(
+      appHashStateFromHash("#movies?date=July-27&movie=%20"),
+    ).toEqual({
+      view: "movies",
+      date: null,
+      movie: null,
+    });
   });
 });
 
