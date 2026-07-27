@@ -253,6 +253,20 @@ describe("schedule filtering", () => {
     ).toBe(true);
   });
 
+  it("does not cap longer routes at one hour", () => {
+    const longerRoute: RouteEstimate = {
+      ...route,
+      durationMinutes: 50,
+    };
+    expect(
+      isShowingReachable(
+        showing({ startsAt: "2026-07-24T10:10:00.000Z" }),
+        now,
+        new Map([[longerRoute.cinemaId, longerRoute]]),
+      ),
+    ).toBe(true);
+  });
+
   it("does not mark a showing when no travel time exists", () => {
     expect(isShowingReachable(showing(), now, new Map())).toBe(false);
   });

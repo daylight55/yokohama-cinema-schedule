@@ -124,7 +124,6 @@ export function isShowingReachable(
   routeByCinema: Map<string, RouteEstimate>,
   arrivalMarginMinutes = 20,
   marginToleranceMinutes = 10,
-  reachableWindowMinutes = 60,
 ): boolean {
   const route = routeByCinema.get(showing.cinemaId);
   if (!route) {
@@ -133,10 +132,7 @@ export function isShowingReachable(
   const targetStartMinutes = route.durationMinutes + arrivalMarginMinutes;
   const earliestStartMinutes =
     targetStartMinutes - marginToleranceMinutes;
-  const latestStartMinutes = Math.min(
-    targetStartMinutes + marginToleranceMinutes,
-    reachableWindowMinutes,
-  );
+  const latestStartMinutes = targetStartMinutes + marginToleranceMinutes;
   const startsInMinutes =
     (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
   return (
