@@ -9,6 +9,30 @@ import type {
   TravelMode,
 } from "../shared/types";
 
+export type AppView = "schedule" | "movies" | "cinemas" | "profile";
+
+const APP_VIEW_BY_HASH: Record<string, AppView> = {
+  "#schedule": "schedule",
+  "#movies": "movies",
+  "#cinemas": "cinemas",
+  "#profile": "profile",
+};
+
+const HASH_BY_APP_VIEW: Record<AppView, string> = {
+  schedule: "#schedule",
+  movies: "#movies",
+  cinemas: "#cinemas",
+  profile: "#profile",
+};
+
+export function appViewFromHash(hash: string): AppView {
+  return APP_VIEW_BY_HASH[hash.toLowerCase()] ?? "schedule";
+}
+
+export function hashForAppView(view: AppView): string {
+  return HASH_BY_APP_VIEW[view];
+}
+
 export const AREA_OPTIONS: Array<{
   id: CinemaArea | "all";
   label: string;

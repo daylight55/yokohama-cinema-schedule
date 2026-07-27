@@ -21,8 +21,9 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   }
   const data = await context.request.formData();
   const password = String(data.get("password") ?? "");
+  const returnHash = normalizeReturnHash(data.get("returnHash"));
   if (!(await passwordMatches(password, context.env.APP_PASSWORD))) {
-    return loginPage(true);
+    return loginPage(true, returnHash);
   }
 
   const session = await createSession(context.env);
@@ -33,9 +34,19 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   return new Response(null, {
     status: 303,
     headers: {
-      location: "/",
+      location: returnHash ? `/${returnHash}` : "/",
       "set-cookie": sessionCookie(session, ttlDays * 86_400),
       "cache-control": "no-store",
     },
   });
 };
+
+export function normalizeReturnHash(value: FormDataEntryValue | null): string {
+  if (typeof value !== "string") return "";
+  const normalized = value.toLowerCase();
+  return ["#schedule", "#movies", "#cinemas", "#profile"].includes(
+    normalized,
+  )
+    ? normalized
+    : "";
+}

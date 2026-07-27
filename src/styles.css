@@ -216,7 +216,7 @@ a:active {
   padding-top: 12px;
 }
 
-.navigation-sheet nav button {
+.navigation-sheet nav a {
   display: flex;
   min-height: 48px;
   align-items: center;
@@ -229,14 +229,15 @@ a:active {
   font: inherit;
   font-weight: 650;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.navigation-sheet nav button:hover {
+.navigation-sheet nav a:hover {
   background: var(--surface);
 }
 
-.navigation-sheet nav button.active {
+.navigation-sheet nav a.active {
   background: var(--accent-soft);
   color: var(--accent);
 }
@@ -447,6 +448,7 @@ footer {
   font: inherit;
   font-size: 11px;
   font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
 }
 

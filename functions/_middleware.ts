@@ -5,7 +5,7 @@ export const onRequest: PagesFunction<PagesEnv> = async (context) => {
   const url = new URL(context.request.url);
   if (
     url.pathname.startsWith("/auth/") ||
-    isPublicBrandAssetPath(url.pathname)
+    isPublicShellAssetPath(url.pathname)
   ) {
     return context.next();
   }
@@ -40,6 +40,10 @@ export const onRequest: PagesFunction<PagesEnv> = async (context) => {
   return secured;
 };
 
-export function isPublicBrandAssetPath(pathname: string): boolean {
-  return pathname.startsWith("/brand/") || pathname === "/site.webmanifest";
+export function isPublicShellAssetPath(pathname: string): boolean {
+  return (
+    pathname.startsWith("/brand/") ||
+    pathname === "/site.webmanifest" ||
+    pathname === "/login-route.js"
+  );
 }
