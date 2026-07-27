@@ -45,7 +45,6 @@ describe("app view hash navigation", () => {
     expect(hashForAppView("movies")).toBe("#movies");
     expect(hashForAppView("cinemas")).toBe("#cinemas");
     expect(hashForAppView("planner")).toBe("#planner");
-    expect(hashForAppView("profile")).toBe("#profile");
     expect(hashForAppView("account")).toBe("#account");
   });
 
@@ -54,7 +53,7 @@ describe("app view hash navigation", () => {
     expect(appViewFromHash("#CINEMAS")).toBe("cinemas");
     expect(appViewFromHash("#planner")).toBe("planner");
     expect(appViewFromHash("#account")).toBe("account");
-    expect(appViewFromHash("#profile")).toBe("profile");
+    expect(appViewFromHash("#profile")).toBe("account");
     expect(appViewFromHash("")).toBe("schedule");
     expect(appViewFromHash("#unknown")).toBe("schedule");
   });

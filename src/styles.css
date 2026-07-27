@@ -1971,6 +1971,13 @@ footer p {
   margin-bottom: 20px;
 }
 
+.account-page > .profile-panel {
+  max-width: none;
+  margin-top: 0;
+  margin-bottom: 14px;
+  border-radius: 16px;
+}
+
 .account-heading p,
 .account-heading h1,
 .account-heading span,

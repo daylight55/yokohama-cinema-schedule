@@ -1141,22 +1141,13 @@ export function App() {
               映画はしご
             </a>
             <a
-              href={hashForAppView("profile")}
-              className={view === "profile" ? "active" : ""}
-              aria-current={view === "profile" ? "page" : undefined}
-              onClick={closeNavigation}
-            >
-              <CrosshairIcon size={20} aria-hidden="true" />
-              現在地・自宅設定
-            </a>
-            <a
               href={hashForAppView("account")}
               className={view === "account" ? "active" : ""}
               aria-current={view === "account" ? "page" : undefined}
               onClick={closeNavigation}
             >
               <UserCircleIcon size={20} aria-hidden="true" />
-              アカウント
+              マイページ
             </a>
           </nav>
         </div>
@@ -1197,7 +1188,7 @@ export function App() {
         </nav>
         )}
 
-        {view !== "profile" && view !== "planner" && view !== "account" && (
+        {view !== "planner" && view !== "account" && (
         <section className="schedule-controls" aria-label="上映の絞り込み">
           <div className="area-strip" role="group" aria-label="エリア">
             {AREA_OPTIONS.map((area) => (
@@ -1275,10 +1266,10 @@ export function App() {
           {view !== "movies" && !userProfile.homeRegistered && (
             <a
               className="home-profile-link"
-              href={hashForAppView("profile")}
+              href={hashForAppView("account")}
             >
               <HouseLineIcon size={16} aria-hidden="true" />
-              プロフィールで自宅を登録
+              マイページで自宅を登録
             </a>
           )}
           {cinemaPreferenceError && (
@@ -1297,7 +1288,24 @@ export function App() {
         )}
 
         {view === "account" ? (
-          <AccountPage />
+          <AccountPage
+            profileSettings={
+              !loading && !error ? (
+                <ProfilePanel
+                  enabled={Boolean(schedule?.userProfileEnabled)}
+                  profile={userProfile}
+                  state={profileState}
+                  collapseState={collapsePreferenceState}
+                  error={profileError}
+                  onRegister={() => void registerHomeLocation()}
+                  onDelete={() => void deleteHomeProfile()}
+                  onCollapseChange={(value) =>
+                    void saveScheduleCollapsePreference(value)
+                  }
+                />
+              ) : null
+            }
+          />
         ) : view === "planner" ? (
           <PlannerPage />
         ) : (
@@ -1307,21 +1315,17 @@ export function App() {
               <p>
                 {view === "cinemas"
                   ? "対象エリア"
-                  : view === "profile"
-                    ? "設定"
-                    : selectedDateLabel}
+                  : selectedDateLabel}
               </p>
               <h1>
                 {view === "schedule"
                   ? "上映スケジュール"
                   : view === "movies"
                     ? "上映中の作品"
-                    : view === "cinemas"
-              ? "映画館"
-              : "現在地・自宅設定"}
+                    : "映画館"}
               </h1>
             </div>
-            {!loading && !error && view !== "profile" && (
+            {!loading && !error && (
               <span>
                 {view === "schedule"
                   ? `${movieCount}作品`
@@ -1335,7 +1339,7 @@ export function App() {
             )}
           </div>
 
-          {schedule?.lastUpdatedAt && !loading && view !== "profile" && (
+          {schedule?.lastUpdatedAt && !loading && (
             <p className="update-status">
               {updatedFormatter.format(new Date(schedule.lastUpdatedAt))}更新
               {schedule.sourceHealth.total > 0 &&
@@ -1359,7 +1363,6 @@ export function App() {
           )}
           {!loading &&
             !error &&
-            view !== "profile" &&
             (view === "schedule"
               ? timeGroups.length === 0
               : view === "movies"
@@ -1383,20 +1386,6 @@ export function App() {
                 </div>
               </div>
             )}
-          {!loading && !error && view === "profile" && (
-            <ProfilePanel
-              enabled={Boolean(schedule?.userProfileEnabled)}
-              profile={userProfile}
-              state={profileState}
-              collapseState={collapsePreferenceState}
-              error={profileError}
-              onRegister={() => void registerHomeLocation()}
-              onDelete={() => void deleteHomeProfile()}
-              onCollapseChange={(value) =>
-                void saveScheduleCollapsePreference(value)
-              }
-            />
-          )}
           {!loading && !error && view === "movies" && movieList.length > 0 && (
             <ul className="movie-list">
               {movieList.map((movie, index) => {
