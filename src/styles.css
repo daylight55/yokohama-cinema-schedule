@@ -459,10 +459,11 @@ footer {
 }
 
 .cinema-route-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
 }
 
 .google-maps-route-link {
@@ -1210,10 +1211,9 @@ footer {
 }
 
 .cinema-list-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  min-width: 0;
+  gap: 3px;
 }
 
 .cinema-list-heading h2 {
@@ -1237,11 +1237,11 @@ footer {
 }
 
 .cinema-route-time {
-  flex: 0 0 auto;
+  min-width: 0;
   color: var(--accent);
   font-size: 17px;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: left;
 }
 
 .cinema-route-time small {
@@ -1250,10 +1250,6 @@ footer {
   color: var(--muted);
   font-size: 9px;
   font-weight: 500;
-}
-
-.cinema-route-actions {
-  flex: 0 0 auto;
 }
 
 .cinema-address {

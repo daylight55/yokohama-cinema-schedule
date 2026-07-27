@@ -1676,27 +1676,25 @@ export function App() {
                   return (
                     <li className="cinema-list-item" key={cinema.id}>
                       <div className="cinema-list-heading">
-                        <div>
-                          <h2>{cinema.name}</h2>
-                          <p>
-                            <MapPinIcon size={15} aria-hidden="true" />
-                            {cinema.areaLabel}
-                          </p>
-                        </div>
-                        {route && routeOrigin && (
-                          <div className="cinema-route-actions">
-                            <strong className="cinema-route-time">
-                              約{route.durationMinutes}分
-                              <small>{routeEstimateDetail(route)}</small>
-                            </strong>
-                            <GoogleMapsRouteLink
-                              cinema={cinema}
-                              origin={routeOrigin}
-                              route={route}
-                            />
-                          </div>
-                        )}
+                        <h2>{cinema.name}</h2>
+                        <p>
+                          <MapPinIcon size={15} aria-hidden="true" />
+                          {cinema.areaLabel}
+                        </p>
                       </div>
+                      {route && routeOrigin && (
+                        <div className="cinema-route-actions">
+                          <strong className="cinema-route-time">
+                            約{route.durationMinutes}分
+                            <small>{routeEstimateDetail(route)}</small>
+                          </strong>
+                          <GoogleMapsRouteLink
+                            cinema={cinema}
+                            origin={routeOrigin}
+                            route={route}
+                          />
+                        </div>
+                      )}
                       <p className="cinema-address">{cinema.address}</p>
                       {route?.transitDetails && (
                         <p className="cinema-transit-breakdown">
