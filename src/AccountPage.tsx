@@ -6,10 +6,19 @@ import {
   UserPlusIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
-import { type FormEvent, useEffect, useState } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import type { AccountResponse } from "../shared/types";
 
-export function AccountPage() {
+export function AccountPage({
+  profileSettings,
+}: {
+  profileSettings?: ReactNode;
+}) {
   const [account, setAccount] = useState<AccountResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -200,20 +209,29 @@ export function AccountPage() {
 
   if (!account) {
     return (
-      <section className="account-page" aria-label="アカウント">
-        <p>{error ?? "アカウント情報を読み込んでいます…"}</p>
+      <section className="account-page" aria-label="マイページ">
+        <header className="account-heading">
+          <p>設定</p>
+          <h1>マイページ</h1>
+        </header>
+        {profileSettings}
+        <p className={error ? "account-message error" : "account-muted"}>
+          {error ?? "アカウント情報を読み込んでいます…"}
+        </p>
       </section>
     );
   }
 
   const email = account.user.displayEmail ?? account.user.email;
   return (
-    <section className="account-page" aria-label="アカウント">
+    <section className="account-page" aria-label="マイページ">
       <header className="account-heading">
         <p>設定</p>
-        <h1>アカウント</h1>
+        <h1>マイページ</h1>
         <span>{email ?? "管理者用セッション"}</span>
       </header>
+
+      {profileSettings}
 
       {account.user.legacy && (
         <section className="account-notice">
