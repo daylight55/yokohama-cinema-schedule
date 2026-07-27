@@ -9,6 +9,7 @@ import {
   HouseLineIcon,
   ListIcon,
   MapPinIcon,
+  PathIcon,
   SignOutIcon,
   StarIcon,
   TrashIcon,
@@ -59,6 +60,7 @@ import {
   shouldDefaultExpandScheduleBucket,
   type AppView,
 } from "./lib";
+import { PlannerPage } from "./PlannerPage";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -1107,6 +1109,15 @@ export function App() {
               映画館
             </a>
             <a
+              href={hashForAppView("planner")}
+              className={view === "planner" ? "active" : ""}
+              aria-current={view === "planner" ? "page" : undefined}
+              onClick={closeNavigation}
+            >
+              <PathIcon size={20} aria-hidden="true" />
+              映画はしご
+            </a>
+            <a
               href={hashForAppView("profile")}
               className={view === "profile" ? "active" : ""}
               aria-current={view === "profile" ? "page" : undefined}
@@ -1154,7 +1165,7 @@ export function App() {
         </nav>
         )}
 
-        {view !== "profile" && (
+        {view !== "profile" && view !== "planner" && (
         <section className="schedule-controls" aria-label="上映の絞り込み">
           <div className="area-strip" role="group" aria-label="エリア">
             {AREA_OPTIONS.map((area) => (
@@ -1253,6 +1264,9 @@ export function App() {
         </section>
         )}
 
+        {view === "planner" ? (
+          <PlannerPage />
+        ) : (
         <section className="guide" aria-live="polite" aria-busy={loading}>
           <div className="guide-heading">
             <div>
@@ -1709,6 +1723,7 @@ export function App() {
             </div>
           )}
         </section>
+        )}
       </main>
 
       {showJumpToNow && (

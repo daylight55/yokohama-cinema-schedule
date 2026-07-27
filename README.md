@@ -14,7 +14,9 @@
 - 作品ごとのスター・鑑賞済み・興味なしをクラウド保存。鑑賞済み／興味なしの作品は上映時間から非表示
 - 作品一覧から映画.comとFilmarksの作品検索へ移動
 - 上映時間・上映作品・映画館・現在地設定を切り替えるスマートフォン向けサイドバー
-- 各画面を `#schedule`・`#movies`・`#cinemas`・`#profile` のURLで直リンク
+- 各画面を `#schedule`・`#movies`・`#cinemas`・`#planner`・`#profile` のURLで直リンク
+- 1年先まで空いている日と時間を保存し、気になる作品と移動時間を優先した映画はしごを提案
+- Google カレンダーの空き時間取得と、保存した映画はしごの予定登録（OAuth設定時）
 - スクロール後に現在時刻の上映位置へ戻るスマートフォン向けボタン
 - 映画館一覧で移動方法と自分の所要時間を館ごとにD1へ保存
 - プロフィールで自宅を一度GPS登録し、D1の固定位置から移動時間と間に合う上映を反映
@@ -99,9 +101,12 @@ npm run pages:dev
 
    ```bash
    npx wrangler pages project create yokohama-cinema-schedule
-   npx wrangler pages secret put APP_PASSWORD
-   npx wrangler pages secret put SESSION_SECRET
-   npx wrangler pages secret put GOOGLE_MAPS_API_KEY
+npx wrangler pages secret put APP_PASSWORD
+npx wrangler pages secret put SESSION_SECRET
+npx wrangler pages secret put GOOGLE_MAPS_API_KEY
+npx wrangler pages secret put GOOGLE_CLIENT_ID
+npx wrangler pages secret put GOOGLE_CLIENT_SECRET
+npx wrangler pages secret put GOOGLE_TOKEN_ENCRYPTION_KEY
    ```
 
 4. Workerの手動実行トークンを登録します。
@@ -118,6 +123,26 @@ npm run pages:dev
    ```
 
 `APP_PASSWORD`は長いランダム文字列、`SESSION_SECRET`は32バイト以上のランダム値を推奨します。`robots`指定だけに依存せず、`*.pages.dev`を含む全リクエストをPages Functionsのミドルウェアで保護します。独自ドメインを追加する場合は、さらにCloudflare Accessのメール許可リストを重ねられます。
+
+### Google カレンダーOAuth
+
+Google CloudでCalendar APIを有効化し、ウェブアプリケーション用OAuthクライアントを作成します。
+承認済みのリダイレクトURIには本番URLを登録します。
+
+```text
+https://yokohama-cinema-schedule.pages.dev/auth/google/callback
+```
+
+ローカルで連携を確認する場合は、利用するポートのcallbackも追加します。
+
+```text
+http://localhost:8788/auth/google/callback
+```
+
+OAuthトークンはD1へ平文保存せず、`GOOGLE_TOKEN_ENCRYPTION_KEY`から生成した
+AES-GCM鍵で暗号化します。要求する権限は空き時間の参照と、自分が所有する
+カレンダーへのイベント登録に限定しています。OAuth秘密情報が未設定の場合も、
+映画はしごの提案・保存は利用でき、Google カレンダー連携だけが設定待ち表示になります。
 
 ## 移動時間の目安
 

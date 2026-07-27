@@ -142,6 +142,70 @@ export interface UserProfile {
   scheduleCollapseMinutes: ScheduleCollapseMinutes;
 }
 
+export interface MovieMarathonPlanItem {
+  showingId: string;
+  sequence: number;
+  movieKey: string;
+  title: string;
+  cinemaId: string;
+  cinemaName: string;
+  startsAt: string;
+  endsAt: string;
+  bookingUrl: string;
+  starred: boolean;
+  transferMinutes: number;
+}
+
+export interface MovieMarathonPlan {
+  id: string;
+  planDate: string;
+  availableStart: string;
+  availableEnd: string;
+  status: "draft" | "planned";
+  googleCalendarEventId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: MovieMarathonPlanItem[];
+}
+
+export interface MovieMarathonProposal {
+  planDate: string;
+  availableStart: string;
+  availableEnd: string;
+  starredCount: number;
+  movieCount: number;
+  totalTransferMinutes: number;
+  items: MovieMarathonPlanItem[];
+}
+
+export interface GoogleCalendarConnectionStatus {
+  configured: boolean;
+  connected: boolean;
+  email: string | null;
+  updatedAt: string | null;
+}
+
+export interface CalendarBusyPeriod {
+  start: string;
+  end: string;
+}
+
+export interface CalendarAvailabilityResponse {
+  date: string;
+  busy: CalendarBusyPeriod[];
+  free: CalendarBusyPeriod[];
+  suggestedStart: string | null;
+  suggestedEnd: string | null;
+}
+
+export interface MovieMarathonPlannerResponse {
+  date: string;
+  schedulePublished: boolean;
+  showingCount: number;
+  savedPlans: MovieMarathonPlan[];
+  calendar: GoogleCalendarConnectionStatus;
+}
+
 export interface NormalizedShowing {
   sourceId: string;
   cinemaId: string;

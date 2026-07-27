@@ -2,6 +2,7 @@ const allowedHashes = new Set([
   "#schedule",
   "#movies",
   "#cinemas",
+  "#planner",
   "#profile",
 ]);
 const returnHashInput = document.querySelector(

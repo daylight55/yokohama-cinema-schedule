@@ -9,12 +9,18 @@ import type {
   TravelMode,
 } from "../shared/types";
 
-export type AppView = "schedule" | "movies" | "cinemas" | "profile";
+export type AppView =
+  | "schedule"
+  | "movies"
+  | "cinemas"
+  | "planner"
+  | "profile";
 
 const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#schedule": "schedule",
   "#movies": "movies",
   "#cinemas": "cinemas",
+  "#planner": "planner",
   "#profile": "profile",
 };
 
@@ -22,6 +28,7 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   schedule: "#schedule",
   movies: "#movies",
   cinemas: "#cinemas",
+  planner: "#planner",
   profile: "#profile",
 };
 
