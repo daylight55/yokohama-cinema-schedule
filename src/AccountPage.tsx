@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 import type { AccountResponse } from "../shared/types";
+import { PageHeader, PageShell } from "./PageLayout";
 
 export function AccountPage({
   profileSettings,
@@ -209,27 +210,24 @@ export function AccountPage({
 
   if (!account) {
     return (
-      <section className="account-page" aria-label="マイページ">
-        <header className="account-heading">
-          <p>設定</p>
-          <h1>マイページ</h1>
-        </header>
+      <PageShell className="account-page" label="マイページ">
+        <PageHeader eyebrow="設定" title="マイページ" />
         {profileSettings}
         <p className={error ? "account-message error" : "account-muted"}>
           {error ?? "アカウント情報を読み込んでいます…"}
         </p>
-      </section>
+      </PageShell>
     );
   }
 
   const email = account.user.displayEmail ?? account.user.email;
   return (
-    <section className="account-page" aria-label="マイページ">
-      <header className="account-heading">
-        <p>設定</p>
-        <h1>マイページ</h1>
-        <span>{email ?? "管理者用セッション"}</span>
-      </header>
+    <PageShell className="account-page" label="マイページ">
+      <PageHeader
+        eyebrow="設定"
+        title="マイページ"
+        lead={email ?? "管理者用セッション"}
+      />
 
       {profileSettings}
 
@@ -430,7 +428,7 @@ export function AccountPage({
           </ul>
         </section>
       )}
-    </section>
+    </PageShell>
   );
 }
 

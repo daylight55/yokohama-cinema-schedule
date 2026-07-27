@@ -66,6 +66,7 @@ import {
 import { PlannerPage } from "./PlannerPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
+import { PageHeader, PageShell } from "./PageLayout";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -1494,35 +1495,32 @@ export function App() {
       ) : view === "about" ? (
         <AboutPage />
       ) : (
-        <section className="guide" aria-live="polite" aria-busy={loading}>
-          <div className="guide-heading">
-            <div>
-              <p>
-                {view === "cinemas"
-                  ? "対象エリア"
-                  : selectedDateLabel}
-              </p>
-              <h1>
-                {view === "schedule"
-                  ? "上映スケジュール"
-                  : view === "movies"
-                    ? "上映中の作品"
-                    : "映画館"}
-              </h1>
-            </div>
-            {!loading && !error && (
-              <span>
-                {view === "schedule"
-                  ? `${movieCount}作品`
-                  : view === "movies"
-                    ? `${movieList.length}作品`
-                    : `${cinemaList.length}館`}
-                {view === "schedule" && (
-                  <small>{visibleShowings.length}上映</small>
-                )}
-              </span>
-            )}
-          </div>
+        <PageShell className="guide" live="polite" busy={loading}>
+          <PageHeader
+            eyebrow={view === "cinemas" ? "対象エリア" : selectedDateLabel}
+            title={
+              view === "schedule"
+                ? "上映スケジュール"
+                : view === "movies"
+                  ? "上映中の作品"
+                  : "映画館"
+            }
+            meta={
+              !loading &&
+              !error && (
+                <span className="page-count">
+                  {view === "schedule"
+                    ? `${movieCount}作品`
+                    : view === "movies"
+                      ? `${movieList.length}作品`
+                      : `${cinemaList.length}館`}
+                  {view === "schedule" && (
+                    <small>{visibleShowings.length}上映</small>
+                  )}
+                </span>
+              )
+            }
+          />
 
           {schedule?.lastUpdatedAt && !loading && (
             <p className="update-status">
@@ -1938,8 +1936,8 @@ export function App() {
               )}
             </div>
           )}
-        </section>
-        )}
+        </PageShell>
+      )}
       </main>
 
       {showJumpToNow && (
