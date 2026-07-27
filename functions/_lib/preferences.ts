@@ -11,13 +11,16 @@ interface PreferenceRow {
 
 export async function listMoviePreferences(
   db: D1Database,
+  userId = "legacy-local",
 ): Promise<MoviePreference[]> {
   const result = await db
     .prepare(
       `SELECT movie_key, title, image_url, starred, status, updated_at
        FROM movie_preferences
+      WHERE user_id = ?
        ORDER BY updated_at DESC`,
     )
+    .bind(userId)
     .all<PreferenceRow>();
   return (result.results ?? []).map((row) => ({
     movieKey: row.movie_key,

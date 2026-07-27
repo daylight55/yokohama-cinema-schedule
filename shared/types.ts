@@ -142,6 +142,40 @@ export interface UserProfile {
   scheduleCollapseMinutes: ScheduleCollapseMinutes;
 }
 
+export interface AccountPasskey {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+export interface ManagedUser {
+  id: string;
+  email: string | null;
+  role: "admin" | "member";
+  status: "active" | "disabled";
+  lastLoginAt: string | null;
+}
+
+export interface AccountResponse {
+  user: {
+    id: string;
+    email: string | null;
+    displayEmail: string | null;
+    role: "admin" | "member";
+    legacy: boolean;
+  };
+  methods: {
+    google: boolean;
+    password: boolean;
+    passkeySupported: boolean;
+  };
+  passkeys: AccountPasskey[];
+  users: ManagedUser[];
+  pendingInvites: Array<{ email: string; createdAt: string }>;
+  googleConfigured: boolean;
+}
+
 export interface MovieMarathonPlanItem {
   showingId: string;
   sequence: number;

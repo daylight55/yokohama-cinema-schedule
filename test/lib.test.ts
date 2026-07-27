@@ -46,12 +46,14 @@ describe("app view hash navigation", () => {
     expect(hashForAppView("cinemas")).toBe("#cinemas");
     expect(hashForAppView("planner")).toBe("#planner");
     expect(hashForAppView("profile")).toBe("#profile");
+    expect(hashForAppView("account")).toBe("#account");
   });
 
   it("opens a directly linked view and falls back to the schedule", () => {
     expect(appViewFromHash("#movies")).toBe("movies");
     expect(appViewFromHash("#CINEMAS")).toBe("cinemas");
     expect(appViewFromHash("#planner")).toBe("planner");
+    expect(appViewFromHash("#account")).toBe("account");
     expect(appViewFromHash("#profile")).toBe("profile");
     expect(appViewFromHash("")).toBe("schedule");
     expect(appViewFromHash("#unknown")).toBe("schedule");

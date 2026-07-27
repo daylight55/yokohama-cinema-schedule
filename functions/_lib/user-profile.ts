@@ -66,13 +66,15 @@ export function normalizeHomeCoordinates(
 
 export async function getHomeLocation(
   db: D1Database,
+  userId = "legacy-local",
 ): Promise<HomeLocation | null> {
   const row = await db
     .prepare(
       `SELECT home_latitude, home_longitude, home_updated_at
        FROM user_profiles
-       WHERE id = 1`,
+       WHERE user_id = ?`,
     )
+    .bind(userId)
     .first<UserProfileRow>();
   if (!row) return null;
 
@@ -83,10 +85,13 @@ export async function getHomeLocation(
   };
 }
 
-export async function getUserProfile(db: D1Database): Promise<UserProfile> {
+export async function getUserProfile(
+  db: D1Database,
+  userId = "legacy-local",
+): Promise<UserProfile> {
   const [home, scheduleCollapseMinutes] = await Promise.all([
-    getHomeLocation(db),
-    getScheduleCollapseMinutes(db),
+    getHomeLocation(db, userId),
+    getScheduleCollapseMinutes(db, userId),
   ]);
   return {
     homeRegistered: Boolean(home),
@@ -97,13 +102,16 @@ export async function getUserProfile(db: D1Database): Promise<UserProfile> {
 
 export async function getScheduleCollapseMinutes(
   db: D1Database,
+  userId = "legacy-local",
 ): Promise<ScheduleCollapseMinutes> {
   const row = await db
     .prepare(
       `SELECT preference_value
        FROM app_preferences
-       WHERE preference_key = 'schedule_collapse_minutes'`,
+       WHERE user_id = ?
+         AND preference_key = 'schedule_collapse_minutes'`,
     )
+    .bind(userId)
     .first<DisplayPreferenceRow>();
   const value = row ? Number(row.preference_value) : null;
   return isScheduleCollapseMinutes(value)
@@ -114,20 +122,22 @@ export async function getScheduleCollapseMinutes(
 export async function saveScheduleCollapseMinutes(
   db: D1Database,
   value: ScheduleCollapseMinutes,
+  userId = "legacy-local",
 ): Promise<void> {
   await db
     .prepare(
       `INSERT INTO app_preferences (
+         user_id,
          preference_key,
          preference_value,
          updated_at
        )
-       VALUES ('schedule_collapse_minutes', ?, ?)
-       ON CONFLICT(preference_key) DO UPDATE SET
+       VALUES (?, 'schedule_collapse_minutes', ?, ?)
+       ON CONFLICT(user_id, preference_key) DO UPDATE SET
          preference_value = excluded.preference_value,
          updated_at = excluded.updated_at`,
     )
-    .bind(String(value), new Date().toISOString())
+    .bind(userId, String(value), new Date().toISOString())
     .run();
 }
 
@@ -135,29 +145,34 @@ export async function saveHomeLocation(
   db: D1Database,
   home: RouteOrigin,
   stationWalks: StationWalkEstimate[],
+  userId = "legacy-local",
 ): Promise<UserProfile> {
   const updatedAt = new Date().toISOString();
   await db.batch([
     db
       .prepare(
         `INSERT INTO user_profiles
-          (id, home_latitude, home_longitude, home_updated_at)
-         VALUES (1, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET
+          (user_id, home_latitude, home_longitude, home_updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(user_id) DO UPDATE SET
            home_latitude = excluded.home_latitude,
            home_longitude = excluded.home_longitude,
            home_updated_at = excluded.home_updated_at`,
       )
-      .bind(home.latitude, home.longitude, updatedAt),
-    db.prepare("DELETE FROM user_home_station_access"),
+      .bind(userId, home.latitude, home.longitude, updatedAt),
+    db
+      .prepare("DELETE FROM user_home_station_access WHERE user_id = ?")
+      .bind(userId),
     ...stationWalks.map((walk) =>
       db
         .prepare(
           `INSERT INTO user_home_station_access (
-             station_id, walk_minutes, distance_meters, provider, calculated_at
-           ) VALUES (?, ?, ?, ?, ?)`,
+             user_id, station_id, walk_minutes, distance_meters, provider,
+             calculated_at
+           ) VALUES (?, ?, ?, ?, ?, ?)`,
         )
         .bind(
+          userId,
           walk.station.id,
           walk.durationMinutes,
           walk.distanceMeters,
@@ -167,18 +182,21 @@ export async function saveHomeLocation(
     ),
   ]);
 
-  return getUserProfile(db);
+  return getUserProfile(db, userId);
 }
 
 export async function listHomeStationAccess(
   db: D1Database,
   stationsById: Map<string, StationWalkEstimate["station"]>,
+  userId = "legacy-local",
 ): Promise<StationWalkEstimate[]> {
   const result = await db
     .prepare(
       `SELECT station_id, walk_minutes, distance_meters, provider
-       FROM user_home_station_access`,
+       FROM user_home_station_access
+       WHERE user_id = ?`,
     )
+    .bind(userId)
     .all<HomeStationAccessRow>();
 
   return (result.results ?? []).flatMap((row) => {
@@ -196,9 +214,14 @@ export async function listHomeStationAccess(
   });
 }
 
-export async function deleteHomeLocation(db: D1Database): Promise<void> {
+export async function deleteHomeLocation(
+  db: D1Database,
+  userId = "legacy-local",
+): Promise<void> {
   await db.batch([
-    db.prepare("DELETE FROM user_home_station_access"),
-    db.prepare("DELETE FROM user_profiles WHERE id = 1"),
+    db
+      .prepare("DELETE FROM user_home_station_access WHERE user_id = ?")
+      .bind(userId),
+    db.prepare("DELETE FROM user_profiles WHERE user_id = ?").bind(userId),
   ]);
 }

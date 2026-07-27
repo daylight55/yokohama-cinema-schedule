@@ -7,7 +7,7 @@ import type {
   MoviePreference,
   MoviePreferenceStatus,
 } from "../../shared/types";
-import type { PagesEnv } from "../_lib/env";
+import type { AuthContextData, PagesEnv } from "../_lib/env";
 
 interface PreferenceRequest {
   title?: string;
@@ -25,7 +25,11 @@ interface PreferenceRow {
   updated_at: string;
 }
 
-export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestPost: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") {
     return Response.json(
       { error: "preferences_unavailable" },
@@ -69,10 +73,10 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   const updatedAt = new Date().toISOString();
   await context.env.DB.prepare(
     `INSERT INTO movie_preferences (
-       movie_key, title, image_url, starred, status, updated_at
+       user_id, movie_key, title, image_url, starred, status, updated_at
      )
-     VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT(movie_key) DO UPDATE SET
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(user_id, movie_key) DO UPDATE SET
        title = excluded.title,
        image_url = COALESCE(excluded.image_url, movie_preferences.image_url),
        starred = CASE
@@ -86,6 +90,7 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
        updated_at = excluded.updated_at`,
   )
     .bind(
+      context.data.userId,
       movieKey,
       title,
       imageUrl,
@@ -100,18 +105,20 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   await context.env.DB.prepare(
     `DELETE FROM movie_preferences
      WHERE movie_key = ?
+       AND user_id = ?
        AND starred = 0
        AND status IS NULL`,
   )
-    .bind(movieKey)
+    .bind(movieKey, context.data.userId)
     .run();
 
   const row = await context.env.DB.prepare(
     `SELECT movie_key, title, image_url, starred, status, updated_at
      FROM movie_preferences
-     WHERE movie_key = ?`,
+     WHERE movie_key = ?
+       AND user_id = ?`,
   )
-    .bind(movieKey)
+    .bind(movieKey, context.data.userId)
     .first<PreferenceRow>();
   const preference: MoviePreference = row
     ? {

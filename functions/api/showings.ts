@@ -1,7 +1,7 @@
 import { jstDateBounds, todayInJst } from "../../shared/date";
 import type { ScheduleResponse, Showing } from "../../shared/types";
 import { listActiveCinemas } from "../_lib/cinemas";
-import type { PagesEnv } from "../_lib/env";
+import type { AuthContextData, PagesEnv } from "../_lib/env";
 import { listCinemaTravelPreferences } from "../_lib/cinema-travel-preferences";
 import { listMoviePreferences } from "../_lib/preferences";
 import { getUserProfile } from "../_lib/user-profile";
@@ -31,7 +31,11 @@ interface HealthRow {
   last_updated_at: string | null;
 }
 
-export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestGet: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   const url = new URL(context.request.url);
   const date = url.searchParams.get("date") ?? todayInJst();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -77,17 +81,21 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     await Promise.all([
       publicOnly
         ? Promise.resolve([])
-        : listMoviePreferences(context.env.DB),
+        : listMoviePreferences(context.env.DB, context.data.userId),
       publicOnly
         ? Promise.resolve([])
-        : listCinemaTravelPreferences(context.env.DB, cinemas),
+        : listCinemaTravelPreferences(
+            context.env.DB,
+            cinemas,
+            context.data.userId,
+          ),
       publicOnly
         ? Promise.resolve({
             homeRegistered: false,
             homeUpdatedAt: null,
             scheduleCollapseMinutes: 60 as const,
           })
-        : getUserProfile(context.env.DB),
+        : getUserProfile(context.env.DB, context.data.userId),
     ]);
 
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({

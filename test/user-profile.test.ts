@@ -42,7 +42,9 @@ describe("schedule collapse preference", () => {
   it("defaults to one hour when no cloud preference exists", async () => {
     const first = vi.fn().mockResolvedValue(null);
     const db = {
-      prepare: vi.fn(() => ({ first })),
+      prepare: vi.fn(() => ({
+        bind: vi.fn(() => ({ first })),
+      })),
     } as unknown as D1Database;
 
     await expect(getScheduleCollapseMinutes(db)).resolves.toBe(60);
@@ -53,7 +55,9 @@ describe("schedule collapse preference", () => {
       .fn()
       .mockResolvedValue({ preference_value: "unexpected" });
     const db = {
-      prepare: vi.fn(() => ({ first })),
+      prepare: vi.fn(() => ({
+        bind: vi.fn(() => ({ first })),
+      })),
     } as unknown as D1Database;
 
     await expect(getScheduleCollapseMinutes(db)).resolves.toBe(60);

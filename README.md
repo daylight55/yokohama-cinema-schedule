@@ -14,7 +14,8 @@
 - 作品ごとのスター・鑑賞済み・興味なしをクラウド保存。鑑賞済み／興味なしの作品は上映時間から非表示
 - 作品一覧から映画.comとFilmarksの作品検索へ移動
 - 上映時間・上映作品・映画館・現在地設定を切り替えるスマートフォン向けサイドバー
-- 各画面を `#schedule`・`#movies`・`#cinemas`・`#planner`・`#profile` のURLで直リンク
+- 各画面を `#schedule`・`#movies`・`#cinemas`・`#planner`・`#profile`・`#account` のURLで直リンク
+- Google OAuthを主認証にし、メールアドレス単位で設定をクラウド共有。パスワードとパスキーを予備のログイン方法として登録
 - 1年先まで空いている日と時間を保存し、気になる作品と移動時間を優先した映画はしごを提案
 - Google カレンダーの空き時間取得と、保存した映画はしごの予定登録（OAuth設定時）
 - スクロール後に現在時刻の上映位置へ戻るスマートフォン向けボタン
@@ -127,15 +128,17 @@ npx wrangler pages secret put GOOGLE_TOKEN_ENCRYPTION_KEY
 ### Google カレンダーOAuth
 
 Google CloudでCalendar APIを有効化し、ウェブアプリケーション用OAuthクライアントを作成します。
-承認済みのリダイレクトURIには本番URLを登録します。
+承認済みのリダイレクトURIには、ログイン用とカレンダー連携用の本番URLを登録します。
 
 ```text
+https://yokohama-cinema-schedule.pages.dev/auth/google/login/callback
 https://yokohama-cinema-schedule.pages.dev/auth/google/callback
 ```
 
 ローカルで連携を確認する場合は、利用するポートのcallbackも追加します。
 
 ```text
+http://localhost:8788/auth/google/login/callback
 http://localhost:8788/auth/google/callback
 ```
 
@@ -143,6 +146,23 @@ OAuthトークンはD1へ平文保存せず、`GOOGLE_TOKEN_ENCRYPTION_KEY`か�
 AES-GCM鍵で暗号化します。要求する権限は空き時間の参照と、自分が所有する
 カレンダーへのイベント登録に限定しています。OAuth秘密情報が未設定の場合も、
 映画はしごの提案・保存は利用でき、Google カレンダー連携だけが設定待ち表示になります。
+
+### ユーザー認証
+
+Googleログインでは、検証済みメールアドレスを一意な検索キーとして保存し、
+Googleの`sub`を変更されない認証主体IDとして保持します。初回管理者は、従来の
+`APP_PASSWORD`でログインしてから`#account`でGoogleアカウントを連携します。
+既存の映画設定や自宅、移動時間、はしごプランはその管理者へ引き継がれます。
+以降の新規ユーザーは、管理者がメールアドレスを招待リストへ追加してから
+Googleログインします。
+
+ユーザーが設定する予備パスワードは暗号化して復元する方式ではなく、
+ユーザーごとのランダムsaltとPBKDF2-HMAC-SHA256（600,000回）による不可逆ハッシュ
+だけをD1へ保存します。ログインセッションもCookieの生トークンではなく、
+SHA-256ハッシュだけをD1へ保存します。パスキーはWebAuthnの端末機能と
+`@simplewebauthn/server`を使うため、外部の有料認証サービスは不要です。
+パスキーは登録したホスト名に紐づくため、本番運用で独自ドメインへ移す場合は、
+ドメイン確定後に登録してください。
 
 ## 移動時間の目安
 

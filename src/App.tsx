@@ -13,6 +13,7 @@ import {
   SignOutIcon,
   StarIcon,
   TrashIcon,
+  UserCircleIcon,
   WarningCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -61,6 +62,7 @@ import {
   type AppView,
 } from "./lib";
 import { PlannerPage } from "./PlannerPage";
+import { AccountPage } from "./AccountPage";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -177,7 +179,7 @@ export function App() {
   }, [movieStatusByKey, starredMovieKeys]);
 
   useLayoutEffect(() => {
-    if (view === "movies") {
+    if (view === "movies" || view === "account") {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
   }, [view]);
@@ -1126,6 +1128,15 @@ export function App() {
               <CrosshairIcon size={20} aria-hidden="true" />
               現在地・自宅設定
             </a>
+            <a
+              href={hashForAppView("account")}
+              className={view === "account" ? "active" : ""}
+              aria-current={view === "account" ? "page" : undefined}
+              onClick={closeNavigation}
+            >
+              <UserCircleIcon size={20} aria-hidden="true" />
+              アカウント
+            </a>
           </nav>
         </div>
       </dialog>
@@ -1165,7 +1176,7 @@ export function App() {
         </nav>
         )}
 
-        {view !== "profile" && view !== "planner" && (
+        {view !== "profile" && view !== "planner" && view !== "account" && (
         <section className="schedule-controls" aria-label="上映の絞り込み">
           <div className="area-strip" role="group" aria-label="エリア">
             {AREA_OPTIONS.map((area) => (
@@ -1264,7 +1275,9 @@ export function App() {
         </section>
         )}
 
-        {view === "planner" ? (
+        {view === "account" ? (
+          <AccountPage />
+        ) : view === "planner" ? (
           <PlannerPage />
         ) : (
         <section className="guide" aria-live="polite" aria-busy={loading}>

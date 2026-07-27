@@ -1,4 +1,4 @@
-import type { PagesEnv } from "../../_lib/env";
+import type { AuthContextData, PagesEnv } from "../../_lib/env";
 import {
   buildGoogleCalendarEvent,
   refreshGoogleAccessToken,
@@ -17,7 +17,11 @@ interface GoogleEventResponse {
   htmlLink?: string;
 }
 
-export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestPost: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") {
     return Response.json({ error: "calendar_unavailable" }, { status: 403 });
   }
@@ -25,7 +29,11 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   if (!body.planId) {
     return Response.json({ error: "missing_plan_id" }, { status: 400 });
   }
-  const plan = await getMovieMarathonPlan(context.env.DB, body.planId);
+  const plan = await getMovieMarathonPlan(
+    context.env.DB,
+    body.planId,
+    context.data.userId,
+  );
   if (!plan) {
     return Response.json({ error: "plan_not_found" }, { status: 404 });
   }
@@ -39,7 +47,10 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     });
   }
 
-  const accessToken = await refreshGoogleAccessToken(context.env);
+  const accessToken = await refreshGoogleAccessToken(
+    context.env,
+    context.data.userId,
+  );
   const googleResponse = await fetch(
     "https://www.googleapis.com/calendar/v3/calendars/primary/events",
     {
@@ -58,7 +69,12 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
       { status: 502 },
     );
   }
-  await markPlanCalendarEvent(context.env.DB, plan.id, payload.id);
+  await markPlanCalendarEvent(
+    context.env.DB,
+    plan.id,
+    payload.id,
+    context.data.userId,
+  );
   return Response.json({
     eventId: payload.id,
     htmlLink: payload.htmlLink ?? null,

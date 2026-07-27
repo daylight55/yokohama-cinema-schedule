@@ -12,7 +12,7 @@ import {
   listCinemaTravelPreferences,
 } from "../_lib/cinema-travel-preferences";
 import { listActiveCinemas } from "../_lib/cinemas";
-import type { PagesEnv } from "../_lib/env";
+import type { AuthContextData, PagesEnv } from "../_lib/env";
 import {
   estimateStationWalkFallbacks,
   estimateStationTravel,
@@ -69,12 +69,19 @@ const ESTIMATE_PROFILES: Record<TravelMode, EstimateProfile> = {
   },
 };
 
-export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+export const onRequestGet: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
   if (context.env.PUBLIC_MODE === "true") {
     return Response.json({ error: "routes_unavailable" }, { status: 403 });
   }
 
-  const home = await getHomeLocation(context.env.DB);
+  const home = await getHomeLocation(
+    context.env.DB,
+    context.data.userId,
+  );
   if (!home) {
     const response: RoutesResponse = {
       generatedAt: new Date().toISOString(),
@@ -96,6 +103,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   const preferences = await listCinemaTravelPreferences(
     context.env.DB,
     cinemas,
+    context.data.userId,
   );
   const modeByCinema = new Map(
     preferences.map((preference) => [
@@ -126,6 +134,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     const storedWalks = await listHomeStationAccess(
       context.env.DB,
       new Map(stations.map((station) => [station.id, station])),
+      context.data.userId,
     );
     const storedWalkByStationId = new Map(
       storedWalks.map((walk) => [walk.station.id, walk]),
