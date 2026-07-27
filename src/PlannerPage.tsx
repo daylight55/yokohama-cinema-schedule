@@ -16,6 +16,7 @@ import type {
   MovieMarathonPlannerResponse,
   MovieMarathonProposal,
 } from "../shared/types";
+import { PageHeader, PageShell } from "./PageLayout";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -271,12 +272,12 @@ export function PlannerPage({
   const busy = state !== "idle";
 
   return (
-    <section className="planner-page" aria-busy={busy}>
-      <div className="planner-heading">
-        <p>1年先まで予定を記録</p>
-        <h1>映画はしごガチャ</h1>
-        <span>気になる作品を優先</span>
-      </div>
+    <PageShell className="planner-page" busy={busy}>
+      <PageHeader
+        eyebrow="1年先まで予定を記録"
+        title="映画はしごガチャ"
+        meta={<span className="page-badge favorite">気になる作品を優先</span>}
+      />
 
       <form
         className="planner-form"
@@ -499,7 +500,7 @@ export function PlannerPage({
           </button>
         </form>
       )}
-    </section>
+    </PageShell>
   );
 }
 

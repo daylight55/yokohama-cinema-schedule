@@ -4,6 +4,7 @@ import {
   FilmSlateIcon,
   PathIcon,
 } from "@phosphor-icons/react";
+import { PageHeader, PageShell } from "./PageLayout";
 
 const FEATURES = [
   {
@@ -34,14 +35,13 @@ const FEATURES = [
 
 export function AboutPage() {
   return (
-    <section className="about-page" aria-labelledby="about-title">
-      <header className="about-heading">
-        <p>このサイトについて</p>
-        <h1 id="about-title">はまむび！でできること</h1>
-        <p className="about-lead">
-          横浜周辺の映画館を、テレビ番組表のような時間軸で横断して探すためのサイトです。
-        </p>
-      </header>
+    <PageShell className="about-page" labelledBy="about-title">
+      <PageHeader
+        eyebrow="このサイトについて"
+        title="はまむび！でできること"
+        titleId="about-title"
+        lead="横浜周辺の映画館を、テレビ番組表のような時間軸で横断して探すためのサイトです。"
+      />
 
       <ul className="about-feature-list">
         {FEATURES.map(({ title, description, icon: Icon }) => (
@@ -61,6 +61,6 @@ export function AboutPage() {
           上映時刻や販売状況は変更されることがあります。鑑賞前に各映画館の公式サイトで最新情報をご確認ください。
         </p>
       </section>
-    </section>
+    </PageShell>
   );
 }
