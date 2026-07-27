@@ -35,3 +35,5 @@
 ## 公開前の確認
 
 各情報提供元から許諾を得た映画館だけ、`shared/cinemas.ts`の`approval`を`approved`へ変更します。そのうえでPagesの`PUBLIC_MODE=true`にすると、未許諾の映画館はAPIレスポンスから除外されます。許諾が揃うまでは`PUBLIC_MODE=false`とアプリ内認証を維持します。
+
+公式サイトの注意書き、問い合わせ先、映画館ごとの許諾依頼文案は[公開許諾の問い合わせ先と依頼文案](./publication-permission-requests.md)にまとめています。
