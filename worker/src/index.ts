@@ -6,6 +6,7 @@ import {
   timestampForCacheBuster,
   todayInJst,
 } from "../../shared/date";
+import { movieDisplayTitle } from "../../shared/movie";
 import type { NormalizedShowing } from "../../shared/types";
 import { parseAeonSchedule } from "./parsers/aeon";
 import { parseEigalandSchedule } from "./parsers/eigaland";
@@ -151,7 +152,9 @@ export async function refreshBatch(
 
     const sourceStartedAt = new Date().toISOString();
     try {
-      const showings = deduplicate(await source.fetch(sourceDates));
+      const showings = deduplicate(
+        (await source.fetch(sourceDates)).map(normalizeShowingMovieTitle),
+      );
       if (showings.length === 0) {
         throw new Error("上映回を1件も取得できませんでした");
       }
@@ -668,6 +671,13 @@ function deduplicate(showings: NormalizedShowing[]): NormalizedShowing[] {
   return [
     ...new Map(showings.map((showing) => [showingId(showing), showing])).values(),
   ].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}
+
+export function normalizeShowingMovieTitle(
+  showing: NormalizedShowing,
+): NormalizedShowing {
+  const title = movieDisplayTitle(showing.title);
+  return title && title !== showing.title ? { ...showing, title } : showing;
 }
 
 function showingId(showing: NormalizedShowing): string {
