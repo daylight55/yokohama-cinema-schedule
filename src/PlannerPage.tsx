@@ -273,10 +273,17 @@ export function PlannerPage() {
         <span>気になる作品を優先</span>
       </div>
 
-      <div className="planner-form">
+      <form
+        className="planner-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void generate();
+        }}
+      >
         <label>
           <span>空いている日</span>
           <input
+            name="date"
             type="date"
             min={today}
             max={maxDate}
@@ -288,8 +295,10 @@ export function PlannerPage() {
           <label>
             <span>開始</span>
             <input
+              name="startTime"
               type="time"
               value={startTime}
+              enterKeyHint="next"
               onChange={(event) => {
                 setStartTime(event.currentTarget.value);
                 setProposal(null);
@@ -300,8 +309,10 @@ export function PlannerPage() {
           <label>
             <span>終了</span>
             <input
+              name="endTime"
               type="time"
               value={endTime}
+              enterKeyHint="done"
               onChange={(event) => {
                 setEndTime(event.currentTarget.value);
                 setProposal(null);
@@ -340,14 +351,13 @@ export function PlannerPage() {
         )}
 
         <button
-          type="button"
+          type="submit"
           className="planner-primary-button"
           disabled={busy}
-          onClick={() => void generate()}
         >
           {state === "generating" ? "組み合わせ中…" : "理想のはしごを提案"}
         </button>
-      </div>
+      </form>
 
       {error && (
         <p className="planner-message error" role="alert">
