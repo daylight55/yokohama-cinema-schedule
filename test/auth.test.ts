@@ -132,7 +132,7 @@ describe("private site authentication", () => {
     const html = await response.text();
 
     expect(html).toContain("<title>はまむび！ — ログイン</title>");
-    expect(html).toContain('src="/brand/hamamubi-icon.svg"');
+    expect(html).toContain('src="/brand/hamamubi-icon-v2.svg"');
     expect(html).toContain("<h1>はまむび！</h1>");
     expect(html).toContain('src="/login-route.js"');
     expect(html).toContain('src="/passkey-login.js"');
