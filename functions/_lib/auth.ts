@@ -68,14 +68,18 @@ export function loginPage(error = false): Response {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>横浜映画案内 — ログイン</title>
+  <title>はまむび！ — ログイン</title>
+  <link rel="icon" href="/brand/hamamubi-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/brand/hamamubi-icon-180.png">
   <style>
     :root{color-scheme:dark;font-family:Inter,"Noto Sans JP",system-ui,sans-serif;background:#101414;color:#f3f5ef}
     *{box-sizing:border-box}
     body{margin:0;min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 15%,#24302d 0,#101414 45%)}
     main{width:min(100%,390px);padding:32px;border:1px solid #35413d;border-radius:18px;background:#171d1b;box-shadow:0 24px 80px #0008}
+    .brand{display:flex;align-items:center;gap:10px;margin:8px 0 12px}
+    .brand img{width:48px;height:48px;border-radius:14px;filter:drop-shadow(0 4px 8px #0006)}
     .eyebrow{color:#a9c8b9;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
-    h1{font-size:25px;line-height:1.3;margin:8px 0 10px}
+    h1{color:#fff4d4;font-family:"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN","Yu Gothic UI",sans-serif;font-size:28px;line-height:1.3;margin:0;text-shadow:0 2px 0 #3a5d4f}
     p{color:#b8c1bd;line-height:1.7;margin:0 0 24px}
     label{display:block;font-size:14px;margin-bottom:8px}
     input{width:100%;height:48px;border:1px solid #4c5c56;border-radius:10px;background:#0f1412;color:#fff;padding:0 14px;font:inherit}
@@ -89,7 +93,10 @@ export function loginPage(error = false): Response {
 <body>
   <main>
     <span class="eyebrow">Private preview</span>
-    <h1>横浜映画案内</h1>
+    <div class="brand">
+      <img src="/brand/hamamubi-icon.svg" width="48" height="48" alt="">
+      <h1>はまむび！</h1>
+    </div>
     <p>個人利用の準備中サイトです。閲覧用パスワードを入力してください。</p>
     ${errorMarkup}
     <form method="post" action="/auth/login">
@@ -108,7 +115,7 @@ export function loginPage(error = false): Response {
       "cache-control": "no-store",
       "x-robots-tag": "noindex, nofollow, noarchive",
       "content-security-policy":
-        "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+        "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     },
   });
 }

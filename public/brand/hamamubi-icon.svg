@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">はまむび！アイコン</title>
+  <desc id="description">映画リールと横浜の波を組み合わせたポップなアイコン</desc>
+  <rect x="20" y="20" width="472" height="472" rx="116" fill="#10251f"/>
+  <path
+    d="M407 102c5-17 9-21 26-26 17-5 21-9 26-26 5 17 9 21 26 26-17 5-21 9-26 26-5 17-9 21-26 26-17-5-21-9-26-26Z"
+    fill="#ffd66b"
+  />
+  <circle cx="244" cy="231" r="139" fill="#ff8f78"/>
+  <circle cx="244" cy="231" r="44" fill="#ffd66b"/>
+  <g fill="#10251f">
+    <circle cx="244" cy="139" r="30"/>
+    <circle cx="330" cy="203" r="30"/>
+    <circle cx="297" cy="304" r="30"/>
+    <circle cx="190" cy="304" r="30"/>
+    <circle cx="158" cy="203" r="30"/>
+  </g>
+  <path
+    d="M65 371c53-43 101-43 154 0s101 43 154 0 101-43 139 0v74H20v-33c14-8 29-22 45-41Z"
+    fill="#bfe9d0"
+  />
+  <path
+    d="M62 398c53-43 101-43 154 0s101 43 154 0 101-43 139 0"
+    fill="none"
+    stroke="#10251f"
+    stroke-linecap="round"
+    stroke-width="22"
+  />
+  <path
+    d="M92 416c39-21 77-17 118 16"
+    fill="none"
+    stroke="#fff4d4"
+    stroke-linecap="round"
+    stroke-width="13"
+  />
+</svg>

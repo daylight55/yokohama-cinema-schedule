@@ -1008,11 +1008,19 @@ export function App() {
           >
             <ListIcon size={21} aria-hidden="true" />
           </button>
-          <a className="brand" href="/" aria-label="横浜映画番組表 ホーム">
-            <span className="brand-mark" aria-hidden="true">
-              Y
-            </span>
-            <strong>横浜映画</strong>
+          <a className="brand" href="/" aria-label="はまむび！ ホーム">
+            <img
+              className="brand-mark"
+              src="/brand/hamamubi-icon.svg"
+              width="34"
+              height="34"
+              alt=""
+              aria-hidden="true"
+              fetchPriority="high"
+            />
+            <strong className="brand-wordmark" aria-hidden="true">
+              はまむび！
+            </strong>
           </a>
           <div className="header-status">
             <time dateTime={now.toISOString()}>{timeFormatter.format(now)}</time>
