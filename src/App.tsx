@@ -1055,7 +1055,7 @@ export function App() {
           >
             <img
               className="brand-mark"
-              src="/brand/hamamubi-icon.svg"
+              src="/brand/hamamubi-icon-v2.svg"
               width="34"
               height="34"
               alt=""

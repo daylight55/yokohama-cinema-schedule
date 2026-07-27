@@ -496,8 +496,8 @@ export function loginPage(
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>はまむび！ — ログイン</title>
-  <link rel="icon" href="/brand/hamamubi-icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/brand/hamamubi-icon-180.png">
+  <link rel="icon" href="/brand/hamamubi-icon-v2.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/brand/hamamubi-icon-v2-180.png">
   <script src="/login-route.js" defer></script>
   <script src="/passkey-login.js" defer></script>
   <style>
@@ -518,7 +518,7 @@ export function loginPage(
 </head>
 <body>
   <main>
-    <div class="brand"><img src="/brand/hamamubi-icon.svg" alt=""><h1>はまむび！</h1></div>
+    <div class="brand"><img src="/brand/hamamubi-icon-v2.svg" alt=""><h1>はまむび！</h1></div>
     <p class="lead">Googleアカウント、パスキー、または登録済みパスワードでログインできます。</p>
     ${errorMarkup}
     <div class="stack">
