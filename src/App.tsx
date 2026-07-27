@@ -106,6 +106,10 @@ export function App() {
     element: HTMLElement;
     top: number;
   } | null>(null);
+  const pendingMovieScrollRef = useRef<{
+    left: number;
+    top: number;
+  } | null>(null);
   const pendingCinemaAnchorRef = useRef<{
     element: HTMLElement;
     top: number;
@@ -176,7 +180,18 @@ export function App() {
     const nextTop = pendingAnchor.element.getBoundingClientRect().top;
     window.scrollBy(0, nextTop - pendingAnchor.top);
     pendingMovieAnchorRef.current = null;
-  }, [movieStatusByKey, starredMovieKeys]);
+  }, [movieStatusByKey]);
+
+  useLayoutEffect(() => {
+    const pendingScroll = pendingMovieScrollRef.current;
+    if (!pendingScroll) return;
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(pendingScroll.left, pendingScroll.top);
+    root.style.scrollBehavior = previousScrollBehavior;
+    pendingMovieScrollRef.current = null;
+  }, [starredMovieKeys]);
 
   useLayoutEffect(() => {
     if (view === "movies" || view === "account") {
@@ -791,6 +806,13 @@ export function App() {
     };
   };
 
+  const rememberMovieScroll = () => {
+    pendingMovieScrollRef.current = {
+      left: window.scrollX,
+      top: window.scrollY,
+    };
+  };
+
   const rememberCinemaAnchor = (element: HTMLElement | null) => {
     if (!element) return;
     pendingCinemaAnchorRef.current = {
@@ -805,10 +827,9 @@ export function App() {
       title: string;
       imageUrl: string | null;
     },
-    anchorElement: HTMLElement | null,
   ) => {
     if (savingMovieKeys.has(movie.preferenceKey)) return;
-    rememberMovieAnchor(anchorElement);
+    rememberMovieScroll();
     const wasStarred = starredMovieKeys.has(movie.preferenceKey);
     const nextStarred = !wasStarred;
     setPreferenceError(null);
@@ -837,7 +858,7 @@ export function App() {
       });
       if (!response.ok) throw new Error();
     } catch {
-      rememberMovieAnchor(anchorElement);
+      rememberMovieScroll();
       setStarredMovieKeys((current) => {
         const next = new Set(current);
         if (wasStarred) next.add(movie.preferenceKey);
@@ -977,7 +998,7 @@ export function App() {
                       isStarred={isStarred}
                       isSaving={savingMovieKeys.has(movie.preferenceKey)}
                       compact
-                      onClick={() => void toggleMovieStar(movie, null)}
+                      onClick={() => void toggleMovieStar(movie)}
                     />
                   )}
                 </div>
@@ -1449,14 +1470,7 @@ export function App() {
                         title={movie.title}
                         isStarred={isStarred}
                         isSaving={savingMovieKeys.has(movie.preferenceKey)}
-                        onClick={(event) =>
-                          void toggleMovieStar(
-                            movie,
-                            event.currentTarget.closest<HTMLElement>(
-                              ".movie-list-item",
-                            ),
-                          )
-                        }
+                        onClick={() => void toggleMovieStar(movie)}
                       />
                     )}
                     {schedule?.preferencesEnabled && (
