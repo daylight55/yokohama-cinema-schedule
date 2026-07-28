@@ -2400,25 +2400,41 @@ function CurrentTimeMarker({
 }
 
 function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
-  const [unavailable, setUnavailable] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <figure className="cinema-exterior">
-      {!unavailable ? (
-        <img
-          src={`/api/cinema-exterior/${encodeURIComponent(cinema.id)}`}
-          alt={`${cinema.name}の外観`}
-          width="480"
-          height="270"
-          loading="lazy"
-          decoding="async"
-          onError={() => setUnavailable(true)}
-        />
+    <figure
+      className={`cinema-exterior${isOpen ? " cinema-exterior-open" : ""}`}
+    >
+      {isOpen ? (
+        <>
+          <iframe
+            className="cinema-street-view-frame"
+            src={`/api/cinema-exterior/${encodeURIComponent(cinema.id)}`}
+            title={`${cinema.name}のGoogle Street View`}
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+          <button
+            type="button"
+            className="cinema-street-view-close"
+            onClick={() => setIsOpen(false)}
+          >
+            閉じる
+          </button>
+        </>
       ) : (
-        <div className="cinema-exterior-placeholder" aria-hidden="true">
+        <button
+          type="button"
+          className="cinema-exterior-placeholder"
+          onClick={() => setIsOpen(true)}
+          aria-label={`${cinema.name}の操作できるStreet Viewを開く`}
+        >
           <BuildingsIcon size={28} />
-          <span>外観画像なし</span>
-        </div>
+          <strong>Street Viewを開く</strong>
+          <span>画面内で向きを変えられます</span>
+        </button>
       )}
       <figcaption>Google Street View</figcaption>
     </figure>

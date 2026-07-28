@@ -1482,21 +1482,63 @@ footer {
   aspect-ratio: 16 / 9;
 }
 
-.cinema-exterior img,
+.cinema-street-view-frame,
 .cinema-exterior-placeholder {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .cinema-exterior-placeholder {
   display: grid;
   place-content: center;
-  gap: 5px;
+  gap: 7px;
+  min-height: 44px;
+  padding: 20px;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 25%, rgb(72 179 143 / 20%), transparent 48%),
+    #101715;
   color: var(--muted);
   text-align: center;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cinema-exterior-placeholder strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.cinema-exterior-placeholder span {
   font-size: 11px;
+}
+
+.cinema-exterior-placeholder:focus-visible,
+.cinema-street-view-close:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.cinema-street-view-frame {
+  border: 0;
+}
+
+.cinema-street-view-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 76%);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .cinema-exterior figcaption {

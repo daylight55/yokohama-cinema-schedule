@@ -22,31 +22,28 @@ export const onRequestGet: PagesFunction<
   if (!cinema) return new Response(null, { status: 404 });
 
   const streetViewUrl = new URL(
-    "https://maps.googleapis.com/maps/api/streetview",
+    "https://www.google.com/maps/embed/v1/streetview",
   );
+  streetViewUrl.searchParams.set("key", context.env.GOOGLE_MAPS_API_KEY);
   streetViewUrl.searchParams.set(
     "location",
-    `${cinema.latitude},${cinema.longitude}`,
+    `${cinema.streetViewLatitude ?? cinema.latitude},${cinema.streetViewLongitude ?? cinema.longitude}`,
   );
-  streetViewUrl.searchParams.set("size", "480x270");
-  streetViewUrl.searchParams.set("source", "outdoor");
-  streetViewUrl.searchParams.set("fov", "95");
-  streetViewUrl.searchParams.set("pitch", "0");
-  streetViewUrl.searchParams.set("return_error_code", "true");
-  streetViewUrl.searchParams.set("key", context.env.GOOGLE_MAPS_API_KEY);
-
-  const response = await fetch(streetViewUrl, {
-    headers: { accept: "image/jpeg" },
-  });
-  if (!response.ok || !response.body) {
-    return new Response(null, { status: response.status === 404 ? 404 : 502 });
+  streetViewUrl.searchParams.set("fov", String(cinema.streetViewFov ?? 95));
+  streetViewUrl.searchParams.set("pitch", String(cinema.streetViewPitch ?? 0));
+  if (cinema.streetViewHeading != null) {
+    streetViewUrl.searchParams.set(
+      "heading",
+      String(cinema.streetViewHeading),
+    );
   }
 
-  return new Response(response.body, {
+  return new Response(null, {
+    status: 302,
     headers: {
-      "cache-control": "private, max-age=86400",
-      "content-type": response.headers.get("content-type") ?? "image/jpeg",
-      "x-content-type-options": "nosniff",
+      location: streetViewUrl.toString(),
+      "cache-control": "private, max-age=3600",
+      "referrer-policy": "strict-origin-when-cross-origin",
     },
   });
 };
