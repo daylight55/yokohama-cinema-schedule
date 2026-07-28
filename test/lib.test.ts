@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouteEstimate, Showing } from "../shared/types";
 import {
+  MOVIE_HIDE_CONFIRMATION,
   appHashStateFromHash,
   appViewFromHash,
   buildMovieExternalLinks,
@@ -22,6 +23,14 @@ import {
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
 } from "../src/lib";
+
+describe("movie preference confirmation", () => {
+  it("states only the schedule consequence", () => {
+    expect(MOVIE_HIDE_CONFIRMATION).toBe(
+      "上映スケジュールから非表示になりますが、よいですか？",
+    );
+  });
+});
 
 const showing = (overrides: Partial<Showing> = {}): Showing => ({
   id: "show-1",

@@ -47,6 +47,7 @@ import type {
 } from "../shared/types";
 import {
   AREA_OPTIONS,
+  MOVIE_HIDE_CONFIRMATION,
   appHashStateFromHash,
   buildMovieExternalLinks,
   buildGoogleMapsDirectionsUrl,
@@ -1149,11 +1150,7 @@ export function App() {
     const nextStatus =
       previousStatus === requestedStatus ? null : requestedStatus;
     if (nextStatus) {
-      const statusLabel =
-        nextStatus === "watched" ? "鑑賞済み" : "興味なし";
-      const confirmed = window.confirm(
-        `「${movie.title}」を${statusLabel}に設定すると、上映スケジュールの表示対象外になります。設定しますか？`,
-      );
+      const confirmed = window.confirm(MOVIE_HIDE_CONFIRMATION);
       if (!confirmed) return undefined;
     }
 

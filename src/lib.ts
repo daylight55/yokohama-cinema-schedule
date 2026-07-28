@@ -99,6 +99,9 @@ export const AREA_OPTIONS: Array<{
   { id: "kamiooka", label: "上大岡" },
 ];
 
+export const MOVIE_HIDE_CONFIRMATION =
+  "上映スケジュールから非表示になりますが、よいですか？";
+
 export type DateSwipeDirection = "previous" | "next";
 
 export function getDateSwipeDirection(
