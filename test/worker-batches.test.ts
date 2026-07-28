@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { CINEMAS } from "../shared/cinemas";
 import {
+  configuredSourceIds,
   normalizeShowingMovieTitle,
   parseSourceBatch,
+  sourceIdsForBatch,
   sourceBatchForCron,
 } from "../worker/src/index";
 
@@ -24,6 +27,17 @@ describe("worker source batches", () => {
     expect(parseSourceBatch("2")).toBe(2);
     expect(parseSourceBatch(null)).toBeNull();
     expect(parseSourceBatch("all")).toBeNull();
+  });
+
+  it("assigns every configured cinema to exactly one implemented source batch", () => {
+    const cinemaIds = CINEMAS.map((cinema) => cinema.id).sort();
+    const assignedSourceIds = ([0, 1, 2] as const).flatMap(
+      sourceIdsForBatch,
+    );
+
+    expect(new Set(assignedSourceIds).size).toBe(assignedSourceIds.length);
+    expect(assignedSourceIds.sort()).toEqual(cinemaIds);
+    expect(configuredSourceIds().sort()).toEqual(cinemaIds);
   });
 
   it("stores a clean movie title while preserving the screening format", () => {

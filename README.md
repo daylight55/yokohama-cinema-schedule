@@ -42,7 +42,114 @@
 [編集用draw.ioファイル](docs/architecture/cloudflare-architecture.drawio) /
 [図のソースとアイコンについて](docs/architecture/README.md)
 
-Workerは日本時間の0時・6時・9時・12時・15時・18時・21時台に実行する設定です。
+## 上映スケジュール収集
+
+上映スケジュールは`yokohama-cinema-schedule-refresh` Workerが公式サイトから
+取得し、Cloudflare D1へ保存します。Workers AIやAI Agentは動かしておらず、
+映画館ごとのJSON API・HTML・公式週間画像を決められたパーサーで解析しています。
+映画館ごとの取得URLと解析方法は[取得元一覧](docs/sources.md)を参照してください。
+
+### 収集の流れ
+
+1. Cron Triggerまたは認証付き`POST /refresh?batch=N`で収集を開始します。
+2. 日本時間の当日から`SCHEDULE_DAYS`日分の日付を作ります。本番値は`7`で、
+   安全のためWorker側で`1〜14`日に制限しています。
+3. D1の`cinemas.active_until`を確認し、営業期間内の日付だけを映画館ごとの
+   取得処理へ渡します。
+4. 公式JSON APIまたはHTMLを取得し、上映時刻・作品・スクリーン・上映形式・
+   公式予約URLを共通形式へ正規化します。
+5. 作品名から字幕・吹替・IMAX・4DX・レイティング等の上映形式表記を除き、
+   重複上映を削除します。上映形式そのものは別フィールドに保持します。
+6. 取得元単位で対象期間の既存上映と検索インデックスを削除し、新しい上映と
+   D1 FTS5用の`showing_search`を同じD1バッチで保存します。
+7. 実行結果を`fetch_runs`と`source_health`へ保存します。
+
+映画館単位の処理は、取得元へ短時間に大量アクセスしないよう直列実行します。
+作品画像は取得できる公式サイトだけ補完し、画像取得だけが失敗した場合は
+上映スケジュールの更新を継続します。
+
+### 3つの収集バッチ
+
+外部リクエスト数と取得元への負荷を抑えるため、10館を3バッチに分割しています。
+各バッチは日本時間の`00・06・09・12・15・18・21`時台に、10分ずつずらして
+実行します。`worker/wrangler.jsonc`のCron式はUTCで記述されています。
+
+| バッチ | 日本時間の実行分 | 対象映画館 |
+| --- | --- | --- |
+| `0` | 各対象時刻の`07`分 | T・ジョイ横浜、ムービル、TOHOシネマズ 上大岡、横浜ブルク13、イオンシネマみなとみらい |
+| `1` | 各対象時刻の`17`分 | ローソン・ユナイテッドシネマ STYLE-S みなとみらい、kino cinéma横浜みなとみらい、シネマ・ジャック＆ベティ |
+| `2` | 各対象時刻の`27`分 | 横浜シネマリン、シネマノヴェチェント |
+
+テストでは、`shared/cinemas.ts`に登録された全映画館が重複なくいずれかの
+バッチに含まれ、対応する取得実装も存在することを検証しています。
+
+### 「7日分」の意味と公式公開範囲
+
+Workerは毎回「日本時間の今日を含む7日」を全映画館へ要求しますが、
+7日すべての上映が保存されることを保証するものではありません。映画館によっては
+翌週分を火曜または水曜に公開するため、週の切り替わり前は公式サイト自体が
+木曜までしか返さず、金曜以降が空になることがあります。休館日や上映のない日も
+0件になります。
+
+次の2つは区別して確認します。
+
+- `source_health.status = 'error'`: HTTPエラー、解析エラー、または対象期間全体で
+  1件も取得できなかった状態。D1の前回正常データは削除しません。
+- `source_health.status = 'healthy'`だが一部の日付が0件: 対象期間内では取得に
+  成功しているものの、その日が公式未公開・休館・上映なしのいずれかである状態。
+  公開後の次回Cronで自動的に補完されます。
+
+現状は取得元全体で1件以上あれば成功として対象7日を置き換えるため、日付単位の
+0件はエラー扱いにしていません。公式未公開の日を推測で補完することもしません。
+
+### 本番の収集状況を確認する
+
+デプロイ中のWorkerを確認します。
+
+```bash
+npx wrangler deployments status --config worker/wrangler.jsonc
+```
+
+日付ごとの取得元数と上映数を確認します。`showing_search.schedule_date`は
+日本時間の上映日です。
+
+```bash
+npx wrangler d1 execute yokohama-cinema-schedule \
+  --remote --config worker/wrangler.jsonc \
+  --command="
+    SELECT schedule_date,
+           COUNT(DISTINCT source_id) AS source_count,
+           COUNT(*) AS showing_count
+    FROM showing_search
+    WHERE schedule_date BETWEEN date('now', '+9 hours')
+      AND date('now', '+9 hours', '+6 days')
+    GROUP BY schedule_date
+    ORDER BY schedule_date
+  "
+```
+
+映画館ごとの取得済み日数を確認します。
+
+```bash
+npx wrangler d1 execute yokohama-cinema-schedule \
+  --remote --config worker/wrangler.jsonc \
+  --command="
+    SELECT source_id,
+           MIN(schedule_date) AS first_date,
+           MAX(schedule_date) AS last_date,
+           COUNT(DISTINCT schedule_date) AS covered_days,
+           COUNT(*) AS showing_count
+    FROM showing_search
+    WHERE schedule_date BETWEEN date('now', '+9 hours')
+      AND date('now', '+9 hours', '+6 days')
+    GROUP BY source_id
+    ORDER BY source_id
+  "
+```
+
+直近の成功・失敗とエラー内容は`source_health`、実行履歴は`fetch_runs`で
+確認できます。Workerログは`console.log`の`Schedule source refreshed`と
+`Schedule batch completed`、失敗時の`Schedule refresh failed`を検索します。
 
 ### 上映検索
 
@@ -82,14 +189,16 @@ npm run db:migrate:local
 npm run worker:dev
 ```
 
-別ターミナルから、`worker/.dev.vars`のトークンで2つの取得バッチを実行します。
+別ターミナルから、`worker/.dev.vars`のトークンで3つの取得バッチを実行します。
 Cloudflare Freeプランの1実行あたり外部リクエスト上限を超えないよう、
-映画館を2バッチに分けています。
+映画館を3バッチに分けています。
 
 ```bash
 curl -X POST "http://localhost:8787/refresh?batch=0" \
   -H "Authorization: Bearer replace-with-a-long-random-token"
 curl -X POST "http://localhost:8787/refresh?batch=1" \
+  -H "Authorization: Bearer replace-with-a-long-random-token"
+curl -X POST "http://localhost:8787/refresh?batch=2" \
   -H "Authorization: Bearer replace-with-a-long-random-token"
 ```
 
