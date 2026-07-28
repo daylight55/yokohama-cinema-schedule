@@ -1025,6 +1025,24 @@ footer {
   box-shadow: inset 3px 0 0 #756436;
 }
 
+.program-block.unreachable {
+  border-color: #2d3733;
+  background: #131816;
+}
+
+.program-block.unreachable .program-title {
+  color: #77817c;
+}
+
+.program-block.unreachable.starred {
+  border-color: #3b413e;
+  box-shadow: inset 3px 0 0 #606a65;
+}
+
+.program-block.unreachable .favorite-button.starred {
+  color: #77817c;
+}
+
 .program-block.reachable {
   border-color: var(--reachable);
   box-shadow: 0 0 0 1px rgb(141 240 181 / 20%);
