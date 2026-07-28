@@ -2263,7 +2263,7 @@ footer p {
   width: 100%;
   min-width: 0;
   min-height: 46px;
-  padding: 0 12px 0 40px;
+  padding: 0 48px 0 40px;
   border: 1px solid var(--line);
   border-radius: 11px;
   outline: none;
@@ -2276,13 +2276,16 @@ footer p {
   color: #75817c;
 }
 
+.schedule-search-input input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
 .schedule-search-input input:focus-visible {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-.schedule-search-submit,
-.schedule-search-clear {
+.schedule-search-submit {
   min-height: 46px;
   border-radius: 11px;
   font-weight: 800;
@@ -2296,13 +2299,21 @@ footer p {
 }
 
 .schedule-search-clear {
-  grid-column: 1 / -1;
-  justify-self: start;
+  position: absolute;
+  top: 50%;
+  right: 1px;
+  display: grid;
+  width: 44px;
+  height: 44px;
   min-height: 44px;
-  padding-inline: 4px;
+  place-items: center;
+  padding: 0;
   border: 0;
+  border-radius: 8px;
   background: transparent;
   color: var(--muted);
+  cursor: pointer;
+  translate: 0 -50%;
 }
 
 .schedule-search-result {
@@ -2317,10 +2328,45 @@ footer p {
   filter: brightness(1.08);
 }
 
+.schedule-search-clear:hover {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
 .schedule-search-submit:focus-visible,
 .schedule-search-clear:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+@media (max-width: 719px) {
+  .schedule-search {
+    position: sticky;
+    z-index: 18;
+    top: var(--header-height);
+    width: 100%;
+    margin-top: 0;
+    padding-block: 8px;
+    border-bottom: 1px solid var(--line);
+    background: rgb(13 18 17 / 97%);
+    backdrop-filter: blur(14px);
+  }
+
+  .schedule-search-field {
+    gap: 0;
+  }
+
+  .schedule-search-field > label,
+  .schedule-search-result {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .jump-to-now-button {

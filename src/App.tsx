@@ -1683,11 +1683,14 @@ export function App() {
               method="get"
               onSubmit={submitScheduleSearch}
             >
-              <label className="schedule-search-field">
-                <span>作品名・映画館名</span>
+              <div className="schedule-search-field">
+                <label htmlFor="schedule-search-query">
+                  作品名・映画館名
+                </label>
                 <span className="schedule-search-input">
                   <MagnifyingGlassIcon size={18} aria-hidden="true" />
                   <input
+                    id="schedule-search-query"
                     type="search"
                     name="q"
                     value={searchDraft}
@@ -1696,20 +1699,21 @@ export function App() {
                     enterKeyHint="search"
                     onChange={(event) => setSearchDraft(event.target.value)}
                   />
+                  {normalizedSearchQuery && (
+                    <button
+                      className="schedule-search-clear"
+                      type="button"
+                      aria-label="検索条件を解除"
+                      onClick={clearScheduleSearch}
+                    >
+                      <XIcon size={17} aria-hidden="true" />
+                    </button>
+                  )}
                 </span>
-              </label>
+              </div>
               <button className="schedule-search-submit" type="submit">
                 検索
               </button>
-              {normalizedSearchQuery && (
-                <button
-                  className="schedule-search-clear"
-                  type="button"
-                  onClick={clearScheduleSearch}
-                >
-                  解除
-                </button>
-              )}
             </form>
             {interactiveSearchQuery && (
               <p className="schedule-search-result" role="status">
