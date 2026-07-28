@@ -10,6 +10,7 @@ import {
   buildGoogleMapsDirectionsUrl,
   getDateSwipeDirection,
   getScheduleMoviePresentation,
+  getShowingReachability,
   groupByMovie,
   groupByScheduleTime,
   groupScheduleTimeBuckets,
@@ -244,6 +245,39 @@ describe("schedule filtering", () => {
     ).toBe(false);
   });
 
+  it("classifies every showing through the reachable window without a gap", () => {
+    const routeByCinema = new Map([[route.cinemaId, route]]);
+
+    expect(
+      getShowingReachability(
+        showing({ startsAt: "2026-07-24T09:34:00.000Z" }),
+        now,
+        routeByCinema,
+      ),
+    ).toBe("unreachable");
+    expect(
+      getShowingReachability(
+        showing({ startsAt: "2026-07-24T09:35:00.000Z" }),
+        now,
+        routeByCinema,
+      ),
+    ).toBe("reachable");
+    expect(
+      getShowingReachability(
+        showing({ startsAt: "2026-07-24T09:55:00.000Z" }),
+        now,
+        routeByCinema,
+      ),
+    ).toBe("reachable");
+    expect(
+      getShowingReachability(
+        showing({ startsAt: "2026-07-24T09:56:00.000Z" }),
+        now,
+        routeByCinema,
+      ),
+    ).toBe("later");
+  });
+
   it("does not mark a showing more than thirty minutes after arrival", () => {
     expect(
       isShowingReachable(
@@ -298,14 +332,14 @@ describe("schedule filtering", () => {
     ).toBe(true);
   });
 
-  it("keeps a showing available when arrival is exactly on time", () => {
+  it("marks a showing unreachable when there is no arrival margin", () => {
     expect(
       isShowingUnreachable(
         showing({ startsAt: "2026-07-24T09:25:00.000Z" }),
         now,
         new Map([[route.cinemaId, route]]),
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("does not infer unreachable without a saved travel time", () => {
@@ -324,15 +358,61 @@ describe("schedule filtering", () => {
     );
 
     expect(presentation.isReachable).toBe(true);
+    expect(presentation.isUnreachable).toBe(false);
     expect(presentation.showings[0]?.isReachable).toBe(true);
     expect(
       scheduleProgramClassName({
         isPast: presentation.isPast,
         isReachable: presentation.isReachable,
+        isUnreachable: presentation.isUnreachable,
         isStarred: true,
         isLinked: false,
       }),
     ).toBe("program-block reachable starred");
+  });
+
+  it("keeps a starred movie presentation unreachable", () => {
+    const presentation = getScheduleMoviePresentation(
+      [
+        showing({
+          startsAt: "2026-07-24T09:34:00.000Z",
+        }),
+      ],
+      now,
+      new Map([[route.cinemaId, route]]),
+    );
+
+    expect(presentation.isReachable).toBe(false);
+    expect(presentation.isUnreachable).toBe(true);
+    expect(presentation.showings[0]?.isUnreachable).toBe(true);
+    expect(
+      scheduleProgramClassName({
+        isPast: presentation.isPast,
+        isReachable: presentation.isReachable,
+        isUnreachable: presentation.isUnreachable,
+        isStarred: true,
+        isLinked: false,
+      }),
+    ).toBe("program-block unreachable starred");
+  });
+
+  it("does not mark a mixed-reachability movie block unreachable", () => {
+    const presentation = getScheduleMoviePresentation(
+      [
+        showing({
+          startsAt: "2026-07-24T09:34:00.000Z",
+        }),
+        showing({
+          id: "show-2",
+          startsAt: "2026-07-24T09:56:00.000Z",
+        }),
+      ],
+      now,
+      new Map([[route.cinemaId, route]]),
+    );
+
+    expect(presentation.isReachable).toBe(false);
+    expect(presentation.isUnreachable).toBe(false);
   });
 
   it("filters by area", () => {

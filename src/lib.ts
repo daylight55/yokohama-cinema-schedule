@@ -142,9 +142,37 @@ export function isShowingReachable(
   arrivalMarginMinutes = 20,
   marginToleranceMinutes = 10,
 ): boolean {
+  return (
+    getShowingReachability(
+      showing,
+      now,
+      routeByCinema,
+      arrivalMarginMinutes,
+      marginToleranceMinutes,
+    ) === "reachable"
+  );
+}
+
+export type ShowingReachability =
+  | "past"
+  | "unknown"
+  | "unreachable"
+  | "reachable"
+  | "later";
+
+export function getShowingReachability(
+  showing: Pick<Showing, "startsAt" | "cinemaId">,
+  now: Date,
+  routeByCinema: Map<string, RouteEstimate>,
+  arrivalMarginMinutes = 20,
+  marginToleranceMinutes = 10,
+): ShowingReachability {
+  if (isShowingPast(showing, now)) {
+    return "past";
+  }
   const route = routeByCinema.get(showing.cinemaId);
   if (!route) {
-    return false;
+    return "unknown";
   }
   const targetStartMinutes = route.durationMinutes + arrivalMarginMinutes;
   const earliestStartMinutes =
@@ -152,28 +180,38 @@ export function isShowingReachable(
   const latestStartMinutes = targetStartMinutes + marginToleranceMinutes;
   const startsInMinutes =
     (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
-  return (
-    startsInMinutes >= earliestStartMinutes &&
-    startsInMinutes <= latestStartMinutes
-  );
+
+  if (startsInMinutes < earliestStartMinutes) {
+    return "unreachable";
+  }
+  if (startsInMinutes <= latestStartMinutes) {
+    return "reachable";
+  }
+  return "later";
 }
 
 export function isShowingUnreachable(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
   routeByCinema: Map<string, RouteEstimate>,
+  arrivalMarginMinutes = 20,
+  marginToleranceMinutes = 10,
 ): boolean {
-  const route = routeByCinema.get(showing.cinemaId);
-  if (!route) return false;
-
-  const startsInMinutes =
-    (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
-  return startsInMinutes >= 0 && startsInMinutes < route.durationMinutes;
+  return (
+    getShowingReachability(
+      showing,
+      now,
+      routeByCinema,
+      arrivalMarginMinutes,
+      marginToleranceMinutes,
+    ) === "unreachable"
+  );
 }
 
 export interface ScheduleMoviePresentation {
   isPast: boolean;
   isReachable: boolean;
+  isUnreachable: boolean;
   showings: Array<{
     showing: Showing;
     isPast: boolean;
@@ -185,11 +223,13 @@ export interface ScheduleMoviePresentation {
 export function scheduleProgramClassName({
   isPast,
   isReachable,
+  isUnreachable,
   isStarred,
   isLinked,
 }: {
   isPast: boolean;
   isReachable: boolean;
+  isUnreachable: boolean;
   isStarred: boolean;
   isLinked: boolean;
 }): string {
@@ -197,6 +237,7 @@ export function scheduleProgramClassName({
     "program-block",
     isPast ? "past" : "",
     isReachable ? "reachable" : "",
+    isUnreachable ? "unreachable" : "",
     isStarred ? "starred" : "",
     isLinked ? "linked" : "",
   ]
@@ -210,22 +251,31 @@ export function getScheduleMoviePresentation(
   routeByCinema: Map<string, RouteEstimate>,
 ): ScheduleMoviePresentation {
   const presentationShowings = showings.map((showing) => {
-    const isPast = isShowingPast(showing, now);
+    const reachability = getShowingReachability(
+      showing,
+      now,
+      routeByCinema,
+    );
     return {
       showing,
-      isPast,
-      isReachable:
-        !isPast && isShowingReachable(showing, now, routeByCinema),
-      isUnreachable:
-        !isPast && isShowingUnreachable(showing, now, routeByCinema),
+      isPast: reachability === "past",
+      isReachable: reachability === "reachable",
+      isUnreachable: reachability === "unreachable",
     };
   });
 
+  const isPast = presentationShowings.every(({ isPast }) => isPast);
   return {
-    isPast: presentationShowings.every(({ isPast }) => isPast),
+    isPast,
     isReachable: presentationShowings.some(
       ({ isReachable }) => isReachable,
     ),
+    isUnreachable:
+      !isPast &&
+      presentationShowings.length > 0 &&
+      presentationShowings.every(
+        ({ isPast, isUnreachable }) => isPast || isUnreachable,
+      ),
     showings: presentationShowings,
   };
 }

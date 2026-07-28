@@ -1293,6 +1293,7 @@ export function App() {
                 className={scheduleProgramClassName({
                   isPast: presentation.isPast,
                   isReachable: presentation.isReachable,
+                  isUnreachable: presentation.isUnreachable,
                   isStarred,
                   isLinked: selectedMovieKey === movie.preferenceKey,
                 })}
