@@ -17,6 +17,7 @@ interface CinemaTravelPreferenceRow {
   cinema_id: string;
   travel_mode: TravelMode;
   custom_duration_minutes: number | null;
+  note: string;
   updated_at: string;
 }
 
@@ -33,6 +34,12 @@ export function isCustomDurationMinutes(value: unknown): value is number {
   );
 }
 
+export function normalizeCinemaNote(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const note = value.trim();
+  return note.length <= 2000 ? note : null;
+}
+
 export async function listCinemaTravelPreferences(
   db: D1Database,
   cinemas: Pick<Cinema, "id">[],
@@ -42,7 +49,7 @@ export async function listCinemaTravelPreferences(
 
   const result = await db
     .prepare(
-      `SELECT cinema_id, travel_mode, custom_duration_minutes, updated_at
+      `SELECT cinema_id, travel_mode, custom_duration_minutes, note, updated_at
        FROM cinema_travel_preferences
        WHERE user_id = ?
          AND cinema_id IN (${cinemas.map(() => "?").join(", ")})`,
@@ -59,6 +66,7 @@ export async function listCinemaTravelPreferences(
       cinemaId: cinema.id,
       travelMode: saved?.travel_mode ?? DEFAULT_TRAVEL_MODE,
       customDurationMinutes: saved?.custom_duration_minutes ?? null,
+      note: saved?.note ?? "",
       updatedAt: saved?.updated_at ?? null,
     };
   });

@@ -120,8 +120,7 @@ a:active {
   overflow: hidden;
   color: #fff4d4;
   font-family:
-    "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Yu Gothic UI",
-    sans-serif;
+    "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "Yu Gothic UI", sans-serif;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.015em;
@@ -1195,8 +1194,7 @@ footer {
   display: grid;
   place-items: center;
   background:
-    linear-gradient(145deg, rgb(191 233 208 / 18%), transparent),
-    #202a25;
+    linear-gradient(145deg, rgb(191 233 208 / 18%), transparent), #202a25;
   color: #8fa198;
   font-size: 24px;
   font-weight: 800;
@@ -1347,6 +1345,52 @@ footer {
   line-height: 1.45;
 }
 
+.cinema-closure-date {
+  margin-left: 4px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cinema-exterior {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #101715;
+  aspect-ratio: 16 / 9;
+}
+
+.cinema-exterior img,
+.cinema-exterior-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cinema-exterior-placeholder {
+  display: grid;
+  place-content: center;
+  gap: 5px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 11px;
+}
+
+.cinema-exterior figcaption {
+  position: absolute;
+  right: 7px;
+  bottom: 6px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 70%);
+  color: #fff;
+  font-size: 9px;
+}
+
 .cinema-list-heading p,
 .cinema-address {
   margin: 5px 0 0;
@@ -1491,6 +1535,71 @@ footer {
 }
 
 .cinema-duration-row > button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.cinema-note-row {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.cinema-note-row > label {
+  color: #bdc9c3;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.cinema-note-row textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 88px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid #45534c;
+  border-radius: 8px;
+  outline: none;
+  background: #18211e;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.cinema-note-row textarea:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgb(184 232 207 / 12%);
+}
+
+.cinema-note-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cinema-note-actions small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.cinema-note-actions button {
+  min-height: 44px;
+  padding-inline: 14px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cinema-note-actions button:disabled {
   cursor: wait;
   opacity: 0.5;
 }
@@ -1992,6 +2101,109 @@ footer p {
   }
 }
 
+.schedule-search {
+  display: block;
+  width: min(100%, 760px);
+  margin: 18px auto 0;
+  padding-inline: 14px;
+}
+
+.schedule-search-form {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.schedule-search-field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.schedule-search-input {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.schedule-search-input > svg {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  color: var(--muted);
+  pointer-events: none;
+  translate: 0 -50%;
+}
+
+.schedule-search-input input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 12px 0 40px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  outline: none;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.schedule-search-input input::placeholder {
+  color: #75817c;
+}
+
+.schedule-search-input input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.schedule-search-submit,
+.schedule-search-clear {
+  min-height: 46px;
+  border-radius: 11px;
+  font-weight: 800;
+}
+
+.schedule-search-submit {
+  padding-inline: 17px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #102019;
+}
+
+.schedule-search-clear {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-height: 44px;
+  padding-inline: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.schedule-search-result {
+  margin: 8px 0 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.schedule-search-submit:hover {
+  filter: brightness(1.08);
+}
+
+.schedule-search-submit:focus-visible,
+.schedule-search-clear:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .jump-to-now-button {
   position: fixed;
   z-index: 24;
@@ -2073,7 +2285,6 @@ footer p {
   .cinema-slot {
     flex-basis: 220px;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

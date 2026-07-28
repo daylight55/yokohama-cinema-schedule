@@ -53,9 +53,10 @@ describe("app view hash navigation", () => {
       hashForAppView("movies", {
         date: "2026-07-27",
         movie: "劇場版 テスト",
+        query: "TOHO 上大岡",
       }),
     ).toBe(
-      "#movies?date=2026-07-27&movie=%E5%8A%87%E5%A0%B4%E7%89%88+%E3%83%86%E3%82%B9%E3%83%88",
+      "#movies?date=2026-07-27&movie=%E5%8A%87%E5%A0%B4%E7%89%88+%E3%83%86%E3%82%B9%E3%83%88&q=TOHO+%E4%B8%8A%E5%A4%A7%E5%B2%A1",
     );
   });
 
@@ -74,12 +75,13 @@ describe("app view hash navigation", () => {
   it("restores a linked date and movie from the hash", () => {
     expect(
       appHashStateFromHash(
-        "#schedule?date=2026-07-27&movie=%E5%8A%87%E5%A0%B4%E7%89%88+%E3%83%86%E3%82%B9%E3%83%88",
+        "#schedule?date=2026-07-27&movie=%E5%8A%87%E5%A0%B4%E7%89%88+%E3%83%86%E3%82%B9%E3%83%88&q=%E3%83%8E%E3%83%B4%E3%82%A7%E3%83%81%E3%83%B3%E3%83%88",
       ),
     ).toEqual({
       view: "schedule",
       date: "2026-07-27",
       movie: "劇場版 テスト",
+      query: "ノヴェチント",
     });
     expect(
       appHashStateFromHash("#movies?date=July-27&movie=%20"),
@@ -87,6 +89,7 @@ describe("app view hash navigation", () => {
       view: "movies",
       date: null,
       movie: null,
+      query: "",
     });
   });
 });

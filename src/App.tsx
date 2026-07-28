@@ -9,6 +9,7 @@ import {
   HouseLineIcon,
   InfoIcon,
   ListIcon,
+  MagnifyingGlassIcon,
   MapPinIcon,
   PathIcon,
   SignOutIcon,
@@ -20,6 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   Fragment,
+  type FormEvent,
   type MouseEvent,
   type TouchEvent,
   useCallback,
@@ -87,6 +89,12 @@ const fullDateFormatter = new Intl.DateTimeFormat("ja-JP", {
   day: "numeric",
   weekday: "short",
 });
+const closureDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+});
 const updatedFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
   month: "numeric",
@@ -139,6 +147,8 @@ export function App() {
       ? initialHashState.date
       : today;
   const [selectedDate, setSelectedDate] = useState(initialScheduleDate);
+  const [searchQuery, setSearchQuery] = useState(initialHashState.query);
+  const [searchDraft, setSearchDraft] = useState(initialHashState.query);
   const [plannerDate, setPlannerDate] = useState(initialPlannerDate);
   const [selectedMovieKey, setSelectedMovieKey] = useState<string | null>(
     initialHashState.view === "schedule" ||
@@ -160,6 +170,12 @@ export function App() {
     Map<string, number | null>
   >(() => new Map());
   const [cinemaDurationDrafts, setCinemaDurationDrafts] = useState<
+    Map<string, string>
+  >(() => new Map());
+  const [cinemaNotes, setCinemaNotes] = useState<Map<string, string>>(
+    () => new Map(),
+  );
+  const [cinemaNoteDrafts, setCinemaNoteDrafts] = useState<
     Map<string, string>
   >(() => new Map());
   const [savingCinemaIds, setSavingCinemaIds] = useState<Set<string>>(
@@ -267,12 +283,15 @@ export function App() {
             ? nextPlannerDate
             : null,
         movie: nextMovieKey,
+        query: usesWeeklyDate ? hashState.query : null,
       });
       if (window.location.hash !== canonicalHash) {
         window.history.replaceState(null, "", canonicalHash);
       }
       setView(nextView);
       setSelectedDate(nextScheduleDate);
+      setSearchQuery(usesWeeklyDate ? hashState.query : "");
+      setSearchDraft(usesWeeklyDate ? hashState.query : "");
       setPlannerDate(nextPlannerDate);
       setSelectedMovieKey(nextMovieKey);
     };
@@ -288,7 +307,9 @@ export function App() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetch(`/api/showings?date=${selectedDate}`, {
+    const params = new URLSearchParams({ date: selectedDate });
+    if (searchQuery) params.set("q", searchQuery);
+    fetch(`/api/showings?${params.toString()}`, {
       signal: controller.signal,
       headers: { accept: "application/json" },
     })
@@ -349,6 +370,22 @@ export function App() {
             ]),
           ),
         );
+        setCinemaNotes(
+          new Map(
+            data.cinemaTravelPreferences.map((preference) => [
+              preference.cinemaId,
+              preference.note,
+            ]),
+          ),
+        );
+        setCinemaNoteDrafts(
+          new Map(
+            data.cinemaTravelPreferences.map((preference) => [
+              preference.cinemaId,
+              preference.note,
+            ]),
+          ),
+        );
         setUserProfile(data.userProfile);
       })
       .catch((reason: unknown) => {
@@ -362,7 +399,7 @@ export function App() {
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [selectedDate]);
+  }, [searchQuery, selectedDate]);
 
   useEffect(() => {
     if (selectedDate !== dates[0]) setFutureOnly(false);
@@ -806,6 +843,50 @@ export function App() {
     }
   };
 
+  const saveCinemaNote = async (
+    cinemaId: string,
+    anchor: HTMLElement | null,
+  ) => {
+    if (savingCinemaIds.has(cinemaId)) return;
+    rememberCinemaAnchor(anchor);
+    const note = cinemaNoteDrafts.get(cinemaId)?.trim() ?? "";
+    setCinemaPreferenceError(null);
+    setSavingCinemaIds((current) => new Set(current).add(cinemaId));
+
+    try {
+      const response = await fetch("/api/cinema-preferences", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({ cinemaId, note }),
+      });
+      if (!response.ok) throw new Error();
+      const preference =
+        (await response.json()) as CinemaTravelPreference;
+      setCinemaNotes((current) => {
+        const next = new Map(current);
+        next.set(cinemaId, preference.note);
+        return next;
+      });
+      setCinemaNoteDrafts((current) => {
+        const next = new Map(current);
+        next.set(cinemaId, preference.note);
+        return next;
+      });
+    } catch {
+      pendingCinemaAnchorRef.current = null;
+      setCinemaPreferenceError("映画館メモを保存できませんでした");
+    } finally {
+      setSavingCinemaIds((current) => {
+        const next = new Set(current);
+        next.delete(cinemaId);
+        return next;
+      });
+    }
+  };
+
   const saveCinemaDurationDraft = (
     cinemaId: string,
     anchor: HTMLElement | null,
@@ -848,9 +929,26 @@ export function App() {
     window.location.hash = event.currentTarget.hash;
   };
 
+  const submitScheduleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    window.location.hash = hashForAppView(view, {
+      date: selectedDate,
+      query: searchDraft,
+    });
+  };
+
+  const clearScheduleSearch = () => {
+    setSearchDraft("");
+    window.location.hash = hashForAppView(view, { date: selectedDate });
+  };
+
   const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
     dateSwipeStartRef.current = null;
-    if (view !== "schedule" || loading || event.touches.length !== 1) {
+    if (
+      (view !== "schedule" && view !== "movies") ||
+      loading ||
+      event.touches.length !== 1
+    ) {
       return;
     }
     const target = event.target;
@@ -881,8 +979,9 @@ export function App() {
     const nextIndex =
       direction === "next" ? currentIndex + 1 : currentIndex - 1;
     if (nextIndex >= 0 && nextIndex < dates.length) {
-      window.location.hash = hashForAppView("schedule", {
+      window.location.hash = hashForAppView(view, {
         date: dates[nextIndex],
+        query: searchQuery,
       });
     }
   };
@@ -1147,6 +1246,7 @@ export function App() {
                       href={hashForAppView("movies", {
                         date: selectedDate,
                         movie: movie.preferenceKey,
+                        query: searchQuery,
                       })}
                       onClick={navigateHashLink}
                     >
@@ -1275,6 +1375,7 @@ export function App() {
               href={hashForAppView("schedule", {
                 date: selectedDate,
                 movie: selectedMovieKey,
+                query: searchQuery,
               })}
               className={view === "schedule" ? "active" : ""}
               aria-current={view === "schedule" ? "page" : undefined}
@@ -1287,6 +1388,7 @@ export function App() {
               href={hashForAppView("movies", {
                 date: selectedDate,
                 movie: selectedMovieKey,
+                query: searchQuery,
               })}
               className={view === "movies" ? "active" : ""}
               aria-current={view === "movies" ? "page" : undefined}
@@ -1333,7 +1435,7 @@ export function App() {
             <InfoIcon size={20} aria-hidden="true" />
             このサイトについて
           </a>
-          </nav>
+        </nav>
         </div>
       </dialog>
 
@@ -1359,7 +1461,10 @@ export function App() {
                   className={
                     date === selectedDate ? "day-button active" : "day-button"
                   }
-                  href={hashForAppView(view, { date })}
+                  href={hashForAppView(view, {
+                    date,
+                    query: searchQuery,
+                  })}
                   aria-current={date === selectedDate ? "date" : undefined}
                 >
                   <span>{index === 0 ? "今日" : monthDay}</span>
@@ -1368,7 +1473,50 @@ export function App() {
               );
             })}
           </div>
-        </nav>
+          </nav>
+        )}
+
+        {(view === "schedule" || view === "movies") && (
+          <search className="schedule-search">
+            <form
+              className="schedule-search-form"
+              method="get"
+              onSubmit={submitScheduleSearch}
+            >
+              <label className="schedule-search-field">
+                <span>作品名・映画館名</span>
+                <span className="schedule-search-input">
+                  <MagnifyingGlassIcon size={18} aria-hidden="true" />
+                  <input
+                    type="search"
+                    name="q"
+                    value={searchDraft}
+                    placeholder="例：ノヴェチント、TOHO"
+                    autoComplete="off"
+                    enterKeyHint="search"
+                    onChange={(event) => setSearchDraft(event.target.value)}
+                  />
+                </span>
+              </label>
+              <button className="schedule-search-submit" type="submit">
+                検索
+              </button>
+              {searchQuery && (
+                <button
+                  className="schedule-search-clear"
+                  type="button"
+                  onClick={clearScheduleSearch}
+                >
+                  解除
+                </button>
+              )}
+            </form>
+            {searchQuery && (
+              <p className="schedule-search-result" role="status">
+                「{searchQuery}」の検索結果
+              </p>
+            )}
+          </search>
         )}
 
       {(view === "schedule" ||
@@ -1568,9 +1716,12 @@ export function App() {
                         : "対象の映画館がありません"}
                   </strong>
                   <p>
-                    {view === "cinemas"
-                      ? "エリアを広げてください。"
-                      : "エリアを広げるか、別の日を選んでください。"}
+                    {searchQuery &&
+                      (view === "schedule" || view === "movies")
+                      ? "作品名や映画館名を変えて検索してください。"
+                      : view === "cinemas"
+                        ? "エリアを広げてください。"
+                        : "エリアを広げるか、別の日を選んでください。"}
                   </p>
                 </div>
               </div>
@@ -1621,6 +1772,7 @@ export function App() {
                           href={hashForAppView("movies", {
                             date: selectedDate,
                             movie: movie.preferenceKey,
+                            query: searchQuery,
                           })}
                           onClick={navigateHashLink}
                           aria-current={
@@ -1738,16 +1890,32 @@ export function App() {
                     cinemaCustomDurations.get(cinema.id) ?? null;
                   const durationDraft =
                     cinemaDurationDrafts.get(cinema.id) ?? "";
+                  const savedNote = cinemaNotes.get(cinema.id) ?? "";
+                  const noteDraft = cinemaNoteDrafts.get(cinema.id) ?? "";
                   const isSaving = savingCinemaIds.has(cinema.id);
                   return (
                     <li className="cinema-list-item" key={cinema.id}>
                       <div className="cinema-list-heading">
-                        <h2>{cinema.name}</h2>
+                        <h2>
+                          {cinema.name}
+                          {cinema.activeUntil && (
+                            <span className="cinema-closure-date">
+                              （
+                              {closureDateFormatter.format(
+                                new Date(
+                                  `${cinema.activeUntil}T12:00:00+09:00`,
+                                ),
+                              )}
+                              閉館予定）
+                            </span>
+                          )}
+                        </h2>
                         <p>
                           <MapPinIcon size={15} aria-hidden="true" />
                           {cinema.areaLabel}
                         </p>
                       </div>
+                      <CinemaExteriorThumbnail cinema={cinema} />
                       {route && routeOrigin && (
                         <div className="cinema-route-actions">
                           <strong className="cinema-route-time">
@@ -1871,6 +2039,47 @@ export function App() {
                           保存した分数を表示と「間に合う」判定に使います
                         </small>
                       </div>
+                      <div className="cinema-note-row">
+                        <label htmlFor={`cinema-note-${cinema.id}`}>
+                          館内・座席メモ
+                        </label>
+                        <textarea
+                          id={`cinema-note-${cinema.id}`}
+                          rows={3}
+                          maxLength={2000}
+                          placeholder="例：シアター3は中央のG〜I列が見やすい"
+                          value={noteDraft}
+                          disabled={
+                            isSaving ||
+                            !schedule?.cinemaTravelPreferencesEnabled
+                          }
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            setCinemaNoteDrafts((current) => {
+                              const next = new Map(current);
+                              next.set(cinema.id, value);
+                              return next;
+                            });
+                          }}
+                        />
+                        <div className="cinema-note-actions">
+                          <small>{noteDraft.length}/2000</small>
+                          <button
+                            type="button"
+                            disabled={isSaving || noteDraft.trim() === savedNote}
+                            onClick={(event) =>
+                              void saveCinemaNote(
+                                cinema.id,
+                                event.currentTarget.closest<HTMLElement>(
+                                  ".cinema-list-item",
+                                ),
+                              )
+                            }
+                          >
+                            {isSaving ? "保存中" : "メモを保存"}
+                          </button>
+                        </div>
+                      </div>
                       <a
                         className="cinema-official-link"
                         href={cinema.sourceUrl}
@@ -1983,6 +2192,32 @@ function CurrentTimeMarker({
       <time dateTime={now.toISOString()}>現在 {timeFormatter.format(now)}</time>
       <span aria-hidden="true" />
     </div>
+  );
+}
+
+function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
+  const [unavailable, setUnavailable] = useState(false);
+
+  return (
+    <figure className="cinema-exterior">
+      {!unavailable ? (
+        <img
+          src={`/api/cinema-exterior/${encodeURIComponent(cinema.id)}`}
+          alt={`${cinema.name}の外観`}
+          width="480"
+          height="270"
+          loading="lazy"
+          decoding="async"
+          onError={() => setUnavailable(true)}
+        />
+      ) : (
+        <div className="cinema-exterior-placeholder" aria-hidden="true">
+          <BuildingsIcon size={28} />
+          <span>外観画像なし</span>
+        </div>
+      )}
+      <figcaption>Google Street View</figcaption>
+    </figure>
   );
 }
 

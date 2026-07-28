@@ -1,5 +1,6 @@
 import { addDays, todayInJst } from "../shared/date";
 import { moviePreferenceKey } from "../shared/movie";
+import { normalizeSearchQuery } from "../shared/search";
 import type {
   Cinema,
   CinemaArea,
@@ -40,6 +41,7 @@ export interface AppHashState {
   view: AppView;
   date: string | null;
   movie: string | null;
+  query: string;
 }
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -54,6 +56,7 @@ export function appHashStateFromHash(hash: string): AppHashState {
     view,
     date: date && ISO_DATE_PATTERN.test(date) ? date : null,
     movie: movie ? movie.slice(0, 240) : null,
+    query: normalizeSearchQuery(params.get("q")),
   };
 }
 
@@ -63,7 +66,11 @@ export function appViewFromHash(hash: string): AppView {
 
 export function hashForAppView(
   view: AppView,
-  state: { date?: string | null; movie?: string | null } = {},
+  state: {
+    date?: string | null;
+    movie?: string | null;
+    query?: string | null;
+  } = {},
 ): string {
   const params = new URLSearchParams();
   if (state.date && ISO_DATE_PATTERN.test(state.date)) {
@@ -71,6 +78,10 @@ export function hashForAppView(
   }
   if (state.movie?.trim()) {
     params.set("movie", state.movie.trim().slice(0, 240));
+  }
+  const searchQuery = normalizeSearchQuery(state.query);
+  if (searchQuery) {
+    params.set("q", searchQuery);
   }
   const query = params.toString();
   return `${HASH_BY_APP_VIEW[view]}${query ? `?${query}` : ""}`;
