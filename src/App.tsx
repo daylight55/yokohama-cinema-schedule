@@ -57,12 +57,11 @@ import {
   groupScheduleTimeBuckets,
   groupByMovie,
   getDateSwipeDirection,
+  getScheduleMoviePresentation,
   hashForAppView,
-  isShowingPast,
-  isShowingReachable,
-  isShowingUnreachable,
   normalizeMovieTitle,
   scrollToInitialTimeMarker,
+  scheduleProgramClassName,
   shouldDefaultExpandScheduleBucket,
   type AppView,
 } from "./lib";
@@ -110,11 +109,19 @@ const TRAVEL_MODE_OPTIONS: Array<{ value: TravelMode; label: string }> = [
   { value: "bicycle", label: "自転車" },
 ];
 
+interface MoviePreferenceTarget {
+  preferenceKey: string;
+  title: string;
+  imageUrl: string | null;
+  anchorElement?: HTMLElement | null;
+}
+
 export function App() {
   const [now, setNow] = useState(() => new Date());
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
   const dateSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const navigationDialogRef = useRef<HTMLDialogElement>(null);
+  const moviePreferenceDialogRef = useRef<HTMLDialogElement>(null);
   const pendingMovieAnchorRef = useRef<{
     element: HTMLElement;
     top: number;
@@ -198,6 +205,8 @@ export function App() {
     () => new Set(),
   );
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
+  const [activeMoviePreference, setActiveMoviePreference] =
+    useState<MoviePreferenceTarget | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile>({
     homeRegistered: false,
     homeUpdatedAt: null,
@@ -218,7 +227,11 @@ export function App() {
 
   useLayoutEffect(() => {
     const pendingAnchor = pendingMovieAnchorRef.current;
-    if (!pendingAnchor || !pendingAnchor.element.isConnected) return;
+    if (!pendingAnchor) return;
+    if (!pendingAnchor.element.isConnected) {
+      pendingMovieAnchorRef.current = null;
+      return;
+    }
     const nextTop = pendingAnchor.element.getBoundingClientRect().top;
     window.scrollBy(0, nextTop - pendingAnchor.top);
     pendingMovieAnchorRef.current = null;
@@ -233,7 +246,7 @@ export function App() {
     window.scrollTo(pendingScroll.left, pendingScroll.top);
     root.style.scrollBehavior = previousScrollBehavior;
     pendingMovieScrollRef.current = null;
-  }, [starredMovieKeys]);
+  }, [movieStatusByKey, starredMovieKeys]);
 
   useLayoutEffect(() => {
     if (view === "movies" || view === "account" || view === "about") {
@@ -258,6 +271,13 @@ export function App() {
       document.removeEventListener("visibilitychange", updateClock);
     };
   }, []);
+
+  useEffect(() => {
+    const dialog = moviePreferenceDialogRef.current;
+    if (activeMoviePreference && dialog && !dialog.open) {
+      dialog.showModal();
+    }
+  }, [activeMoviePreference]);
 
   useEffect(() => {
     const syncViewFromHash = () => {
@@ -1070,11 +1090,7 @@ export function App() {
   };
 
   const toggleMovieStar = async (
-    movie: {
-      preferenceKey: string;
-      title: string;
-      imageUrl: string | null;
-    },
+    movie: MoviePreferenceTarget,
   ) => {
     if (savingMovieKeys.has(movie.preferenceKey)) return;
     rememberMovieScroll();
@@ -1124,15 +1140,11 @@ export function App() {
   };
 
   const updateMovieStatus = async (
-    movie: {
-      preferenceKey: string;
-      title: string;
-      imageUrl: string | null;
-    },
+    movie: MoviePreferenceTarget,
     requestedStatus: MoviePreferenceStatus,
     anchorElement: HTMLElement | null,
   ) => {
-    if (savingMovieKeys.has(movie.preferenceKey)) return;
+    if (savingMovieKeys.has(movie.preferenceKey)) return undefined;
     const previousStatus = movieStatusByKey.get(movie.preferenceKey) ?? null;
     const nextStatus =
       previousStatus === requestedStatus ? null : requestedStatus;
@@ -1140,12 +1152,13 @@ export function App() {
       const statusLabel =
         nextStatus === "watched" ? "鑑賞済み" : "興味なし";
       const confirmed = window.confirm(
-        `「${movie.title}」を${statusLabel}に設定すると、上映時間一覧の表示対象外になります。設定しますか？`,
+        `「${movie.title}」を${statusLabel}に設定すると、上映スケジュールの表示対象外になります。設定しますか？`,
       );
-      if (!confirmed) return;
+      if (!confirmed) return undefined;
     }
 
-    rememberMovieAnchor(anchorElement);
+    if (view === "schedule") rememberMovieScroll();
+    else rememberMovieAnchor(anchorElement);
     setPreferenceError(null);
     setMovieStatusByKey((current) => {
       const next = new Map(current);
@@ -1171,8 +1184,10 @@ export function App() {
         }),
       });
       if (!response.ok) throw new Error();
+      return nextStatus;
     } catch {
-      rememberMovieAnchor(anchorElement);
+      if (view === "schedule") rememberMovieScroll();
+      else rememberMovieAnchor(anchorElement);
       setMovieStatusByKey((current) => {
         const next = new Map(current);
         if (previousStatus) {
@@ -1183,6 +1198,7 @@ export function App() {
         return next;
       });
       setPreferenceError("作品の状態を保存できませんでした");
+      return undefined;
     } finally {
       setSavingMovieKeys((current) => {
         const next = new Set(current);
@@ -1190,6 +1206,30 @@ export function App() {
         return next;
       });
     }
+  };
+
+  const openMoviePreferenceDialog = (
+    movie: MoviePreferenceTarget,
+    anchorElement: HTMLElement | null,
+  ) => {
+    setPreferenceError(null);
+    setActiveMoviePreference({ ...movie, anchorElement });
+  };
+
+  const closeMoviePreferenceDialog = () => {
+    moviePreferenceDialogRef.current?.close();
+  };
+
+  const selectMovieStatusFromDialog = async (
+    status: MoviePreferenceStatus,
+  ) => {
+    if (!activeMoviePreference) return;
+    const savedStatus = await updateMovieStatus(
+      activeMoviePreference,
+      status,
+      activeMoviePreference.anchorElement ?? null,
+    );
+    if (savedStatus) closeMoviePreferenceDialog();
   };
 
   const selectedDateLabel =
@@ -1223,35 +1263,52 @@ export function App() {
         </div>
         <div className="hour-programs">
           {group.movies.map((movie) => {
-            const isPast = movie.showings.every((showing) =>
-              isShowingPast(showing, now),
+            const presentation = getScheduleMoviePresentation(
+              movie.showings,
+              now,
+              routeByCinema,
             );
             const isStarred = starredMovieKeys.has(movie.preferenceKey);
             return (
               <article
-                className={[
-                  "program-block",
-                  isPast ? "past" : "",
-                  isStarred ? "starred" : "",
-                  selectedMovieKey === movie.preferenceKey ? "linked" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+                className={scheduleProgramClassName({
+                  isPast: presentation.isPast,
+                  isReachable: presentation.isReachable,
+                  isStarred,
+                  isLinked: selectedMovieKey === movie.preferenceKey,
+                })}
                 data-movie-key={movie.preferenceKey}
                 key={movie.key}
               >
                 <div className="program-title">
                   <h2>
-                    <a
-                      href={hashForAppView("movies", {
-                        date: selectedDate,
-                        movie: movie.preferenceKey,
-                        query: searchQuery,
-                      })}
-                      onClick={navigateHashLink}
-                    >
-                      {movie.title}
-                    </a>
+                    {schedule?.preferencesEnabled ? (
+                      <button
+                        className="program-title-button"
+                        type="button"
+                        onClick={(event) =>
+                          openMoviePreferenceDialog(
+                            movie,
+                            event.currentTarget.closest<HTMLElement>(
+                              ".program-block",
+                            ),
+                          )
+                        }
+                      >
+                        {movie.title}
+                      </button>
+                    ) : (
+                      <a
+                        href={hashForAppView("movies", {
+                          date: selectedDate,
+                          movie: movie.preferenceKey,
+                          query: searchQuery,
+                        })}
+                        onClick={navigateHashLink}
+                      >
+                        {movie.title}
+                      </a>
+                    )}
                   </h2>
                   {schedule?.preferencesEnabled && (
                     <FavoriteButton
@@ -1268,29 +1325,24 @@ export function App() {
                   role="list"
                   aria-label={`${movie.title}の上映館`}
                 >
-                  {movie.showings.map((showing) => {
-                    const route = routeByCinema.get(showing.cinemaId);
-                    const isPast = isShowingPast(showing, now);
-                    return (
-                      <CinemaSlot
-                        key={showing.id}
-                        showing={showing}
-                        isPast={isPast}
-                        isReachable={Boolean(
-                          route &&
-                            isShowingReachable(
-                              showing,
-                              now,
-                              routeByCinema,
-                            ),
-                        )}
-                        isUnreachable={
-                          !isPast &&
-                          isShowingUnreachable(showing, now, routeByCinema)
-                        }
-                      />
-                    );
-                  })}
+                  {presentation.showings.map(
+                    ({
+                      showing,
+                      isPast,
+                      isReachable,
+                      isUnreachable,
+                    }) => {
+                      return (
+                        <CinemaSlot
+                          key={showing.id}
+                          showing={showing}
+                          isPast={isPast}
+                          isReachable={isReachable}
+                          isUnreachable={isUnreachable}
+                        />
+                      );
+                    },
+                  )}
                 </div>
               </article>
             );
@@ -1437,6 +1489,135 @@ export function App() {
           </a>
         </nav>
         </div>
+      </dialog>
+
+      <dialog
+        className="movie-preference-dialog"
+        ref={moviePreferenceDialogRef}
+        closedby="any"
+        aria-labelledby="movie-preference-title"
+        onClose={() => setActiveMoviePreference(null)}
+        onClick={(event) => {
+          if (event.currentTarget !== event.target) return;
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const isInside =
+            event.clientX >= bounds.left &&
+            event.clientX <= bounds.right &&
+            event.clientY >= bounds.top &&
+            event.clientY <= bounds.bottom;
+          if (!isInside) closeMoviePreferenceDialog();
+        }}
+      >
+        {activeMoviePreference && (
+          <div className="movie-preference-sheet">
+            <div className="movie-preference-heading">
+              <div>
+                <small>作品の設定</small>
+                <h2 id="movie-preference-title">
+                  {activeMoviePreference.title}
+                </h2>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="作品の設定を閉じる"
+                onClick={closeMoviePreferenceDialog}
+              >
+                <XIcon size={20} aria-hidden="true" />
+              </button>
+            </div>
+            <div
+              className="movie-preference-actions"
+              role="group"
+              aria-label={`${activeMoviePreference.title}の状態`}
+            >
+              <button
+                type="button"
+                className={
+                  starredMovieKeys.has(
+                    activeMoviePreference.preferenceKey,
+                  )
+                    ? "favorite active"
+                    : "favorite"
+                }
+                aria-pressed={starredMovieKeys.has(
+                  activeMoviePreference.preferenceKey,
+                )}
+                disabled={savingMovieKeys.has(
+                  activeMoviePreference.preferenceKey,
+                )}
+                onClick={() =>
+                  void toggleMovieStar(activeMoviePreference)
+                }
+              >
+                <StarIcon
+                  size={20}
+                  weight={
+                    starredMovieKeys.has(
+                      activeMoviePreference.preferenceKey,
+                    )
+                      ? "fill"
+                      : "regular"
+                  }
+                  aria-hidden="true"
+                />
+                気になる
+              </button>
+              <button
+                type="button"
+                className={
+                  movieStatusByKey.get(
+                    activeMoviePreference.preferenceKey,
+                  ) === "watched"
+                    ? "active"
+                    : ""
+                }
+                aria-pressed={
+                  movieStatusByKey.get(
+                    activeMoviePreference.preferenceKey,
+                  ) === "watched"
+                }
+                disabled={savingMovieKeys.has(
+                  activeMoviePreference.preferenceKey,
+                )}
+                onClick={() =>
+                  void selectMovieStatusFromDialog("watched")
+                }
+              >
+                鑑賞済み
+              </button>
+              <button
+                type="button"
+                className={
+                  movieStatusByKey.get(
+                    activeMoviePreference.preferenceKey,
+                  ) === "not_interested"
+                    ? "not-interested active"
+                    : "not-interested"
+                }
+                aria-pressed={
+                  movieStatusByKey.get(
+                    activeMoviePreference.preferenceKey,
+                  ) === "not_interested"
+                }
+                disabled={savingMovieKeys.has(
+                  activeMoviePreference.preferenceKey,
+                )}
+                onClick={() =>
+                  void selectMovieStatusFromDialog("not_interested")
+                }
+              >
+                興味なし
+              </button>
+            </div>
+            {preferenceError && (
+              <p className="inline-status error" role="status">
+                <WarningCircleIcon size={16} aria-hidden="true" />
+                {preferenceError}
+              </p>
+            )}
+          </div>
+        )}
       </dialog>
 
       <main
