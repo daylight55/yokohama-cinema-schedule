@@ -7,6 +7,7 @@ import {
   todayInJst,
 } from "../../shared/date";
 import { movieDisplayTitle } from "../../shared/movie";
+import { showingSearchText } from "../../shared/search";
 import type { NormalizedShowing } from "../../shared/types";
 import { parseAeonSchedule } from "./parsers/aeon";
 import { parseEigalandSchedule } from "./parsers/eigaland";
@@ -613,10 +614,17 @@ async function replaceSourceWindow(
 ): Promise<void> {
   const fetchedAt = new Date().toISOString();
   const start = `${dates[0]}T00:00:00+09:00`;
+  const lastDate = dates.at(-1) ?? dates[0];
   const dayAfter = new Date(
-    new Date(`${dates.at(-1)}T00:00:00+09:00`).getTime() + 86_400_000,
+    new Date(`${lastDate}T00:00:00+09:00`).getTime() + 86_400_000,
   ).toISOString();
   const statements = [
+    db
+      .prepare(
+        `DELETE FROM showing_search
+         WHERE source_id = ? AND schedule_date >= ? AND schedule_date <= ?`,
+      )
+      .bind(sourceId, dates[0], lastDate),
     db
       .prepare(
         "DELETE FROM showings WHERE source_id = ? AND starts_at >= ? AND starts_at < ?",
@@ -646,6 +654,25 @@ async function replaceSourceWindow(
           showing.bookingUrl,
           showing.purchasable === null ? null : Number(showing.purchasable),
           fetchedAt,
+      );
+    }),
+    ...showings.map((showing) => {
+      const cinema = CINEMAS.find((candidate) => candidate.id === showing.cinemaId);
+      return db
+        .prepare(
+          `INSERT INTO showing_search (
+            showing_id, source_id, schedule_date, search_text
+          ) VALUES (?, ?, ?, ?)`,
+        )
+        .bind(
+          showingId(showing),
+          showing.sourceId,
+          todayInJst(new Date(showing.startsAt)),
+          showingSearchText(
+            showing.title,
+            cinema?.name ?? showing.cinemaId,
+            cinema?.shortName ?? "",
+          ),
         );
     }),
   ];

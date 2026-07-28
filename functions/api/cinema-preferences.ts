@@ -7,6 +7,7 @@ import {
   isCustomDurationMinutes,
   isTravelMode,
   listCinemaTravelPreferences,
+  normalizeCinemaNote,
 } from "../_lib/cinema-travel-preferences";
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { AuthContextData, PagesEnv } from "../_lib/env";
@@ -16,6 +17,7 @@ interface CinemaPreferenceRequest {
   cinemaId?: string;
   travelMode?: TravelMode;
   customDurationMinutes?: number | null;
+  note?: string;
 }
 
 export const onRequestPost: PagesFunction<
@@ -40,13 +42,16 @@ export const onRequestPost: PagesFunction<
   const cinemaId = body.cinemaId?.trim();
   const hasTravelMode = body.travelMode !== undefined;
   const hasCustomDuration = Object.hasOwn(body, "customDurationMinutes");
+  const hasNote = Object.hasOwn(body, "note");
+  const normalizedNote = hasNote ? normalizeCinemaNote(body.note) : null;
   if (
     !cinemaId ||
-    (!hasTravelMode && !hasCustomDuration) ||
+    (!hasTravelMode && !hasCustomDuration && !hasNote) ||
     (hasTravelMode && !isTravelMode(body.travelMode)) ||
     (hasCustomDuration &&
       body.customDurationMinutes !== null &&
-      !isCustomDurationMinutes(body.customDurationMinutes))
+      !isCustomDurationMinutes(body.customDurationMinutes)) ||
+    (hasNote && normalizedNote === null)
   ) {
     return Response.json(
       { error: "invalid_cinema_preference" },
@@ -74,14 +79,16 @@ export const onRequestPost: PagesFunction<
   const customDurationMinutes = hasCustomDuration
     ? (body.customDurationMinutes ?? null)
     : (current?.customDurationMinutes ?? null);
+  const note = hasNote ? (normalizedNote ?? "") : (current?.note ?? "");
   const updatedAt = new Date().toISOString();
   await context.env.DB.prepare(
     `INSERT INTO cinema_travel_preferences
-      (user_id, cinema_id, travel_mode, custom_duration_minutes, updated_at)
-     VALUES (?, ?, ?, ?, ?)
+      (user_id, cinema_id, travel_mode, custom_duration_minutes, note, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id, cinema_id) DO UPDATE SET
        travel_mode = excluded.travel_mode,
        custom_duration_minutes = excluded.custom_duration_minutes,
+       note = excluded.note,
        updated_at = excluded.updated_at`,
   )
     .bind(
@@ -89,6 +96,7 @@ export const onRequestPost: PagesFunction<
       cinemaId,
       travelMode,
       customDurationMinutes,
+      note,
       updatedAt,
     )
     .run();
@@ -97,6 +105,7 @@ export const onRequestPost: PagesFunction<
     cinemaId,
     travelMode,
     customDurationMinutes,
+    note,
     updatedAt,
   };
   return Response.json(preference, {

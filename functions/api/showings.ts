@@ -1,4 +1,8 @@
 import { jstDateBounds, todayInJst } from "../../shared/date";
+import {
+  normalizeSearchQuery,
+  searchMatchExpression,
+} from "../../shared/search";
 import type { ScheduleResponse, Showing } from "../../shared/types";
 import { listActiveCinemas } from "../_lib/cinemas";
 import type { AuthContextData, PagesEnv } from "../_lib/env";
@@ -38,6 +42,8 @@ export const onRequestGet: PagesFunction<
 > = async (context) => {
   const url = new URL(context.request.url);
   const date = url.searchParams.get("date") ?? todayInJst();
+  const searchQuery = normalizeSearchQuery(url.searchParams.get("q"));
+  const searchExpression = searchMatchExpression(searchQuery);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return Response.json({ error: "invalid_date" }, { status: 400 });
   }
@@ -46,6 +52,16 @@ export const onRequestGet: PagesFunction<
   const approvalClause = publicOnly
     ? "c.approval = 'approved'"
     : "c.approval != 'disabled'";
+  const searchClause = searchExpression
+    ? `AND s.id IN (
+        SELECT showing_id
+        FROM showing_search
+        WHERE schedule_date = ? AND search_text MATCH ?
+      )`
+    : "";
+  const showingBindings = searchExpression
+    ? [from, to, date, date, searchExpression]
+    : [from, to, date];
 
   const [showingResult, health, cinemas] = await Promise.all([
     context.env.DB.prepare(
@@ -59,9 +75,10 @@ export const onRequestGet: PagesFunction<
       JOIN cinemas c ON c.id = s.cinema_id
       WHERE s.starts_at >= ? AND s.starts_at < ? AND ${approvalClause}
         AND (c.active_until IS NULL OR c.active_until >= ?)
+        ${searchClause}
       ORDER BY s.starts_at ASC, c.name ASC`,
     )
-      .bind(from, to, date)
+      .bind(...showingBindings)
       .all<ShowingRow>(),
     context.env.DB.prepare(
       `SELECT

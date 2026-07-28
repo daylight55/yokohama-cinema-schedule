@@ -133,6 +133,7 @@ export interface CinemaTravelPreference {
   cinemaId: string;
   travelMode: TravelMode;
   customDurationMinutes: number | null;
+  note: string;
   updatedAt: string | null;
 }
 
