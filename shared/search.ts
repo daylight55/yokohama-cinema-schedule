@@ -26,6 +26,20 @@ export function showingSearchText(
   return searchTerms(`${title} ${cinemaName} ${cinemaShortName}`).join(" ");
 }
 
+export function matchesShowingSearchQuery(
+  query: string,
+  title: string,
+  cinemaName: string,
+  cinemaShortName = "",
+): boolean {
+  const queryTerms = [...new Set(searchTerms(query))];
+  if (queryTerms.length === 0) return true;
+  const showingTerms = new Set(
+    searchTerms(`${title} ${cinemaName} ${cinemaShortName}`),
+  );
+  return queryTerms.every((term) => showingTerms.has(term));
+}
+
 export function searchMatchExpression(value: string): string | null {
   const terms = [...new Set(searchTerms(value))];
   if (terms.length === 0) return null;

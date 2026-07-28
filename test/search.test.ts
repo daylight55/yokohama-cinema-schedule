@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  matchesShowingSearchQuery,
   normalizeSearchQuery,
   searchMatchExpression,
   showingSearchText,
@@ -34,5 +35,41 @@ describe("schedule full-text search", () => {
       '"ノ" AND "ヴ" AND "ェ" AND "チ" AND "ン" AND "ト"',
     );
     expect(searchMatchExpression("   ")).toBeNull();
+  });
+
+  it("matches titles and cinema names while the user is typing", () => {
+    expect(
+      matchesShowingSearchQuery(
+        "ノヴェチ",
+        "ノヴェチント",
+        "シネマ・ジャック＆ベティ",
+      ),
+    ).toBe(true);
+    expect(
+      matchesShowingSearchQuery(
+        "ＴＯＨＯ 上大岡",
+        "映画ちいかわ 人魚の島のひみつ",
+        "TOHOシネマズ 上大岡",
+        "TOHO上大岡",
+      ),
+    ).toBe(true);
+  });
+
+  it("requires every search term to match the same showing", () => {
+    expect(
+      matchesShowingSearchQuery(
+        "TOHO 桜木町",
+        "映画ちいかわ 人魚の島のひみつ",
+        "TOHOシネマズ 上大岡",
+        "TOHO上大岡",
+      ),
+    ).toBe(false);
+    expect(
+      matchesShowingSearchQuery(
+        "",
+        "映画ちいかわ 人魚の島のひみつ",
+        "TOHOシネマズ 上大岡",
+      ),
+    ).toBe(true);
   });
 });

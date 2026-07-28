@@ -25,6 +25,7 @@ import {
   type MouseEvent,
   type TouchEvent,
   useCallback,
+  useDeferredValue,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -32,6 +33,10 @@ import {
   useState,
 } from "react";
 import { addDays, todayInJst } from "../shared/date";
+import {
+  matchesShowingSearchQuery,
+  normalizeSearchQuery,
+} from "../shared/search";
 import type {
   Cinema,
   CinemaArea,
@@ -155,8 +160,9 @@ export function App() {
       ? initialHashState.date
       : today;
   const [selectedDate, setSelectedDate] = useState(initialScheduleDate);
-  const [searchQuery, setSearchQuery] = useState(initialHashState.query);
   const [searchDraft, setSearchDraft] = useState(initialHashState.query);
+  const normalizedSearchQuery = normalizeSearchQuery(searchDraft);
+  const interactiveSearchQuery = useDeferredValue(normalizedSearchQuery);
   const [plannerDate, setPlannerDate] = useState(initialPlannerDate);
   const [selectedMovieKey, setSelectedMovieKey] = useState<string | null>(
     initialHashState.view === "schedule" ||
@@ -311,7 +317,6 @@ export function App() {
       }
       setView(nextView);
       setSelectedDate(nextScheduleDate);
-      setSearchQuery(usesWeeklyDate ? hashState.query : "");
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
       setPlannerDate(nextPlannerDate);
       setSelectedMovieKey(nextMovieKey);
@@ -329,7 +334,6 @@ export function App() {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams({ date: selectedDate });
-    if (searchQuery) params.set("q", searchQuery);
     fetch(`/api/showings?${params.toString()}`, {
       signal: controller.signal,
       headers: { accept: "application/json" },
@@ -420,7 +424,7 @@ export function App() {
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [searchQuery, selectedDate]);
+  }, [selectedDate]);
 
   useEffect(() => {
     if (selectedDate !== dates[0]) setFutureOnly(false);
@@ -455,11 +459,18 @@ export function App() {
         now,
       }).filter(
         (showing) =>
-          !movieStatusByKey.has(normalizeMovieTitle(showing.title)),
+          !movieStatusByKey.has(normalizeMovieTitle(showing.title)) &&
+          matchesShowingSearchQuery(
+            interactiveSearchQuery,
+            showing.title,
+            showing.cinemaName,
+            showing.cinemaShortName,
+          ),
       ),
     [
       dates,
       futureOnly,
+      interactiveSearchQuery,
       now,
       movieStatusByKey,
       schedule?.showings,
@@ -484,7 +495,13 @@ export function App() {
   const movieList = useMemo(() => {
     const areaShowings = (schedule?.showings ?? []).filter(
       (showing) =>
-        selectedArea === "all" || showing.area === selectedArea,
+        (selectedArea === "all" || showing.area === selectedArea) &&
+        matchesShowingSearchQuery(
+          interactiveSearchQuery,
+          showing.title,
+          showing.cinemaName,
+          showing.cinemaShortName,
+        ),
     );
     return groupByMovie(areaShowings).sort((movieA, movieB) => {
       const starredDifference =
@@ -495,7 +512,12 @@ export function App() {
         movieA.title.localeCompare(movieB.title, "ja")
       );
     });
-  }, [schedule?.showings, selectedArea, starredMovieKeys]);
+  }, [
+    interactiveSearchQuery,
+    schedule?.showings,
+    selectedArea,
+    starredMovieKeys,
+  ]);
   const movieCount = useMemo(
     () =>
       new Set(
@@ -1002,7 +1024,7 @@ export function App() {
     if (nextIndex >= 0 && nextIndex < dates.length) {
       window.location.hash = hashForAppView(view, {
         date: dates[nextIndex],
-        query: searchQuery,
+        query: normalizedSearchQuery,
       });
     }
   };
@@ -1299,7 +1321,7 @@ export function App() {
                         href={hashForAppView("movies", {
                           date: selectedDate,
                           movie: movie.preferenceKey,
-                          query: searchQuery,
+                          query: normalizedSearchQuery,
                         })}
                         onClick={navigateHashLink}
                       >
@@ -1424,7 +1446,7 @@ export function App() {
               href={hashForAppView("schedule", {
                 date: selectedDate,
                 movie: selectedMovieKey,
-                query: searchQuery,
+                query: normalizedSearchQuery,
               })}
               className={view === "schedule" ? "active" : ""}
               aria-current={view === "schedule" ? "page" : undefined}
@@ -1437,7 +1459,7 @@ export function App() {
               href={hashForAppView("movies", {
                 date: selectedDate,
                 movie: selectedMovieKey,
-                query: searchQuery,
+                query: normalizedSearchQuery,
               })}
               className={view === "movies" ? "active" : ""}
               aria-current={view === "movies" ? "page" : undefined}
@@ -1641,7 +1663,7 @@ export function App() {
                   }
                   href={hashForAppView(view, {
                     date,
-                    query: searchQuery,
+                    query: normalizedSearchQuery,
                   })}
                   aria-current={date === selectedDate ? "date" : undefined}
                 >
@@ -1679,7 +1701,7 @@ export function App() {
               <button className="schedule-search-submit" type="submit">
                 検索
               </button>
-              {searchQuery && (
+              {normalizedSearchQuery && (
                 <button
                   className="schedule-search-clear"
                   type="button"
@@ -1689,9 +1711,9 @@ export function App() {
                 </button>
               )}
             </form>
-            {searchQuery && (
+            {interactiveSearchQuery && (
               <p className="schedule-search-result" role="status">
-                「{searchQuery}」の検索結果
+                「{interactiveSearchQuery}」で絞り込み中
               </p>
             )}
           </search>
@@ -1894,7 +1916,7 @@ export function App() {
                         : "対象の映画館がありません"}
                   </strong>
                   <p>
-                    {searchQuery &&
+                    {interactiveSearchQuery &&
                       (view === "schedule" || view === "movies")
                       ? "作品名や映画館名を変えて検索してください。"
                       : view === "cinemas"
@@ -1950,7 +1972,7 @@ export function App() {
                           href={hashForAppView("movies", {
                             date: selectedDate,
                             movie: movie.preferenceKey,
-                            query: searchQuery,
+                            query: normalizedSearchQuery,
                           })}
                           onClick={navigateHashLink}
                           aria-current={
