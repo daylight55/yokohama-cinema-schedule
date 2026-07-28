@@ -40,7 +40,7 @@ interface ActiveCinemaWindow {
   active_until: string | null;
 }
 
-type SourceBatch = 0 | 1 | 2;
+export type SourceBatch = 0 | 1 | 2;
 
 const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
   0: new Set([
@@ -114,6 +114,14 @@ export function parseSourceBatch(value: string | null): SourceBatch | null {
   if (value === "1") return 1;
   if (value === "2") return 2;
   return null;
+}
+
+export function sourceIdsForBatch(batch: SourceBatch): string[] {
+  return [...SOURCE_BATCH_IDS[batch]];
+}
+
+export function configuredSourceIds(): string[] {
+  return buildSources().map((source) => source.id);
 }
 
 export async function refreshBatch(
