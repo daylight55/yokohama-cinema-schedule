@@ -9,6 +9,11 @@ interface CinemaRow {
   address: string;
   latitude: number;
   longitude: number;
+  street_view_latitude: number | null;
+  street_view_longitude: number | null;
+  street_view_heading: number | null;
+  street_view_pitch: number;
+  street_view_fov: number;
   source_url: string;
   active_until: string | null;
   approval: Cinema["approval"];
@@ -29,7 +34,9 @@ export async function listActiveCinemas(
     .prepare(
       `SELECT
         id, name, short_name, area, area_label, address, latitude, longitude,
-         source_url, active_until, approval, nearest_station_id,
+         street_view_latitude, street_view_longitude, street_view_heading,
+         street_view_pitch, street_view_fov, source_url, active_until, approval,
+         nearest_station_id,
          station_walk_minutes, station_walk_distance_meters
       FROM cinemas
       WHERE ${approvalClause}
@@ -48,6 +55,11 @@ export async function listActiveCinemas(
     address: row.address,
     latitude: row.latitude,
     longitude: row.longitude,
+    streetViewLatitude: row.street_view_latitude ?? row.latitude,
+    streetViewLongitude: row.street_view_longitude ?? row.longitude,
+    streetViewHeading: row.street_view_heading,
+    streetViewPitch: row.street_view_pitch ?? 0,
+    streetViewFov: row.street_view_fov ?? 95,
     sourceUrl: row.source_url,
     activeUntil: row.active_until,
     approval: row.approval,

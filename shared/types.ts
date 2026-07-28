@@ -19,6 +19,11 @@ export interface Cinema {
   address: string;
   latitude: number;
   longitude: number;
+  streetViewLatitude?: number;
+  streetViewLongitude?: number;
+  streetViewHeading?: number | null;
+  streetViewPitch?: number;
+  streetViewFov?: number;
   sourceUrl: string;
   activeUntil: string | null;
   approval: SourceApproval;

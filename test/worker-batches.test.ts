@@ -2,23 +2,30 @@ import { describe, expect, it } from "vitest";
 import { CINEMAS } from "../shared/cinemas";
 import {
   configuredSourceIds,
+  isFailedSourceRetryCron,
   normalizeShowingMovieTitle,
   parseSourceBatch,
+  sourceDateOutcomes,
   sourceIdsForBatch,
   sourceBatchForCron,
 } from "../worker/src/index";
 
 describe("worker source batches", () => {
   it("uses the first batch for minute 7 cron triggers", () => {
-    expect(sourceBatchForCron("7 0,3,6,9,12,15,21 * * *")).toBe(0);
+    expect(sourceBatchForCron("7 21 * * *")).toBe(0);
   });
 
   it("uses the second batch for minute 17 cron triggers", () => {
-    expect(sourceBatchForCron("17 0,3,6,9,12,15,21 * * *")).toBe(1);
+    expect(sourceBatchForCron("17 21 * * *")).toBe(1);
   });
 
   it("uses third batch for minute 27 cron triggers", () => {
-    expect(sourceBatchForCron("27 0,3,6,9,12,15,21 * * *")).toBe(2);
+    expect(sourceBatchForCron("27 21 * * *")).toBe(2);
+  });
+
+  it("uses minute 47 only for failed-source retry", () => {
+    expect(isFailedSourceRetryCron("47 3 * * *")).toBe(true);
+    expect(isFailedSourceRetryCron("7 21 * * *")).toBe(false);
   });
 
   it("accepts only explicit manual batch values", () => {
@@ -58,5 +65,37 @@ describe("worker source batches", () => {
     expect(showing.title).toBe("テスト映画");
     expect(showing.format).toBe("4DX / 字幕");
     expect(showing.movieKey).toBe("movie-1");
+  });
+
+  it("reports each requested date as published, not published, or failed", () => {
+    const showing = {
+      sourceId: "test-source",
+      cinemaId: "test-cinema",
+      movieKey: "movie-1",
+      title: "テスト映画",
+      imageUrl: null,
+      startsAt: "2026-07-28T01:00:00.000Z",
+      endsAt: null,
+      screen: null,
+      format: null,
+      bookingUrl: "https://example.com",
+      purchasable: null,
+    };
+    const outcomes = sourceDateOutcomes(
+      ["2026-07-28", "2026-07-29", "2026-07-30"],
+      [showing],
+      new Map([["2026-07-30", "HTTP 503"]]),
+    );
+
+    expect(outcomes).toEqual([
+      { date: "2026-07-28", status: "published", count: 1 },
+      { date: "2026-07-29", status: "not_published", count: 0 },
+      {
+        date: "2026-07-30",
+        status: "error",
+        count: 0,
+        error: "HTTP 503",
+      },
+    ]);
   });
 });

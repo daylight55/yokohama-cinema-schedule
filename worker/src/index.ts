@@ -32,7 +32,19 @@ interface Env {
 
 interface Source {
   id: string;
-  fetch: (dates: string[]) => Promise<NormalizedShowing[]>;
+  fetch: (dates: string[]) => Promise<SourceFetchResult>;
+}
+
+interface SourceFetchResult {
+  showings: NormalizedShowing[];
+  dateErrors: Map<string, string>;
+}
+
+export interface SourceDateOutcome {
+  date: string;
+  status: "published" | "not_published" | "error";
+  count: number;
+  error?: string;
 }
 
 interface ActiveCinemaWindow {
@@ -70,13 +82,19 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    ctx.waitUntil(refreshBatch(env, sourceBatchForCron(controller.cron)));
+    ctx.waitUntil(
+      isFailedSourceRetryCron(controller.cron)
+        ? refreshFailedSources(env)
+        : refreshBatch(env, sourceBatchForCron(controller.cron)),
+    );
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/health") {
-      return Response.json({ ok: true });
+      return Response.json(await collectionHealth(env), {
+        headers: { "cache-control": "no-store" },
+      });
     }
     if (request.method !== "POST" || url.pathname !== "/refresh") {
       return new Response("Not found", { status: 404 });
@@ -109,6 +127,34 @@ export function sourceBatchForCron(cron: string): SourceBatch {
   return cron.trimStart().startsWith("17 ") ? 1 : 0;
 }
 
+export function isFailedSourceRetryCron(cron: string): boolean {
+  return cron.trimStart().startsWith("47 ");
+}
+
+export function sourceDateOutcomes(
+  dates: string[],
+  showings: NormalizedShowing[],
+  dateErrors: ReadonlyMap<string, string> = new Map(),
+): SourceDateOutcome[] {
+  const counts = new Map(dates.map((date) => [date, 0]));
+  for (const showing of showings) {
+    const date = todayInJst(new Date(showing.startsAt));
+    if (counts.has(date)) counts.set(date, (counts.get(date) ?? 0) + 1);
+  }
+  return dates.map((date) => {
+    const error = dateErrors.get(date);
+    if (error) {
+      return { date, status: "error", count: 0, error };
+    }
+    const count = counts.get(date) ?? 0;
+    return {
+      date,
+      status: count > 0 ? "published" : "not_published",
+      count,
+    };
+  });
+}
+
 export function parseSourceBatch(value: string | null): SourceBatch | null {
   if (value === "0") return 0;
   if (value === "1") return 1;
@@ -127,6 +173,7 @@ export function configuredSourceIds(): string[] {
 export async function refreshBatch(
   env: Env,
   batch: SourceBatch,
+  onlySourceIds?: ReadonlySet<string>,
 ): Promise<{
   startedAt: string;
   completedAt: string;
@@ -149,8 +196,10 @@ export async function refreshBatch(
     dates[0],
   );
   const sourceIds = SOURCE_BATCH_IDS[batch];
-  const sources = buildSources().filter((source) =>
-    sourceIds.has(source.id),
+  const sources = buildSources().filter(
+    (source) =>
+      sourceIds.has(source.id) &&
+      (!onlySourceIds || onlySourceIds.has(source.id)),
   );
   const results: Array<{
     sourceId: string;
@@ -170,28 +219,61 @@ export async function refreshBatch(
 
     const sourceStartedAt = new Date().toISOString();
     try {
+      const fetched = await source.fetch(sourceDates);
       const showings = deduplicate(
-        (await source.fetch(sourceDates)).map(normalizeShowingMovieTitle),
+        fetched.showings.map(normalizeShowingMovieTitle),
       );
       if (showings.length === 0) {
-        throw new Error("上映回を1件も取得できませんでした");
+        const detail = [...fetched.dateErrors.entries()]
+          .map(([date, error]) => `${date}: ${error}`)
+          .join(" / ");
+        throw new Error(
+          detail || "上映回を1件も取得できませんでした",
+        );
       }
-      await replaceSourceWindow(env.DB, source.id, sourceDates, showings);
+      const dateOutcomes = sourceDateOutcomes(
+        sourceDates,
+        showings,
+        fetched.dateErrors,
+      );
+      const publishedDates = dateOutcomes
+        .filter((outcome) => outcome.status === "published")
+        .map((outcome) => outcome.date);
+      await replaceSourceDates(
+        env.DB,
+        source.id,
+        publishedDates,
+        showings,
+      );
+      await recordDateOutcomes(
+        env.DB,
+        source.id,
+        sourceStartedAt,
+        dateOutcomes,
+      );
+      const dateErrorMessage = dateOutcomes
+        .filter((outcome) => outcome.status === "error")
+        .map((outcome) => `${outcome.date}: ${outcome.error}`)
+        .join(" / ");
+      const status = dateErrorMessage ? "failed" : "success";
       await recordRun(
         env.DB,
         source.id,
         sourceStartedAt,
-        "success",
+        status,
         showings.length,
+        dateErrorMessage || null,
       );
       results.push({
         sourceId: source.id,
-        status: "success",
+        status,
         count: showings.length,
+        ...(dateErrorMessage ? { error: dateErrorMessage } : {}),
       });
       console.log("Schedule source refreshed", {
         sourceId: source.id,
         showingCount: showings.length,
+        dateOutcomes,
         startedAt: sourceStartedAt,
       });
     } catch (error) {
@@ -208,6 +290,17 @@ export async function refreshBatch(
         "failed",
         0,
         message,
+      );
+      await recordDateOutcomes(
+        env.DB,
+        source.id,
+        sourceStartedAt,
+        sourceDates.map((date) => ({
+          date,
+          status: "error",
+          count: 0,
+          error: message,
+        })),
       );
       results.push({
         sourceId: source.id,
@@ -233,6 +326,28 @@ export async function refreshBatch(
     failed: summary.failed,
   });
   return summary;
+}
+
+async function refreshFailedSources(env: Env): Promise<void> {
+  const failedRows = await env.DB
+    .prepare("SELECT source_id FROM source_health WHERE status = 'error'")
+    .all<{ source_id: string }>();
+  const failedSourceIds = new Set(
+    (failedRows.results ?? []).map((row) => row.source_id),
+  );
+  if (failedSourceIds.size === 0) {
+    console.log("No failed schedule sources to retry");
+    return;
+  }
+  for (const batch of [0, 1, 2] as const) {
+    if (
+      sourceIdsForBatch(batch).some((sourceId) =>
+        failedSourceIds.has(sourceId),
+      )
+    ) {
+      await refreshBatch(env, batch, failedSourceIds);
+    }
+  }
 }
 
 function buildSources(): Source[] {
@@ -308,38 +423,35 @@ function buildSources(): Source[] {
   ];
 }
 
-async function fetchAeon(dates: string[]): Promise<NormalizedShowing[]> {
+async function fetchAeon(dates: string[]): Promise<SourceFetchResult> {
   const url = new URL(
     "https://theater.aeoncinema.com/schedule/v2/data/minatomirai/schedule.json",
   );
   url.searchParams.set("v", timestampForCacheBuster());
   const response = await checkedFetch(url);
-  return parseAeonSchedule(await response.json(), new Set(dates));
+  return successfulFetch(
+    parseAeonSchedule(await response.json(), new Set(dates)),
+  );
 }
 
-async function fetchMovil(dates: string[]): Promise<NormalizedShowing[]> {
+async function fetchMovil(dates: string[]): Promise<SourceFetchResult> {
   const movieImages = await fetchOptionalMovieImages(
     "https://109cinemas.net/nowshowing/",
     parseMovilMovieImages,
   );
-  const showings: NormalizedShowing[] = [];
-  for (const date of dates) {
+  return fetchDatesIndependently(dates, async (date) => {
     const url = `https://109cinemas.net/movil/schedules/${compactDate(date)}.html?theater_code=72`;
     const response = await checkedFetch(url);
-    showings.push(
-      ...parseMovilSchedule(await response.text(), date, movieImages),
-    );
-  }
-  return showings;
+    return parseMovilSchedule(await response.text(), date, movieImages);
+  });
 }
 
 async function fetchTohoKamiooka(
   dates: string[],
-): Promise<NormalizedShowing[]> {
-  const showings: NormalizedShowing[] = [];
+): Promise<SourceFetchResult> {
   const bookingUrl =
     "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do";
-  for (const date of dates) {
+  return fetchDatesIndependently(dates, async (date) => {
     const url = new URL(
       "https://api2.tohotheater.jp/api/schedule/v1/schedule/066/TNPI3050J02",
     );
@@ -357,42 +469,35 @@ async function fetchTohoKamiooka(
         referer: "https://hlo.tohotheater.jp/",
       },
     });
-    showings.push(
-      ...parseTohoSchedule(
-        await response.json(),
-        date,
-        "toho-kamiooka",
-        "toho-kamiooka",
-        bookingUrl,
-      ),
+    return parseTohoSchedule(
+      await response.json(),
+      date,
+      "toho-kamiooka",
+      "toho-kamiooka",
+      bookingUrl,
     );
-  }
-  return showings;
+  });
 }
 
-async function fetchUnited(dates: string[]): Promise<NormalizedShowing[]> {
+async function fetchUnited(dates: string[]): Promise<SourceFetchResult> {
   const decoder = new TextDecoder("shift_jis");
   const movieImages = await fetchOptionalMovieImages(
     "https://www.unitedcinemas.jp/minatomirai/film.php",
     parseUnitedMovieImages,
     async (response) => decoder.decode(await response.arrayBuffer()),
   );
-  const showings: NormalizedShowing[] = [];
-  for (const date of dates) {
+  return fetchDatesIndependently(dates, async (date) => {
     const url = `https://www.unitedcinemas.jp/minatomirai/daily.php?date=${date}`;
     const response = await checkedFetch(url);
-    showings.push(
-      ...parseUnitedSchedule(
-        decoder.decode(await response.arrayBuffer()),
-        date,
-        movieImages,
-      ),
+    return parseUnitedSchedule(
+      decoder.decode(await response.arrayBuffer()),
+      date,
+      movieImages,
     );
-  }
-  return showings;
+  });
 }
 
-async function fetchKino(dates: string[]): Promise<NormalizedShowing[]> {
+async function fetchKino(dates: string[]): Promise<SourceFetchResult> {
   const [scheduleResponse, movieImages] = await Promise.all([
     checkedFetch("https://kinocinema.jp/minatomirai/"),
     fetchOptionalMovieImages(
@@ -400,16 +505,18 @@ async function fetchKino(dates: string[]): Promise<NormalizedShowing[]> {
       parseKinoMovieImages,
     ),
   ]);
-  return parseKinoSchedule(
-    await scheduleResponse.text(),
-    dates[0],
-    movieImages,
+  return successfulFetch(
+    parseKinoSchedule(
+      await scheduleResponse.text(),
+      dates[0],
+      movieImages,
+    ),
   );
 }
 
 async function fetchNovecento(
   dates: string[],
-): Promise<NormalizedShowing[]> {
+): Promise<SourceFetchResult> {
   const scheduleUrl =
     "https://cinema1900.wixsite.com/home/filmtheater1900";
   const response = await checkedFetch(scheduleUrl);
@@ -417,7 +524,7 @@ async function fetchNovecento(
   if (images.length === 0) {
     throw new Error("ノヴェチェントの週間スケジュール画像を取得できませんでした");
   }
-  return parseReviewedNovecentoSchedule(images, dates);
+  return successfulFetch(parseReviewedNovecentoSchedule(images, dates));
 }
 
 async function fetchOptionalMovieImages(
@@ -444,25 +551,21 @@ async function fetchEigaland(
   cinemaId: string,
   webKey: string,
   bookingUrl: string,
-): Promise<NormalizedShowing[]> {
-  const showings: NormalizedShowing[] = [];
-  for (const date of dates) {
+): Promise<SourceFetchResult> {
+  return fetchDatesIndependently(dates, async (date) => {
     const url = new URL(
       "https://schedule.eigaland.com/api/schedulePage/show/listByCinemaIdAndDate",
     );
     url.searchParams.set("webKey", webKey);
     url.searchParams.set("date", date);
     const response = await checkedFetch(url);
-    showings.push(
-      ...parseEigalandSchedule(
-        await response.json(),
-        sourceId,
-        cinemaId,
-        bookingUrl,
-      ),
+    return parseEigalandSchedule(
+      await response.json(),
+      sourceId,
+      cinemaId,
+      bookingUrl,
     );
-  }
-  return showings;
+  });
 }
 
 async function fetchTjoy(
@@ -471,7 +574,7 @@ async function fetchTjoy(
   cinemaId: string,
   theaterUrl: string,
   theaterId: string,
-): Promise<NormalizedShowing[]> {
+): Promise<SourceFetchResult> {
   const initial = await checkedFetch(theaterUrl);
   const html = await initial.text();
   const setCookie = initial.headers.get("set-cookie") ?? "";
@@ -489,8 +592,7 @@ async function fetchTjoy(
     setCookie.match(/(?:^|,\s*)csrfToken=([^;,]+)/)?.[1];
   if (!csrf) throw new Error("T-JoyのCSRFトークンを取得できませんでした");
 
-  const days: NormalizedShowing[] = [];
-  for (const date of dates) {
+  return fetchDatesIndependently(dates, async (date) => {
     const body = new URLSearchParams({
       data: JSON.stringify({ date, theaterId }),
       _csrfToken: csrf,
@@ -508,45 +610,80 @@ async function fetchTjoy(
         body,
       },
     );
-    days.push(
-      ...parseTjoySchedule(
-        await response.text(),
-        date,
-        sourceId,
-        cinemaId,
-        theaterUrl,
-      ),
+    return parseTjoySchedule(
+      await response.text(),
+      date,
+      sourceId,
+      cinemaId,
+      theaterUrl,
     );
+  });
+}
+
+function successfulFetch(
+  showings: NormalizedShowing[],
+): SourceFetchResult {
+  return { showings, dateErrors: new Map() };
+}
+
+async function fetchDatesIndependently(
+  dates: string[],
+  fetchDate: (date: string) => Promise<NormalizedShowing[]>,
+): Promise<SourceFetchResult> {
+  const showings: NormalizedShowing[] = [];
+  const dateErrors = new Map<string, string>();
+  for (const date of dates) {
+    try {
+      showings.push(...(await fetchDate(date)));
+    } catch (error) {
+      dateErrors.set(date, safeError(error));
+    }
   }
-  return days;
+  return { showings, dateErrors };
 }
 
 async function checkedFetch(
   input: string | URL,
   init: RequestInit = {},
 ): Promise<Response> {
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  const host = new URL(input.toString()).hostname;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const headers = new Headers(init.headers);
     headers.set("user-agent", USER_AGENT);
     headers.set("accept-language", "ja,en;q=0.5");
-    const response = await fetch(input, {
-      ...init,
-      headers,
-      redirect: "follow",
-    });
+    let response: Response;
+    try {
+      response = await fetch(input, {
+        ...init,
+        headers,
+        redirect: "follow",
+      });
+    } catch (error) {
+      if (attempt < 2) {
+        await delay(attempt === 0 ? 1_000 : 3_000);
+        continue;
+      }
+      throw new Error(`${host}: ${safeError(error)}`);
+    }
     if (response.ok) return response;
     if (
-      attempt === 0 &&
-      (response.status === 429 || response.status >= 500)
+      attempt < 2 &&
+      (response.status === 403 ||
+        response.status === 429 ||
+        response.status >= 500)
     ) {
-      await delay(300);
+      const retryAfterSeconds = Number(response.headers.get("retry-after"));
+      const retryDelay = Number.isFinite(retryAfterSeconds)
+        ? Math.min(Math.max(retryAfterSeconds * 1_000, 1_000), 10_000)
+        : attempt === 0
+          ? 1_000
+          : 3_000;
+      await delay(retryDelay);
       continue;
     }
-    throw new Error(
-      `${new URL(input.toString()).hostname}: HTTP ${response.status}`,
-    );
+    throw new Error(`${host}: HTTP ${response.status}`);
   }
-  throw new Error(`${new URL(input.toString()).hostname}: fetch failed`);
+  throw new Error(`${host}: fetch failed`);
 }
 
 function delay(milliseconds: number): Promise<void> {
@@ -561,9 +698,11 @@ async function seedCinemas(db: D1Database): Promise<void> {
         .prepare(
           `INSERT INTO cinemas (
             id, name, short_name, area, area_label, address, latitude, longitude,
-            source_url, active_until, approval, nearest_station_id,
-            station_walk_minutes, station_walk_distance_meters, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            street_view_latitude, street_view_longitude, street_view_heading,
+            street_view_pitch, street_view_fov, source_url, active_until,
+            approval, nearest_station_id, station_walk_minutes,
+            station_walk_distance_meters, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             short_name = excluded.short_name,
@@ -584,6 +723,11 @@ async function seedCinemas(db: D1Database): Promise<void> {
           cinema.address,
           cinema.latitude,
           cinema.longitude,
+          cinema.streetViewLatitude,
+          cinema.streetViewLongitude,
+          cinema.streetViewHeading,
+          cinema.streetViewPitch,
+          cinema.streetViewFov,
           cinema.sourceUrl,
           cinema.activeUntil,
           cinema.approval,
@@ -614,31 +758,37 @@ async function listActiveCinemaWindows(
   );
 }
 
-async function replaceSourceWindow(
+async function replaceSourceDates(
   db: D1Database,
   sourceId: string,
   dates: string[],
   showings: NormalizedShowing[],
 ): Promise<void> {
+  if (dates.length === 0) return;
   const fetchedAt = new Date().toISOString();
-  const start = `${dates[0]}T00:00:00+09:00`;
-  const lastDate = dates.at(-1) ?? dates[0];
-  const dayAfter = new Date(
-    new Date(`${lastDate}T00:00:00+09:00`).getTime() + 86_400_000,
-  ).toISOString();
+  const dateSet = new Set(dates);
+  const publishedShowings = showings.filter((showing) =>
+    dateSet.has(todayInJst(new Date(showing.startsAt))),
+  );
   const statements = [
-    db
-      .prepare(
-        `DELETE FROM showing_search
-         WHERE source_id = ? AND schedule_date >= ? AND schedule_date <= ?`,
-      )
-      .bind(sourceId, dates[0], lastDate),
-    db
-      .prepare(
-        "DELETE FROM showings WHERE source_id = ? AND starts_at >= ? AND starts_at < ?",
-      )
-      .bind(sourceId, new Date(start).toISOString(), dayAfter),
-    ...showings.map((showing) => {
+    ...dates.flatMap((date) => {
+      const start = new Date(`${date}T00:00:00+09:00`);
+      const dayAfter = new Date(start.getTime() + 86_400_000);
+      return [
+        db
+          .prepare(
+            `DELETE FROM showing_search
+             WHERE source_id = ? AND schedule_date = ?`,
+          )
+          .bind(sourceId, date),
+        db
+          .prepare(
+            "DELETE FROM showings WHERE source_id = ? AND starts_at >= ? AND starts_at < ?",
+          )
+          .bind(sourceId, start.toISOString(), dayAfter.toISOString()),
+      ];
+    }),
+    ...publishedShowings.map((showing) => {
       const id = showingId(showing);
       return db
         .prepare(
@@ -664,7 +814,7 @@ async function replaceSourceWindow(
           fetchedAt,
       );
     }),
-    ...showings.map((showing) => {
+    ...publishedShowings.map((showing) => {
       const cinema = CINEMAS.find((candidate) => candidate.id === showing.cinemaId);
       return db
         .prepare(
@@ -685,6 +835,132 @@ async function replaceSourceWindow(
     }),
   ];
   await db.batch(statements);
+}
+
+async function recordDateOutcomes(
+  db: D1Database,
+  sourceId: string,
+  attemptedAt: string,
+  outcomes: SourceDateOutcome[],
+): Promise<void> {
+  if (outcomes.length === 0) return;
+  await db.batch(
+    outcomes.map((outcome) =>
+      db
+        .prepare(
+          `INSERT INTO source_date_health (
+            source_id, schedule_date, last_attempt_at, last_success_at,
+            status, showing_count, error_message
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(source_id, schedule_date) DO UPDATE SET
+            last_attempt_at = excluded.last_attempt_at,
+            last_success_at = CASE
+              WHEN excluded.status != 'error' THEN excluded.last_success_at
+              ELSE source_date_health.last_success_at
+            END,
+            status = excluded.status,
+            showing_count = excluded.showing_count,
+            error_message = excluded.error_message`,
+        )
+        .bind(
+          sourceId,
+          outcome.date,
+          attemptedAt,
+          outcome.status === "error" ? null : attemptedAt,
+          outcome.status,
+          outcome.count,
+          outcome.error ?? null,
+        ),
+    ),
+  );
+}
+
+async function collectionHealth(env: Env): Promise<{
+  ok: boolean;
+  generatedAt: string;
+  window: { from: string; to: string; days: number };
+  summary: {
+    published: number;
+    notPublished: number;
+    errors: number;
+    missing: number;
+  };
+  cinemas: Array<{
+    cinemaId: string;
+    dates: Array<{
+      date: string;
+      status: SourceDateOutcome["status"] | "missing";
+      count: number;
+      lastAttemptAt: string | null;
+      error?: string;
+    }>;
+  }>;
+}> {
+  const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
+  const dates = dateRange(todayInJst(), days);
+  const activeCinemaWindows = await listActiveCinemaWindows(
+    env.DB,
+    dates[0],
+  );
+  const rows = await env.DB
+    .prepare(
+      `SELECT
+        source_id, schedule_date, last_attempt_at, status, showing_count,
+        error_message
+      FROM source_date_health
+      WHERE schedule_date >= ? AND schedule_date <= ?`,
+    )
+    .bind(dates[0], dates.at(-1) ?? dates[0])
+    .all<{
+      source_id: string;
+      schedule_date: string;
+      last_attempt_at: string;
+      status: SourceDateOutcome["status"];
+      showing_count: number;
+      error_message: string | null;
+    }>();
+  const rowBySourceAndDate = new Map(
+    (rows.results ?? []).map((row) => [
+      `${row.source_id}|${row.schedule_date}`,
+      row,
+    ]),
+  );
+  const cinemas = [...activeCinemaWindows.values()].map((cinema) => ({
+    cinemaId: cinema.id,
+    dates: activeDatesForCinema(dates, cinema.active_until).map((date) => {
+      const row = rowBySourceAndDate.get(`${cinema.id}|${date}`);
+      return {
+        date,
+        status: (row?.status ?? "missing") as
+          | SourceDateOutcome["status"]
+          | "missing",
+        count: Number(row?.showing_count ?? 0),
+        lastAttemptAt: row?.last_attempt_at ?? null,
+        ...(row?.error_message ? { error: row.error_message } : {}),
+      };
+    }),
+  }));
+  const dateStatuses = cinemas.flatMap((cinema) => cinema.dates);
+  const summary = {
+    published: dateStatuses.filter((date) => date.status === "published")
+      .length,
+    notPublished: dateStatuses.filter(
+      (date) => date.status === "not_published",
+    ).length,
+    errors: dateStatuses.filter((date) => date.status === "error").length,
+    missing: dateStatuses.filter((date) => date.status === "missing").length,
+  };
+  return {
+    ok: summary.errors === 0 && summary.missing === 0,
+    generatedAt: new Date().toISOString(),
+    window: {
+      from: dates[0],
+      to: dates.at(-1) ?? dates[0],
+      days: dates.length,
+    },
+    summary,
+    cinemas,
+  };
 }
 
 async function recordRun(
