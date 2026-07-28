@@ -8,6 +8,7 @@ import {
   findCurrentTimeMarkerIndex,
   buildGoogleMapsDirectionsUrl,
   getDateSwipeDirection,
+  getScheduleMoviePresentation,
   groupByMovie,
   groupByScheduleTime,
   groupScheduleTimeBuckets,
@@ -16,6 +17,7 @@ import {
   isShowingUnreachable,
   hashForAppView,
   normalizeMovieTitle,
+  scheduleProgramClassName,
   scheduleTimeSlot,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
@@ -299,6 +301,29 @@ describe("schedule filtering", () => {
 
   it("does not infer unreachable without a saved travel time", () => {
     expect(isShowingUnreachable(showing(), now, new Map())).toBe(false);
+  });
+
+  it("keeps a starred movie presentation reachable", () => {
+    const presentation = getScheduleMoviePresentation(
+      [
+        showing({
+          startsAt: "2026-07-24T09:45:00.000Z",
+        }),
+      ],
+      now,
+      new Map([[route.cinemaId, route]]),
+    );
+
+    expect(presentation.isReachable).toBe(true);
+    expect(presentation.showings[0]?.isReachable).toBe(true);
+    expect(
+      scheduleProgramClassName({
+        isPast: presentation.isPast,
+        isReachable: presentation.isReachable,
+        isStarred: true,
+        isLinked: false,
+      }),
+    ).toBe("program-block reachable starred");
   });
 
   it("filters by area", () => {

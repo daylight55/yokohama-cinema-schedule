@@ -168,6 +168,65 @@ export function isShowingUnreachable(
   return startsInMinutes >= 0 && startsInMinutes < route.durationMinutes;
 }
 
+export interface ScheduleMoviePresentation {
+  isPast: boolean;
+  isReachable: boolean;
+  showings: Array<{
+    showing: Showing;
+    isPast: boolean;
+    isReachable: boolean;
+    isUnreachable: boolean;
+  }>;
+}
+
+export function scheduleProgramClassName({
+  isPast,
+  isReachable,
+  isStarred,
+  isLinked,
+}: {
+  isPast: boolean;
+  isReachable: boolean;
+  isStarred: boolean;
+  isLinked: boolean;
+}): string {
+  return [
+    "program-block",
+    isPast ? "past" : "",
+    isReachable ? "reachable" : "",
+    isStarred ? "starred" : "",
+    isLinked ? "linked" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function getScheduleMoviePresentation(
+  showings: Showing[],
+  now: Date,
+  routeByCinema: Map<string, RouteEstimate>,
+): ScheduleMoviePresentation {
+  const presentationShowings = showings.map((showing) => {
+    const isPast = isShowingPast(showing, now);
+    return {
+      showing,
+      isPast,
+      isReachable:
+        !isPast && isShowingReachable(showing, now, routeByCinema),
+      isUnreachable:
+        !isPast && isShowingUnreachable(showing, now, routeByCinema),
+    };
+  });
+
+  return {
+    isPast: presentationShowings.every(({ isPast }) => isPast),
+    isReachable: presentationShowings.some(
+      ({ isReachable }) => isReachable,
+    ),
+    showings: presentationShowings,
+  };
+}
+
 export function buildGoogleMapsDirectionsUrl(
   origin: { latitude: number; longitude: number },
   destination: Pick<Cinema, "name" | "address">,
