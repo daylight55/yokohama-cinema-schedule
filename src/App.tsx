@@ -1646,7 +1646,7 @@ export function App() {
               onClick={closeNavigation}
             >
               <BuildingsIcon size={20} aria-hidden="true" />
-              映画館
+              横浜駅近くの映画館一覧
             </a>
             <a
               href={hashForAppView("planner", {
