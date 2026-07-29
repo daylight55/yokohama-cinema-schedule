@@ -71,6 +71,7 @@ import {
   getAppPageScrollTarget,
   getScheduleMoviePresentation,
   hashForAppView,
+  listMovieShowingDates,
   normalizeMovieTitle,
   parseColorTheme,
   resolveColorTheme,
@@ -202,6 +203,9 @@ export function App() {
       ? initialHashState.date
       : today;
   const [selectedDate, setSelectedDate] = useState(initialScheduleDate);
+  const [showAllMovieDates, setShowAllMovieDates] = useState(
+    initialHashState.view === "movies" && initialHashState.date === null,
+  );
   const [searchDraft, setSearchDraft] = useState(initialHashState.query);
   const normalizedSearchQuery = normalizeSearchQuery(searchDraft);
   const interactiveSearchQuery = useDeferredValue(normalizedSearchQuery);
@@ -273,6 +277,8 @@ export function App() {
   const [routeState, setRouteState] = useState<
     "idle" | "loading" | "ready" | "error"
   >("idle");
+  const selectedMovieListDate =
+    view === "movies" && showAllMovieDates ? null : selectedDate;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -325,7 +331,7 @@ export function App() {
   useLayoutEffect(() => {
     const pageScrollKey =
       view === "schedule" || view === "movies"
-        ? `${view}:${selectedDate}:${selectedMovieKey ?? ""}`
+        ? `${view}:${selectedMovieListDate ?? "all"}:${selectedMovieKey ?? ""}`
         : view === "planner"
           ? `${view}:${plannerDate}`
           : view;
@@ -364,7 +370,14 @@ export function App() {
     }
     // The current-time layout effect handles today's schedule after data renders.
     return undefined;
-  }, [plannerDate, selectedDate, selectedMovieKey, today, view]);
+  }, [
+    plannerDate,
+    selectedDate,
+    selectedMovieKey,
+    selectedMovieListDate,
+    today,
+    view,
+  ]);
 
   useLayoutEffect(() => {
     const pendingAnchor = pendingCinemaAnchorRef.current;
@@ -397,6 +410,8 @@ export function App() {
       const nextView = hashState.view;
       const usesWeeklyDate =
         nextView === "schedule" || nextView === "movies";
+      const nextShowAllMovieDates =
+        nextView === "movies" && hashState.date === null;
       const nextScheduleDate =
         hashState.date && dates.includes(hashState.date)
           ? hashState.date
@@ -409,11 +424,14 @@ export function App() {
           : today;
       const nextMovieKey = usesWeeklyDate ? hashState.movie : null;
       const canonicalHash = hashForAppView(nextView, {
-        date: usesWeeklyDate
-          ? nextScheduleDate
-          : nextView === "planner"
-            ? nextPlannerDate
-            : null,
+        date:
+          nextView === "movies" && nextShowAllMovieDates
+            ? null
+            : usesWeeklyDate
+              ? nextScheduleDate
+              : nextView === "planner"
+                ? nextPlannerDate
+                : null,
         movie: nextMovieKey,
         query: usesWeeklyDate ? hashState.query : null,
       });
@@ -422,6 +440,7 @@ export function App() {
       }
       setView(nextView);
       setSelectedDate(nextScheduleDate);
+      setShowAllMovieDates(nextShowAllMovieDates);
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
       setPlannerDate(nextPlannerDate);
       setSelectedMovieKey(nextMovieKey);
@@ -439,6 +458,9 @@ export function App() {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams({ date: selectedDate });
+    if (view === "movies" && showAllMovieDates) {
+      params.set("through", dates[dates.length - 1]);
+    }
     fetch(`/api/showings?${params.toString()}`, {
       signal: controller.signal,
       headers: { accept: "application/json" },
@@ -529,7 +551,7 @@ export function App() {
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [selectedDate]);
+  }, [dates, selectedDate, showAllMovieDates, view]);
 
   useEffect(() => {
     if (selectedDate !== dates[0]) setFutureOnly(false);
@@ -651,7 +673,7 @@ export function App() {
     ) {
       return;
     }
-    const deepLinkKey = `${view}:${selectedDate}:${selectedMovieKey}`;
+    const deepLinkKey = `${view}:${selectedMovieListDate ?? "all"}:${selectedMovieKey}`;
     if (lastMovieDeepLinkRef.current === deepLinkKey) return;
     const target = [
       ...document.querySelectorAll<HTMLElement>("[data-movie-key]"),
@@ -669,6 +691,7 @@ export function App() {
     movieList,
     schedule?.date,
     selectedDate,
+    selectedMovieListDate,
     selectedMovieKey,
     timeGroups,
     view,
@@ -1084,14 +1107,16 @@ export function App() {
   const submitScheduleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     window.location.hash = hashForAppView(view, {
-      date: selectedDate,
+      date: selectedMovieListDate,
       query: searchDraft,
     });
   };
 
   const clearScheduleSearch = () => {
     setSearchDraft("");
-    window.location.hash = hashForAppView(view, { date: selectedDate });
+    window.location.hash = hashForAppView(view, {
+      date: selectedMovieListDate,
+    });
   };
 
   const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
@@ -1127,12 +1152,17 @@ export function App() {
       touch.clientY - start.y,
     );
     if (!direction) return;
-    const currentIndex = dates.indexOf(selectedDate);
+    const swipeDates: Array<string | null> =
+      view === "movies" ? [null, ...dates] : dates;
+    const currentIndex =
+      view === "movies" && showAllMovieDates
+        ? 0
+        : swipeDates.indexOf(selectedDate);
     const nextIndex =
       direction === "next" ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex >= 0 && nextIndex < dates.length) {
+    if (nextIndex >= 0 && nextIndex < swipeDates.length) {
       window.location.hash = hashForAppView(view, {
-        date: dates[nextIndex],
+        date: swipeDates[nextIndex],
         query: normalizedSearchQuery,
       });
     }
@@ -1370,11 +1400,13 @@ export function App() {
   };
 
   const selectedDateLabel =
-    selectedDate === dates[0]
-      ? "今日"
-      : fullDateFormatter.format(
-          new Date(`${selectedDate}T12:00:00+09:00`),
-        );
+    view === "movies" && showAllMovieDates
+      ? "今後1週間"
+      : selectedDate === dates[0]
+        ? "今日"
+        : fullDateFormatter.format(
+            new Date(`${selectedDate}T12:00:00+09:00`),
+          );
 
   const renderScheduleTimeGroup = (
     group: (typeof timeGroups)[number],
@@ -1596,7 +1628,7 @@ export function App() {
             </a>
             <a
               href={hashForAppView("movies", {
-                date: selectedDate,
+                date: selectedMovieListDate,
                 movie: selectedMovieKey,
                 query: normalizedSearchQuery,
               })}
@@ -1789,6 +1821,22 @@ export function App() {
         {(view === "schedule" || view === "movies") && (
         <nav className="date-nav" aria-label="上映日">
           <div className="date-strip">
+            {view === "movies" && (
+              <a
+                className={
+                  showAllMovieDates
+                    ? "day-button active"
+                    : "day-button"
+                }
+                href={hashForAppView("movies", {
+                  query: normalizedSearchQuery,
+                })}
+                aria-current={showAllMovieDates ? "page" : undefined}
+              >
+                <span>すべて</span>
+                <small>1週間</small>
+              </a>
+            )}
             {dates.map((date, index) => {
               const displayDate = dayFormatter.format(
                 new Date(`${date}T12:00:00+09:00`),
@@ -1798,13 +1846,19 @@ export function App() {
                 <a
                   key={date}
                   className={
-                    date === selectedDate ? "day-button active" : "day-button"
+                    !showAllMovieDates && date === selectedDate
+                      ? "day-button active"
+                      : "day-button"
                   }
                   href={hashForAppView(view, {
                     date,
                     query: normalizedSearchQuery,
                   })}
-                  aria-current={date === selectedDate ? "date" : undefined}
+                  aria-current={
+                    !showAllMovieDates && date === selectedDate
+                      ? "date"
+                      : undefined
+                  }
                 >
                   <span>{index === 0 ? "今日" : monthDay}</span>
                   <small>{weekday}</small>
@@ -2076,6 +2130,14 @@ export function App() {
                 const status =
                   movieStatusByKey.get(movie.preferenceKey) ?? null;
                 const externalLinks = buildMovieExternalLinks(movie.title);
+                const showingDateLabels = listMovieShowingDates(
+                  movie.showings,
+                ).map((date) => {
+                  if (date === today) return "今日";
+                  return dayFormatter
+                    .format(new Date(`${date}T12:00:00+09:00`))
+                    .split(/[()]/)[0];
+                });
                 return (
                   <li
                     className={[
@@ -2113,7 +2175,7 @@ export function App() {
                       <strong>
                         <a
                           href={hashForAppView("movies", {
-                            date: selectedDate,
+                            date: selectedMovieListDate,
                             movie: movie.preferenceKey,
                             query: normalizedSearchQuery,
                           })}
@@ -2154,6 +2216,15 @@ export function App() {
                           />
                         </a>
                       </div>
+                      {showAllMovieDates && (
+                        <p
+                          className="movie-showing-dates"
+                          aria-label={`${movie.title}の上映日`}
+                        >
+                          <CalendarDotsIcon size={13} aria-hidden="true" />
+                          {showingDateLabels.join("・")}
+                        </p>
+                      )}
                     </div>
                     {schedule?.preferencesEnabled && (
                       <FavoriteButton

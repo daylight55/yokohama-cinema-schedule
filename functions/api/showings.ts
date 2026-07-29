@@ -1,4 +1,4 @@
-import { jstDateBounds, todayInJst } from "../../shared/date";
+import { addDays, jstDateBounds, todayInJst } from "../../shared/date";
 import {
   normalizeSearchQuery,
   searchMatchExpression,
@@ -35,19 +35,50 @@ interface HealthRow {
   last_updated_at: string | null;
 }
 
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_SHOWING_RANGE_DAYS = 7;
+
+function isValidIsoDate(value: string): boolean {
+  if (!ISO_DATE_PATTERN.test(value)) return false;
+  try {
+    return addDays(value, 0) === value;
+  } catch {
+    return false;
+  }
+}
+
+export function resolveShowingDateRange(
+  searchParams: URLSearchParams,
+  today = todayInJst(),
+): { date: string; through: string } | null {
+  const date = searchParams.get("date") ?? today;
+  const through = searchParams.get("through") ?? date;
+  if (
+    !isValidIsoDate(date) ||
+    !isValidIsoDate(through) ||
+    through < date ||
+    through > addDays(date, MAX_SHOWING_RANGE_DAYS - 1)
+  ) {
+    return null;
+  }
+  return { date, through };
+}
+
 export const onRequestGet: PagesFunction<
   PagesEnv,
   string,
   AuthContextData
 > = async (context) => {
   const url = new URL(context.request.url);
-  const date = url.searchParams.get("date") ?? todayInJst();
+  const dateRange = resolveShowingDateRange(url.searchParams);
   const searchQuery = normalizeSearchQuery(url.searchParams.get("q"));
   const searchExpression = searchMatchExpression(searchQuery);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return Response.json({ error: "invalid_date" }, { status: 400 });
+  if (!dateRange) {
+    return Response.json({ error: "invalid_date_range" }, { status: 400 });
   }
-  const [from, to] = jstDateBounds(date);
+  const { date, through } = dateRange;
+  const [from] = jstDateBounds(date);
+  const [, to] = jstDateBounds(through);
   const publicOnly = context.env.PUBLIC_MODE === "true";
   const approvalClause = publicOnly
     ? "c.approval = 'approved'"
@@ -56,11 +87,11 @@ export const onRequestGet: PagesFunction<
     ? `AND s.id IN (
         SELECT showing_id
         FROM showing_search
-        WHERE schedule_date = ? AND search_text MATCH ?
+        WHERE schedule_date >= ? AND schedule_date <= ? AND search_text MATCH ?
       )`
     : "";
   const showingBindings = searchExpression
-    ? [from, to, date, date, searchExpression]
+    ? [from, to, date, date, through, searchExpression]
     : [from, to, date];
 
   const [showingResult, health, cinemas] = await Promise.all([

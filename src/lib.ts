@@ -1,4 +1,4 @@
-import { addDays, todayInJst } from "../shared/date";
+import { addDays, formatJstDate, todayInJst } from "../shared/date";
 import { moviePreferenceKey } from "../shared/movie";
 import { normalizeSearchQuery } from "../shared/search";
 import type {
@@ -411,6 +411,18 @@ export function groupByMovie(showings: Showing[]): Array<{
       const firstB = b.showings[0]?.startsAt ?? "";
       return firstA.localeCompare(firstB) || a.title.localeCompare(b.title, "ja");
     });
+}
+
+export function listMovieShowingDates(
+  showings: Array<Pick<Showing, "startsAt">>,
+): string[] {
+  return [
+    ...new Set(
+      showings.map((showing) =>
+        formatJstDate(new Date(showing.startsAt)),
+      ),
+    ),
+  ].sort();
 }
 
 export interface ScheduleTimeGroup {

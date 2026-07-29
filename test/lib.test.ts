@@ -22,6 +22,7 @@ import {
   isShowingReachable,
   isShowingUnreachable,
   hashForAppView,
+  listMovieShowingDates,
   normalizeMovieTitle,
   parseColorTheme,
   resolveColorTheme,
@@ -710,5 +711,17 @@ describe("movie grouping", () => {
       behavior: "instant",
       block: "start",
     });
+  });
+});
+
+describe("movie showing dates", () => {
+  it("returns unique JST dates in chronological order", () => {
+    expect(
+      listMovieShowingDates([
+        { startsAt: "2026-07-30T15:30:00.000Z" },
+        { startsAt: "2026-07-29T15:30:00.000Z" },
+        { startsAt: "2026-07-29T21:00:00.000Z" },
+      ]),
+    ).toEqual(["2026-07-30", "2026-07-31"]);
   });
 });
