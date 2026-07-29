@@ -331,10 +331,20 @@ describe("schedule filtering", () => {
     ).toBe(true);
   });
 
-  it("does not mark a showing less than ten minutes after arrival", () => {
+  it("marks a showing five minutes after estimated arrival", () => {
     expect(
       isShowingReachable(
-        showing({ startsAt: "2026-07-24T09:34:00.000Z" }),
+        showing({ startsAt: "2026-07-24T09:30:00.000Z" }),
+        now,
+        new Map([[route.cinemaId, route]]),
+      ),
+    ).toBe(true);
+  });
+
+  it("does not mark a showing less than five minutes after estimated arrival", () => {
+    expect(
+      isShowingReachable(
+        showing({ startsAt: "2026-07-24T09:29:00.000Z" }),
         now,
         new Map([[route.cinemaId, route]]),
       ),
@@ -346,14 +356,14 @@ describe("schedule filtering", () => {
 
     expect(
       getShowingReachability(
-        showing({ startsAt: "2026-07-24T09:34:00.000Z" }),
+        showing({ startsAt: "2026-07-24T09:29:00.000Z" }),
         now,
         routeByCinema,
       ),
     ).toBe("unreachable");
     expect(
       getShowingReachability(
-        showing({ startsAt: "2026-07-24T09:35:00.000Z" }),
+        showing({ startsAt: "2026-07-24T09:30:00.000Z" }),
         now,
         routeByCinema,
       ),
@@ -505,7 +515,7 @@ describe("schedule filtering", () => {
     const presentation = getScheduleMoviePresentation(
       [
         showing({
-          startsAt: "2026-07-24T09:34:00.000Z",
+          startsAt: "2026-07-24T09:29:00.000Z",
         }),
       ],
       now,
@@ -531,7 +541,7 @@ describe("schedule filtering", () => {
     const presentation = getScheduleMoviePresentation(
       [
         showing({
-          startsAt: "2026-07-24T09:34:00.000Z",
+          startsAt: "2026-07-24T09:29:00.000Z",
         }),
         showing({
           id: "show-2",

@@ -190,12 +190,17 @@ export function buildDates(now = new Date(), days = 7): string[] {
   return Array.from({ length: days }, (_, index) => addDays(today, index));
 }
 
+const DEFAULT_ARRIVAL_MARGIN_MINUTES = 20;
+// Route durations already include mode-specific or user-adjusted buffers.
+// Keep only five additional minutes before a showing is considered reachable.
+const DEFAULT_MARGIN_TOLERANCE_MINUTES = 15;
+
 export function isShowingReachable(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
   routeByCinema: Map<string, RouteEstimate>,
-  arrivalMarginMinutes = 20,
-  marginToleranceMinutes = 10,
+  arrivalMarginMinutes = DEFAULT_ARRIVAL_MARGIN_MINUTES,
+  marginToleranceMinutes = DEFAULT_MARGIN_TOLERANCE_MINUTES,
 ): boolean {
   return (
     getShowingReachability(
@@ -218,8 +223,8 @@ export function getShowingReachability(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
   routeByCinema: Map<string, RouteEstimate>,
-  arrivalMarginMinutes = 20,
-  marginToleranceMinutes = 10,
+  arrivalMarginMinutes = DEFAULT_ARRIVAL_MARGIN_MINUTES,
+  marginToleranceMinutes = DEFAULT_MARGIN_TOLERANCE_MINUTES,
 ): ShowingReachability {
   if (isShowingPast(showing, now)) {
     return "past";
@@ -244,8 +249,8 @@ export function isShowingUnreachable(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
   routeByCinema: Map<string, RouteEstimate>,
-  arrivalMarginMinutes = 20,
-  marginToleranceMinutes = 10,
+  arrivalMarginMinutes = DEFAULT_ARRIVAL_MARGIN_MINUTES,
+  marginToleranceMinutes = DEFAULT_MARGIN_TOLERANCE_MINUTES,
 ): boolean {
   return (
     getShowingReachability(
