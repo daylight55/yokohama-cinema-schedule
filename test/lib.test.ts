@@ -434,6 +434,39 @@ describe("schedule filtering", () => {
     ).toBe(true);
   });
 
+  it("keeps obviously later showings neutral even when another route estimate is unusually large", () => {
+    const unusuallyLongRoute = {
+      ...route,
+      cinemaId: "unusually-long-route",
+      durationMinutes: 24 * 60,
+    };
+    const routeByCinema = new Map([
+      [route.cinemaId, route],
+      [unusuallyLongRoute.cinemaId, unusuallyLongRoute],
+    ]);
+
+    for (const startsAt of [
+      "2026-07-24T10:31:00.000Z",
+      "2026-07-24T11:00:00.000Z",
+      "2026-07-24T15:00:00.000Z",
+      "2026-07-25T09:00:00.000Z",
+    ]) {
+      expect(
+        getShowingReachability(showing({ startsAt }), now, routeByCinema),
+      ).toBe("later");
+    }
+    expect(
+      getShowingReachability(
+        showing({
+          cinemaId: unusuallyLongRoute.cinemaId,
+          startsAt: "2026-07-25T09:00:00.000Z",
+        }),
+        now,
+        routeByCinema,
+      ),
+    ).toBe("later");
+  });
+
   it("uses the displayed transit time including its route buffer", () => {
     const transitRoute: RouteEstimate = {
       ...route,

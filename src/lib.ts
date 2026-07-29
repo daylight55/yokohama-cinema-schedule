@@ -194,6 +194,9 @@ const DEFAULT_ARRIVAL_MARGIN_MINUTES = 20;
 // Route durations already include mode-specific or user-adjusted buffers.
 // Keep only five additional minutes before a showing is considered reachable.
 const DEFAULT_MARGIN_TOLERANCE_MINUTES = 15;
+// Reachability is only useful for an immediate decision. Longer-term
+// showings are obviously reachable and should remain visually neutral.
+const MAX_REACHABILITY_WINDOW_MINUTES = 90;
 
 export function isShowingReachable(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
@@ -234,22 +237,24 @@ export function getShowingReachability(
   if (!route) {
     return "unknown";
   }
-  const targetStartMinutes = route.durationMinutes + arrivalMarginMinutes;
-  const earliestStartMinutes =
-    targetStartMinutes - marginToleranceMinutes;
   const startsInMinutes =
     (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
-
-  if (startsInMinutes < earliestStartMinutes) {
-    return "unreachable";
-  }
   const farthestTravelMinutes = Math.max(
     ...Array.from(routeByCinema.values(), ({ durationMinutes }) => durationMinutes),
   );
-  const reachabilityWindowMinutes =
-    farthestTravelMinutes + arrivalMarginMinutes;
+  const reachabilityWindowMinutes = Math.min(
+    farthestTravelMinutes + arrivalMarginMinutes,
+    MAX_REACHABILITY_WINDOW_MINUTES,
+  );
   if (startsInMinutes > reachabilityWindowMinutes) {
     return "later";
+  }
+
+  const targetStartMinutes = route.durationMinutes + arrivalMarginMinutes;
+  const earliestStartMinutes =
+    targetStartMinutes - marginToleranceMinutes;
+  if (startsInMinutes < earliestStartMinutes) {
+    return "unreachable";
   }
 
   return "reachable";
