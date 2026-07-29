@@ -1426,12 +1426,6 @@ footer {
   white-space: nowrap;
 }
 
-.slot-time-details .started-label {
-  color: #d1d5d2;
-  font-size: 9px;
-  font-weight: 800;
-}
-
 .slot-time-details .reachable-label {
   padding: 2px 6px;
   border-radius: 999px;
@@ -3319,10 +3313,7 @@ html[data-theme="light"] :is(.cinema-slot.past, .cinema-slot.unreachable) {
   background: #eef1ef;
 }
 
-html[data-theme="light"] :is(
-    .slot-time-details .started-label,
-    .slot-time-details .unreachable-label
-  ) {
+html[data-theme="light"] .slot-time-details .unreachable-label {
   color: #626e68;
 }
 

@@ -9,6 +9,7 @@ import {
   filterShowings,
   findCurrentTimeMarkerIndex,
   formatReachableLabel,
+  formatUnreachableLabel,
   buildGoogleMapsDirectionsUrl,
   colorThemeToggleLabel,
   getAppPageScrollTarget,
@@ -128,6 +129,10 @@ describe("movie preference confirmation", () => {
 describe("reachable showing labels", () => {
   it("includes the travel time used by the reachability decision", () => {
     expect(formatReachableLabel(25)).toBe("間に合う・移動25分");
+  });
+
+  it("includes the travel time when the showing is unreachable", () => {
+    expect(formatUnreachableLabel(25)).toBe("間に合わない・移動25分");
   });
 });
 

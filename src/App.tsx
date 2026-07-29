@@ -65,6 +65,7 @@ import {
   filterShowings,
   findCurrentTimeMarkerIndex,
   formatReachableLabel,
+  formatUnreachableLabel,
   groupByScheduleTime,
   groupScheduleTimeBuckets,
   groupByMovie,
@@ -3096,6 +3097,11 @@ function CinemaSlot({
       ? "間に合う"
       : formatReachableLabel(travelMinutes)
     : null;
+  const unreachableLabel = isUnreachable
+    ? travelMinutes === null
+      ? "間に合わない"
+      : formatUnreachableLabel(travelMinutes)
+    : null;
 
   useEffect(() => {
     if (!feedback) return;
@@ -3125,18 +3131,17 @@ function CinemaSlot({
         href={showing.bookingUrl}
         target="_blank"
         rel="noreferrer"
-        aria-label={`${isPast ? "開始済み " : ""}${reachableLabel ? `${reachableLabel} ` : ""}${isUnreachable ? "移動時間では間に合わない " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+        aria-label={`${reachableLabel ? `${reachableLabel} ` : ""}${unreachableLabel ? `${unreachableLabel} ` : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
       >
         <div className="slot-time">
           <strong>{start}</strong>
           <span className="slot-time-details">
             {end && <span>{end}終了</span>}
-            {isPast && <span className="started-label">開始済み</span>}
             {reachableLabel && (
               <span className="reachable-label">{reachableLabel}</span>
             )}
-            {isUnreachable && (
-              <span className="unreachable-label">間に合わない</span>
+            {unreachableLabel && (
+              <span className="unreachable-label">{unreachableLabel}</span>
             )}
           </span>
         </div>
