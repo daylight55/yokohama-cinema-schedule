@@ -17,7 +17,7 @@
 - 映画館ごとの座席・館内メモをユーザー単位でクラウド保存
 - 映画館一覧から操作できるGoogle Street Viewを必要な館だけ開き、閉館予定日を一覧で明示
 - 上映スケジュール・上映作品・映画館・映画はしごガチャ・マイページを切り替えるスマートフォン向けサイドバー
-- 各画面を `#schedule`・`#movies`・`#cinemas`・`#planner`・`#account` のURLで直リンク（`#account`はマイページ、旧`#profile`も同画面へ移動）
+- 各画面を `#schedule`・`#movies`・`#cinemas`・`#viewing-plans`・`#planner`・`#account` のURLで直リンク（`#viewing-plans`は鑑賞予定、`#account`はマイページ、旧`#profile`も同画面へ移動）
 - `#schedule?date=YYYY-MM-DD`のように日付を、`movie`パラメータで作品を含めて同じ表示位置へ直リンク
 - Google OAuthを主認証にし、メールアドレス単位で設定をクラウド共有。パスワードとパスキーを予備のログイン方法として登録
 - 1年先まで空いている日と時間を保存し、気になる作品と移動時間を優先した映画はしごを提案
