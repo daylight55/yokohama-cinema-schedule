@@ -525,6 +525,13 @@ export function shouldDefaultExpandScheduleBucket(
   );
 }
 
+export function shouldExpandScheduleBucket(
+  searchQuery: string | null | undefined,
+  defaultExpanded: boolean,
+): boolean {
+  return Boolean(normalizeSearchQuery(searchQuery)) || defaultExpanded;
+}
+
 export function findCurrentTimeMarkerIndex(
   groups: Array<Pick<ScheduleTimeGroup, "time">>,
   now: Date,

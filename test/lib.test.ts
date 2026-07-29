@@ -31,6 +31,7 @@ import {
   scheduleTimeSlot,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
+  shouldExpandScheduleBucket,
 } from "../src/lib";
 
 describe("page navigation scroll targets", () => {
@@ -276,6 +277,12 @@ describe("schedule collapse windows", () => {
         ),
       ),
     ).toEqual([true, true, false]);
+  });
+
+  it("opens filtered result windows regardless of the collapse default", () => {
+    expect(shouldExpandScheduleBucket("スパイダーマン", false)).toBe(true);
+    expect(shouldExpandScheduleBucket("  ", false)).toBe(false);
+    expect(shouldExpandScheduleBucket("", true)).toBe(true);
   });
 });
 
