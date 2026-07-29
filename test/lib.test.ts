@@ -19,6 +19,7 @@ import {
   groupByMovie,
   groupByScheduleTime,
   groupScheduleTimeBuckets,
+  isDateSwipeBlockedByHorizontalScroll,
   isShowingPast,
   isShowingReachable,
   isShowingUnreachable,
@@ -307,6 +308,26 @@ describe("date swipe gestures", () => {
     expect(getDateSwipeDirection(-40, 0)).toBeNull();
     expect(getDateSwipeDirection(20, 90)).toBeNull();
     expect(getDateSwipeDirection(80, 70)).toBeNull();
+  });
+
+  it("blocks date swipes started inside an overflowing horizontal region", () => {
+    const target = {
+      closest: (selector: string) => {
+        expect(selector).toBe("[data-horizontal-scroll]");
+        return { clientWidth: 320, scrollWidth: 640 };
+      },
+    } as unknown as EventTarget;
+
+    expect(isDateSwipeBlockedByHorizontalScroll(target)).toBe(true);
+  });
+
+  it("allows date swipes when the marked region does not overflow", () => {
+    const target = {
+      closest: () => ({ clientWidth: 320, scrollWidth: 320 }),
+    } as unknown as EventTarget;
+
+    expect(isDateSwipeBlockedByHorizontalScroll(target)).toBe(false);
+    expect(isDateSwipeBlockedByHorizontalScroll(null)).toBe(false);
   });
 });
 
