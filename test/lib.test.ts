@@ -358,7 +358,7 @@ describe("schedule filtering", () => {
     ).toBe(false);
   });
 
-  it("classifies every routed showing without a gap", () => {
+  it("limits reachable showings to the farthest travel time plus margin", () => {
     const routeByCinema = new Map([[route.cinemaId, route]]);
 
     expect(
@@ -377,31 +377,31 @@ describe("schedule filtering", () => {
     ).toBe("reachable");
     expect(
       getShowingReachability(
-        showing({ startsAt: "2026-07-24T09:55:00.000Z" }),
+        showing({ startsAt: "2026-07-24T09:45:00.000Z" }),
         now,
         routeByCinema,
       ),
     ).toBe("reachable");
     expect(
       getShowingReachability(
-        showing({ startsAt: "2026-07-24T09:56:00.000Z" }),
+        showing({ startsAt: "2026-07-24T09:46:00.000Z" }),
         now,
         routeByCinema,
       ),
-    ).toBe("reachable");
+    ).toBe("later");
   });
 
-  it("keeps a later showing reachable once the arrival margin is met", () => {
+  it("keeps a later showing neutral once it is outside the decision window", () => {
     expect(
       isShowingReachable(
         showing({ startsAt: "2026-07-24T09:56:00.000Z" }),
         now,
         new Map([[route.cinemaId, route]]),
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it("does not exclude a closer cinema when a farther cinema is reachable", () => {
+  it("uses the farthest cinema to set a common decision window", () => {
     const closerRoute = {
       ...route,
       cinemaId: "closer-cinema",
@@ -450,18 +450,25 @@ describe("schedule filtering", () => {
     ).toBe(true);
   });
 
-  it("does not cap longer routes at one hour", () => {
+  it("does not mark showings beyond the farthest route window reachable", () => {
     const longerRoute: RouteEstimate = {
       ...route,
       durationMinutes: 50,
     };
     expect(
       isShowingReachable(
+        showing({ startsAt: "2026-07-24T10:11:00.000Z" }),
+        now,
+        new Map([[longerRoute.cinemaId, longerRoute]]),
+      ),
+    ).toBe(false);
+    expect(
+      getShowingReachability(
         showing({ startsAt: "2026-07-24T10:10:00.000Z" }),
         now,
         new Map([[longerRoute.cinemaId, longerRoute]]),
       ),
-    ).toBe(true);
+    ).toBe("reachable");
   });
 
   it("does not mark a showing when no travel time exists", () => {
@@ -490,6 +497,23 @@ describe("schedule filtering", () => {
 
   it("does not infer unreachable without a saved travel time", () => {
     expect(isShowingUnreachable(showing(), now, new Map())).toBe(false);
+  });
+
+  it("keeps tomorrow's showing neutral instead of obviously reachable", () => {
+    const presentation = getScheduleMoviePresentation(
+      [
+        showing({
+          startsAt: "2026-07-25T09:45:00.000Z",
+        }),
+      ],
+      now,
+      new Map([[route.cinemaId, route]]),
+    );
+
+    expect(presentation.isReachable).toBe(false);
+    expect(presentation.isUnreachable).toBe(false);
+    expect(presentation.showings[0]?.isReachable).toBe(false);
+    expect(presentation.showings[0]?.isUnreachable).toBe(false);
   });
 
   it("keeps a starred movie presentation reachable", () => {
@@ -552,7 +576,7 @@ describe("schedule filtering", () => {
         }),
         showing({
           id: "show-2",
-          startsAt: "2026-07-24T09:56:00.000Z",
+          startsAt: "2026-07-24T09:45:00.000Z",
         }),
       ],
       now,
