@@ -51,6 +51,8 @@ import type {
   Showing,
   TravelMode,
   UserProfile,
+  ViewingPlan,
+  ViewingPlansResponse,
 } from "../shared/types";
 import {
   AREA_OPTIONS,
@@ -86,6 +88,7 @@ import { PlannerPage } from "./PlannerPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
+import { ViewingPlansPage } from "./ViewingPlansPage";
 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -168,6 +171,7 @@ export function App() {
   );
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
   const dateSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressClickUntilRef = useRef(0);
   const navigationDialogRef = useRef<HTMLDialogElement>(null);
   const moviePreferenceDialogRef = useRef<HTMLDialogElement>(null);
   const pendingMovieAnchorRef = useRef<{
@@ -268,6 +272,14 @@ export function App() {
   const [collapsePreferenceState, setCollapsePreferenceState] = useState<
     "idle" | "saving" | "saved"
   >("idle");
+  const [viewingPlans, setViewingPlans] = useState<ViewingPlan[]>([]);
+  const [viewingPlansState, setViewingPlansState] = useState<
+    "loading" | "idle" | "error"
+  >("loading");
+  const [viewingPlanError, setViewingPlanError] = useState<string | null>(null);
+  const [savingViewingPlanIds, setSavingViewingPlanIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [routeState, setRouteState] = useState<
@@ -548,6 +560,40 @@ export function App() {
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, [dates, selectedDate, showAllMovieDates, view]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setViewingPlansState("loading");
+    setViewingPlanError(null);
+    fetch("/api/viewing-plans", {
+      signal: controller.signal,
+      headers: { accept: "application/json" },
+    })
+      .then(async (response) => {
+        if (response.status === 401) {
+          window.location.assign("/auth/login");
+          throw new Error("ログインが必要です");
+        }
+        if (!response.ok) {
+          throw new Error("鑑賞予定を取得できませんでした");
+        }
+        return response.json() as Promise<ViewingPlansResponse>;
+      })
+      .then((data) => {
+        setViewingPlans(data.plans);
+        setViewingPlansState("idle");
+      })
+      .catch((reason: unknown) => {
+        if ((reason as Error).name === "AbortError") return;
+        setViewingPlanError(
+          reason instanceof Error
+            ? reason.message
+            : "鑑賞予定を取得できませんでした",
+        );
+        setViewingPlansState("error");
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     if (selectedDate !== dates[0]) setFutureOnly(false);
@@ -1112,21 +1158,92 @@ export function App() {
     });
   };
 
+  const toggleViewingPlan = async (
+    showing: Showing,
+  ): Promise<"added" | "removed" | null> => {
+    const isPlanned = viewingPlans.some(
+      (plan) => plan.showingId === showing.id,
+    );
+    setSavingViewingPlanIds((current) => new Set(current).add(showing.id));
+    setViewingPlanError(null);
+
+    try {
+      const response = await fetch(
+        isPlanned
+          ? `/api/viewing-plans?id=${encodeURIComponent(showing.id)}`
+          : "/api/viewing-plans",
+        isPlanned
+          ? { method: "DELETE" }
+          : {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                accept: "application/json",
+              },
+              body: JSON.stringify({ showingId: showing.id }),
+            },
+      );
+      if (!response.ok) throw new Error();
+
+      if (isPlanned) {
+        setViewingPlans((current) =>
+          current.filter((plan) => plan.showingId !== showing.id),
+        );
+        return "removed";
+      }
+
+      const savedPlan = (await response.json()) as ViewingPlan;
+      setViewingPlans((current) =>
+        [
+          ...current.filter(
+            (plan) => plan.showingId !== savedPlan.showingId,
+          ),
+          savedPlan,
+        ].sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+      );
+      setViewingPlansState("idle");
+      return "added";
+    } catch {
+      setViewingPlanError("鑑賞予定を保存できませんでした");
+      return null;
+    } finally {
+      setSavingViewingPlanIds((current) => {
+        const next = new Set(current);
+        next.delete(showing.id);
+        return next;
+      });
+    }
+  };
+
+  const removeViewingPlan = async (plan: ViewingPlan): Promise<void> => {
+    setSavingViewingPlanIds((current) => new Set(current).add(plan.showingId));
+    setViewingPlanError(null);
+    try {
+      const response = await fetch(
+        `/api/viewing-plans?id=${encodeURIComponent(plan.showingId)}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) throw new Error();
+      setViewingPlans((current) =>
+        current.filter((item) => item.showingId !== plan.showingId),
+      );
+    } catch {
+      setViewingPlanError("鑑賞予定を削除できませんでした");
+    } finally {
+      setSavingViewingPlanIds((current) => {
+        const next = new Set(current);
+        next.delete(plan.showingId);
+        return next;
+      });
+    }
+  };
+
   const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
     dateSwipeStartRef.current = null;
     if (
       (view !== "schedule" && view !== "movies") ||
       loading ||
       event.touches.length !== 1
-    ) {
-      return;
-    }
-    const target = event.target;
-    if (
-      !(target instanceof Element) ||
-      target.closest(
-        "a, button, input, select, textarea, .date-strip, .area-strip, .cinema-strip",
-      )
     ) {
       return;
     }
@@ -1145,6 +1262,7 @@ export function App() {
       touch.clientY - start.y,
     );
     if (!direction) return;
+    suppressClickUntilRef.current = Date.now() + 500;
     const swipeDates: Array<string | null> =
       view === "movies" ? [null, ...dates] : dates;
     const currentIndex =
@@ -1159,6 +1277,13 @@ export function App() {
         query: normalizedSearchQuery,
       });
     }
+  };
+
+  const handleMainClickCapture = (event: MouseEvent<HTMLElement>) => {
+    if (Date.now() > suppressClickUntilRef.current) return;
+    suppressClickUntilRef.current = 0;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const jumpToCurrentTime = () => {
@@ -1509,6 +1634,11 @@ export function App() {
                           isReachable={isReachable}
                           isUnreachable={isUnreachable}
                           travelMinutes={travelMinutes}
+                          isPlanned={viewingPlans.some(
+                            (plan) => plan.showingId === showing.id,
+                          )}
+                          isSaving={savingViewingPlanIds.has(showing.id)}
+                          onToggle={toggleViewingPlan}
                         />
                       );
                     },
@@ -1641,6 +1771,15 @@ export function App() {
             >
               <BuildingsIcon size={20} aria-hidden="true" />
               横浜駅近くの映画館一覧
+            </a>
+            <a
+              href={hashForAppView("viewingPlans")}
+              className={view === "viewingPlans" ? "active" : ""}
+              aria-current={view === "viewingPlans" ? "page" : undefined}
+              onClick={closeNavigation}
+            >
+              <CalendarDotsIcon size={20} aria-hidden="true" />
+              鑑賞予定
             </a>
             <a
               href={hashForAppView("planner", {
@@ -1806,6 +1945,7 @@ export function App() {
 
       <main
         id="main"
+        onClickCapture={handleMainClickCapture}
         onTouchStart={handleScheduleTouchStart}
         onTouchEnd={handleScheduleTouchEnd}
         onTouchCancel={() => {
@@ -2030,6 +2170,15 @@ export function App() {
               ) : null
             }
           />
+      ) : view === "viewingPlans" ? (
+        <ViewingPlansPage
+          plans={viewingPlans}
+          starredMovieKeys={starredMovieKeys}
+          loading={viewingPlansState === "loading"}
+          error={viewingPlanError}
+          savingIds={savingViewingPlanIds}
+          onRemove={removeViewingPlan}
+        />
       ) : view === "planner" ? (
         <PlannerPage
             selectedDate={plannerDate}
@@ -2923,13 +3072,20 @@ function CinemaSlot({
   isReachable,
   isUnreachable,
   travelMinutes,
+  isPlanned,
+  isSaving,
+  onToggle,
 }: {
   showing: Showing;
   isPast: boolean;
   isReachable: boolean;
   isUnreachable: boolean;
   travelMinutes: number | null;
+  isPlanned: boolean;
+  isSaving: boolean;
+  onToggle(showing: Showing): Promise<"added" | "removed" | null>;
 }) {
+  const [feedback, setFeedback] = useState<"added" | "removed" | null>(null);
   const start = timeFormatter.format(new Date(showing.startsAt));
   const end = showing.endsAt
     ? timeFormatter.format(new Date(showing.endsAt))
@@ -2941,8 +3097,19 @@ function CinemaSlot({
       : formatReachableLabel(travelMinutes)
     : null;
 
+  useEffect(() => {
+    if (!feedback) return;
+    const timeout = window.setTimeout(() => setFeedback(null), 2200);
+    return () => window.clearTimeout(timeout);
+  }, [feedback]);
+
+  const toggle = async () => {
+    const result = await onToggle(showing);
+    if (result) setFeedback(result);
+  };
+
   return (
-    <a
+    <div
       className={[
         "cinema-slot",
         isPast ? "past" : "",
@@ -2951,31 +3118,70 @@ function CinemaSlot({
       ]
         .filter(Boolean)
         .join(" ")}
-      href={showing.bookingUrl}
-      target="_blank"
-      rel="noreferrer"
       role="listitem"
-      aria-label={`${isPast ? "開始済み " : ""}${reachableLabel ? `${reachableLabel} ` : ""}${isUnreachable ? "移動時間では間に合わない " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
     >
-      <div className="slot-time">
-        <strong>{start}</strong>
-        <span className="slot-time-details">
-          {end && <span>{end}終了</span>}
-          {isPast && <span className="started-label">開始済み</span>}
-          {reachableLabel && (
-            <span className="reachable-label">{reachableLabel}</span>
-          )}
-          {isUnreachable && (
-            <span className="unreachable-label">間に合わない</span>
-          )}
+      <a
+        className="cinema-slot-booking"
+        href={showing.bookingUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`${isPast ? "開始済み " : ""}${reachableLabel ? `${reachableLabel} ` : ""}${isUnreachable ? "移動時間では間に合わない " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+      >
+        <div className="slot-time">
+          <strong>{start}</strong>
+          <span className="slot-time-details">
+            {end && <span>{end}終了</span>}
+            {isPast && <span className="started-label">開始済み</span>}
+            {reachableLabel && (
+              <span className="reachable-label">{reachableLabel}</span>
+            )}
+            {isUnreachable && (
+              <span className="unreachable-label">間に合わない</span>
+            )}
+          </span>
+        </div>
+        <div className="slot-cinema">
+          <strong>{showing.cinemaShortName}</strong>
+          <ArrowSquareOutIcon size={15} aria-hidden="true" />
+        </div>
+        {metadata && <span className="slot-meta">{metadata}</span>}
+      </a>
+      <button
+        type="button"
+        className={[
+          "viewing-plan-toggle",
+          isPlanned ? "planned" : "",
+          feedback ? "confirmed" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-pressed={isPlanned}
+        aria-label={`${showing.title} ${start} ${showing.cinemaShortName}を鑑賞予定${isPlanned ? "から外す" : "に追加"}`}
+        disabled={isPast || isSaving}
+        onClick={() => void toggle()}
+      >
+        <img
+          src={
+            feedback
+              ? "/brand/hamamubi-icon-wink.svg"
+              : "/brand/hamamubi-icon-v2.svg"
+          }
+          alt=""
+        />
+        <span className="viewing-plan-toggle-label">
+          {isSaving ? "保存中" : isPlanned ? "予定済" : "観に行く"}
         </span>
-      </div>
-      <div className="slot-cinema">
-        <strong>{showing.cinemaShortName}</strong>
-        <ArrowSquareOutIcon size={15} aria-hidden="true" />
-      </div>
-      {metadata && <span className="slot-meta">{metadata}</span>}
-    </a>
+        {feedback && (
+          <span
+            className="viewing-plan-feedback"
+            role="status"
+            aria-live="polite"
+          >
+            {feedback === "added" ? "チェックしたよ！" : "予定から外したよ"}
+          </span>
+        )}
+      </button>
+    </div>
   );
 }
 

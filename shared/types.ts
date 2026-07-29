@@ -197,6 +197,26 @@ export interface MovieMarathonPlanItem {
   transferMinutes: number;
 }
 
+export interface ViewingPlan {
+  showingId: string;
+  movieKey: string;
+  title: string;
+  cinemaId: string;
+  cinemaName: string;
+  cinemaShortName: string;
+  startsAt: string;
+  endsAt: string | null;
+  screen: string | null;
+  format: string | null;
+  bookingUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ViewingPlansResponse {
+  plans: ViewingPlan[];
+}
+
 export interface MovieMarathonPlan {
   id: string;
   planDate: string;

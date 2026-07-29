@@ -166,6 +166,7 @@ describe("private site authentication", () => {
 
   it("accepts only known view hashes after login", () => {
     expect(normalizeReturnHash("#movies")).toBe("#movies");
+    expect(normalizeReturnHash("#viewing-plans")).toBe("#viewing-plans");
     expect(normalizeReturnHash("#planner")).toBe("#planner");
     expect(normalizeReturnHash("#account")).toBe("#account");
     expect(normalizeReturnHash("#CINEMAS")).toBe("#cinemas");

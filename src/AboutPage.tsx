@@ -13,7 +13,10 @@ const FEATURES: ReadonlyArray<{
   title: string;
   description: string;
   icon: typeof CalendarDotsIcon;
-  view: Extract<AppView, "schedule" | "movies" | "cinemas" | "planner">;
+  view: Extract<
+    AppView,
+    "schedule" | "movies" | "cinemas" | "viewingPlans" | "planner"
+  >;
 }> = [
   {
     title: "今から観られる上映を探す",
@@ -35,6 +38,13 @@ const FEATURES: ReadonlyArray<{
       "ベース出発地点と移動方法を登録すると、映画館ごとの所要時間や間に合いそうな上映を確認できます。",
     icon: BuildingsIcon,
     view: "cinemas",
+  },
+  {
+    title: "観に行く上映をまとめる",
+    description:
+      "上映回のはまむびくんを押すと、映画館と開始時刻を鑑賞予定としてまとめて確認できます。",
+    icon: CalendarDotsIcon,
+    view: "viewingPlans",
   },
   {
     title: "映画はしごを組み立てる",

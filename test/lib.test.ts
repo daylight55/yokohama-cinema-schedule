@@ -59,6 +59,7 @@ describe("page navigation scroll targets", () => {
     for (const view of [
       "movies",
       "cinemas",
+      "viewingPlans",
       "planner",
       "account",
       "about",
@@ -155,6 +156,7 @@ describe("app view hash navigation", () => {
     expect(hashForAppView("schedule")).toBe("#schedule");
     expect(hashForAppView("movies")).toBe("#movies");
     expect(hashForAppView("cinemas")).toBe("#cinemas");
+    expect(hashForAppView("viewingPlans")).toBe("#viewing-plans");
     expect(hashForAppView("planner")).toBe("#planner");
     expect(hashForAppView("account")).toBe("#account");
     expect(hashForAppView("about")).toBe("#about");
@@ -173,6 +175,7 @@ describe("app view hash navigation", () => {
     expect(appViewFromHash("#movies")).toBe("movies");
     expect(appViewFromHash("#movies?date=2026-07-27")).toBe("movies");
     expect(appViewFromHash("#CINEMAS")).toBe("cinemas");
+    expect(appViewFromHash("#viewing-plans")).toBe("viewingPlans");
     expect(appViewFromHash("#planner")).toBe("planner");
     expect(appViewFromHash("#account")).toBe("account");
     expect(appViewFromHash("#about")).toBe("about");
