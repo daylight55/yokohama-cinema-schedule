@@ -11,9 +11,11 @@ import {
   ListIcon,
   MagnifyingGlassIcon,
   MapPinIcon,
+  MoonIcon,
   PathIcon,
   SignOutIcon,
   StarIcon,
+  SunIcon,
   TrashIcon,
   UserCircleIcon,
   WarningCircleIcon,
@@ -52,11 +54,13 @@ import type {
 } from "../shared/types";
 import {
   AREA_OPTIONS,
+  COLOR_THEME_STORAGE_KEY,
   MOVIE_HIDE_CONFIRMATION,
   appHashStateFromHash,
   buildMovieExternalLinks,
   buildGoogleMapsDirectionsUrl,
   buildDates,
+  colorThemeToggleLabel,
   filterShowings,
   findCurrentTimeMarkerIndex,
   formatReachableLabel,
@@ -67,10 +71,13 @@ import {
   getScheduleMoviePresentation,
   hashForAppView,
   normalizeMovieTitle,
+  parseColorTheme,
+  resolveColorTheme,
   scrollToInitialTimeMarker,
   scheduleProgramClassName,
   shouldDefaultExpandScheduleBucket,
   type AppView,
+  type ColorTheme,
 } from "./lib";
 import { PlannerPage } from "./PlannerPage";
 import { AccountPage } from "./AccountPage";
@@ -123,8 +130,39 @@ interface MoviePreferenceTarget {
   anchorElement?: HTMLElement | null;
 }
 
+function getStoredColorTheme(): ColorTheme | null {
+  try {
+    return parseColorTheme(window.localStorage.getItem(COLOR_THEME_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function storeColorTheme(theme: ColorTheme): void {
+  try {
+    window.localStorage.setItem(COLOR_THEME_STORAGE_KEY, theme);
+  } catch {
+    // The active tab still switches themes when storage is unavailable.
+  }
+}
+
 export function App() {
   const [now, setNow] = useState(() => new Date());
+  const [theme, setTheme] = useState<ColorTheme>(() => {
+    const bootstrappedTheme = parseColorTheme(
+      document.documentElement.dataset.theme,
+    );
+    return (
+      bootstrappedTheme ??
+      resolveColorTheme(
+        getStoredColorTheme(),
+        window.matchMedia("(prefers-color-scheme: dark)").matches,
+      )
+    );
+  });
+  const [hasExplicitTheme, setHasExplicitTheme] = useState(
+    () => getStoredColorTheme() !== null,
+  );
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
   const dateSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const navigationDialogRef = useRef<HTMLDialogElement>(null);
@@ -232,6 +270,31 @@ export function App() {
   const [routeState, setRouteState] = useState<
     "idle" | "loading" | "ready" | "error"
   >("idle");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+    document
+      .querySelector('meta[name="color-scheme"]')
+      ?.setAttribute("content", theme);
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#0d1211" : "#fff8ee");
+  }, [theme]);
+
+  useEffect(() => {
+    if (hasExplicitTheme) return;
+
+    const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const followSystemTheme = (event: MediaQueryListEvent) => {
+      setTheme(event.matches ? "dark" : "light");
+    };
+    colorSchemeQuery.addEventListener("change", followSystemTheme);
+    return () => {
+      colorSchemeQuery.removeEventListener("change", followSystemTheme);
+    };
+  }, [hasExplicitTheme]);
 
   useLayoutEffect(() => {
     const pendingAnchor = pendingMovieAnchorRef.current;
@@ -1410,6 +1473,24 @@ export function App() {
           </a>
           <div className="header-status">
             <time dateTime={now.toISOString()}>{timeFormatter.format(now)}</time>
+            <button
+              className="icon-button theme-toggle-button"
+              type="button"
+              aria-label={colorThemeToggleLabel(theme)}
+              title={colorThemeToggleLabel(theme)}
+              onClick={() => {
+                const nextTheme = theme === "dark" ? "light" : "dark";
+                storeColorTheme(nextTheme);
+                setHasExplicitTheme(true);
+                setTheme(nextTheme);
+              }}
+            >
+              {theme === "dark" ? (
+                <SunIcon size={20} weight="fill" aria-hidden="true" />
+              ) : (
+                <MoonIcon size={20} weight="fill" aria-hidden="true" />
+              )}
+            </button>
             <form method="post" action="/auth/logout">
               <button
                 className="icon-button"

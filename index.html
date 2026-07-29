@@ -3,7 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#10251f" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0d1211" />
+    <script>
+      (() => {
+        let theme;
+        try {
+          const savedTheme = localStorage.getItem("hamamubi-color-theme");
+          theme =
+            savedTheme === "light" || savedTheme === "dark"
+              ? savedTheme
+              : matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+        } catch {
+          theme = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        document
+          .querySelector('meta[name="color-scheme"]')
+          ?.setAttribute("content", theme);
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute("content", theme === "dark" ? "#0d1211" : "#fff8ee");
+      })();
+    </script>
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <link rel="icon" href="/brand/hamamubi-icon-v2.svg" type="image/svg+xml" />
     <link
