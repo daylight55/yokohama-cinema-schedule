@@ -164,6 +164,16 @@ export function formatUnreachableLabel(travelMinutes: number): string {
   return `間に合わない・移動${travelMinutes}分`;
 }
 
+export function getViewingPlanButtonState(
+  isPast: boolean,
+  isSaving: boolean,
+): { disabled: boolean; unavailable: boolean } {
+  return {
+    disabled: isPast || isSaving,
+    unavailable: isPast,
+  };
+}
+
 export type DateSwipeDirection = "previous" | "next";
 
 export function isDateSwipeBlockedByHorizontalScroll(

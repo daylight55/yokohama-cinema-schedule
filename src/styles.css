@@ -1339,6 +1339,20 @@ footer {
   opacity: 0.55;
 }
 
+.viewing-plan-toggle.unavailable {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: default;
+  filter: grayscale(1);
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.viewing-plan-toggle.unavailable img {
+  opacity: 0.5;
+}
+
 .viewing-plan-toggle.confirmed img {
   animation: hamamubi-wink 420ms ease-out;
 }
