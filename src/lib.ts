@@ -39,6 +39,36 @@ export type AppView =
   | "account"
   | "about";
 
+export type AppPageScrollTarget = "top" | "current-time" | "linked-movie";
+
+export function getAppPageScrollTarget(
+  view: AppView,
+  selectedDate: string,
+  today: string,
+  selectedMovieKey: string | null,
+): AppPageScrollTarget {
+  if (
+    selectedMovieKey &&
+    (view === "schedule" || view === "movies")
+  ) {
+    return "linked-movie";
+  }
+  if (view === "schedule" && selectedDate === today) {
+    return "current-time";
+  }
+  return "top";
+}
+
+export function scrollPageToTop(scroller: {
+  scrollTo(options: {
+    top: number;
+    left: number;
+    behavior: "instant";
+  }): void;
+}): void {
+  scroller.scrollTo({ top: 0, left: 0, behavior: "instant" });
+}
+
 const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#schedule": "schedule",
   "#movies": "movies",

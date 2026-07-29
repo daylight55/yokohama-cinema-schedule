@@ -11,6 +11,7 @@ import {
   formatReachableLabel,
   buildGoogleMapsDirectionsUrl,
   colorThemeToggleLabel,
+  getAppPageScrollTarget,
   getDateSwipeDirection,
   getScheduleMoviePresentation,
   getShowingReachability,
@@ -24,11 +25,75 @@ import {
   normalizeMovieTitle,
   parseColorTheme,
   resolveColorTheme,
+  scrollPageToTop,
   scheduleProgramClassName,
   scheduleTimeSlot,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
 } from "../src/lib";
+
+describe("page navigation scroll targets", () => {
+  it("opens today's schedule at the current time", () => {
+    expect(
+      getAppPageScrollTarget(
+        "schedule",
+        "2026-07-29",
+        "2026-07-29",
+        null,
+      ),
+    ).toBe("current-time");
+  });
+
+  it("opens every other page at the top", () => {
+    expect(
+      getAppPageScrollTarget(
+        "schedule",
+        "2026-07-30",
+        "2026-07-29",
+        null,
+      ),
+    ).toBe("top");
+
+    for (const view of [
+      "movies",
+      "cinemas",
+      "planner",
+      "account",
+      "about",
+    ] as const) {
+      expect(
+        getAppPageScrollTarget(
+          view,
+          "2026-07-29",
+          "2026-07-29",
+          null,
+        ),
+      ).toBe("top");
+    }
+  });
+
+  it("keeps explicit movie deep links targeted", () => {
+    expect(
+      getAppPageScrollTarget(
+        "movies",
+        "2026-07-29",
+        "2026-07-29",
+        "movie-key",
+      ),
+    ).toBe("linked-movie");
+  });
+
+  it("moves to the top without smooth-scroll delay", () => {
+    const scrollTo = vi.fn();
+    scrollPageToTop({ scrollTo });
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  });
+});
 
 describe("color theme", () => {
   it("uses a valid saved theme before the system preference", () => {

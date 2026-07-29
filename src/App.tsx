@@ -68,11 +68,13 @@ import {
   groupScheduleTimeBuckets,
   groupByMovie,
   getDateSwipeDirection,
+  getAppPageScrollTarget,
   getScheduleMoviePresentation,
   hashForAppView,
   normalizeMovieTitle,
   parseColorTheme,
   resolveColorTheme,
+  scrollPageToTop,
   scrollToInitialTimeMarker,
   scheduleProgramClassName,
   shouldDefaultExpandScheduleBucket,
@@ -182,6 +184,7 @@ export function App() {
   const lastMovieDeepLinkRef = useRef<string | null>(null);
   const didInitialTimeScrollRef = useRef(false);
   const pendingHomeScrollRef = useRef(false);
+  const lastPageScrollKeyRef = useRef<string | null>(null);
   const today = todayInJst(now);
   const dates = useMemo(() => buildDates(now), [today]);
   const plannerMaxDate = addDays(today, 365);
@@ -320,10 +323,48 @@ export function App() {
   }, [movieStatusByKey, starredMovieKeys]);
 
   useLayoutEffect(() => {
-    if (view === "movies" || view === "account" || view === "about") {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    const pageScrollKey =
+      view === "schedule" || view === "movies"
+        ? `${view}:${selectedDate}:${selectedMovieKey ?? ""}`
+        : view === "planner"
+          ? `${view}:${plannerDate}`
+          : view;
+    if (lastPageScrollKeyRef.current === pageScrollKey) return;
+    lastPageScrollKeyRef.current = pageScrollKey;
+
+    const scrollTarget = getAppPageScrollTarget(
+      view,
+      selectedDate,
+      today,
+      selectedMovieKey,
+    );
+
+    pendingHomeScrollRef.current = false;
+    didInitialTimeScrollRef.current = false;
+
+    if (scrollTarget === "linked-movie") {
+      lastMovieDeepLinkRef.current = null;
+      return;
     }
-  }, [view]);
+    if (scrollTarget === "top") {
+      scrollPageToTop(window);
+      let finalScrollFrame: number | null = null;
+      const settleScrollFrame = window.requestAnimationFrame(() => {
+        scrollPageToTop(window);
+        finalScrollFrame = window.requestAnimationFrame(() => {
+          scrollPageToTop(window);
+        });
+      });
+      return () => {
+        window.cancelAnimationFrame(settleScrollFrame);
+        if (finalScrollFrame !== null) {
+          window.cancelAnimationFrame(finalScrollFrame);
+        }
+      };
+    }
+    // The current-time layout effect handles today's schedule after data renders.
+    return undefined;
+  }, [plannerDate, selectedDate, selectedMovieKey, today, view]);
 
   useLayoutEffect(() => {
     const pendingAnchor = pendingCinemaAnchorRef.current;
@@ -604,6 +645,7 @@ export function App() {
     if (
       loading ||
       error ||
+      schedule?.date !== selectedDate ||
       !selectedMovieKey ||
       (view !== "schedule" && view !== "movies")
     ) {
@@ -625,6 +667,7 @@ export function App() {
     error,
     loading,
     movieList,
+    schedule?.date,
     selectedDate,
     selectedMovieKey,
     timeGroups,
@@ -636,6 +679,7 @@ export function App() {
       didInitialTimeScrollRef.current ||
       loading ||
       error ||
+      schedule?.date !== selectedDate ||
       selectedMovieKey ||
       selectedDate !== today ||
       view !== "schedule" ||
@@ -649,6 +693,7 @@ export function App() {
   }, [
     error,
     loading,
+    schedule?.date,
     selectedDate,
     selectedMovieKey,
     timeGroups,
@@ -1141,6 +1186,7 @@ export function App() {
       !pendingHomeScrollRef.current ||
       loading ||
       error ||
+      schedule?.date !== selectedDate ||
       view !== "schedule" ||
       selectedDate !== today ||
       !currentTimeMarkerRef.current
@@ -1151,7 +1197,15 @@ export function App() {
     scrollToInitialTimeMarker(currentTimeMarkerRef.current);
     pendingHomeScrollRef.current = false;
     didInitialTimeScrollRef.current = true;
-  }, [error, loading, selectedDate, timeGroups, today, view]);
+  }, [
+    error,
+    loading,
+    schedule?.date,
+    selectedDate,
+    timeGroups,
+    today,
+    view,
+  ]);
 
   const rememberMovieAnchor = (element: HTMLElement | null) => {
     if (!element) return;
