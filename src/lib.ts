@@ -10,6 +10,27 @@ import type {
   TravelMode,
 } from "../shared/types";
 
+export type ColorTheme = "light" | "dark";
+
+export const COLOR_THEME_STORAGE_KEY = "hamamubi-color-theme";
+
+export function parseColorTheme(value: unknown): ColorTheme | null {
+  return value === "light" || value === "dark" ? value : null;
+}
+
+export function resolveColorTheme(
+  storedTheme: unknown,
+  prefersDark: boolean,
+): ColorTheme {
+  return parseColorTheme(storedTheme) ?? (prefersDark ? "dark" : "light");
+}
+
+export function colorThemeToggleLabel(theme: ColorTheme): string {
+  return theme === "dark"
+    ? "ライトモードに切り替える"
+    : "ダークモードに切り替える";
+}
+
 export type AppView =
   | "schedule"
   | "movies"

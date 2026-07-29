@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RouteEstimate, Showing } from "../shared/types";
 import {
+  COLOR_THEME_STORAGE_KEY,
   MOVIE_HIDE_CONFIRMATION,
   appHashStateFromHash,
   appViewFromHash,
@@ -9,6 +10,7 @@ import {
   findCurrentTimeMarkerIndex,
   formatReachableLabel,
   buildGoogleMapsDirectionsUrl,
+  colorThemeToggleLabel,
   getDateSwipeDirection,
   getScheduleMoviePresentation,
   getShowingReachability,
@@ -20,11 +22,32 @@ import {
   isShowingUnreachable,
   hashForAppView,
   normalizeMovieTitle,
+  parseColorTheme,
+  resolveColorTheme,
   scheduleProgramClassName,
   scheduleTimeSlot,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
 } from "../src/lib";
+
+describe("color theme", () => {
+  it("uses a valid saved theme before the system preference", () => {
+    expect(resolveColorTheme("light", true)).toBe("light");
+    expect(resolveColorTheme("dark", false)).toBe("dark");
+  });
+
+  it("falls back to the system preference for missing or invalid values", () => {
+    expect(resolveColorTheme(null, true)).toBe("dark");
+    expect(resolveColorTheme("sepia", false)).toBe("light");
+    expect(parseColorTheme(undefined)).toBeNull();
+  });
+
+  it("describes the theme the toggle will switch to", () => {
+    expect(colorThemeToggleLabel("dark")).toBe("ライトモードに切り替える");
+    expect(colorThemeToggleLabel("light")).toBe("ダークモードに切り替える");
+    expect(COLOR_THEME_STORAGE_KEY).toBe("hamamubi-color-theme");
+  });
+});
 
 describe("movie preference confirmation", () => {
   it("states only the schedule consequence", () => {
