@@ -32,7 +32,7 @@ const FEATURES: ReadonlyArray<{
   {
     title: "映画館までの移動を見積もる",
     description:
-      "自宅と移動方法を登録すると、映画館ごとの所要時間や間に合いそうな上映を確認できます。",
+      "ベース出発地点と移動方法を登録すると、映画館ごとの所要時間や間に合いそうな上映を確認できます。",
     icon: BuildingsIcon,
     view: "cinemas",
   },

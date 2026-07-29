@@ -12,7 +12,11 @@ import {
   listCinemaTravelPreferences,
 } from "../_lib/cinema-travel-preferences";
 import { listActiveCinemas } from "../_lib/cinemas";
-import type { AuthContextData, PagesEnv } from "../_lib/env";
+import {
+  requireProfileEncryptionKey,
+  type AuthContextData,
+  type PagesEnv,
+} from "../_lib/env";
 import {
   estimateStationWalkFallbacks,
   estimateStationTravel,
@@ -22,8 +26,8 @@ import {
   type StationWalkEstimate,
 } from "../_lib/stations";
 import {
-  getHomeLocation,
-  listHomeStationAccess,
+  getDepartureLocation,
+  listDepartureStationAccess,
 } from "../_lib/user-profile";
 
 interface EstimateProfile {
@@ -78,15 +82,16 @@ export const onRequestGet: PagesFunction<
     return Response.json({ error: "routes_unavailable" }, { status: 403 });
   }
 
-  const home = await getHomeLocation(
+  const departure = await getDepartureLocation(
     context.env.DB,
+    requireProfileEncryptionKey(context.env),
     context.data.userId,
   );
-  if (!home) {
+  if (!departure) {
     const response: RoutesResponse = {
       generatedAt: new Date().toISOString(),
       provider: "estimate",
-      origin: null,
+      originRegistered: false,
       routes: [],
     };
     return Response.json(response, {
@@ -94,7 +99,7 @@ export const onRequestGet: PagesFunction<
     });
   }
 
-  const { latitude, longitude } = home;
+  const { latitude, longitude } = departure;
   const cinemas = await listActiveCinemas(
     context.env.DB,
     todayInJst(),
@@ -131,7 +136,7 @@ export const onRequestGet: PagesFunction<
             preferredOriginStationIds.has(station.id),
           )
         : stations;
-    const storedWalks = await listHomeStationAccess(
+    const storedWalks = await listDepartureStationAccess(
       context.env.DB,
       new Map(stations.map((station) => [station.id, station])),
       context.data.userId,
@@ -169,7 +174,7 @@ export const onRequestGet: PagesFunction<
   const response: RoutesResponse = {
     generatedAt: new Date().toISOString(),
     provider: "estimate",
-    origin: { latitude, longitude },
+    originRegistered: true,
     routes,
   };
   return Response.json(response, {

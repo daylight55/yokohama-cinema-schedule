@@ -1,17 +1,21 @@
 import type { RouteOrigin } from "../../shared/types";
-import type { AuthContextData, PagesEnv } from "../_lib/env";
+import {
+  requireProfileEncryptionKey,
+  type AuthContextData,
+  type PagesEnv,
+} from "../_lib/env";
 import {
   estimateWalksToStations,
   listPreferredOriginStationIds,
   listStations,
 } from "../_lib/stations";
 import {
-  deleteHomeLocation,
+  deleteDepartureLocation,
   getUserProfile,
   isScheduleCollapseMinutes,
-  normalizeHomeCoordinates,
+  normalizeDepartureCoordinates,
   saveScheduleCollapseMinutes,
-  saveHomeLocation,
+  saveDepartureLocation,
 } from "../_lib/user-profile";
 
 interface ProfileRequest {
@@ -35,7 +39,11 @@ export const onRequestGet: PagesFunction<
   if (context.env.PUBLIC_MODE === "true") return unavailable();
 
   return Response.json(
-    await getUserProfile(context.env.DB, context.data.userId),
+    await getUserProfile(
+      context.env.DB,
+      requireProfileEncryptionKey(context.env),
+      context.data.userId,
+    ),
     {
     headers: { "cache-control": "private, no-store" },
     },
@@ -56,11 +64,11 @@ export const onRequestPost: PagesFunction<
     return Response.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const home: RouteOrigin | null = normalizeHomeCoordinates(
+  const departure: RouteOrigin | null = normalizeDepartureCoordinates(
     body.latitude,
     body.longitude,
   );
-  if (!home) {
+  if (!departure) {
     return Response.json({ error: "invalid_location" }, { status: 400 });
   }
 
@@ -75,14 +83,15 @@ export const onRequestPost: PagesFunction<
         )
       : stations;
   const stationWalks = await estimateWalksToStations(
-    home.latitude,
-    home.longitude,
+    departure.latitude,
+    departure.longitude,
     originStations,
     context.env.GOOGLE_MAPS_API_KEY,
   );
-  const profile = await saveHomeLocation(
+  const profile = await saveDepartureLocation(
     context.env.DB,
-    home,
+    requireProfileEncryptionKey(context.env),
+    departure,
     stationWalks,
     context.data.userId,
   );
@@ -119,7 +128,11 @@ export const onRequestPatch: PagesFunction<
     context.data.userId,
   );
   return Response.json(
-    await getUserProfile(context.env.DB, context.data.userId),
+    await getUserProfile(
+      context.env.DB,
+      requireProfileEncryptionKey(context.env),
+      context.data.userId,
+    ),
     {
       headers: { "cache-control": "private, no-store" },
     },
@@ -133,9 +146,9 @@ export const onRequestDelete: PagesFunction<
 > = async (context) => {
   if (context.env.PUBLIC_MODE === "true") return unavailable();
 
-  await deleteHomeLocation(context.env.DB, context.data.userId);
+  await deleteDepartureLocation(context.env.DB, context.data.userId);
   return Response.json(
-    { homeRegistered: false, homeUpdatedAt: null },
+    { departureRegistered: false, departureUpdatedAt: null },
     { headers: { "cache-control": "private, no-store" } },
   );
 };

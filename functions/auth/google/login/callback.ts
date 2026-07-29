@@ -7,7 +7,10 @@ import {
   sessionCookie,
   verifyLegacySession,
 } from "../../../_lib/auth";
-import type { PagesEnv } from "../../../_lib/env";
+import {
+  requireProfileEncryptionKey,
+  type PagesEnv,
+} from "../../../_lib/env";
 import {
   exchangeGoogleAuthorizationCode,
   getGoogleOAuthCredentials,
@@ -108,6 +111,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
         emailVerified: userInfo.email_verified,
       },
       currentSession,
+      requireProfileEncryptionKey(context.env),
     );
     const session = await createUserSession(context.env, user.id);
     const headers = new Headers({

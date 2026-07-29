@@ -58,7 +58,6 @@ import {
   MOVIE_HIDE_CONFIRMATION,
   appHashStateFromHash,
   buildMovieExternalLinks,
-  buildGoogleMapsDirectionsUrl,
   buildDates,
   colorThemeToggleLabel,
   filterShowings,
@@ -244,10 +243,6 @@ export function App() {
   const [cinemaPreferenceError, setCinemaPreferenceError] = useState<
     string | null
   >(null);
-  const [routeOrigin, setRouteOrigin] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
   const [starredMovieKeys, setStarredMovieKeys] = useState<Set<string>>(
     () => new Set(),
   );
@@ -261,8 +256,8 @@ export function App() {
   const [activeMoviePreference, setActiveMoviePreference] =
     useState<MoviePreferenceTarget | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile>({
-    homeRegistered: false,
-    homeUpdatedAt: null,
+    departureRegistered: false,
+    departureUpdatedAt: null,
     scheduleCollapseMinutes: 60,
   });
   const [profileState, setProfileState] = useState<
@@ -762,30 +757,27 @@ export function App() {
       if (!response.ok) throw new Error();
       const data = (await response.json()) as RoutesResponse;
       setRoutes(data.routes);
-      setRouteOrigin(data.origin);
-      setRouteState(data.origin ? "ready" : "idle");
+      setRouteState(data.originRegistered ? "ready" : "idle");
     } catch {
       setRoutes([]);
-      setRouteOrigin(null);
       setRouteState("error");
     }
   }, []);
 
   useEffect(() => {
-    if (!userProfile.homeRegistered) {
+    if (!userProfile.departureRegistered) {
       setRoutes([]);
-      setRouteOrigin(null);
       setRouteState("idle");
       return;
     }
     void fetchRoutes();
   }, [
     fetchRoutes,
-    userProfile.homeRegistered,
-    userProfile.homeUpdatedAt,
+    userProfile.departureRegistered,
+    userProfile.departureUpdatedAt,
   ]);
 
-  const registerHomeLocation = async () => {
+  const registerDepartureLocation = async () => {
     setProfileError(null);
     if (!navigator.geolocation) {
       setProfileError("このブラウザでは位置情報を利用できません");
@@ -822,15 +814,15 @@ export function App() {
       );
     } catch {
       setProfileError(
-        "自宅を登録できませんでした。位置情報の許可を確認してください",
+        "ベース出発地点を登録できませんでした。位置情報の許可を確認してください",
       );
     } finally {
       setProfileState("idle");
     }
   };
 
-  const deleteHomeProfile = async () => {
-    if (!window.confirm("登録した自宅位置を削除しますか？")) return;
+  const deleteDepartureProfile = async () => {
+    if (!window.confirm("登録したベース出発地点を削除しますか？")) return;
 
     setProfileState("deleting");
     setProfileError(null);
@@ -843,7 +835,7 @@ export function App() {
         current ? { ...current, userProfile: profile } : current,
       );
     } catch {
-      setProfileError("自宅情報を削除できませんでした");
+      setProfileError("ベース出発地点を削除できませんでした");
     } finally {
       setProfileState("idle");
     }
@@ -915,7 +907,7 @@ export function App() {
     anchor: HTMLElement | null,
   ) => {
     if (savingCinemaIds.has(cinemaId)) return;
-    if (userProfile.homeRegistered) rememberCinemaAnchor(anchor);
+    if (userProfile.departureRegistered) rememberCinemaAnchor(anchor);
     const previousMode = cinemaTravelModes.get(cinemaId) ?? "transit";
     setCinemaPreferenceError(null);
     setCinemaTravelModes((current) => {
@@ -947,7 +939,7 @@ export function App() {
         next.set(cinemaId, preference.travelMode);
         return next;
       });
-      if (userProfile.homeRegistered) await fetchRoutes();
+      if (userProfile.departureRegistered) await fetchRoutes();
     } catch {
       pendingCinemaAnchorRef.current = null;
       setCinemaTravelModes((current) => {
@@ -971,7 +963,7 @@ export function App() {
     anchor: HTMLElement | null,
   ) => {
     if (savingCinemaIds.has(cinemaId)) return;
-    if (userProfile.homeRegistered) rememberCinemaAnchor(anchor);
+    if (userProfile.departureRegistered) rememberCinemaAnchor(anchor);
     const travelMode = cinemaTravelModes.get(cinemaId) ?? "transit";
     setCinemaPreferenceError(null);
     setSavingCinemaIds((current) => new Set(current).add(cinemaId));
@@ -1005,7 +997,7 @@ export function App() {
         );
         return next;
       });
-      if (userProfile.homeRegistered) await fetchRoutes();
+      if (userProfile.departureRegistered) await fetchRoutes();
     } catch {
       pendingCinemaAnchorRef.current = null;
       setCinemaPreferenceError("自分の所要時間を保存できませんでした");
@@ -1971,7 +1963,7 @@ export function App() {
             )}
           </div>
 
-          {view !== "movies" && userProfile.homeRegistered && (
+          {view !== "movies" && userProfile.departureRegistered && (
             <p
               className={[
                 "inline-status",
@@ -1987,19 +1979,19 @@ export function App() {
                 <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
               )}
               {routeState === "loading"
-                ? "自宅からの移動時間を読み込んでいます"
+                ? "ベース出発地点からの移動時間を読み込んでいます"
                 : routeState === "error"
-                  ? "自宅からの移動時間を読み込めませんでした"
-                  : "自宅からの固定移動時間を反映しています"}
+                  ? "ベース出発地点からの移動時間を読み込めませんでした"
+                  : "ベース出発地点からの固定移動時間を反映しています"}
             </p>
           )}
-          {view !== "movies" && !userProfile.homeRegistered && (
+          {view !== "movies" && !userProfile.departureRegistered && (
             <a
               className="home-profile-link"
               href={hashForAppView("account")}
             >
               <HouseLineIcon size={16} aria-hidden="true" />
-              マイページで自宅を登録
+              マイページでベース出発地点を登録
             </a>
           )}
           {cinemaPreferenceError && (
@@ -2027,8 +2019,8 @@ export function App() {
                   state={profileState}
                   collapseState={collapsePreferenceState}
                   error={profileError}
-                  onRegister={() => void registerHomeLocation()}
-                  onDelete={() => void deleteHomeProfile()}
+                  onRegister={() => void registerDepartureLocation()}
+                  onDelete={() => void deleteDepartureProfile()}
                   onCollapseChange={(value) =>
                     void saveScheduleCollapsePreference(value)
                   }
@@ -2358,7 +2350,7 @@ export function App() {
                         </p>
                       </div>
                       <CinemaExteriorThumbnail cinema={cinema} />
-                      {route && routeOrigin && (
+                      {route && (
                         <div className="cinema-route-actions">
                           <strong className="cinema-route-time">
                             約{route.durationMinutes}分
@@ -2366,7 +2358,6 @@ export function App() {
                           </strong>
                           <GoogleMapsRouteLink
                             cinema={cinema}
-                            origin={routeOrigin}
                             route={route}
                           />
                         </div>
@@ -2763,25 +2754,37 @@ function ProfilePanel({
 }) {
   const isBusy = state !== "idle";
   return (
-    <section className="profile-panel" aria-labelledby="home-profile-title">
+    <section
+      className="profile-panel"
+      aria-labelledby="departure-profile-title"
+    >
       <div className="profile-icon" aria-hidden="true">
         <HouseLineIcon size={27} />
       </div>
       <div className="profile-copy">
-        <h2 id="home-profile-title">
-          {profile.homeRegistered ? "自宅を登録済み" : "自宅を登録"}
+        <h2 id="departure-profile-title">
+          {profile.departureRegistered
+            ? "ベース出発地点を登録済み"
+            : "ベース出発地点を登録"}
         </h2>
         <p>
-          {profile.homeRegistered
-            ? "映画館までの時間は、登録した自宅位置を基準に固定して表示します。"
-            : "今いる場所を自宅として一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。"}
+          {profile.departureRegistered
+            ? "映画館までの時間は、登録したベース出発地点を基準に固定して表示します。"
+            : "現在地を一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。"}
         </p>
-        {profile.homeUpdatedAt && (
+        {profile.departureUpdatedAt && (
           <small>
-            {updatedFormatter.format(new Date(profile.homeUpdatedAt))}登録
+            {updatedFormatter.format(new Date(profile.departureUpdatedAt))}
+            登録
           </small>
         )}
       </div>
+      <aside className="profile-location-notice">
+        <WarningCircleIcon size={20} weight="fill" aria-hidden="true" />
+        <p>
+          映画館に向かうためのいつもの出発地点を登録してください。出発地点を登録しなくても、各映画館までの時間は手動でも登録可能です。
+        </p>
+      </aside>
       <div className="profile-display-setting">
         <label htmlFor="schedule-collapse-minutes">
           上映時間の折りたたみ
@@ -2817,14 +2820,14 @@ function ProfilePanel({
         <CrosshairIcon size={18} aria-hidden="true" />
         {state === "saving"
           ? "登録中"
-          : profile.homeRegistered
-            ? "現在地で自宅を更新"
-            : "現在地を自宅として登録"}
+          : profile.departureRegistered
+            ? "現在地でベース出発地点を更新"
+            : "現在地をベース出発地点として登録"}
       </button>
       <p className="profile-privacy-note">
-        GPSはこの操作時だけ使用します。保存する座標は約10m単位に丸め、画面には表示しません。
+        GPSはこの操作時だけ使用します。座標は約10m単位に丸め、ユーザーごとの鍵で暗号化して保存し、通常の画面や一覧APIには返しません。
       </p>
-      {profile.homeRegistered && (
+      {profile.departureRegistered && (
         <button
           type="button"
           className="profile-delete-action"
@@ -2832,7 +2835,7 @@ function ProfilePanel({
           onClick={onDelete}
         >
           <TrashIcon size={15} aria-hidden="true" />
-          {state === "deleting" ? "削除中" : "自宅情報を削除"}
+          {state === "deleting" ? "削除中" : "ベース出発地点を削除"}
         </button>
       )}
       {!enabled && (
@@ -2891,17 +2894,15 @@ function transitRouteSummary(route: RouteEstimate): string {
 
 function GoogleMapsRouteLink({
   cinema,
-  origin,
   route,
 }: {
   cinema: Cinema;
-  origin: { latitude: number; longitude: number };
   route: RouteEstimate;
 }) {
   return (
     <a
       className="google-maps-route-link"
-      href={buildGoogleMapsDirectionsUrl(origin, cinema, route.travelMode)}
+      href={`/api/route-guidance/${encodeURIComponent(cinema.id)}`}
       target="_blank"
       rel="noreferrer"
       aria-label={`${cinema.name}までの${routeTravelLabel(route)}経路をGoogle マップで開く`}

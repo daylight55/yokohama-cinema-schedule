@@ -5,7 +5,11 @@ import {
 } from "../../shared/search";
 import type { ScheduleResponse, Showing } from "../../shared/types";
 import { listActiveCinemas } from "../_lib/cinemas";
-import type { AuthContextData, PagesEnv } from "../_lib/env";
+import {
+  requireProfileEncryptionKey,
+  type AuthContextData,
+  type PagesEnv,
+} from "../_lib/env";
 import { listCinemaTravelPreferences } from "../_lib/cinema-travel-preferences";
 import { listMoviePreferences } from "../_lib/preferences";
 import { getUserProfile } from "../_lib/user-profile";
@@ -139,12 +143,16 @@ export const onRequestGet: PagesFunction<
             context.data.userId,
           ),
       publicOnly
-        ? Promise.resolve({
-            homeRegistered: false,
-            homeUpdatedAt: null,
+          ? Promise.resolve({
+            departureRegistered: false,
+            departureUpdatedAt: null,
             scheduleCollapseMinutes: 60 as const,
           })
-        : getUserProfile(context.env.DB, context.data.userId),
+        : getUserProfile(
+            context.env.DB,
+            requireProfileEncryptionKey(context.env),
+            context.data.userId,
+          ),
     ]);
 
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({
