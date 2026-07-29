@@ -2021,7 +2021,7 @@ export function App() {
                     type="search"
                     name="q"
                     value={searchDraft}
-                    placeholder="例：ノヴェチント、TOHO"
+                    placeholder="例：スパイダーマン、TOHOシネマズ"
                     autoComplete="off"
                     enterKeyHint="search"
                     onChange={(event) => setSearchDraft(event.target.value)}
