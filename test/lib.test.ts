@@ -726,6 +726,17 @@ describe("movie grouping", () => {
     expect(groups[1].releaseDate).toBeNull();
   });
 
+  it("groups bilingual title separator variants as one movie", () => {
+    const groups = groupByMovie([
+      showing({ id: "slash", title: "Michael/マイケル" }),
+      showing({ id: "full-width-slash", title: "Michael／マイケル（字幕）" }),
+      showing({ id: "space", title: "Michael マイケル" }),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].showings).toHaveLength(3);
+  });
+
   it("groups the guide by one-minute JST slots", () => {
     const groups = groupByScheduleTime([
       showing({

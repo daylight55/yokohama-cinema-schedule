@@ -23,6 +23,13 @@ describe("movie preferences", () => {
     );
   });
 
+  it("uses the same key across bilingual title separators", () => {
+    const expectedKey = moviePreferenceKey("Michael/マイケル");
+
+    expect(moviePreferenceKey("Michael／マイケル（字幕）")).toBe(expectedKey);
+    expect(moviePreferenceKey("Michael マイケル")).toBe(expectedKey);
+  });
+
   it.each([
     ["４ＤＸ　キングダム　魂の決戦（字幕）（ＰＧ１２）", "キングダム 魂の決戦"],
     ["【ＩＭＡＸ／日本語字幕版】 テスト映画 [PG-12]", "テスト映画"],

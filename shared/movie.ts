@@ -70,6 +70,7 @@ export function moviePreferenceKey(title: string): string {
   return title
     .normalize("NFKC")
     .replace(/\s+/g, "")
+    .replaceAll("/", "")
     .replace(/[【（(].*?(?:】|）|\))/g, "")
     .replace(
       /[［\[](?:字幕|吹替|日本語版|2D|3D|IMAX|4DX|R15\+|PG-?12)[］\]]/gi,
