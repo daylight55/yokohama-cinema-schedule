@@ -78,6 +78,7 @@ import {
   scrollToInitialTimeMarker,
   scheduleProgramClassName,
   shouldDefaultExpandScheduleBucket,
+  shouldExpandScheduleBucket,
   type AppView,
   type ColorTheme,
 } from "./lib";
@@ -2545,14 +2546,16 @@ export function App() {
                           (group) => group.time === markerGroup.time,
                         ),
                     );
-                    const defaultOpen =
+                    const defaultOpen = shouldExpandScheduleBucket(
+                      interactiveSearchQuery,
                       containsCurrentMarker ||
-                      shouldDefaultExpandScheduleBucket(
-                        bucket,
-                        now,
-                        selectedDate,
-                        today,
-                      );
+                        shouldDefaultExpandScheduleBucket(
+                          bucket,
+                          now,
+                          selectedDate,
+                          today,
+                        ),
+                    );
                     return (
                       <details
                         className="schedule-window"
