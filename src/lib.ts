@@ -160,6 +160,10 @@ export function formatReachableLabel(travelMinutes: number): string {
   return `間に合う・移動${travelMinutes}分`;
 }
 
+export function formatUnreachableLabel(travelMinutes: number): string {
+  return `間に合わない・移動${travelMinutes}分`;
+}
+
 export type DateSwipeDirection = "previous" | "next";
 
 export function getDateSwipeDirection(
