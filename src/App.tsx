@@ -59,6 +59,7 @@ import {
   buildDates,
   filterShowings,
   findCurrentTimeMarkerIndex,
+  formatReachableLabel,
   groupByScheduleTime,
   groupScheduleTimeBuckets,
   groupByMovie,
@@ -1351,6 +1352,7 @@ export function App() {
                       isPast,
                       isReachable,
                       isUnreachable,
+                      travelMinutes,
                     }) => {
                       return (
                         <CinemaSlot
@@ -1359,6 +1361,7 @@ export function App() {
                           isPast={isPast}
                           isReachable={isReachable}
                           isUnreachable={isUnreachable}
+                          travelMinutes={travelMinutes}
                         />
                       );
                     },
@@ -2654,17 +2657,24 @@ function CinemaSlot({
   isPast,
   isReachable,
   isUnreachable,
+  travelMinutes,
 }: {
   showing: Showing;
   isPast: boolean;
   isReachable: boolean;
   isUnreachable: boolean;
+  travelMinutes: number | null;
 }) {
   const start = timeFormatter.format(new Date(showing.startsAt));
   const end = showing.endsAt
     ? timeFormatter.format(new Date(showing.endsAt))
     : null;
   const metadata = [showing.screen, showing.format].filter(Boolean).join(" / ");
+  const reachableLabel = isReachable
+    ? travelMinutes === null
+      ? "間に合う"
+      : formatReachableLabel(travelMinutes)
+    : null;
 
   return (
     <a
@@ -2680,14 +2690,16 @@ function CinemaSlot({
       target="_blank"
       rel="noreferrer"
       role="listitem"
-      aria-label={`${isPast ? "開始済み " : ""}${isUnreachable ? "移動時間では間に合わない " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+      aria-label={`${isPast ? "開始済み " : ""}${reachableLabel ? `${reachableLabel} ` : ""}${isUnreachable ? "移動時間では間に合わない " : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
     >
       <div className="slot-time">
         <strong>{start}</strong>
         <span className="slot-time-details">
           {end && <span>{end}終了</span>}
           {isPast && <span className="started-label">開始済み</span>}
-          {isReachable && <span className="reachable-label">間に合う</span>}
+          {reachableLabel && (
+            <span className="reachable-label">{reachableLabel}</span>
+          )}
           {isUnreachable && (
             <span className="unreachable-label">間に合わない</span>
           )}

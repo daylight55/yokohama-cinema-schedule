@@ -102,6 +102,10 @@ export const AREA_OPTIONS: Array<{
 export const MOVIE_HIDE_CONFIRMATION =
   "上映スケジュールから非表示になりますが、よいですか？";
 
+export function formatReachableLabel(travelMinutes: number): string {
+  return `間に合う・移動${travelMinutes}分`;
+}
+
 export type DateSwipeDirection = "previous" | "next";
 
 export function getDateSwipeDirection(
@@ -217,6 +221,7 @@ export interface ScheduleMoviePresentation {
     isPast: boolean;
     isReachable: boolean;
     isUnreachable: boolean;
+    travelMinutes: number | null;
   }>;
 }
 
@@ -256,11 +261,13 @@ export function getScheduleMoviePresentation(
       now,
       routeByCinema,
     );
+    const route = routeByCinema.get(showing.cinemaId);
     return {
       showing,
       isPast: reachability === "past",
       isReachable: reachability === "reachable",
       isUnreachable: reachability === "unreachable",
+      travelMinutes: route?.durationMinutes ?? null,
     };
   });
 
