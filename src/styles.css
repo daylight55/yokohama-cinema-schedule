@@ -822,6 +822,32 @@ footer {
   font-size: 10px;
 }
 
+.profile-location-notice {
+  display: grid;
+  min-width: 0;
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 13px;
+  border: 1px solid rgb(245 174 75 / 48%);
+  border-radius: 10px;
+  background: rgb(245 174 75 / 10%);
+  color: #ffd894;
+}
+
+.profile-location-notice svg {
+  margin-top: 2px;
+}
+
+.profile-location-notice p {
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
 .profile-display-setting {
   display: grid;
   grid-column: 1 / -1;
@@ -3139,6 +3165,12 @@ html[data-theme="light"] .calendar-connection {
 
 html[data-theme="light"] .account-notice {
   border-color: rgb(21 154 107 / 42%);
+}
+
+html[data-theme="light"] .profile-location-notice {
+  border-color: rgb(190 116 18 / 42%);
+  background: rgb(255 188 75 / 16%);
+  color: #7a4508;
 }
 
 html[data-theme="light"] .account-message.error {

@@ -514,7 +514,7 @@ function PlanTimeline({
       {items.map((item, index) => (
         <li key={`${item.showingId}-${item.sequence}`}>
           <div className="plan-transfer">
-            <span>{index === 0 ? "自宅から" : "移動"}</span>
+            <span>{index === 0 ? "ベース出発地点から" : "移動"}</span>
             <strong>約{item.transferMinutes}分</strong>
           </div>
           <article>

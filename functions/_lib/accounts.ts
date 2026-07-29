@@ -1,5 +1,6 @@
 import type { AuthUser, ResolvedSession } from "./auth";
 import { findUserByEmail, LEGACY_USER_ID, normalizeEmail } from "./auth";
+import { prepareDepartureLocationTransfer } from "./user-profile";
 
 interface IdentityRow {
   user_id: string;
@@ -72,8 +73,15 @@ async function realUserCount(db: D1Database): Promise<number> {
 async function claimLegacyAccount(
   db: D1Database,
   userId: string,
+  profileEncryptionKey: string,
 ): Promise<void> {
   const now = new Date().toISOString();
+  const departureProfileTransfer = await prepareDepartureLocationTransfer(
+    db,
+    profileEncryptionKey,
+    LEGACY_USER_ID,
+    userId,
+  );
   await db.batch([
     db
       .prepare(
@@ -88,9 +96,7 @@ async function claimLegacyAccount(
     db
       .prepare("UPDATE app_preferences SET user_id = ? WHERE user_id = ?")
       .bind(userId, LEGACY_USER_ID),
-    db
-      .prepare("UPDATE user_profiles SET user_id = ? WHERE user_id = ?")
-      .bind(userId, LEGACY_USER_ID),
+    departureProfileTransfer,
     db
       .prepare(
         "UPDATE user_home_station_access SET user_id = ? WHERE user_id = ?",
@@ -120,6 +126,7 @@ export async function completeGoogleLogin(
   db: D1Database,
   identity: GoogleIdentity,
   currentSession: ResolvedSession | null,
+  profileEncryptionKey: string,
 ): Promise<AuthUser> {
   const normalizedEmail = normalizeEmail(identity.email);
   if (
@@ -213,7 +220,9 @@ export async function completeGoogleLogin(
       )
       .bind(now, normalizedEmail),
   ]);
-  if (claimingLegacy) await claimLegacyAccount(db, userId);
+  if (claimingLegacy) {
+    await claimLegacyAccount(db, userId, profileEncryptionKey);
+  }
   return {
     id: userId,
     email: normalizedEmail,

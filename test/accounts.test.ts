@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { completeGoogleLogin } from "../functions/_lib/accounts";
 import { listMoviePreferences } from "../functions/_lib/preferences";
-import { getHomeLocation } from "../functions/_lib/user-profile";
+import { getDepartureLocation } from "../functions/_lib/user-profile";
+
+const PROFILE_ENCRYPTION_KEY = btoa("a".repeat(32));
 
 function loginDatabase(realUsers: number, invited = false): D1Database {
   return {
@@ -34,6 +36,7 @@ describe("multi-user account bootstrap", () => {
           emailVerified: true,
         },
         null,
+        PROFILE_ENCRYPTION_KEY,
       ),
     ).rejects.toThrow("admin_bootstrap_required");
   });
@@ -49,6 +52,7 @@ describe("multi-user account bootstrap", () => {
           emailVerified: true,
         },
         null,
+        PROFILE_ENCRYPTION_KEY,
       ),
     ).rejects.toThrow("invite_required");
   });
@@ -72,6 +76,7 @@ describe("multi-user account bootstrap", () => {
           status: "active",
         },
       },
+      PROFILE_ENCRYPTION_KEY,
     );
 
     expect(user.email).toBe("admin@example.com");
@@ -93,14 +98,18 @@ describe("user-owned data access", () => {
     expect(bind).toHaveBeenCalledWith("user-a");
   });
 
-  it("binds the stored home location to the authenticated user", async () => {
+  it("binds the stored departure location to the authenticated user", async () => {
     const first = vi.fn().mockResolvedValue(null);
     const bind = vi.fn(() => ({ first }));
     const db = {
       prepare: vi.fn(() => ({ bind })),
     } as unknown as D1Database;
 
-    await getHomeLocation(db, "user-b");
+    await getDepartureLocation(
+      db,
+      PROFILE_ENCRYPTION_KEY,
+      "user-b",
+    );
     expect(bind).toHaveBeenCalledWith("user-b");
   });
 });

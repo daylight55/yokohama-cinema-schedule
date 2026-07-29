@@ -21,7 +21,7 @@ import {
   listCinemaTravelPreferences,
 } from "./cinema-travel-preferences";
 import { listActiveCinemas } from "./cinemas";
-import type { PagesEnv } from "./env";
+import { requireProfileEncryptionKey, type PagesEnv } from "./env";
 import { listMoviePreferences } from "./preferences";
 import {
   estimateStationWalkFallbacks,
@@ -29,7 +29,10 @@ import {
   listStationConnections,
   listStations,
 } from "./stations";
-import { getHomeLocation, listHomeStationAccess } from "./user-profile";
+import {
+  getDepartureLocation,
+  listDepartureStationAccess,
+} from "./user-profile";
 
 interface ShowingRow {
   id: string;
@@ -147,8 +150,12 @@ async function homeTravelMinutes(
   cinemas: Cinema[],
   userId: string,
 ): Promise<Map<string, number>> {
-  const home = await getHomeLocation(env.DB, userId);
-  if (!home) return new Map();
+  const departure = await getDepartureLocation(
+    env.DB,
+    requireProfileEncryptionKey(env),
+    userId,
+  );
+  if (!departure) return new Map();
   const preferences = await listCinemaTravelPreferences(
     env.DB,
     cinemas,
@@ -176,7 +183,7 @@ async function homeTravelMinutes(
   const stationById = new Map(
     stations.map((station) => [station.id, station]),
   );
-  const storedWalks = await listHomeStationAccess(
+  const storedWalks = await listDepartureStationAccess(
     env.DB,
     stationById,
     userId,
@@ -194,14 +201,14 @@ async function homeTravelMinutes(
     (station) =>
       storedWalkByStation.get(station.id) ??
       estimateStationWalkFallbacks(
-        home.latitude,
-        home.longitude,
+      departure.latitude,
+      departure.longitude,
         [station],
       )[0],
   );
   const transitRoutes = buildTransitRoutes(
-    home.latitude,
-    home.longitude,
+    departure.latitude,
+    departure.longitude,
     transitCinemas,
     stationWalks,
     stations,
@@ -216,8 +223,8 @@ async function homeTravelMinutes(
       const route =
         transitRoutes.get(cinema.id) ??
         estimateRoute(
-          home.latitude,
-          home.longitude,
+          departure.latitude,
+          departure.longitude,
           cinema,
           travelMode,
         );

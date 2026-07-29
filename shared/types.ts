@@ -117,7 +117,7 @@ export interface StationConnection {
 export interface RoutesResponse {
   generatedAt: string;
   provider: RouteEstimate["provider"];
-  origin: RouteOrigin | null;
+  originRegistered: boolean;
   routes: RouteEstimate[];
 }
 
@@ -144,8 +144,8 @@ export interface CinemaTravelPreference {
 }
 
 export interface UserProfile {
-  homeRegistered: boolean;
-  homeUpdatedAt: string | null;
+  departureRegistered: boolean;
+  departureUpdatedAt: string | null;
   scheduleCollapseMinutes: ScheduleCollapseMinutes;
 }
 
