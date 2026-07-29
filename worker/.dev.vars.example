@@ -1,1 +1,2 @@
+TMDB_API_READ_TOKEN="replace-with-tmdb-api-read-access-token"
 WORKER_TRIGGER_TOKEN="replace-with-a-long-random-token"

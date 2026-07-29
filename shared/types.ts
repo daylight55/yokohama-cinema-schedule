@@ -42,6 +42,7 @@ export interface Showing {
   movieKey: string;
   title: string;
   imageUrl: string | null;
+  releaseDate?: string | null;
   startsAt: string;
   endsAt: string | null;
   screen: string | null;

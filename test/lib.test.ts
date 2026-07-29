@@ -642,7 +642,12 @@ describe("movie grouping", () => {
   it("groups normalized titles and sorts by earliest showing", () => {
     const groups = groupByMovie([
       showing({ id: "later", title: "作品B", startsAt: "2026-07-24T12:00:00Z" }),
-      showing({ id: "first", title: "作品A", startsAt: "2026-07-24T11:00:00Z" }),
+      showing({
+        id: "first",
+        title: "作品A",
+        releaseDate: "2026-07-18",
+        startsAt: "2026-07-24T11:00:00Z",
+      }),
       showing({
         id: "same",
         title: "【字幕】作品A",
@@ -653,6 +658,8 @@ describe("movie grouping", () => {
       ["作品A", 2],
       ["作品B", 1],
     ]);
+    expect(groups[0].releaseDate).toBe("2026-07-18");
+    expect(groups[1].releaseDate).toBeNull();
   });
 
   it("groups the guide by one-minute JST slots", () => {

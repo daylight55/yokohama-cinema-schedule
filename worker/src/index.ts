@@ -6,7 +6,10 @@ import {
   timestampForCacheBuster,
   todayInJst,
 } from "../../shared/date";
-import { movieDisplayTitle } from "../../shared/movie";
+import {
+  movieDisplayTitle,
+  moviePreferenceKey,
+} from "../../shared/movie";
 import { showingSearchText } from "../../shared/search";
 import type { NormalizedShowing } from "../../shared/types";
 import { parseAeonSchedule } from "./parsers/aeon";
@@ -23,10 +26,12 @@ import {
   parseUnitedMovieImages,
   parseUnitedSchedule,
 } from "./parsers/united";
+import { fetchTmdbReleaseDates } from "./tmdb";
 
 interface Env {
   DB: D1Database;
   SCHEDULE_DAYS?: string;
+  TMDB_API_READ_TOKEN?: string;
   WORKER_TRIGGER_TOKEN?: string;
 }
 
@@ -194,6 +199,10 @@ export async function refreshBatch(
   const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
   const dates = dateRange(todayInJst(), days);
   await seedCinemas(env.DB);
+  if (batch === 0 && !onlySourceIds) {
+    await refreshTmdbReleaseDateCatalog(env, dates[0]);
+  }
+  const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
 
   const activeCinemaWindows = await listActiveCinemaWindows(
     env.DB,
@@ -248,6 +257,7 @@ export async function refreshBatch(
         source.id,
         publishedDates,
         showings,
+        releaseDateByTitle,
       );
       await recordDateOutcomes(
         env.DB,
@@ -753,6 +763,7 @@ async function replaceSourceDates(
   sourceId: string,
   dates: string[],
   showings: NormalizedShowing[],
+  releaseDateByTitle: ReadonlyMap<string, string>,
 ): Promise<void> {
   if (dates.length === 0) return;
   const fetchedAt = new Date().toISOString();
@@ -784,9 +795,9 @@ async function replaceSourceDates(
         .prepare(
           `INSERT INTO showings (
             id, source_id, cinema_id, movie_key, title, image_url,
-            starts_at, ends_at,
+            release_date, starts_at, ends_at,
             screen, format, booking_url, purchasable, fetched_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id,
@@ -795,6 +806,8 @@ async function replaceSourceDates(
           showing.movieKey,
           showing.title,
           showing.imageUrl,
+          releaseDateByTitle.get(moviePreferenceKey(showing.title)) ??
+            null,
           showing.startsAt,
           showing.endsAt,
           showing.screen,
@@ -825,6 +838,96 @@ async function replaceSourceDates(
     }),
   ];
   await db.batch(statements);
+}
+
+async function refreshTmdbReleaseDateCatalog(
+  env: Env,
+  today: string,
+): Promise<void> {
+  const accessToken = env.TMDB_API_READ_TOKEN?.trim();
+  if (!accessToken) {
+    console.log(
+      JSON.stringify({
+        message: "TMDB release-date refresh skipped",
+        reason: "TMDB_API_READ_TOKEN is not configured",
+      }),
+    );
+    return;
+  }
+
+  try {
+    const lastFetched = await env.DB
+      .prepare(
+        "SELECT MAX(fetched_at) AS fetched_at FROM movie_release_dates",
+      )
+      .first<{ fetched_at: string | null }>();
+    if (
+      lastFetched?.fetched_at &&
+      Date.now() - new Date(lastFetched.fetched_at).getTime() <
+        20 * 60 * 60 * 1000
+    ) {
+      return;
+    }
+
+    const records = await fetchTmdbReleaseDates(
+      accessToken,
+      today,
+    );
+    const fetchedAt = new Date().toISOString();
+    for (let offset = 0; offset < records.length; offset += 50) {
+      await env.DB.batch(
+        records.slice(offset, offset + 50).map((record) =>
+          env.DB
+            .prepare(
+              `INSERT INTO movie_release_dates (
+                title_key, tmdb_movie_id, tmdb_title, release_date,
+                fetched_at
+              ) VALUES (?, ?, ?, ?, ?)
+              ON CONFLICT(title_key) DO UPDATE SET
+                tmdb_movie_id = excluded.tmdb_movie_id,
+                tmdb_title = excluded.tmdb_title,
+                release_date = excluded.release_date,
+                fetched_at = excluded.fetched_at`,
+            )
+            .bind(
+              record.titleKey,
+              record.tmdbMovieId,
+              record.tmdbTitle,
+              record.releaseDate,
+              fetchedAt,
+            ),
+        ),
+      );
+    }
+    console.log(
+      JSON.stringify({
+        message: "TMDB release dates refreshed",
+        recordCount: records.length,
+        fetchedAt,
+      }),
+    );
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        message: "TMDB release-date refresh failed",
+        error: safeError(error),
+      }),
+    );
+  }
+}
+
+async function loadMovieReleaseDates(
+  db: D1Database,
+): Promise<Map<string, string>> {
+  const result = await db
+    .prepare("SELECT title_key, release_date FROM movie_release_dates")
+    .all<{ title_key: string; release_date: string }>();
+  return new Map(
+    (result.results ?? []).map((row) => [
+      row.title_key,
+      row.release_date,
+    ]),
+  );
 }
 
 async function recordDateOutcomes(

@@ -2122,14 +2122,30 @@ export function App() {
                   </p>
                 </div>
               </div>
-            )}
+          )}
           {!loading && !error && view === "movies" && movieList.length > 0 && (
-            <ul className="movie-list">
-              {movieList.map((movie, index) => {
+            <>
+              <p className="movie-release-source">
+                日本公開日の情報：
+                <a
+                  href="https://www.themoviedb.org/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  TMDB
+                </a>
+              </p>
+              <ul className="movie-list">
+                {movieList.map((movie, index) => {
                 const isStarred = starredMovieKeys.has(movie.preferenceKey);
                 const status =
                   movieStatusByKey.get(movie.preferenceKey) ?? null;
                 const externalLinks = buildMovieExternalLinks(movie.title);
+                const releaseDateLabel = movie.releaseDate
+                  ? dayFormatter.format(
+                      new Date(`${movie.releaseDate}T12:00:00+09:00`),
+                    )
+                  : null;
                 const showingDateLabels = listMovieShowingDates(
                   movie.showings,
                 ).map((date) => {
@@ -2189,6 +2205,17 @@ export function App() {
                           {movie.title}
                         </a>
                       </strong>
+                      {movie.releaseDate && releaseDateLabel && (
+                        <p
+                          className="movie-release-date"
+                          aria-label={`${movie.title}の日本公開日`}
+                        >
+                          <CalendarDotsIcon size={13} aria-hidden="true" />
+                          <time dateTime={movie.releaseDate}>
+                            日本公開 {releaseDateLabel}
+                          </time>
+                        </p>
+                      )}
                       <div
                         className="movie-external-links"
                         aria-label={`${movie.title}の作品情報`}
@@ -2288,8 +2315,9 @@ export function App() {
                     )}
                   </li>
                 );
-              })}
-            </ul>
+                })}
+              </ul>
+            </>
           )}
           {!loading &&
             !error &&

@@ -395,6 +395,7 @@ export function groupByMovie(showings: Showing[]): Array<{
   preferenceKey: string;
   title: string;
   imageUrl: string | null;
+  releaseDate: string | null;
   showings: Showing[];
 }> {
   const groups = new Map<string, Showing[]>();
@@ -409,6 +410,9 @@ export function groupByMovie(showings: Showing[]): Array<{
       title: entries[0].title,
       imageUrl:
         entries.find((showing) => showing.imageUrl)?.imageUrl ?? null,
+      releaseDate:
+        entries.find((showing) => showing.releaseDate)?.releaseDate ??
+        null,
       showings: entries.sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
     }))
     .sort((a, b) => {
