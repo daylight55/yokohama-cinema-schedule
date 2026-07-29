@@ -75,6 +75,10 @@ const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
 
 const USER_AGENT =
   "YokohamaCinemaSchedule/0.1 (private personal schedule viewer)";
+const STANDARD_BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+  "AppleWebKit/537.36 (KHTML, like Gecko) " +
+  "Chrome/140.0.0.0 Safari/537.36";
 
 export default {
   async scheduled(
@@ -360,7 +364,6 @@ function buildSources(): Source[] {
           "tjoy-yokohama",
           "tjoy-yokohama",
           "https://tjoy.jp/t-joy_yokohama",
-          "190",
         ),
     },
     {
@@ -379,7 +382,6 @@ function buildSources(): Source[] {
           "yokohama-burg13",
           "yokohama-burg13",
           "https://tjoy.jp/yokohama_burg13",
-          "170",
         ),
     },
     {
@@ -573,43 +575,11 @@ async function fetchTjoy(
   sourceId: string,
   cinemaId: string,
   theaterUrl: string,
-  theaterId: string,
 ): Promise<SourceFetchResult> {
-  const initial = await checkedFetch(theaterUrl);
-  const html = await initial.text();
-  const setCookie = initial.headers.get("set-cookie") ?? "";
-  const cookie = setCookie
-    .split(/,(?=\s*[^;,=\s]+=[^;,]+)/)
-    .map((part) => part.trim().split(";")[0])
-    .join("; ");
-  const csrf =
-    html.match(
-      /<input[^>]+name=["']_csrfToken["'][^>]+value=["']([^"']+)["']/i,
-    )?.[1] ??
-    html.match(
-      /<meta[^>]+name=["']csrf-token["'][^>]+content=["']([^"']+)["']/i,
-    )?.[1] ??
-    setCookie.match(/(?:^|,\s*)csrfToken=([^;,]+)/)?.[1];
-  if (!csrf) throw new Error("T-JoyのCSRFトークンを取得できませんでした");
-
   return fetchDatesIndependently(dates, async (date) => {
-    const body = new URLSearchParams({
-      data: JSON.stringify({ date, theaterId }),
-      _csrfToken: csrf,
+    const response = await checkedFetch(tjoyScheduleUrl(theaterUrl, date), {
+      headers: tjoyRequestHeaders(theaterUrl),
     });
-    const response = await checkedFetch(
-      "https://tjoy.jp/theaterTop/scheduleGetHtmlApi",
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "x-requested-with": "XMLHttpRequest",
-          cookie,
-          referer: theaterUrl,
-        },
-        body,
-      },
-    );
     return parseTjoySchedule(
       await response.text(),
       date,
@@ -618,6 +588,26 @@ async function fetchTjoy(
       theaterUrl,
     );
   });
+}
+
+export function tjoyScheduleUrl(
+  theaterUrl: string,
+  date: string,
+): string {
+  const scheduleUrl = new URL(theaterUrl);
+  scheduleUrl.searchParams.set("date", date);
+  return scheduleUrl.toString();
+}
+
+export function tjoyRequestHeaders(
+  theaterUrl: string,
+): Record<string, string> {
+  return {
+    accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    referer: theaterUrl,
+    "user-agent": STANDARD_BROWSER_USER_AGENT,
+  };
 }
 
 function successfulFetch(
@@ -649,7 +639,7 @@ async function checkedFetch(
   const host = new URL(input.toString()).hostname;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const headers = new Headers(init.headers);
-    headers.set("user-agent", USER_AGENT);
+    if (!headers.has("user-agent")) headers.set("user-agent", USER_AGENT);
     headers.set("accept-language", "ja,en;q=0.5");
     let response: Response;
     try {

@@ -8,6 +8,8 @@ import {
   sourceDateOutcomes,
   sourceIdsForBatch,
   sourceBatchForCron,
+  tjoyRequestHeaders,
+  tjoyScheduleUrl,
 } from "../worker/src/index";
 
 describe("worker source batches", () => {
@@ -97,5 +99,19 @@ describe("worker source batches", () => {
         error: "HTTP 503",
       },
     ]);
+  });
+
+  it("requests a T-Joy schedule through its public date URL", () => {
+    expect(
+      tjoyScheduleUrl(
+        "https://tjoy.jp/t-joy_yokohama",
+        "2026-07-31",
+      ),
+    ).toBe("https://tjoy.jp/t-joy_yokohama?date=2026-07-31");
+    expect(
+      tjoyRequestHeaders("https://tjoy.jp/t-joy_yokohama")[
+        "user-agent"
+      ],
+    ).toMatch(/^Mozilla\/5\.0 /);
   });
 });
