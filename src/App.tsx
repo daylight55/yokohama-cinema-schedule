@@ -2405,9 +2405,35 @@ function CurrentTimeMarker({
 
 function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!("IntersectionObserver" in window)) {
+      setIsOpen(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setIsOpen(true);
+        observer.disconnect();
+      },
+      {
+        rootMargin: "200px 0px",
+        threshold: 0.01,
+      },
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <figure
+      ref={containerRef}
       className={`cinema-exterior${isOpen ? " cinema-exterior-open" : ""}`}
     >
       {isOpen ? (
@@ -2433,11 +2459,11 @@ function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
           type="button"
           className="cinema-exterior-placeholder"
           onClick={() => setIsOpen(true)}
-          aria-label={`${cinema.name}の操作できるStreet Viewを開く`}
+          aria-label={`${cinema.name}のStreet Viewを今すぐ読み込む`}
         >
           <BuildingsIcon size={28} />
-          <strong>Street Viewを開く</strong>
-          <span>画面内で向きを変えられます</span>
+          <strong>Street Viewを読み込む</strong>
+          <span>表示位置までスクロールすると自動で読み込みます</span>
         </button>
       )}
       <figcaption>Google Street View</figcaption>
