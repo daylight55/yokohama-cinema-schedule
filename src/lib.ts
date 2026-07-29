@@ -166,6 +166,26 @@ export function formatUnreachableLabel(travelMinutes: number): string {
 
 export type DateSwipeDirection = "previous" | "next";
 
+export function isDateSwipeBlockedByHorizontalScroll(
+  target: EventTarget | null,
+): boolean {
+  const closest = (
+    target as
+      | {
+          closest?: (
+            selector: string,
+          ) => { clientWidth: number; scrollWidth: number } | null;
+        }
+      | null
+  )?.closest;
+  if (typeof closest !== "function") return false;
+
+  const scrollRegion = closest.call(target, "[data-horizontal-scroll]");
+  return Boolean(
+    scrollRegion && scrollRegion.scrollWidth > scrollRegion.clientWidth,
+  );
+}
+
 export function getDateSwipeDirection(
   deltaX: number,
   deltaY: number,

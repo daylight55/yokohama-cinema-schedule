@@ -73,6 +73,7 @@ import {
   getAppPageScrollTarget,
   getScheduleMoviePresentation,
   hashForAppView,
+  isDateSwipeBlockedByHorizontalScroll,
   listMovieShowingDates,
   normalizeMovieTitle,
   parseColorTheme,
@@ -1244,7 +1245,8 @@ export function App() {
     if (
       (view !== "schedule" && view !== "movies") ||
       loading ||
-      event.touches.length !== 1
+      event.touches.length !== 1 ||
+      isDateSwipeBlockedByHorizontalScroll(event.target)
     ) {
       return;
     }
@@ -1616,6 +1618,7 @@ export function App() {
                 </div>
                 <div
                   className="cinema-strip"
+                  data-horizontal-scroll
                   role="list"
                   aria-label={`${movie.title}の上映館`}
                 >
@@ -1955,7 +1958,7 @@ export function App() {
       >
         {(view === "schedule" || view === "movies") && (
         <nav className="date-nav" aria-label="上映日">
-          <div className="date-strip">
+          <div className="date-strip" data-horizontal-scroll>
             {view === "movies" && (
               <a
                 className={
@@ -2055,7 +2058,12 @@ export function App() {
         view === "movies" ||
         view === "cinemas") && (
         <section className="schedule-controls" aria-label="上映の絞り込み">
-          <div className="area-strip" role="group" aria-label="エリア">
+          <div
+            className="area-strip"
+            data-horizontal-scroll
+            role="group"
+            aria-label="エリア"
+          >
             {AREA_OPTIONS.map((area) => (
               <button
                 key={area.id}
