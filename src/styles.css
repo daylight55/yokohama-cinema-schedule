@@ -1420,6 +1420,22 @@ footer {
   text-underline-offset: 3px;
 }
 
+.movie-showing-dates {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.movie-showing-dates svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--accent);
+}
+
 .movie-status-actions {
   display: flex;
   min-width: 0;
