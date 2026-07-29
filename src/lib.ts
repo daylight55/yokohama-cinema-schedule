@@ -217,7 +217,8 @@ export type ShowingReachability =
   | "past"
   | "unknown"
   | "unreachable"
-  | "reachable";
+  | "reachable"
+  | "later";
 
 export function getShowingReachability(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
@@ -242,6 +243,15 @@ export function getShowingReachability(
   if (startsInMinutes < earliestStartMinutes) {
     return "unreachable";
   }
+  const farthestTravelMinutes = Math.max(
+    ...Array.from(routeByCinema.values(), ({ durationMinutes }) => durationMinutes),
+  );
+  const reachabilityWindowMinutes =
+    farthestTravelMinutes + arrivalMarginMinutes;
+  if (startsInMinutes > reachabilityWindowMinutes) {
+    return "later";
+  }
+
   return "reachable";
 }
 
