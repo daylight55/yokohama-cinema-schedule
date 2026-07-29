@@ -7,6 +7,7 @@ import {
   buildMovieExternalLinks,
   filterShowings,
   findCurrentTimeMarkerIndex,
+  formatReachableLabel,
   buildGoogleMapsDirectionsUrl,
   getDateSwipeDirection,
   getScheduleMoviePresentation,
@@ -30,6 +31,12 @@ describe("movie preference confirmation", () => {
     expect(MOVIE_HIDE_CONFIRMATION).toBe(
       "上映スケジュールから非表示になりますが、よいですか？",
     );
+  });
+});
+
+describe("reachable showing labels", () => {
+  it("includes the travel time used by the reachability decision", () => {
+    expect(formatReachableLabel(25)).toBe("間に合う・移動25分");
   });
 });
 
@@ -360,6 +367,7 @@ describe("schedule filtering", () => {
     expect(presentation.isReachable).toBe(true);
     expect(presentation.isUnreachable).toBe(false);
     expect(presentation.showings[0]?.isReachable).toBe(true);
+    expect(presentation.showings[0]?.travelMinutes).toBe(25);
     expect(
       scheduleProgramClassName({
         isPast: presentation.isPast,
@@ -385,6 +393,7 @@ describe("schedule filtering", () => {
     expect(presentation.isReachable).toBe(false);
     expect(presentation.isUnreachable).toBe(true);
     expect(presentation.showings[0]?.isUnreachable).toBe(true);
+    expect(presentation.showings[0]?.travelMinutes).toBe(25);
     expect(
       scheduleProgramClassName({
         isPast: presentation.isPast,
