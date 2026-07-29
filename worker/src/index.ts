@@ -1119,8 +1119,12 @@ function deduplicate(showings: NormalizedShowing[]): NormalizedShowing[] {
 export function normalizeShowingMovieTitle(
   showing: NormalizedShowing,
 ): NormalizedShowing {
-  const title = movieDisplayTitle(showing.title);
-  return title && title !== showing.title ? { ...showing, title } : showing;
+  const title = movieDisplayTitle(showing.title) || showing.title.trim();
+  const movieKey = moviePreferenceKey(title) || showing.movieKey;
+
+  return title !== showing.title || movieKey !== showing.movieKey
+    ? { ...showing, title, movieKey }
+    : showing;
 }
 
 function showingId(showing: NormalizedShowing): string {
