@@ -252,7 +252,7 @@ describe("schedule filtering", () => {
     ).toBe(false);
   });
 
-  it("classifies every showing through the reachable window without a gap", () => {
+  it("classifies every routed showing without a gap", () => {
     const routeByCinema = new Map([[route.cinemaId, route]]);
 
     expect(
@@ -282,17 +282,50 @@ describe("schedule filtering", () => {
         now,
         routeByCinema,
       ),
-    ).toBe("later");
+    ).toBe("reachable");
   });
 
-  it("does not mark a showing more than thirty minutes after arrival", () => {
+  it("keeps a later showing reachable once the arrival margin is met", () => {
     expect(
       isShowingReachable(
         showing({ startsAt: "2026-07-24T09:56:00.000Z" }),
         now,
         new Map([[route.cinemaId, route]]),
       ),
-    ).toBe(false);
+    ).toBe(true);
+  });
+
+  it("does not exclude a closer cinema when a farther cinema is reachable", () => {
+    const closerRoute = {
+      ...route,
+      cinemaId: "closer-cinema",
+      durationMinutes: 25,
+    };
+    const fartherRoute = {
+      ...route,
+      cinemaId: "farther-cinema",
+      durationMinutes: 50,
+    };
+    const startsAt = "2026-07-24T10:10:00.000Z";
+    const routeByCinema = new Map([
+      [closerRoute.cinemaId, closerRoute],
+      [fartherRoute.cinemaId, fartherRoute],
+    ]);
+
+    expect(
+      isShowingReachable(
+        showing({ cinemaId: closerRoute.cinemaId, startsAt }),
+        now,
+        routeByCinema,
+      ),
+    ).toBe(true);
+    expect(
+      isShowingReachable(
+        showing({ cinemaId: fartherRoute.cinemaId, startsAt }),
+        now,
+        routeByCinema,
+      ),
+    ).toBe(true);
   });
 
   it("uses the displayed transit time including its route buffer", () => {
@@ -420,7 +453,7 @@ describe("schedule filtering", () => {
       new Map([[route.cinemaId, route]]),
     );
 
-    expect(presentation.isReachable).toBe(false);
+    expect(presentation.isReachable).toBe(true);
     expect(presentation.isUnreachable).toBe(false);
   });
 

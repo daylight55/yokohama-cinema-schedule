@@ -161,8 +161,7 @@ export type ShowingReachability =
   | "past"
   | "unknown"
   | "unreachable"
-  | "reachable"
-  | "later";
+  | "reachable";
 
 export function getShowingReachability(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
@@ -181,17 +180,13 @@ export function getShowingReachability(
   const targetStartMinutes = route.durationMinutes + arrivalMarginMinutes;
   const earliestStartMinutes =
     targetStartMinutes - marginToleranceMinutes;
-  const latestStartMinutes = targetStartMinutes + marginToleranceMinutes;
   const startsInMinutes =
     (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
 
   if (startsInMinutes < earliestStartMinutes) {
     return "unreachable";
   }
-  if (startsInMinutes <= latestStartMinutes) {
-    return "reachable";
-  }
-  return "later";
+  return "reachable";
 }
 
 export function isShowingUnreachable(
