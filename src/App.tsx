@@ -1204,6 +1204,11 @@ export function App() {
     }
   };
 
+  const goHomeFromNavigation = (event: MouseEvent<HTMLAnchorElement>) => {
+    closeNavigation();
+    goHomeToCurrentTime(event);
+  };
+
   useLayoutEffect(() => {
     if (
       !pendingHomeScrollRef.current ||
@@ -1607,14 +1612,10 @@ export function App() {
           </div>
           <nav aria-label="メイン">
             <a
-              href={hashForAppView("schedule", {
-                date: selectedDate,
-                movie: selectedMovieKey,
-                query: normalizedSearchQuery,
-              })}
+              href={hashForAppView("schedule", { date: today })}
               className={view === "schedule" ? "active" : ""}
               aria-current={view === "schedule" ? "page" : undefined}
-              onClick={closeNavigation}
+              onClick={goHomeFromNavigation}
             >
               <CalendarDotsIcon size={20} aria-hidden="true" />
               上映スケジュール
