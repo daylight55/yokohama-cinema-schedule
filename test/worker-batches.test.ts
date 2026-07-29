@@ -66,7 +66,35 @@ describe("worker source batches", () => {
 
     expect(showing.title).toBe("テスト映画");
     expect(showing.format).toBe("4DX / 字幕");
-    expect(showing.movieKey).toBe("movie-1");
+    expect(showing.movieKey).toBe("テスト映画");
+  });
+
+  it("normalizes bilingual movie keys before Worker deduplication", () => {
+    const baseShowing = {
+      sourceId: "test-source",
+      cinemaId: "test-cinema",
+      imageUrl: null,
+      startsAt: "2026-07-31T10:00:00.000Z",
+      endsAt: "2026-07-31T12:00:00.000Z",
+      screen: "1",
+      format: null,
+      bookingUrl: "https://example.com",
+      purchasable: true,
+    };
+
+    const slashTitle = normalizeShowingMovieTitle({
+      ...baseShowing,
+      movieKey: "provider-michael-1",
+      title: "Michael/マイケル",
+    });
+    const fullWidthSlashTitle = normalizeShowingMovieTitle({
+      ...baseShowing,
+      movieKey: "provider-michael-2",
+      title: "Michael／マイケル（字幕）",
+    });
+
+    expect(fullWidthSlashTitle.movieKey).toBe(slashTitle.movieKey);
+    expect(slashTitle.movieKey).toBe("michaelマイケル");
   });
 
   it("reports each requested date as published, not published, or failed", () => {
