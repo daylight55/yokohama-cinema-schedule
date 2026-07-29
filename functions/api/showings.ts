@@ -20,6 +20,7 @@ interface ShowingRow {
   movie_key: string;
   title: string;
   image_url: string | null;
+  release_date: string | null;
   starts_at: string;
   ends_at: string | null;
   screen: string | null;
@@ -99,7 +100,7 @@ export const onRequestGet: PagesFunction<
       `SELECT
         s.id, s.source_id, s.cinema_id, c.name AS cinema_name,
         c.short_name AS cinema_short_name, c.area, s.movie_key, s.title,
-        s.image_url,
+        s.image_url, s.release_date,
         s.starts_at, s.ends_at, s.screen, s.format, s.booking_url,
         s.purchasable, s.fetched_at
       FROM showings s
@@ -156,6 +157,7 @@ export const onRequestGet: PagesFunction<
     movieKey: row.movie_key,
     title: row.title,
     imageUrl: row.image_url,
+    releaseDate: row.release_date,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     screen: row.screen,

@@ -88,6 +88,28 @@ export function AboutPage() {
           上映時刻や販売状況は変更されることがあります。鑑賞前に各映画館の公式サイトで最新情報をご確認ください。
         </p>
       </section>
+
+      <section
+        className="about-note tmdb-attribution"
+        aria-labelledby="tmdb-attribution-title"
+      >
+        <h2 id="tmdb-attribution-title">作品の公開日について</h2>
+        <a
+          href="https://www.themoviedb.org/"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="TMDBを開く"
+        >
+          <img src="/tmdb-logo.svg" alt="TMDB" width="137" height="18" />
+        </a>
+        <p>
+          日本公開日はTMDBのAPIから取得しています。上映中の作品とタイトルが一致した場合に表示します。
+        </p>
+        <p lang="en">
+          This website uses TMDB and the TMDB APIs but is not endorsed,
+          certified, or otherwise approved by TMDB.
+        </p>
+      </section>
     </PageShell>
   );
 }

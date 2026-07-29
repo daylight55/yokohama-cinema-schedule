@@ -1338,9 +1338,21 @@ footer {
 .movie-list {
   display: grid;
   gap: 8px;
-  margin: 22px 0 0;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
+}
+
+.movie-release-source {
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: right;
+}
+
+.movie-release-source a {
+  color: var(--accent);
+  text-underline-offset: 3px;
 }
 
 .movie-list-item {
@@ -1420,6 +1432,7 @@ footer {
   text-underline-offset: 3px;
 }
 
+.movie-release-date,
 .movie-showing-dates {
   display: flex;
   align-items: flex-start;
@@ -1430,10 +1443,23 @@ footer {
   line-height: 1.5;
 }
 
+.movie-release-date {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.movie-release-date svg,
 .movie-showing-dates svg {
   flex: 0 0 auto;
   margin-top: 1px;
   color: var(--accent);
+}
+
+.tmdb-attribution img {
+  display: block;
+  width: 137px;
+  height: auto;
+  margin: 10px 0 12px;
 }
 
 .movie-status-actions {

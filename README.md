@@ -62,9 +62,12 @@
    通常のGETとして取得します。
 5. 作品名から字幕・吹替・IMAX・4DX・レイティング等の上映形式表記を除き、
    重複上映を削除します。上映形式そのものは別フィールドに保持します。
-6. 取得できた日だけ、既存上映と検索インデックスを日付単位で置き換えます。
+6. 1日1回、TMDBの日本向け劇場公開作品一覧を取得し、タイトルが一致する作品へ
+   日本公開日を付与します。APIトークン未設定・取得失敗時も上映収集は継続し、
+   D1に保存済みの公開日を利用します。
+7. 取得できた日だけ、既存上映と検索インデックスを日付単位で置き換えます。
    HTTPエラーや一時的な0件では前回正常データを削除しません。
-7. 実行結果を`fetch_runs`と`source_health`へ、各日付の結果を
+8. 実行結果を`fetch_runs`と`source_health`へ、各日付の結果を
    `source_date_health`へ保存します。
 
 映画館単位の処理は、取得元へ短時間に大量アクセスしないよう直列実行します。
@@ -115,6 +118,11 @@ Browser Rendering、Workers AI、Cloudflare Agentsは使いません。実測で
 実行時間や外部
 サブリクエスト上限に達した場合は、Agentsより先にWorkflowsまたはQueuesへの
 分割を検討します。
+
+日本公開日の取得にはTMDBの`discover/movie`を`region=JP`、
+`with_release_type=2|3`で使用します。直近120日から14日先までを対象にし、
+取得結果は正規化した作品名をキーとしてD1へ保存します。TMDBのAPIは非商用利用時も
+出典表記が必要なため、「このサイトについて」に公式ロゴと所定の免責文を表示します。
 
 ### 本番の収集状況を確認する
 
@@ -276,10 +284,11 @@ npx wrangler pages secret put GOOGLE_CLIENT_SECRET
 npx wrangler pages secret put GOOGLE_TOKEN_ENCRYPTION_KEY
    ```
 
-4. Workerの手動実行トークンを登録します。
+4. Workerの手動実行トークンとTMDB API Read Access Tokenを登録します。
 
    ```bash
    npx wrangler secret put WORKER_TRIGGER_TOKEN --config worker/wrangler.jsonc
+   npx wrangler secret put TMDB_API_READ_TOKEN --config worker/wrangler.jsonc
    ```
 
 5. PagesとWorkerをデプロイします。
