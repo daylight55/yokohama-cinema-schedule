@@ -16,6 +16,7 @@ import {
   getDateSwipeDirection,
   getScheduleMoviePresentation,
   getShowingReachability,
+  getViewingPlanButtonState,
   groupByMovie,
   groupByScheduleTime,
   groupScheduleTimeBuckets,
@@ -134,6 +135,26 @@ describe("reachable showing labels", () => {
 
   it("includes the travel time when the showing is unreachable", () => {
     expect(formatUnreachableLabel(25)).toBe("間に合わない・移動25分");
+  });
+});
+
+describe("viewing plan button state", () => {
+  it("marks past showings disabled and visually unavailable", () => {
+    expect(getViewingPlanButtonState(true, false)).toEqual({
+      disabled: true,
+      unavailable: true,
+    });
+  });
+
+  it("keeps the saving state separate from past-showing styling", () => {
+    expect(getViewingPlanButtonState(false, true)).toEqual({
+      disabled: true,
+      unavailable: false,
+    });
+    expect(getViewingPlanButtonState(false, false)).toEqual({
+      disabled: false,
+      unavailable: false,
+    });
   });
 });
 

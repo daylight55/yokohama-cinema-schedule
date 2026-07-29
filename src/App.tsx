@@ -72,6 +72,7 @@ import {
   getDateSwipeDirection,
   getAppPageScrollTarget,
   getScheduleMoviePresentation,
+  getViewingPlanButtonState,
   hashForAppView,
   isDateSwipeBlockedByHorizontalScroll,
   listMovieShowingDates,
@@ -3110,6 +3111,7 @@ function CinemaSlot({
       ? "間に合わない"
       : formatUnreachableLabel(travelMinutes)
     : null;
+  const viewingPlanButtonState = getViewingPlanButtonState(isPast, isSaving);
 
   useEffect(() => {
     if (!feedback) return;
@@ -3163,6 +3165,7 @@ function CinemaSlot({
         type="button"
         className={[
           "viewing-plan-toggle",
+          viewingPlanButtonState.unavailable ? "unavailable" : "",
           isPlanned ? "planned" : "",
           feedback ? "confirmed" : "",
         ]
@@ -3170,7 +3173,7 @@ function CinemaSlot({
           .join(" ")}
         aria-pressed={isPlanned}
         aria-label={`${showing.title} ${start} ${showing.cinemaShortName}を鑑賞予定${isPlanned ? "から外す" : "に追加"}`}
-        disabled={isPast || isSaving}
+        disabled={viewingPlanButtonState.disabled}
         onClick={() => void toggle()}
       >
         <img
