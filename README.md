@@ -15,7 +15,7 @@
 - 作品ごとのスター・鑑賞済み・興味なしをクラウド保存。鑑賞済み／興味なしの作品は上映時間から非表示
 - 作品一覧から映画.comとFilmarksの作品検索へ移動
 - 映画館ごとの座席・館内メモをユーザー単位でクラウド保存
-- 映画館一覧から操作できるGoogle Street Viewを必要な館だけ開き、閉館予定日を一覧で明示
+- 映画館一覧で建物名と住所に紐づくGoogle マップを必要な館だけ開き、閉館予定日を一覧で明示
 - 上映スケジュール・上映作品・映画館・映画はしごガチャ・マイページを切り替えるスマートフォン向けサイドバー
 - 各画面を `#schedule`・`#movies`・`#cinemas`・`#viewing-plans`・`#planner`・`#account` のURLで直リンク（`#viewing-plans`は鑑賞予定、`#account`はマイページ、旧`#profile`も同画面へ移動）
 - `#schedule?date=YYYY-MM-DD`のように日付を、`movie`パラメータで作品を含めて同じ表示位置へ直リンク
@@ -24,7 +24,9 @@
 - Google カレンダーの空き時間取得と、保存した映画はしごの予定登録（OAuth設定時）
 - スクロール後に現在時刻の上映位置へ戻るスマートフォン向けボタン
 - 映画館一覧で移動方法と自分の所要時間を館ごとにD1へ保存
+- 映画館一覧で上映スケジュールへの表示・非表示を館ごとに切り替え
 - マイページでベース出発地点を一度GPS登録し、暗号化した固定位置から移動時間と間に合う上映を反映
+- 上映スケジュール右下の「現在地で更新」で、保存せずに最新GPS位置からローカル推定を再計算
 - 公式画像と作品名だけの作品一覧
 - スターした好みの作品をD1へ保存し、操作位置を保ったまま番組表でも強調
 - 公式予約ページへのリンク
@@ -182,19 +184,12 @@ npx wrangler d1 execute yokohama-cinema-schedule \
 curl https://yokohama-cinema-schedule-refresh.<subdomain>.workers.dev/health
 ```
 
-### 映画館Street View
+### 映画館の地図プレビュー
 
-映画館一覧では、各館の「Street Viewを開く」を押したときだけGoogle Maps Embed
-APIのiframeを読み込みます。画面内で向きやズームを操作でき、10館分を最初から
-読み込まないためスマートフォンの通信量を抑えます。
-
-10館の現在の座標と向き調整用Google Mapsリンクは
-[映画館Street View調整用座標](docs/street-view.md)にまとめています。
-
-経路計算用の`latitude`・`longitude`とは別に、Street View用の
-`street_view_latitude`・`street_view_longitude`・`street_view_heading`・
-`street_view_pitch`・`street_view_fov`をD1へ保存します。向きを調整するときは
-経路計算用座標を変更せず、Street View用の値だけを更新します。
+映画館一覧では、表示位置までスクロールした館だけGoogle Maps Embed APIの
+iframeを読み込みます。座標だけで入口付近を探すStreet Viewではなく、映画館名と
+建物名を含む住所をPlace検索へ渡し、施設のマーカーがすぐ見える縮尺で開きます。
+10館分を最初から読み込まないため、スマートフォンの通信量も抑えます。
 
 Maps Embed APIは公式ドキュメント上、リクエスト数の利用料金と日次上限が
 ありません。APIキーはブラウザから見える前提のため、本番・プレビュー・ローカルの

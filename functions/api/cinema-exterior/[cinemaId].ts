@@ -1,4 +1,5 @@
 import { todayInJst } from "../../../shared/date";
+import { buildGoogleMapsPlaceEmbedUrl } from "../../../shared/maps";
 import { listActiveCinemas } from "../../_lib/cinemas";
 import type { AuthContextData, PagesEnv } from "../../_lib/env";
 
@@ -21,27 +22,15 @@ export const onRequestGet: PagesFunction<
   );
   if (!cinema) return new Response(null, { status: 404 });
 
-  const streetViewUrl = new URL(
-    "https://www.google.com/maps/embed/v1/streetview",
+  const placeUrl = buildGoogleMapsPlaceEmbedUrl(
+    context.env.GOOGLE_MAPS_API_KEY,
+    cinema,
   );
-  streetViewUrl.searchParams.set("key", context.env.GOOGLE_MAPS_API_KEY);
-  streetViewUrl.searchParams.set(
-    "location",
-    `${cinema.streetViewLatitude ?? cinema.latitude},${cinema.streetViewLongitude ?? cinema.longitude}`,
-  );
-  streetViewUrl.searchParams.set("fov", String(cinema.streetViewFov ?? 95));
-  streetViewUrl.searchParams.set("pitch", String(cinema.streetViewPitch ?? 0));
-  if (cinema.streetViewHeading != null) {
-    streetViewUrl.searchParams.set(
-      "heading",
-      String(cinema.streetViewHeading),
-    );
-  }
 
   return new Response(null, {
     status: 302,
     headers: {
-      location: streetViewUrl.toString(),
+      location: placeUrl,
       "cache-control": "private, max-age=3600",
       "referrer-policy": "strict-origin-when-cross-origin",
     },

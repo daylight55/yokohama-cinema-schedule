@@ -118,6 +118,7 @@ export interface RoutesResponse {
   generatedAt: string;
   provider: RouteEstimate["provider"];
   originRegistered: boolean;
+  origin: "saved" | "current" | null;
   routes: RouteEstimate[];
 }
 
@@ -139,6 +140,7 @@ export interface CinemaTravelPreference {
   cinemaId: string;
   travelMode: TravelMode;
   customDurationMinutes: number | null;
+  showInSchedule: boolean;
   note: string;
   updatedAt: string | null;
 }

@@ -28,6 +28,7 @@ import {
 import {
   getDepartureLocation,
   listDepartureStationAccess,
+  normalizeDepartureCoordinates,
 } from "../_lib/user-profile";
 
 interface EstimateProfile {
@@ -92,6 +93,7 @@ export const onRequestGet: PagesFunction<
       generatedAt: new Date().toISOString(),
       provider: "estimate",
       originRegistered: false,
+      origin: null,
       routes: [],
     };
     return Response.json(response, {
@@ -99,16 +101,60 @@ export const onRequestGet: PagesFunction<
     });
   }
 
-  const { latitude, longitude } = departure;
-  const cinemas = await listActiveCinemas(
+  const routes = await calculateRoutes(
     context.env.DB,
+    context.data.userId,
+    departure.latitude,
+    departure.longitude,
+    true,
+  );
+  return routeResponse(routes, true, "saved");
+};
+
+export const onRequestPost: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
+  if (context.env.PUBLIC_MODE === "true") {
+    return Response.json({ error: "routes_unavailable" }, { status: 403 });
+  }
+  let body: { latitude?: unknown; longitude?: unknown };
+  try {
+    body = await context.request.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+  const origin = normalizeDepartureCoordinates(body.latitude, body.longitude);
+  if (!origin) {
+    return Response.json({ error: "invalid_coordinates" }, { status: 400 });
+  }
+  const routes = await calculateRoutes(
+    context.env.DB,
+    context.data.userId,
+    origin.latitude,
+    origin.longitude,
+    false,
+  );
+  return routeResponse(routes, true, "current");
+};
+
+async function calculateRoutes(
+  db: D1Database,
+  userId: string,
+  latitude: number,
+  longitude: number,
+  useStoredStationWalks: boolean,
+): Promise<RouteEstimate[]> {
+  const cinemas = await listActiveCinemas(
+    db,
     todayInJst(),
     false,
   );
   const preferences = await listCinemaTravelPreferences(
-    context.env.DB,
+    db,
     cinemas,
-    context.data.userId,
+    userId,
   );
   const modeByCinema = new Map(
     preferences.map((preference) => [
@@ -125,22 +171,25 @@ export const onRequestGet: PagesFunction<
   );
   let transitRoutes = new Map<string, RouteEstimate>();
   if (transitCinemas.length > 0) {
-    const [stations, connections, preferredOriginStationIds] = await Promise.all([
-      listStations(context.env.DB),
-      listStationConnections(context.env.DB),
-      listPreferredOriginStationIds(context.env.DB),
-    ]);
+    const [stations, connections, preferredOriginStationIds] =
+      await Promise.all([
+        listStations(db),
+        listStationConnections(db),
+        listPreferredOriginStationIds(db),
+      ]);
     const originStations =
       preferredOriginStationIds.size > 0
         ? stations.filter((station) =>
             preferredOriginStationIds.has(station.id),
           )
         : stations;
-    const storedWalks = await listDepartureStationAccess(
-      context.env.DB,
-      new Map(stations.map((station) => [station.id, station])),
-      context.data.userId,
-    );
+    const storedWalks = useStoredStationWalks
+      ? await listDepartureStationAccess(
+          db,
+          new Map(stations.map((station) => [station.id, station])),
+          userId,
+        )
+      : [];
     const storedWalkByStationId = new Map(
       storedWalks.map((walk) => [walk.station.id, walk]),
     );
@@ -159,7 +208,7 @@ export const onRequestGet: PagesFunction<
       preferredOriginStationIds,
     );
   }
-  const routes = cinemas.map((cinema) => {
+  return cinemas.map((cinema) => {
     const travelMode =
       modeByCinema.get(cinema.id) ?? DEFAULT_TRAVEL_MODE;
     const route =
@@ -170,17 +219,24 @@ export const onRequestGet: PagesFunction<
       preferenceByCinema.get(cinema.id)?.customDurationMinutes ?? null,
     );
   });
+}
 
+function routeResponse(
+  routes: RouteEstimate[],
+  originRegistered: boolean,
+  origin: RoutesResponse["origin"],
+): Response {
   const response: RoutesResponse = {
     generatedAt: new Date().toISOString(),
     provider: "estimate",
-    originRegistered: true,
+    originRegistered,
+    origin,
     routes,
   };
   return Response.json(response, {
     headers: { "cache-control": "private, no-store" },
   });
-};
+}
 
 export function applyCustomDuration(
   route: RouteEstimate,

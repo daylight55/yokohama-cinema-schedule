@@ -22,3 +22,14 @@ export function buildGoogleMapsDirectionsUrl(
   });
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
+
+export function buildGoogleMapsPlaceEmbedUrl(
+  apiKey: string,
+  cinema: Pick<Cinema, "name" | "address">,
+): string {
+  const url = new URL("https://www.google.com/maps/embed/v1/place");
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("q", `${cinema.name} ${cinema.address}`);
+  url.searchParams.set("zoom", "18");
+  return url.toString();
+}
