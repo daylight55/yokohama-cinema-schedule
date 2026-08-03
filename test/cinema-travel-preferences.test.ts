@@ -3,6 +3,7 @@ import {
   DEFAULT_TRAVEL_MODE,
   isCustomDurationMinutes,
   isTravelMode,
+  listCinemaTravelPreferences,
 } from "../functions/_lib/cinema-travel-preferences";
 
 describe("cinema travel preferences", () => {
@@ -34,4 +35,36 @@ describe("cinema travel preferences", () => {
       expect(isCustomDurationMinutes(durationMinutes)).toBe(false);
     },
   );
+
+  it("shows every cinema by default and restores a saved hidden cinema", async () => {
+    const db = {
+      prepare: () => ({
+        bind: () => ({
+          all: async () => ({
+            results: [
+              {
+                cinema_id: "hidden",
+                travel_mode: "transit",
+                custom_duration_minutes: null,
+                show_in_schedule: 0,
+                note: "",
+                updated_at: "2026-08-03T00:00:00.000Z",
+              },
+            ],
+          }),
+        }),
+      }),
+    } as unknown as D1Database;
+
+    await expect(
+      listCinemaTravelPreferences(
+        db,
+        [{ id: "visible" }, { id: "hidden" }],
+        "user-1",
+      ),
+    ).resolves.toMatchObject([
+      { cinemaId: "visible", showInSchedule: true },
+      { cinemaId: "hidden", showInSchedule: false },
+    ]);
+  });
 });

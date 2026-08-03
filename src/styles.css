@@ -1850,6 +1850,78 @@ footer {
   line-height: 1.5;
 }
 
+.cinema-schedule-toggle {
+  display: flex;
+  min-width: 0;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-block: 4px;
+  cursor: pointer;
+}
+
+.cinema-schedule-toggle > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.cinema-schedule-toggle strong {
+  font-size: 13px;
+}
+
+.cinema-schedule-toggle small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.cinema-schedule-toggle input {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex: 0 0 auto;
+  appearance: none;
+  border: 1px solid #66776f;
+  border-radius: 999px;
+  background: #27322e;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.cinema-schedule-toggle input::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #dce5e1;
+  content: "";
+  transition: transform 120ms ease;
+}
+
+.cinema-schedule-toggle input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.cinema-schedule-toggle input:checked::after {
+  background: var(--accent-ink);
+  transform: translateX(20px);
+}
+
+.cinema-schedule-toggle input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.cinema-schedule-toggle input:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .cinema-preference-row {
   display: grid;
   grid-template-columns: auto minmax(112px, 1fr) auto;
@@ -2812,6 +2884,46 @@ footer p {
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.jump-to-now-button.with-location-button {
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px);
+}
+
+.current-location-routes-button {
+  position: fixed;
+  z-index: 24;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 15px;
+  border: 1px solid #d6f7e5;
+  border-radius: 999px;
+  background: #17241f;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 38%);
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.current-location-routes-button.error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.current-location-routes-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.current-location-routes-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
 }
 
 .jump-to-now-button:focus-visible {

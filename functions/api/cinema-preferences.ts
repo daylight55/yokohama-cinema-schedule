@@ -17,6 +17,7 @@ interface CinemaPreferenceRequest {
   cinemaId?: string;
   travelMode?: TravelMode;
   customDurationMinutes?: number | null;
+  showInSchedule?: boolean;
   note?: string;
 }
 
@@ -42,15 +43,20 @@ export const onRequestPost: PagesFunction<
   const cinemaId = body.cinemaId?.trim();
   const hasTravelMode = body.travelMode !== undefined;
   const hasCustomDuration = Object.hasOwn(body, "customDurationMinutes");
+  const hasShowInSchedule = Object.hasOwn(body, "showInSchedule");
   const hasNote = Object.hasOwn(body, "note");
   const normalizedNote = hasNote ? normalizeCinemaNote(body.note) : null;
   if (
     !cinemaId ||
-    (!hasTravelMode && !hasCustomDuration && !hasNote) ||
+    (!hasTravelMode &&
+      !hasCustomDuration &&
+      !hasShowInSchedule &&
+      !hasNote) ||
     (hasTravelMode && !isTravelMode(body.travelMode)) ||
     (hasCustomDuration &&
       body.customDurationMinutes !== null &&
       !isCustomDurationMinutes(body.customDurationMinutes)) ||
+    (hasShowInSchedule && typeof body.showInSchedule !== "boolean") ||
     (hasNote && normalizedNote === null)
   ) {
     return Response.json(
@@ -79,15 +85,20 @@ export const onRequestPost: PagesFunction<
   const customDurationMinutes = hasCustomDuration
     ? (body.customDurationMinutes ?? null)
     : (current?.customDurationMinutes ?? null);
+  const showInSchedule = hasShowInSchedule
+    ? Boolean(body.showInSchedule)
+    : (current?.showInSchedule ?? true);
   const note = hasNote ? (normalizedNote ?? "") : (current?.note ?? "");
   const updatedAt = new Date().toISOString();
   await context.env.DB.prepare(
     `INSERT INTO cinema_travel_preferences
-      (user_id, cinema_id, travel_mode, custom_duration_minutes, note, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)
+      (user_id, cinema_id, travel_mode, custom_duration_minutes,
+       show_in_schedule, note, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id, cinema_id) DO UPDATE SET
        travel_mode = excluded.travel_mode,
        custom_duration_minutes = excluded.custom_duration_minutes,
+       show_in_schedule = excluded.show_in_schedule,
        note = excluded.note,
        updated_at = excluded.updated_at`,
   )
@@ -96,6 +107,7 @@ export const onRequestPost: PagesFunction<
       cinemaId,
       travelMode,
       customDurationMinutes,
+      Number(showInSchedule),
       note,
       updatedAt,
     )
@@ -105,6 +117,7 @@ export const onRequestPost: PagesFunction<
     cinemaId,
     travelMode,
     customDurationMinutes,
+    showInSchedule,
     note,
     updatedAt,
   };

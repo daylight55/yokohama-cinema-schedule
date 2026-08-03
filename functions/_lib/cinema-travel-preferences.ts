@@ -17,6 +17,7 @@ interface CinemaTravelPreferenceRow {
   cinema_id: string;
   travel_mode: TravelMode;
   custom_duration_minutes: number | null;
+  show_in_schedule: number;
   note: string;
   updated_at: string;
 }
@@ -49,7 +50,8 @@ export async function listCinemaTravelPreferences(
 
   const result = await db
     .prepare(
-      `SELECT cinema_id, travel_mode, custom_duration_minutes, note, updated_at
+      `SELECT cinema_id, travel_mode, custom_duration_minutes,
+              show_in_schedule, note, updated_at
        FROM cinema_travel_preferences
        WHERE user_id = ?
          AND cinema_id IN (${cinemas.map(() => "?").join(", ")})`,
@@ -66,6 +68,7 @@ export async function listCinemaTravelPreferences(
       cinemaId: cinema.id,
       travelMode: saved?.travel_mode ?? DEFAULT_TRAVEL_MODE,
       customDurationMinutes: saved?.custom_duration_minutes ?? null,
+      showInSchedule: saved ? Boolean(saved.show_in_schedule) : true,
       note: saved?.note ?? "",
       updatedAt: saved?.updated_at ?? null,
     };

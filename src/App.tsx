@@ -236,6 +236,9 @@ export function App() {
   const [cinemaCustomDurations, setCinemaCustomDurations] = useState<
     Map<string, number | null>
   >(() => new Map());
+  const [cinemaScheduleVisibility, setCinemaScheduleVisibility] = useState<
+    Map<string, boolean>
+  >(() => new Map());
   const [cinemaDurationDrafts, setCinemaDurationDrafts] = useState<
     Map<string, string>
   >(() => new Map());
@@ -288,6 +291,9 @@ export function App() {
   const [routeState, setRouteState] = useState<
     "idle" | "loading" | "ready" | "error"
   >("idle");
+  const [routeOrigin, setRouteOrigin] =
+    useState<RoutesResponse["origin"]>(null);
+  const [routeUpdatedAt, setRouteUpdatedAt] = useState<string | null>(null);
   const selectedMovieListDate =
     view === "movies" && showAllMovieDates ? null : selectedDate;
 
@@ -525,6 +531,14 @@ export function App() {
             ]),
           ),
         );
+        setCinemaScheduleVisibility(
+          new Map(
+            data.cinemaTravelPreferences.map((preference) => [
+              preference.cinemaId,
+              preference.showInSchedule,
+            ]),
+          ),
+        );
         setCinemaDurationDrafts(
           new Map(
             data.cinemaTravelPreferences.map((preference) => [
@@ -631,6 +645,7 @@ export function App() {
         now,
       }).filter(
         (showing) =>
+          (cinemaScheduleVisibility.get(showing.cinemaId) ?? true) &&
           !movieStatusByKey.has(normalizeMovieTitle(showing.title)) &&
           matchesShowingSearchQuery(
             interactiveSearchQuery,
@@ -641,6 +656,7 @@ export function App() {
       ),
     [
       dates,
+      cinemaScheduleVisibility,
       futureOnly,
       interactiveSearchQuery,
       now,
@@ -807,9 +823,13 @@ export function App() {
       if (!response.ok) throw new Error();
       const data = (await response.json()) as RoutesResponse;
       setRoutes(data.routes);
+      setRouteOrigin(data.origin);
+      setRouteUpdatedAt(data.generatedAt);
       setRouteState(data.originRegistered ? "ready" : "idle");
     } catch {
       setRoutes([]);
+      setRouteOrigin(null);
+      setRouteUpdatedAt(null);
       setRouteState("error");
     }
   }, []);
@@ -817,6 +837,8 @@ export function App() {
   useEffect(() => {
     if (!userProfile.departureRegistered) {
       setRoutes([]);
+      setRouteOrigin(null);
+      setRouteUpdatedAt(null);
       setRouteState("idle");
       return;
     }
@@ -826,6 +848,42 @@ export function App() {
     userProfile.departureRegistered,
     userProfile.departureUpdatedAt,
   ]);
+
+  const fetchCurrentLocationRoutes = async () => {
+    if (!navigator.geolocation || routeState === "loading") return;
+    setRouteState("loading");
+    try {
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10_000,
+            maximumAge: 0,
+          });
+        },
+      );
+      const response = await fetch("/api/routes", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }),
+      });
+      if (!response.ok) throw new Error();
+      const data = (await response.json()) as RoutesResponse;
+      setRoutes(data.routes);
+      setRouteOrigin(data.origin);
+      setRouteUpdatedAt(data.generatedAt);
+      setNow(new Date());
+      setRouteState("ready");
+    } catch {
+      setRouteState("error");
+    }
+  };
 
   const registerDepartureLocation = async () => {
     setProfileError(null);
@@ -998,6 +1056,51 @@ export function App() {
         return next;
       });
       setCinemaPreferenceError("移動方法を保存できませんでした");
+    } finally {
+      setSavingCinemaIds((current) => {
+        const next = new Set(current);
+        next.delete(cinemaId);
+        return next;
+      });
+    }
+  };
+
+  const saveCinemaScheduleVisibility = async (
+    cinemaId: string,
+    showInSchedule: boolean,
+  ) => {
+    if (savingCinemaIds.has(cinemaId)) return;
+    const previous = cinemaScheduleVisibility.get(cinemaId) ?? true;
+    setCinemaPreferenceError(null);
+    setCinemaScheduleVisibility((current) => {
+      const next = new Map(current);
+      next.set(cinemaId, showInSchedule);
+      return next;
+    });
+    setSavingCinemaIds((current) => new Set(current).add(cinemaId));
+    try {
+      const response = await fetch("/api/cinema-preferences", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({ cinemaId, showInSchedule }),
+      });
+      if (!response.ok) throw new Error();
+      const preference = (await response.json()) as CinemaTravelPreference;
+      setCinemaScheduleVisibility((current) => {
+        const next = new Map(current);
+        next.set(cinemaId, preference.showInSchedule);
+        return next;
+      });
+    } catch {
+      setCinemaScheduleVisibility((current) => {
+        const next = new Map(current);
+        next.set(cinemaId, previous);
+        return next;
+      });
+      setCinemaPreferenceError("上映スケジュールの表示設定を保存できませんでした");
     } finally {
       setSavingCinemaIds((current) => {
         const next = new Set(current);
@@ -1775,7 +1878,7 @@ export function App() {
               onClick={closeNavigation}
             >
               <BuildingsIcon size={20} aria-hidden="true" />
-              横浜駅近くの映画館一覧
+              映画館一覧
             </a>
             <a
               href={hashForAppView("viewingPlans")}
@@ -2488,6 +2591,8 @@ export function App() {
                   const savedNote = cinemaNotes.get(cinema.id) ?? "";
                   const noteDraft = cinemaNoteDrafts.get(cinema.id) ?? "";
                   const isSaving = savingCinemaIds.has(cinema.id);
+                  const showInSchedule =
+                    cinemaScheduleVisibility.get(cinema.id) ?? true;
                   return (
                     <li className="cinema-list-item" key={cinema.id}>
                       <div className="cinema-list-heading">
@@ -2510,6 +2615,29 @@ export function App() {
                           {cinema.areaLabel}
                         </p>
                       </div>
+                      <label className="cinema-schedule-toggle">
+                        <span>
+                          <strong>上映スケジュールに表示</strong>
+                          <small>
+                            この映画館の上映だけを表示・非表示にします
+                          </small>
+                        </span>
+                        <input
+                          type="checkbox"
+                          role="switch"
+                          checked={showInSchedule}
+                          disabled={
+                            isSaving ||
+                            !schedule?.cinemaTravelPreferencesEnabled
+                          }
+                          onChange={(event) =>
+                            void saveCinemaScheduleVisibility(
+                              cinema.id,
+                              event.currentTarget.checked,
+                            )
+                          }
+                        />
+                      </label>
                       <CinemaExteriorThumbnail cinema={cinema} />
                       {route && (
                         <div className="cinema-route-actions">
@@ -2751,10 +2879,42 @@ export function App() {
       )}
       </main>
 
+      {view === "schedule" && (
+        <button
+          type="button"
+          className={`current-location-routes-button${
+            routeState === "error" ? " error" : ""
+          }`}
+          aria-label={
+            routeState === "loading"
+              ? "現在地から間に合う上映を更新中"
+              : "現在地から間に合う上映を更新"
+          }
+          title={
+            routeOrigin === "current" && routeUpdatedAt
+              ? `最終更新 ${updatedFormatter.format(new Date(routeUpdatedAt))}`
+              : undefined
+          }
+          disabled={routeState === "loading"}
+          onClick={() => void fetchCurrentLocationRoutes()}
+        >
+          <CrosshairIcon size={18} weight="bold" aria-hidden="true" />
+          {routeState === "loading"
+            ? "取得中…"
+            : routeState === "error"
+              ? "再取得"
+              : routeOrigin === "current"
+                ? "現在地で再取得"
+                : "現在地で更新"}
+        </button>
+      )}
+
       {showJumpToNow && (
         <button
           type="button"
-          className="jump-to-now-button"
+          className={`jump-to-now-button${
+            view === "schedule" ? " with-location-button" : ""
+          }`}
           aria-label="現在時刻の上映位置へ移動"
           onClick={jumpToCurrentTime}
         >
@@ -2829,7 +2989,7 @@ function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
           <iframe
             className="cinema-street-view-frame"
             src={`/api/cinema-exterior/${encodeURIComponent(cinema.id)}`}
-            title={`${cinema.name}のGoogle Street View`}
+            title={`${cinema.name}のGoogle マップ`}
             loading="lazy"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
@@ -2847,14 +3007,14 @@ function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
           type="button"
           className="cinema-exterior-placeholder"
           onClick={() => setIsOpen(true)}
-          aria-label={`${cinema.name}のStreet Viewを今すぐ読み込む`}
+          aria-label={`${cinema.name}の地図を今すぐ読み込む`}
         >
           <BuildingsIcon size={28} />
-          <strong>Street Viewを読み込む</strong>
+          <strong>映画館の地図を読み込む</strong>
           <span>表示位置までスクロールすると自動で読み込みます</span>
         </button>
       )}
-      <figcaption>Google Street View</figcaption>
+      <figcaption>Google マップ</figcaption>
     </figure>
   );
 }
