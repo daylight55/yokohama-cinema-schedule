@@ -230,7 +230,10 @@ export function sessionCookie(value: string, maxAge: number): string {
     "Path=/",
     "HttpOnly",
     "Secure",
-    "SameSite=Strict",
+    // OAuth returns through a cross-site redirect. Lax keeps the cookie
+    // available on that top-level navigation while still excluding it from
+    // ordinary cross-site subrequests and unsafe requests.
+    "SameSite=Lax",
     `Max-Age=${maxAge}`,
   ].join("; ");
 }
@@ -241,7 +244,7 @@ export function clearSessionCookie(): string {
     "Path=/",
     "HttpOnly",
     "Secure",
-    "SameSite=Strict",
+    "SameSite=Lax",
     "Max-Age=0",
   ].join("; ");
 }
