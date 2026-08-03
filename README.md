@@ -2,7 +2,9 @@
 
 横浜駅、桜木町、みなとみらい、関内、伊勢佐木町周辺の公式上映スケジュールを横断して、「今日、今から観られる映画」を確認する個人用サイトです。
 
-[サイトを開く](https://yokohama-cinema-schedule.pages.dev)
+[サイトを開く](https://hamamovie.daylight55.dev)
+
+旧URLの `https://yokohama-cinema-schedule.pages.dev` も互換用に維持しています。
 
 ## 現在できること
 
@@ -304,27 +306,21 @@ openssl rand -base64 32 | npx wrangler pages secret put PROFILE_ENCRYPTION_KEY
 
 `APP_PASSWORD`は長いランダム文字列、`SESSION_SECRET`は32バイト以上のランダム値を推奨します。`robots`指定だけに依存せず、`*.pages.dev`を含む全リクエストをPages Functionsのミドルウェアで保護します。独自ドメインを追加する場合は、さらにCloudflare Accessのメール許可リストを重ねられます。
 
-### Google カレンダーOAuth
+### Google OAuth
 
-Google CloudでCalendar APIを有効化し、ウェブアプリケーション用OAuthクライアントを作成します。
-承認済みのリダイレクトURIには、ログイン用とカレンダー連携用の本番URLを登録します。
+Google Cloudでウェブアプリケーション用OAuthクライアントを作成します。
+承認済みのリダイレクトURIには、メインURLと旧URLのログイン用callbackを登録します。
 
 ```text
+https://hamamovie.daylight55.dev/auth/google/login/callback
 https://yokohama-cinema-schedule.pages.dev/auth/google/login/callback
-https://yokohama-cinema-schedule.pages.dev/auth/google/callback
 ```
 
 ローカルで連携を確認する場合は、利用するポートのcallbackも追加します。
 
 ```text
 http://localhost:8788/auth/google/login/callback
-http://localhost:8788/auth/google/callback
 ```
-
-OAuthトークンはD1へ平文保存せず、`GOOGLE_TOKEN_ENCRYPTION_KEY`から生成した
-AES-GCM鍵で暗号化します。要求する権限は空き時間の参照と、自分が所有する
-カレンダーへのイベント登録に限定しています。OAuth秘密情報が未設定の場合も、
-映画はしごの提案・保存は利用でき、Google カレンダー連携だけが設定待ち表示になります。
 
 ### ユーザー認証
 
