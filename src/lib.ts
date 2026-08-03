@@ -60,6 +60,14 @@ export function getAppPageScrollTarget(
   return "top";
 }
 
+export function shouldShowCurrentLocationRefresh(
+  view: AppView,
+  selectedDate: string,
+  today: string,
+): boolean {
+  return view === "schedule" && selectedDate === today;
+}
+
 export function scrollPageToTop(scroller: {
   scrollTo(options: {
     top: number;

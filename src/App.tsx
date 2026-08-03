@@ -84,6 +84,7 @@ import {
   scheduleProgramClassName,
   shouldDefaultExpandScheduleBucket,
   shouldExpandScheduleBucket,
+  shouldShowCurrentLocationRefresh,
   type AppView,
   type ColorTheme,
 } from "./lib";
@@ -2879,7 +2880,7 @@ export function App() {
       )}
       </main>
 
-      {view === "schedule" && (
+      {shouldShowCurrentLocationRefresh(view, selectedDate, today) && (
         <button
           type="button"
           className={`current-location-routes-button${
@@ -3077,100 +3078,118 @@ function ProfilePanel({
 }) {
   const isBusy = state !== "idle";
   return (
-    <section
-      className="profile-panel"
-      aria-labelledby="departure-profile-title"
-    >
-      <div className="profile-icon" aria-hidden="true">
-        <HouseLineIcon size={27} />
-      </div>
-      <div className="profile-copy">
-        <h2 id="departure-profile-title">
-          {profile.departureRegistered
-            ? "ベース出発地点を登録済み"
-            : "ベース出発地点を登録"}
-        </h2>
-        <p>
-          {profile.departureRegistered
-            ? "映画館までの時間は、登録したベース出発地点を基準に固定して表示します。"
-            : "現在地を一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。"}
-        </p>
-        {profile.departureUpdatedAt && (
-          <small>
-            {updatedFormatter.format(new Date(profile.departureUpdatedAt))}
-            登録
-          </small>
-        )}
-      </div>
-      <aside className="profile-location-notice">
-        <WarningCircleIcon size={20} weight="fill" aria-hidden="true" />
-        <p>
-          映画館に向かうためのいつもの出発地点を登録してください。出発地点を登録しなくても、各映画館までの時間は手動でも登録可能です。
-        </p>
-      </aside>
-      <div className="profile-display-setting">
-        <label htmlFor="schedule-collapse-minutes">
-          上映時間の折りたたみ
-        </label>
-        <select
-          id="schedule-collapse-minutes"
-          value={profile.scheduleCollapseMinutes}
-          disabled={!enabled || collapseState === "saving"}
-          onChange={(event) =>
-            onCollapseChange(
-              Number(event.currentTarget.value) as ScheduleCollapseMinutes,
-            )
-          }
-        >
-          <option value={0}>なし</option>
-          <option value={30}>30分</option>
-          <option value={60}>1時間</option>
-        </select>
-        <small className="profile-save-status" aria-live="polite">
-          {collapseState === "saving"
-            ? "保存中"
-            : collapseState === "saved"
-              ? "保存しました"
-              : "端末間で共有されます"}
-        </small>
-      </div>
-      <button
-        type="button"
-        className="profile-primary-action"
-        disabled={!enabled || isBusy}
-        onClick={onRegister}
+    <>
+      <section
+        className="profile-panel profile-display-panel"
+        aria-labelledby="schedule-display-title"
       >
-        <CrosshairIcon size={18} aria-hidden="true" />
-        {state === "saving"
-          ? "登録中"
-          : profile.departureRegistered
-            ? "現在地でベース出発地点を更新"
-            : "現在地をベース出発地点として登録"}
-      </button>
-      <p className="profile-privacy-note">
-        GPSはこの操作時だけ使用します。座標は約10m単位に丸め、ユーザーごとの鍵で暗号化して保存し、通常の画面や一覧APIには返しません。
-      </p>
-      {profile.departureRegistered && (
+        <div className="profile-icon" aria-hidden="true">
+          <ClockIcon size={27} />
+        </div>
+        <div className="profile-copy">
+          <h2 id="schedule-display-title">上映スケジュール表示</h2>
+          <p>上映時間をまとめて表示する間隔を設定します。</p>
+        </div>
+        <div className="profile-display-setting">
+          <label htmlFor="schedule-collapse-minutes">
+            上映時間の折りたたみ
+          </label>
+          <select
+            id="schedule-collapse-minutes"
+            value={profile.scheduleCollapseMinutes}
+            disabled={!enabled || collapseState === "saving"}
+            onChange={(event) =>
+              onCollapseChange(
+                Number(event.currentTarget.value) as ScheduleCollapseMinutes,
+              )
+            }
+          >
+            <option value={0}>なし</option>
+            <option value={30}>30分</option>
+            <option value={60}>1時間</option>
+          </select>
+          <small className="profile-save-status" aria-live="polite">
+            {collapseState === "saving"
+              ? "保存中"
+              : collapseState === "saved"
+                ? "保存しました"
+                : "端末間で共有されます"}
+          </small>
+        </div>
+        {!enabled && (
+          <p className="inline-status error">公開モードでは利用できません</p>
+        )}
+      </section>
+
+      <section
+        className="profile-panel profile-location-panel"
+        aria-labelledby="departure-profile-title"
+      >
+        <div className="profile-icon" aria-hidden="true">
+          <HouseLineIcon size={27} />
+        </div>
+        <div className="profile-copy">
+          <h2 id="departure-profile-title">
+            {profile.departureRegistered
+              ? "ベース出発地点を登録済み"
+              : "ベース出発地点を登録"}
+          </h2>
+          <p>
+            {profile.departureRegistered
+              ? "映画館までの時間は、登録したベース出発地点を基準に固定して表示します。"
+              : "現在地を一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。"}
+          </p>
+          {profile.departureUpdatedAt && (
+            <small>
+              {updatedFormatter.format(new Date(profile.departureUpdatedAt))}
+              登録
+            </small>
+          )}
+        </div>
+        <aside className="profile-location-notice">
+          <WarningCircleIcon size={20} weight="fill" aria-hidden="true" />
+          <p>
+            映画館に向かうためのいつもの出発地点を登録してください。出発地点を登録しなくても、各映画館までの時間は手動でも登録可能です。
+          </p>
+        </aside>
         <button
           type="button"
-          className="profile-delete-action"
-          disabled={isBusy}
-          onClick={onDelete}
+          className="profile-primary-action"
+          disabled={!enabled || isBusy}
+          onClick={onRegister}
         >
-          <TrashIcon size={15} aria-hidden="true" />
-          {state === "deleting" ? "削除中" : "ベース出発地点を削除"}
+          <CrosshairIcon size={18} aria-hidden="true" />
+          {state === "saving"
+            ? "登録中"
+            : profile.departureRegistered
+              ? "現在地でベース出発地点を更新"
+              : "現在地をベース出発地点として登録"}
         </button>
-      )}
-      {!enabled && (
-        <p className="inline-status error">公開モードでは利用できません</p>
-      )}
-      {error && (
-        <p className="inline-status error" role="status">
-          <WarningCircleIcon size={16} aria-hidden="true" />
-          {error}
+        <p className="profile-privacy-note">
+          GPSはこの操作時だけ使用します。座標は約10m単位に丸め、ユーザーごとの鍵で暗号化して保存し、通常の画面や一覧APIには返しません。
         </p>
-      )}
-    </section>
+        {profile.departureRegistered && (
+          <button
+            type="button"
+            className="profile-delete-action"
+            disabled={isBusy}
+            onClick={onDelete}
+          >
+            <TrashIcon size={15} aria-hidden="true" />
+            {state === "deleting" ? "削除中" : "ベース出発地点を削除"}
+          </button>
+        )}
+        {!enabled && (
+          <p className="inline-status error">公開モードでは利用できません</p>
+        )}
+        {error && (
+          <p className="inline-status error" role="status">
+            <WarningCircleIcon size={16} aria-hidden="true" />
+            {error}
+          </p>
+        )}
+      </section>
+    </>
   );
 }
 
