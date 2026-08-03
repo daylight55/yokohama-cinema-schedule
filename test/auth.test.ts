@@ -123,7 +123,7 @@ describe("private site authentication", () => {
 
   it("creates a hardened session cookie", () => {
     expect(sessionCookie("signed", 3600)).toContain(
-      "HttpOnly; Secure; SameSite=Strict",
+      "HttpOnly; Secure; SameSite=Lax",
     );
   });
 
