@@ -68,6 +68,14 @@ export function shouldShowCurrentLocationRefresh(
   return view === "schedule" && selectedDate === today;
 }
 
+export function shouldShowScheduleTimeJumps(
+  view: AppView,
+  selectedDate: string,
+  today: string,
+): boolean {
+  return view === "schedule" && selectedDate !== today;
+}
+
 export function scrollPageToTop(scroller: {
   scrollTo(options: {
     top: number;
@@ -524,6 +532,52 @@ export function groupByScheduleTime(showings: Showing[]): ScheduleTimeGroup[] {
 function minutesFromTime(time: string): number {
   const [hour, minute] = time.split(":").map(Number);
   return hour * 60 + minute;
+}
+
+export type ScheduleTimePeriod =
+  | "morning"
+  | "daytime"
+  | "evening"
+  | "night";
+
+export const SCHEDULE_TIME_PERIODS: ReadonlyArray<{
+  id: ScheduleTimePeriod;
+  label: string;
+  targetMinutes: number;
+}> = [
+  { id: "morning", label: "朝", targetMinutes: 9 * 60 },
+  { id: "daytime", label: "昼", targetMinutes: 12 * 60 },
+  { id: "evening", label: "夕方", targetMinutes: 17 * 60 },
+  { id: "night", label: "夜", targetMinutes: 20 * 60 },
+];
+
+export function scheduleTimePeriodForTime(
+  time: string,
+): ScheduleTimePeriod {
+  const minutes = minutesFromTime(time);
+  if (minutes >= 5 * 60 && minutes < 12 * 60) return "morning";
+  if (minutes >= 12 * 60 && minutes < 16 * 60) return "daytime";
+  if (minutes >= 16 * 60 && minutes < 19 * 60) return "evening";
+  return "night";
+}
+
+export function getScheduleTimeJumpTargets(
+  times: string[],
+): Record<ScheduleTimePeriod, string | null> {
+  return Object.fromEntries(
+    SCHEDULE_TIME_PERIODS.map((period) => {
+      const periodTimes = times
+        .filter((time) => scheduleTimePeriodForTime(time) === period.id)
+        .sort((timeA, timeB) => timeA.localeCompare(timeB));
+      const target =
+        periodTimes.find(
+          (time) => minutesFromTime(time) >= period.targetMinutes,
+        ) ??
+        periodTimes.at(-1) ??
+        null;
+      return [period.id, target];
+    }),
+  ) as Record<ScheduleTimePeriod, string | null>;
 }
 
 function timeFromMinutes(minutes: number): string {

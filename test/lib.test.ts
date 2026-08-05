@@ -15,6 +15,7 @@ import {
   getAppPageScrollTarget,
   getDateSwipeDirection,
   getScheduleMoviePresentation,
+  getScheduleTimeJumpTargets,
   getShowingReachability,
   getViewingPlanButtonState,
   groupByMovie,
@@ -31,11 +32,13 @@ import {
   resolveColorTheme,
   scrollPageToTop,
   scheduleProgramClassName,
+  scheduleTimePeriodForTime,
   scheduleTimeSlot,
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
   shouldExpandScheduleBucket,
   shouldShowCurrentLocationRefresh,
+  shouldShowScheduleTimeJumps,
 } from "../src/lib";
 
 describe("page navigation scroll targets", () => {
@@ -125,6 +128,74 @@ describe("current location refresh visibility", () => {
         "2026-08-03",
       ),
     ).toBe(false);
+  });
+});
+
+describe("schedule time-period jumps", () => {
+  it("shows only on schedule dates other than today", () => {
+    expect(
+      shouldShowScheduleTimeJumps(
+        "schedule",
+        "2026-08-04",
+        "2026-08-03",
+      ),
+    ).toBe(true);
+    expect(
+      shouldShowScheduleTimeJumps(
+        "schedule",
+        "2026-08-03",
+        "2026-08-03",
+      ),
+    ).toBe(false);
+    expect(
+      shouldShowScheduleTimeJumps(
+        "movies",
+        "2026-08-04",
+        "2026-08-03",
+      ),
+    ).toBe(false);
+  });
+
+  it("classifies every boundary into one of the four periods", () => {
+    expect(scheduleTimePeriodForTime("04:59")).toBe("night");
+    expect(scheduleTimePeriodForTime("05:00")).toBe("morning");
+    expect(scheduleTimePeriodForTime("11:59")).toBe("morning");
+    expect(scheduleTimePeriodForTime("12:00")).toBe("daytime");
+    expect(scheduleTimePeriodForTime("15:59")).toBe("daytime");
+    expect(scheduleTimePeriodForTime("16:00")).toBe("evening");
+    expect(scheduleTimePeriodForTime("18:59")).toBe("evening");
+    expect(scheduleTimePeriodForTime("19:00")).toBe("night");
+  });
+
+  it("chooses a useful showing near each approximate target", () => {
+    expect(
+      getScheduleTimeJumpTargets([
+        "00:15",
+        "06:30",
+        "10:10",
+        "12:20",
+        "15:40",
+        "16:30",
+        "18:40",
+        "19:10",
+        "20:30",
+      ]),
+    ).toEqual({
+      morning: "10:10",
+      daytime: "12:20",
+      evening: "18:40",
+      night: "20:30",
+    });
+  });
+
+  it("falls back within a period and disables periods without showings", () => {
+    expect(getScheduleTimeJumpTargets(["07:30", "13:00", "19:15"]))
+      .toEqual({
+        morning: "07:30",
+        daytime: "13:00",
+        evening: null,
+        night: "19:15",
+      });
   });
 });
 
