@@ -59,6 +59,12 @@ interface ActiveCinemaWindow {
 
 export type SourceBatch = 0 | 1 | 2;
 
+// Each source/date is refreshed once per day. Allow for the three batches to
+// run at slightly different times before flagging a healthy result as stale.
+// A missed daily trigger will therefore be visible in /health within the next
+// run window without producing false positives immediately before batch 2.
+export const SOURCE_DATE_STALE_AFTER_MS = 36 * 60 * 60 * 1000;
+
 const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
   0: new Set([
     "tjoy-yokohama",
@@ -92,9 +98,12 @@ export default {
     ctx: ExecutionContext,
   ): Promise<void> {
     ctx.waitUntil(
-      isFailedSourceRetryCron(controller.cron)
-        ? refreshFailedSources(env)
-        : refreshBatch(env, sourceBatchForCron(controller.cron)),
+      refreshBatch(env, sourceBatchForCron(controller.cron)).catch((error) => {
+        console.error("Schedule batch execution failed", {
+          cron: controller.cron,
+          error: safeError(error),
+        });
+      }),
     );
   },
 
@@ -136,8 +145,14 @@ export function sourceBatchForCron(cron: string): SourceBatch {
   return cron.trimStart().startsWith("17 ") ? 1 : 0;
 }
 
-export function isFailedSourceRetryCron(cron: string): boolean {
-  return cron.trimStart().startsWith("47 ");
+export function isStaleSourceDate(
+  lastAttemptAt: string | null,
+  now = Date.now(),
+): boolean {
+  if (!lastAttemptAt) return true;
+  const attemptedAt = Date.parse(lastAttemptAt);
+  return !Number.isFinite(attemptedAt) ||
+    now - attemptedAt > SOURCE_DATE_STALE_AFTER_MS;
 }
 
 export function sourceDateOutcomes(
@@ -340,28 +355,6 @@ export async function refreshBatch(
     failed: summary.failed,
   });
   return summary;
-}
-
-async function refreshFailedSources(env: Env): Promise<void> {
-  const failedRows = await env.DB
-    .prepare("SELECT source_id FROM source_health WHERE status = 'error'")
-    .all<{ source_id: string }>();
-  const failedSourceIds = new Set(
-    (failedRows.results ?? []).map((row) => row.source_id),
-  );
-  if (failedSourceIds.size === 0) {
-    console.log("No failed schedule sources to retry");
-    return;
-  }
-  for (const batch of [0, 1, 2] as const) {
-    if (
-      sourceIdsForBatch(batch).some((sourceId) =>
-        failedSourceIds.has(sourceId),
-      )
-    ) {
-      await refreshBatch(env, batch, failedSourceIds);
-    }
-  }
 }
 
 function buildSources(): Source[] {
@@ -977,12 +970,13 @@ async function collectionHealth(env: Env): Promise<{
     notPublished: number;
     errors: number;
     missing: number;
+    stale: number;
   };
   cinemas: Array<{
     cinemaId: string;
     dates: Array<{
       date: string;
-      status: SourceDateOutcome["status"] | "missing";
+      status: SourceDateOutcome["status"] | "missing" | "stale";
       count: number;
       lastAttemptAt: string | null;
       error?: string;
@@ -1022,11 +1016,17 @@ async function collectionHealth(env: Env): Promise<{
     cinemaId: cinema.id,
     dates: activeDatesForCinema(dates, cinema.active_until).map((date) => {
       const row = rowBySourceAndDate.get(`${cinema.id}|${date}`);
+      const status = row?.status === "error"
+        ? "error"
+        : row && isStaleSourceDate(row.last_attempt_at)
+          ? "stale"
+          : (row?.status ?? "missing");
       return {
         date,
-        status: (row?.status ?? "missing") as
+        status: status as
           | SourceDateOutcome["status"]
-          | "missing",
+          | "missing"
+          | "stale",
         count: Number(row?.showing_count ?? 0),
         lastAttemptAt: row?.last_attempt_at ?? null,
         ...(row?.error_message ? { error: row.error_message } : {}),
@@ -1042,9 +1042,10 @@ async function collectionHealth(env: Env): Promise<{
     ).length,
     errors: dateStatuses.filter((date) => date.status === "error").length,
     missing: dateStatuses.filter((date) => date.status === "missing").length,
+    stale: dateStatuses.filter((date) => date.status === "stale").length,
   };
   return {
-    ok: summary.errors === 0 && summary.missing === 0,
+    ok: summary.errors === 0 && summary.missing === 0 && summary.stale === 0,
     generatedAt: new Date().toISOString(),
     window: {
       from: dates[0],

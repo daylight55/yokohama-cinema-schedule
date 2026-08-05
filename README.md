@@ -81,8 +81,9 @@
 
 外部リクエスト数と取得元への負荷を抑えるため、10館を3バッチに分割しています。
 各バッチは1日1回、日本時間の`06`時台に10分ずつずらして実行します。
-さらに`12:47`に、直近の実行がエラーだった映画館だけを再試行します。正常な
-映画館への外部リクエストは発生しません。
+Workers FreeプランのCron Trigger上限（1 Workerあたり3個）に収めるため、
+専用の再試行Cronは設けていません。エラーになった映画館も次回の所属バッチで
+自動的に再試行します。
 `worker/wrangler.jsonc`のCron式はUTCで記述されています。
 
 | バッチ | 日本時間の実行分 | 対象映画館 |
@@ -90,7 +91,6 @@
 | `0` | `06:07` | T・ジョイ横浜、ムービル、TOHOシネマズ 上大岡、横浜ブルク13、イオンシネマみなとみらい |
 | `1` | `06:17` | ローソン・ユナイテッドシネマ STYLE-S みなとみらい、kino cinéma横浜みなとみらい、シネマ・ジャック＆ベティ |
 | `2` | `06:27` | 横浜シネマリン、シネマノヴェチェント |
-| 失敗分のみ | `12:47` | `source_health.status = 'error'`の映画館だけ |
 
 テストでは、`shared/cinemas.ts`に登録された全映画館が重複なくいずれかの
 バッチに含まれ、対応する取得実装も存在することを検証しています。
@@ -108,6 +108,10 @@ Workerは毎回「日本時間の今日を含む7日」を全映画館へ要求�
 - `published`: 公式サイトから1件以上取得して、その日の上映を更新済み
 - `not_published`: 取得処理は正常終了したが0件。公式未公開・休館・上映なしを含む
 - `error`: HTTPエラーまたは解析エラー。前回正常データは削除せず、次回実行で再試行
+
+`GET /health`では、最後の取得試行から36時間を超えた日付を`stale`として明示します。
+`error`・`missing`・`stale`のいずれかがあれば`ok: false`になるため、Cron停止や
+設定不備で古いデータだけが残る状態を監視で検知できます。
 
 日付別URLを持つ取得元は、1日だけ失敗しても残りの日付を継続して取得します。
 同じHTTPリクエストは`403`・`429`・`5xx`の場合だけ、待ち時間を増やしながら
@@ -177,8 +181,8 @@ npx wrangler d1 execute yokohama-cinema-schedule \
 `Schedule batch completed`、失敗時の`Schedule refresh failed`を検索します。
 
 デプロイ済みWorkerの`GET /health`は、当日から7日分について、全映画館の
-`published`・`not_published`・`error`・`missing`をJSONで返します。
-`error`または未実行の`missing`が1つでもあれば`ok: false`です。
+`published`・`not_published`・`error`・`missing`・`stale`をJSONで返します。
+`error`・未実行の`missing`・36時間を超えた`stale`が1つでもあれば`ok: false`です。
 
 ```bash
 curl https://yokohama-cinema-schedule-refresh.<subdomain>.workers.dev/health
