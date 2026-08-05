@@ -564,17 +564,24 @@ export function scheduleTimePeriodForTime(
 export function getScheduleTimeJumpTargets(
   times: string[],
 ): Record<ScheduleTimePeriod, string | null> {
+  const sortedTimes = [...new Set(times)].sort((timeA, timeB) =>
+    timeA.localeCompare(timeB),
+  );
+
   return Object.fromEntries(
     SCHEDULE_TIME_PERIODS.map((period) => {
-      const periodTimes = times
-        .filter((time) => scheduleTimePeriodForTime(time) === period.id)
-        .sort((timeA, timeB) => timeA.localeCompare(timeB));
+      // 朝は特定の上映時刻ではなく、常にスケジュールの先頭へ戻す。
+      // それ以外は固定した基準時刻以降の最初の上映だけを対象にする。
+      // 基準時刻より前へフォールバックしないことで、日によってジャンプ先が
+      // 逆戻りすることを防ぐ。
       const target =
-        periodTimes.find(
-          (time) => minutesFromTime(time) >= period.targetMinutes,
-        ) ??
-        periodTimes.at(-1) ??
-        null;
+        period.id === "morning"
+          ? sortedTimes.length > 0
+            ? "top"
+            : null
+          : sortedTimes.find(
+              (time) => minutesFromTime(time) >= period.targetMinutes,
+            ) ?? null;
       return [period.id, target];
     }),
   ) as Record<ScheduleTimePeriod, string | null>;

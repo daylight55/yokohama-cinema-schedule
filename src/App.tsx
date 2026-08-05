@@ -1546,15 +1546,25 @@ export function App() {
   const jumpToScheduleTimePeriod = (period: ScheduleTimePeriod) => {
     const time = scheduleTimeJumpTargets[period];
     if (!time) return;
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (period === "morning") {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+      return;
+    }
+
     const target = document.getElementById(`time-${time.replace(":", "-")}`);
     if (!target) return;
     const collapsedWindow = target.closest<HTMLDetailsElement>(
       "details.schedule-window",
     );
     if (collapsedWindow) collapsedWindow.open = true;
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
     window.requestAnimationFrame(() => {
       target.scrollIntoView({
         behavior: reduceMotion ? "auto" : "smooth",
