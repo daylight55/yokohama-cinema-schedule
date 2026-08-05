@@ -3,6 +3,7 @@ import type { PagesEnv } from "../functions/_lib/env";
 import {
   onRequestDelete,
   onRequestGet,
+  onRequestPatch,
   onRequestPost,
 } from "../functions/api/viewing-plans";
 
@@ -93,6 +94,7 @@ const futureShowing = {
   screen: "シアター1",
   format: "字幕",
   booking_url: "https://cinema.example/showing-1",
+  reserved_at: null,
 };
 
 const savedPlanRow = {
@@ -115,6 +117,7 @@ describe("viewing plans API", () => {
           showingId: "showing-1",
           title: "テスト映画",
           cinemaName: "テストシネマ",
+          reservedAt: null,
         },
       ],
     });
@@ -197,5 +200,47 @@ describe("viewing plans API", () => {
 
     expect(response.status).toBe(204);
     expect(calls[0].values).toEqual(["showing-1", "user-2"]);
+  });
+
+  it("updates reservation state only for the signed-in user's plan", async () => {
+    const { DB, calls } = fakeDatabase({ deleteChanges: 1 });
+    const response = await onRequestPatch(
+      context(
+        new Request(
+          "https://example.com/api/viewing-plans?id=showing-1",
+          {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ reserved: true }),
+          },
+        ),
+        DB,
+        "user-1",
+      ),
+    );
+
+    expect(response.status).toBe(204);
+    expect(calls[0].sql).toContain("SET reserved_at = ?");
+    expect(calls[0].values[2]).toBe("showing-1");
+    expect(calls[0].values[3]).toBe("user-1");
+  });
+
+  it("rejects reservation updates without a boolean", async () => {
+    const { DB } = fakeDatabase({ deleteChanges: 1 });
+    const response = await onRequestPatch(
+      context(
+        new Request(
+          "https://example.com/api/viewing-plans?id=showing-1",
+          {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ reserved: "yes" }),
+          },
+        ),
+        DB,
+      ),
+    );
+
+    expect(response.status).toBe(400);
   });
 });

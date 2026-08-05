@@ -36,6 +36,7 @@ export function ViewingPlansPage({
   error,
   savingIds,
   onRemove,
+  onReservationChange,
 }: {
   plans: ViewingPlan[];
   starredMovieKeys: Set<string>;
@@ -43,6 +44,7 @@ export function ViewingPlansPage({
   error: string | null;
   savingIds: Set<string>;
   onRemove(plan: ViewingPlan): Promise<void>;
+  onReservationChange(plan: ViewingPlan, reserved: boolean): Promise<void>;
 }) {
   const groupedPlans = plans.reduce<Map<string, ViewingPlan[]>>(
     (groups, plan) => {
@@ -126,6 +128,20 @@ export function ViewingPlansPage({
                     </p>
                   )}
                   <div className="viewing-plan-actions">
+                    <label className="viewing-plan-reservation">
+                      <input
+                        type="checkbox"
+                        checked={plan.reservedAt !== null}
+                        disabled={savingIds.has(plan.showingId)}
+                        onChange={(event) =>
+                          void onReservationChange(
+                            plan,
+                            event.currentTarget.checked,
+                          )
+                        }
+                      />
+                      <span>予約済み</span>
+                    </label>
                     <a
                       href={plan.bookingUrl}
                       target="_blank"

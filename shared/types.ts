@@ -211,6 +211,7 @@ export interface ViewingPlan {
   screen: string | null;
   format: string | null;
   bookingUrl: string;
+  reservedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
