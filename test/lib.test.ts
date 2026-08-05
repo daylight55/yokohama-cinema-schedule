@@ -177,7 +177,7 @@ describe("schedule time-period jumps", () => {
     expect(scheduleTimePeriodForTime("19:00")).toBe("night");
   });
 
-  it("chooses a useful showing near each approximate target", () => {
+  it("uses fixed target times and never falls back before them", () => {
     expect(
       getScheduleTimeJumpTargets([
         "00:15",
@@ -191,20 +191,20 @@ describe("schedule time-period jumps", () => {
         "20:30",
       ]),
     ).toEqual({
-      morning: "10:10",
+      morning: "top",
       daytime: "12:20",
       evening: "18:40",
       night: "20:30",
     });
   });
 
-  it("falls back within a period and disables periods without showings", () => {
+  it("keeps the morning jump at the top and disables missing fixed targets", () => {
     expect(getScheduleTimeJumpTargets(["07:30", "13:00", "19:15"]))
       .toEqual({
-        morning: "07:30",
+        morning: "top",
         daytime: "13:00",
-        evening: null,
-        night: "19:15",
+        evening: "19:15",
+        night: null,
       });
   });
 });
