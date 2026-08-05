@@ -1440,6 +1440,48 @@ export function App() {
     }
   };
 
+  const updateViewingPlanReservation = async (
+    plan: ViewingPlan,
+    reserved: boolean,
+  ): Promise<void> => {
+    setSavingViewingPlanIds((current) =>
+      new Set(current).add(plan.showingId),
+    );
+    setViewingPlanError(null);
+    try {
+      const response = await fetch(
+        `/api/viewing-plans?id=${encodeURIComponent(plan.showingId)}`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({ reserved }),
+        },
+      );
+      if (!response.ok) throw new Error();
+      setViewingPlans((current) =>
+        current.map((item) =>
+          item.showingId === plan.showingId
+            ? {
+                ...item,
+                reservedAt: reserved ? new Date().toISOString() : null,
+              }
+            : item,
+        ),
+      );
+    } catch {
+      setViewingPlanError("予約状態を保存できませんでした");
+    } finally {
+      setSavingViewingPlanIds((current) => {
+        const next = new Set(current);
+        next.delete(plan.showingId);
+        return next;
+      });
+    }
+  };
+
   const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
     dateSwipeStartRef.current = null;
     if (
@@ -2408,6 +2450,7 @@ export function App() {
           error={viewingPlanError}
           savingIds={savingViewingPlanIds}
           onRemove={removeViewingPlan}
+          onReservationChange={updateViewingPlanReservation}
         />
       ) : view === "planner" ? (
         <PlannerPage

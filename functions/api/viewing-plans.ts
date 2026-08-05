@@ -19,6 +19,7 @@ interface ShowingSnapshotRow {
 }
 
 interface ViewingPlanRow extends ShowingSnapshotRow {
+  reserved_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +49,7 @@ function planFromRow(row: ViewingPlanRow): ViewingPlan {
     screen: row.screen,
     format: row.format,
     bookingUrl: row.booking_url,
+    reservedAt: row.reserved_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -73,6 +75,7 @@ export const onRequestGet: PagesFunction<
       screen,
       format,
       booking_url,
+      reserved_at,
       created_at,
       updated_at
     FROM viewing_plans
@@ -198,12 +201,62 @@ export const onRequestPost: PagesFunction<
     Response.json(
       planFromRow({
         ...showing,
+        reserved_at: null,
         created_at: updatedAt,
         updated_at: updatedAt,
       }),
       { status: 201 },
     ),
   );
+};
+
+export const onRequestPatch: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (context) => {
+  if (context.env.PUBLIC_MODE === "true") return unavailable();
+
+  const showingId = new URL(context.request.url).searchParams.get("id")?.trim();
+  if (!showingId) {
+    return Response.json(
+      { error: "missing_showing_id" },
+      { status: 400 },
+    );
+  }
+
+  let body: { reserved?: unknown };
+  try {
+    body = await context.request.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+  if (typeof body.reserved !== "boolean") {
+    return Response.json({ error: "invalid_reserved" }, { status: 400 });
+  }
+
+  const updatedAt = new Date().toISOString();
+  const result = await context.env.DB.prepare(
+    `UPDATE viewing_plans
+    SET reserved_at = ?, updated_at = ?
+    WHERE showing_id = ?
+      AND user_id = ?`,
+  )
+    .bind(
+      body.reserved ? updatedAt : null,
+      updatedAt,
+      showingId,
+      context.data.userId,
+    )
+    .run();
+
+  if ((result.meta.changes ?? 0) === 0) {
+    return Response.json(
+      { error: "viewing_plan_not_found" },
+      { status: 404 },
+    );
+  }
+  return noStore(new Response(null, { status: 204 }));
 };
 
 export const onRequestDelete: PagesFunction<
