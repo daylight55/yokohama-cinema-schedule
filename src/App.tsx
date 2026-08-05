@@ -12,9 +12,12 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
   MoonIcon,
+  MoonStarsIcon,
   PathIcon,
   SignOutIcon,
   StarIcon,
+  SunDimIcon,
+  SunHorizonIcon,
   SunIcon,
   TrashIcon,
   UserCircleIcon,
@@ -72,6 +75,7 @@ import {
   getDateSwipeDirection,
   getAppPageScrollTarget,
   getScheduleMoviePresentation,
+  getScheduleTimeJumpTargets,
   getViewingPlanButtonState,
   hashForAppView,
   isDateSwipeBlockedByHorizontalScroll,
@@ -82,11 +86,15 @@ import {
   scrollPageToTop,
   scrollToInitialTimeMarker,
   scheduleProgramClassName,
+  scheduleTimePeriodForTime,
+  SCHEDULE_TIME_PERIODS,
   shouldDefaultExpandScheduleBucket,
   shouldExpandScheduleBucket,
   shouldShowCurrentLocationRefresh,
+  shouldShowScheduleTimeJumps,
   type AppView,
   type ColorTheme,
+  type ScheduleTimePeriod,
 } from "./lib";
 import { PlannerPage } from "./PlannerPage";
 import { AccountPage } from "./AccountPage";
@@ -231,6 +239,8 @@ export function App() {
   const [view, setView] = useState<AppView>(initialHashState.view);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [showJumpToNow, setShowJumpToNow] = useState(false);
+  const [activeScheduleTimePeriod, setActiveScheduleTimePeriod] =
+    useState<ScheduleTimePeriod | null>(null);
   const [cinemaTravelModes, setCinemaTravelModes] = useState<
     Map<string, TravelMode>
   >(() => new Map());
@@ -671,6 +681,10 @@ export function App() {
     () => groupByScheduleTime(visibleShowings),
     [visibleShowings],
   );
+  const scheduleTimeJumpTargets = useMemo(
+    () => getScheduleTimeJumpTargets(timeGroups.map((group) => group.time)),
+    [timeGroups],
+  );
   const scheduleTimeBuckets = useMemo(
     () =>
       userProfile.scheduleCollapseMinutes === 0
@@ -814,6 +828,87 @@ export function App() {
     today,
     view,
   ]);
+
+  useEffect(() => {
+    if (
+      loading ||
+      error ||
+      !shouldShowScheduleTimeJumps(view, selectedDate, today) ||
+      timeGroups.length === 0
+    ) {
+      setActiveScheduleTimePeriod(null);
+      return;
+    }
+
+    let animationFrame = 0;
+    const updateActivePeriod = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(() => {
+        const timeline = document.querySelector<HTMLElement>(".timeline");
+        const rows = [
+          ...document.querySelectorAll<HTMLElement>(
+            ".timeline-hour[data-time-period]",
+          ),
+        ].filter((row) => {
+          const scheduleWindow = row.closest<HTMLDetailsElement>(
+            "details.schedule-window",
+          );
+          return (
+            row.getClientRects().length > 0 &&
+            (!scheduleWindow || scheduleWindow.open)
+          );
+        });
+        if (!timeline || rows.length === 0) {
+          setActiveScheduleTimePeriod(null);
+          return;
+        }
+
+        const styles = getComputedStyle(document.documentElement);
+        const stickyHeight =
+          Number.parseFloat(styles.getPropertyValue("--header-height")) +
+          Number.parseFloat(styles.getPropertyValue("--date-height")) +
+          (window.innerWidth < 720
+            ? Number.parseFloat(
+                styles.getPropertyValue("--mobile-search-height"),
+              )
+            : 0);
+        const focusY = Math.max(
+          stickyHeight + 12,
+          stickyHeight + (window.innerHeight - stickyHeight) * 0.42,
+        );
+        const timelineRect = timeline.getBoundingClientRect();
+        if (focusY < timelineRect.top || focusY > timelineRect.bottom) {
+          setActiveScheduleTimePeriod(null);
+          return;
+        }
+
+        const rowAtFocus = rows.find((row) => {
+          const rect = row.getBoundingClientRect();
+          return rect.top <= focusY && rect.bottom >= focusY;
+        });
+        const nearestRow =
+          rowAtFocus ??
+          [...rows]
+            .reverse()
+            .find((row) => row.getBoundingClientRect().top <= focusY) ??
+          rows[0];
+        setActiveScheduleTimePeriod(
+          nearestRow.dataset.timePeriod as ScheduleTimePeriod,
+        );
+      });
+    };
+
+    updateActivePeriod();
+    window.addEventListener("scroll", updateActivePeriod, { passive: true });
+    window.addEventListener("resize", updateActivePeriod);
+    document.addEventListener("toggle", updateActivePeriod, true);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("scroll", updateActivePeriod);
+      window.removeEventListener("resize", updateActivePeriod);
+      document.removeEventListener("toggle", updateActivePeriod, true);
+    };
+  }, [error, loading, selectedDate, timeGroups.length, today, view]);
 
   const fetchRoutes = useCallback(async () => {
     setRouteState("loading");
@@ -1406,6 +1501,26 @@ export function App() {
     });
   };
 
+  const jumpToScheduleTimePeriod = (period: ScheduleTimePeriod) => {
+    const time = scheduleTimeJumpTargets[period];
+    if (!time) return;
+    const target = document.getElementById(`time-${time.replace(":", "-")}`);
+    if (!target) return;
+    const collapsedWindow = target.closest<HTMLDetailsElement>(
+      "details.schedule-window",
+    );
+    if (collapsedWindow) collapsedWindow.open = true;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    window.requestAnimationFrame(() => {
+      target.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  };
+
   const goHomeToCurrentTime = (event: MouseEvent<HTMLAnchorElement>) => {
     if (
       event.metaKey ||
@@ -1650,6 +1765,7 @@ export function App() {
       <section
         className="timeline-hour"
         id={`time-${group.time.replace(":", "-")}`}
+        data-time-period={scheduleTimePeriodForTime(group.time)}
         aria-labelledby={`time-label-${group.time.replace(":", "-")}`}
       >
         <div className="hour-label">
@@ -2923,6 +3039,47 @@ export function App() {
           今の上映へ
         </button>
       )}
+
+      {!loading &&
+        !error &&
+        timeGroups.length > 0 &&
+        shouldShowScheduleTimeJumps(view, selectedDate, today) && (
+          <nav className="schedule-time-jumps" aria-label="時間帯へ移動">
+            {SCHEDULE_TIME_PERIODS.map((period) => {
+              const Icon =
+                period.id === "morning"
+                  ? SunHorizonIcon
+                  : period.id === "daytime"
+                    ? SunIcon
+                    : period.id === "evening"
+                      ? SunDimIcon
+                      : MoonStarsIcon;
+              const isActive = activeScheduleTimePeriod === period.id;
+              const hasTarget = scheduleTimeJumpTargets[period.id] !== null;
+              return (
+                <button
+                  type="button"
+                  className={isActive ? "active" : undefined}
+                  aria-current={isActive ? "true" : undefined}
+                  aria-label={`${period.label}の上映へ移動`}
+                  title={
+                    hasTarget
+                      ? isActive
+                        ? `${period.label}の時間帯を表示中`
+                        : `${period.label}の上映へ移動`
+                      : `${period.label}の上映はありません`
+                  }
+                  disabled={isActive || !hasTarget}
+                  onClick={() => jumpToScheduleTimePeriod(period.id)}
+                  key={period.id}
+                >
+                  <Icon size={19} weight="bold" aria-hidden="true" />
+                  <span>{period.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
 
       <footer>
         <p>
