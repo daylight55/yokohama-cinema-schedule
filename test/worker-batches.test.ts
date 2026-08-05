@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CINEMAS } from "../shared/cinemas";
 import {
   configuredSourceIds,
-  isFailedSourceRetryCron,
+  isStaleSourceDate,
   normalizeShowingMovieTitle,
   parseSourceBatch,
   sourceDateOutcomes,
@@ -25,9 +25,11 @@ describe("worker source batches", () => {
     expect(sourceBatchForCron("27 21 * * *")).toBe(2);
   });
 
-  it("uses minute 47 only for failed-source retry", () => {
-    expect(isFailedSourceRetryCron("47 3 * * *")).toBe(true);
-    expect(isFailedSourceRetryCron("7 21 * * *")).toBe(false);
+  it("flags source dates that were not attempted in the last 36 hours", () => {
+    const now = Date.parse("2026-08-05T00:00:00.000Z");
+    expect(isStaleSourceDate("2026-08-04T12:00:00.000Z", now)).toBe(false);
+    expect(isStaleSourceDate("2026-08-03T11:59:59.999Z", now)).toBe(true);
+    expect(isStaleSourceDate(null, now)).toBe(true);
   });
 
   it("accepts only explicit manual batch values", () => {
