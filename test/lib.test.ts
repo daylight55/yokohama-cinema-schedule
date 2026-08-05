@@ -30,6 +30,7 @@ import {
   normalizeMovieTitle,
   parseColorTheme,
   resolveColorTheme,
+  SCHEDULE_TIME_PERIODS,
   scrollPageToTop,
   scheduleProgramClassName,
   scheduleTimePeriodForTime,
@@ -132,6 +133,15 @@ describe("current location refresh visibility", () => {
 });
 
 describe("schedule time-period jumps", () => {
+  it("uses compact labels for the four period buttons", () => {
+    expect(SCHEDULE_TIME_PERIODS.map((period) => period.label)).toEqual([
+      "朝",
+      "昼",
+      "夕",
+      "夜",
+    ]);
+  });
+
   it("shows only on schedule dates other than today", () => {
     expect(
       shouldShowScheduleTimeJumps(
