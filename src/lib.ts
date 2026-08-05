@@ -547,7 +547,7 @@ export const SCHEDULE_TIME_PERIODS: ReadonlyArray<{
 }> = [
   { id: "morning", label: "朝", targetMinutes: 9 * 60 },
   { id: "daytime", label: "昼", targetMinutes: 12 * 60 },
-  { id: "evening", label: "夕方", targetMinutes: 17 * 60 },
+  { id: "evening", label: "夕", targetMinutes: 17 * 60 },
   { id: "night", label: "夜", targetMinutes: 20 * 60 },
 ];
 
