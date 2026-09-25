@@ -1,3 +1,4 @@
+import { groupSharedMovies } from "../shared/sharing";
 import { describe, expect, it } from "vitest";
 import { testDatabase } from "./helpers/sqlite-d1";
 import { onRequestGet } from "../functions/api/sharing";
@@ -108,4 +109,24 @@ describe("automatic sharing between registered users", () => {
     expect(normalizeReturnHash("#shared")).toBe("#shared");
     expect(normalizeReturnHash("//evil.example/#shared")).toBe("");
   });
+});
+
+it("normalizes legacy watchlist keys for detail links and deduplicates each member", () => {
+  const movie = {
+    userId: "alice",
+    movieKey: "goodboy/グッド・ボーイ",
+    title: "GOOD BOY/グッド・ボーイ",
+    imageUrl: null,
+  };
+  const groups = groupSharedMovies([
+    movie,
+    { ...movie, movieKey: "new-key" },
+    { ...movie, userId: "bob" },
+  ]);
+  expect([...groups.keys()]).toEqual(["goodboyグッド・ボーイ"]);
+  expect([...groups.values()][0].map((m) => m.userId)).toEqual([
+    "alice",
+    "bob",
+  ]);
+  expect([...groupSharedMovies([movie], "bob")]).toEqual([]);
 });

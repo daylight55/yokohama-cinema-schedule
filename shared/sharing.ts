@@ -1,3 +1,5 @@
+import { moviePreferenceKey } from "./movie";
+
 export interface SharedMember {
   userId: string;
   name: string;
@@ -23,4 +25,17 @@ export interface SharingResponse {
   plans: SharedPlan[];
   movies: SharedMovie[];
   titles: { japaneseTitle: string; englishTitle: string | null }[];
+}
+
+/** Older saved watchlists can contain keys from a previous normalization rule. */
+export function groupSharedMovies(movies: SharedMovie[], member = "") {
+  const groups = new Map<string, SharedMovie[]>();
+  for (const movie of movies) {
+    if (member && movie.userId !== member) continue;
+    const key = moviePreferenceKey(movie.title);
+    const rows = groups.get(key) ?? [];
+    if (!rows.some((row) => row.userId === movie.userId)) rows.push(movie);
+    groups.set(key, rows);
+  }
+  return groups;
 }

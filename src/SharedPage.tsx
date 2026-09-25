@@ -1,3 +1,4 @@
+import { groupSharedMovies } from "../shared/sharing";
 import { useEffect, useState } from "react";
 import {
   ArrowClockwiseIcon,
@@ -5,11 +6,7 @@ import {
   StarIcon,
   UsersThreeIcon,
 } from "@phosphor-icons/react";
-import type {
-  SharedMovie,
-  SharedPlan,
-  SharingResponse,
-} from "../shared/sharing";
+import type { SharedPlan, SharingResponse } from "../shared/sharing";
 import { formatJstDate } from "../shared/date";
 import { moviePreferenceKey, safeImageUrl } from "../shared/movie";
 import { hashForAppView } from "./lib";
@@ -63,11 +60,7 @@ export function SharedPage() {
     const day = formatJstDate(new Date(rows[0].startsAt));
     days.set(day, [...(days.get(day) ?? []), rows]);
   }
-  const movies = new Map<string, SharedMovie[]>();
-  for (const movie of data?.movies ?? []) {
-    if (member && movie.userId !== member) continue;
-    movies.set(movie.movieKey, [...(movies.get(movie.movieKey) ?? []), movie]);
-  }
+  const movies = groupSharedMovies(data?.movies ?? [], member);
   const date = localizedDate({
     month: "long",
     day: "numeric",
