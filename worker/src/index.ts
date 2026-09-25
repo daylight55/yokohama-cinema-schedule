@@ -1,4 +1,5 @@
 import { validBearer } from "./request-auth";
+import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
 import { activeDatesForCinema } from "../../shared/cinema-availability";
 import {
@@ -419,74 +420,101 @@ async function fetchAeon(dates: string[]): Promise<SourceFetchResult> {
 }
 
 async function fetchMovil(dates: string[]): Promise<SourceFetchResult> {
+  const budget = new SourceAccessBudget();
   const movieImages = await fetchOptionalMovieImages(
     "https://109cinemas.net/nowshowing/",
     parseMovilMovieImages,
+    undefined,
+    budget,
   );
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = `https://109cinemas.net/movil/schedules/${compactDate(date)}.html?theater_code=72`;
-    const response = await checkedFetch(url);
-    return parseMovilSchedule(await response.text(), date, movieImages);
-  });
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = `https://109cinemas.net/movil/schedules/${compactDate(date)}.html?theater_code=72`;
+      const response = await checkedFetch(url, {}, budget);
+      return parseMovilSchedule(await response.text(), date, movieImages);
+    },
+    budget,
+  );
 }
 
 async function fetchTohoKamiooka(dates: string[]): Promise<SourceFetchResult> {
+  const budget = new SourceAccessBudget();
   const bookingUrl =
     "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do";
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = new URL(
-      "https://api2.tohotheater.jp/api/schedule/v1/schedule/066/TNPI3050J02",
-    );
-    url.searchParams.set("__type__", "html");
-    url.searchParams.set("__useResultInfo__", "no");
-    url.searchParams.set("vg_cd", "066");
-    url.searchParams.set("show_day", compactDate(date));
-    url.searchParams.set("term", "99");
-    url.searchParams.set("isMember", "");
-    url.searchParams.set("enter_kbn", "");
-    url.searchParams.set("_dc", String(Date.now()));
-    const response = await checkedFetch(url, {
-      headers: {
-        accept: "application/json",
-        referer: "https://hlo.tohotheater.jp/",
-      },
-    });
-    return parseTohoSchedule(
-      await response.json(),
-      date,
-      "toho-kamiooka",
-      "toho-kamiooka",
-      bookingUrl,
-    );
-  });
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = new URL(
+        "https://api2.tohotheater.jp/api/schedule/v1/schedule/066/TNPI3050J02",
+      );
+      url.searchParams.set("__type__", "html");
+      url.searchParams.set("__useResultInfo__", "no");
+      url.searchParams.set("vg_cd", "066");
+      url.searchParams.set("show_day", compactDate(date));
+      url.searchParams.set("term", "99");
+      url.searchParams.set("isMember", "");
+      url.searchParams.set("enter_kbn", "");
+      url.searchParams.set("_dc", String(Date.now()));
+      const response = await checkedFetch(
+        url,
+        {
+          headers: {
+            accept: "application/json",
+            referer: "https://hlo.tohotheater.jp/",
+          },
+        },
+        budget,
+      );
+      return parseTohoSchedule(
+        await response.json(),
+        date,
+        "toho-kamiooka",
+        "toho-kamiooka",
+        bookingUrl,
+      );
+    },
+    budget,
+  );
 }
 
 async function fetchUnited(dates: string[]): Promise<SourceFetchResult> {
+  const budget = new SourceAccessBudget();
   const decoder = new TextDecoder("shift_jis");
   const movieImages = await fetchOptionalMovieImages(
     "https://www.unitedcinemas.jp/minatomirai/film.php",
     parseUnitedMovieImages,
     async (response) => decoder.decode(await response.arrayBuffer()),
+    budget,
   );
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = `https://www.unitedcinemas.jp/minatomirai/daily.php?date=${date}`;
-    const response = await checkedFetch(url);
-    return parseUnitedSchedule(
-      decoder.decode(await response.arrayBuffer()),
-      date,
-      movieImages,
-    );
-  });
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = `https://www.unitedcinemas.jp/minatomirai/daily.php?date=${date}`;
+      const response = await checkedFetch(url, {}, budget);
+      return parseUnitedSchedule(
+        decoder.decode(await response.arrayBuffer()),
+        date,
+        movieImages,
+      );
+    },
+    budget,
+  );
 }
 
 async function fetchKino(dates: string[]): Promise<SourceFetchResult> {
-  const [scheduleResponse, movieImages] = await Promise.all([
-    checkedFetch("https://kinocinema.jp/minatomirai/"),
-    fetchOptionalMovieImages(
-      "https://kinocinema.jp/minatomirai/movie/",
-      parseKinoMovieImages,
-    ),
-  ]);
+  const budget = new SourceAccessBudget();
+  const scheduleResponse = await checkedFetch(
+    "https://kinocinema.jp/minatomirai/",
+    {},
+    budget,
+  );
+  const movieImages = await fetchOptionalMovieImages(
+    "https://kinocinema.jp/minatomirai/movie/",
+    parseKinoMovieImages,
+    undefined,
+    budget,
+  );
   return successfulFetch(
     parseKinoSchedule(await scheduleResponse.text(), dates[0], movieImages),
   );
@@ -509,11 +537,13 @@ async function fetchOptionalMovieImages(
   parse: (html: string) => Map<string, string>,
   decode: (response: Response) => Promise<string> = (response) =>
     response.text(),
+  budget = new SourceAccessBudget(),
 ): Promise<Map<string, string>> {
   try {
-    const response = await checkedFetch(url);
+    const response = await checkedFetch(url, {}, budget);
     return parse(await decode(response));
   } catch (error) {
+    budget.recordFailure(error);
     console.warn("Movie image enrichment failed", {
       host: new URL(url).hostname,
       message: safeError(error),
@@ -529,20 +559,25 @@ async function fetchEigaland(
   webKey: string,
   bookingUrl: string,
 ): Promise<SourceFetchResult> {
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = new URL(
-      "https://schedule.eigaland.com/api/schedulePage/show/listByCinemaIdAndDate",
-    );
-    url.searchParams.set("webKey", webKey);
-    url.searchParams.set("date", date);
-    const response = await checkedFetch(url);
-    return parseEigalandSchedule(
-      await response.json(),
-      sourceId,
-      cinemaId,
-      bookingUrl,
-    );
-  });
+  const budget = new SourceAccessBudget();
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = new URL(
+        "https://schedule.eigaland.com/api/schedulePage/show/listByCinemaIdAndDate",
+      );
+      url.searchParams.set("webKey", webKey);
+      url.searchParams.set("date", date);
+      const response = await checkedFetch(url, {}, budget);
+      return parseEigalandSchedule(
+        await response.json(),
+        sourceId,
+        cinemaId,
+        bookingUrl,
+      );
+    },
+    budget,
+  );
 }
 
 export async function fetchTjoy(
@@ -552,32 +587,44 @@ export async function fetchTjoy(
   theaterUrl: string,
   browser?: BrowserRun,
 ): Promise<SourceFetchResult> {
-  return fetchDatesIndependently(dates, async (date) => {
-    let html: string;
-    if (browser) {
-      const response = await browser.quickAction("content", {
-        url: tjoyScheduleUrl(theaterUrl, date),
-        gotoOptions: { waitUntil: "domcontentloaded", timeout: 20_000 },
-        rejectResourceTypes: ["image", "font", "media", "stylesheet"],
-      });
-      if (!response.ok) {
-        await response.body?.cancel();
-        throw new Error(`Browser Run: HTTP ${response.status}`);
+  const budget = new SourceAccessBudget();
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      let html: string;
+      if (browser) {
+        const response = await browser.quickAction("content", {
+          url: tjoyScheduleUrl(theaterUrl, date),
+          gotoOptions: { waitUntil: "domcontentloaded", timeout: 20_000 },
+          rejectResourceTypes: ["image", "font", "media", "stylesheet"],
+        });
+        if (!response.ok) {
+          await response.body?.cancel();
+          throw budget.recordFailure(
+            new Error(`Browser Run: HTTP ${response.status}`),
+            response.status === 403 || response.status === 429,
+          );
+        }
+        const payload = await response.json<
+          BrowserRunContentSuccessResponse | BrowserRunErrorResponse
+        >();
+        if (!payload.success || typeof payload.result !== "string")
+          throw new Error("Browser Run: invalid content response");
+        html = payload.result;
+      } else {
+        const response = await checkedFetch(
+          tjoyScheduleUrl(theaterUrl, date),
+          {
+            headers: tjoyRequestHeaders(theaterUrl),
+          },
+          budget,
+        );
+        html = await response.text();
       }
-      const payload = await response.json<
-        BrowserRunContentSuccessResponse | BrowserRunErrorResponse
-      >();
-      if (!payload.success || typeof payload.result !== "string")
-        throw new Error("Browser Run: invalid content response");
-      html = payload.result;
-    } else {
-      const response = await checkedFetch(tjoyScheduleUrl(theaterUrl, date), {
-        headers: tjoyRequestHeaders(theaterUrl),
-      });
-      html = await response.text();
-    }
-    return parseTjoySchedule(html, date, sourceId, cinemaId, theaterUrl);
-  });
+      return parseTjoySchedule(html, date, sourceId, cinemaId, theaterUrl);
+    },
+    budget,
+  );
 }
 
 export function tjoyScheduleUrl(theaterUrl: string, date: string): string {
@@ -601,14 +648,17 @@ function successfulFetch(showings: NormalizedShowing[]): SourceFetchResult {
 async function fetchDatesIndependently(
   dates: string[],
   fetchDate: (date: string) => Promise<NormalizedShowing[]>,
+  budget: SourceAccessBudget,
 ): Promise<SourceFetchResult> {
   const showings: NormalizedShowing[] = [];
   const dateErrors = new Map<string, string>();
   for (const date of dates) {
     try {
+      budget.assertAvailable();
       showings.push(...(await fetchDate(date)));
     } catch (error) {
-      dateErrors.set(date, safeError(error));
+      dateErrors.set(date, safeError(budget.recordFailure(error)));
+      if (!budget.stopReason && date !== dates.at(-1)) await delay(1_000);
     }
   }
   return { showings, dateErrors };
@@ -617,9 +667,11 @@ async function fetchDatesIndependently(
 export async function checkedFetch(
   input: string | URL,
   init: RequestInit = {},
+  budget = new SourceAccessBudget(),
 ): Promise<Response> {
   const host = new URL(input.toString()).hostname;
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    budget.assertAvailable();
     const headers = new Headers(init.headers);
     if (!headers.has("user-agent")) headers.set("user-agent", USER_AGENT);
     headers.set("accept-language", "ja,en;q=0.5");
@@ -632,26 +684,31 @@ export async function checkedFetch(
         signal: init.signal ?? AbortSignal.timeout(20_000),
       });
     } catch (error) {
-      if (attempt < 1) {
-        await delay(attempt === 0 ? 1_000 : 3_000);
+      const failure = budget.recordFailure(
+        new Error(`${host}: ${safeError(error)}`),
+      );
+      if (attempt < 1 && !budget.stopReason) {
+        await delay(1_000);
         continue;
       }
-      throw new Error(`${host}: ${safeError(error)}`);
+      throw failure;
     }
     if (response.ok) return response;
     await response.body?.cancel();
-    if (attempt < 1 && (response.status === 429 || response.status >= 500)) {
+    const failure = budget.recordFailure(
+      new Error(`${host}: HTTP ${response.status}`),
+      response.status === 403 || response.status === 429,
+    );
+    if (attempt < 1 && response.status >= 500 && !budget.stopReason) {
       const retryAfter = response.headers.get("retry-after");
       const retryAfterSeconds = retryAfter === null ? NaN : Number(retryAfter);
       const retryDelay = Number.isFinite(retryAfterSeconds)
         ? Math.min(Math.max(retryAfterSeconds * 1_000, 1_000), 10_000)
-        : attempt === 0
-          ? 1_000
-          : 3_000;
+        : 1_000;
       await delay(retryDelay);
       continue;
     }
-    throw new Error(`${host}: HTTP ${response.status}`);
+    throw failure;
   }
   throw new Error(`${host}: fetch failed`);
 }
