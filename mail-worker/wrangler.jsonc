@@ -11,7 +11,7 @@
     }
   ],
   "vars": {
-    "APP_ORIGIN": "https://yokohama-cinema-schedule.pages.dev",
+    "APP_ORIGIN": "https://hama-movie.daylight55.dev",
     "INVITE_FROM_EMAIL": "noreply@notify.daylight55.dev"
   }
 }

@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import mailer from "../mail-worker/index";
-const origin = "https://yokohama-cinema-schedule.pages.dev";
+const origin = "https://hama-movie.daylight55.dev";
 const payload = {
   to: "member@example.com",
   url: `${origin}/auth/invite?token=${"a".repeat(64)}`,

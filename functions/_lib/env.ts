@@ -1,5 +1,6 @@
 export interface PagesEnv {
   DB: D1Database;
+  APP_ORIGIN?: string;
   INVITE_MAILER?: Fetcher;
   INVITE_FROM_EMAIL?: string;
   APP_PASSWORD: string;

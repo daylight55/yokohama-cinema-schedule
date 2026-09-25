@@ -124,6 +124,28 @@ function context(
   } as Parameters<typeof onRequestPost>[0];
 }
 describe("invitation API authorization and email failures", () => {
+  it("issues and emails canonical-domain links even when the admin uses the old host", async () => {
+    const { db, sqlite } = testDatabase();
+    try {
+      const ctx = context(db, "POST", { email: identity.email, sendEmail: true });
+      ctx.env.APP_ORIGIN = "https://hama-movie.daylight55.dev";
+      ctx.env.INVITE_FROM_EMAIL = "noreply@notify.daylight55.dev";
+      let emailedUrl = "";
+      const deliver = vi.fn(async (_input: string, init: RequestInit) => {
+        emailedUrl = JSON.parse(String(init.body)).url;
+        return Response.json({ sent: true });
+      });
+      ctx.env.INVITE_MAILER = { fetch: deliver } as unknown as Fetcher;
+      const response = await onRequestPost(ctx);
+      const payload = await response.json() as { url: string; emailStatus: string };
+      expect(response.status).toBe(201);
+      expect(new URL(payload.url).origin).toBe(ctx.env.APP_ORIGIN);
+      expect(payload.emailStatus).toBe("sent");
+      expect(emailedUrl).toBe(payload.url);
+    } finally {
+      sqlite.close();
+    }
+  });
   it("denies members for all methods and cross-origin writes", async () => {
     const { db, sqlite } = testDatabase();
     expect(

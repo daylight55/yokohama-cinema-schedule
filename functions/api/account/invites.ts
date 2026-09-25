@@ -95,7 +95,10 @@ export const onRequestPost: PagesFunction<
       );
     throw error;
   }
-  const url = new URL("/auth/invite", context.request.url);
+  const url = new URL(
+    "/auth/invite",
+    context.env.APP_ORIGIN || context.request.url,
+  );
   url.searchParams.set("token", invite.token);
   let emailStatus: "not_requested" | "sent" | "failed" = "not_requested";
   if (

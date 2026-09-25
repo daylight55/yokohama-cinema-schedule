@@ -2,7 +2,10 @@
 
 横浜駅、桜木町、みなとみらい、関内、伊勢佐木町周辺の公式上映スケジュールを横断して、「今日、今から観られる映画」を確認する個人用サイトです。
 
-[サイトを開く](https://yokohama-cinema-schedule.pages.dev)
+[サイトを開く](https://hama-movie.daylight55.dev)
+
+旧URLの `https://yokohama-cinema-schedule.pages.dev` も利用できます。
+Cloudflare Pagesのプロジェクト名とD1名は引き続き `yokohama-cinema-schedule` です。
 
 ## 現在できること
 
@@ -309,9 +312,11 @@ openssl rand -base64 32 | npx wrangler pages secret put PROFILE_ENCRYPTION_KEY
 ### Google カレンダーOAuth
 
 Google CloudでCalendar APIを有効化し、ウェブアプリケーション用OAuthクライアントを作成します。
-承認済みのリダイレクトURIには、ログイン用とカレンダー連携用の本番URLを登録します。
+承認済みのリダイレクトURIには、新旧ホスト名それぞれのログイン用とカレンダー連携用URLを登録します。
 
 ```text
+https://hama-movie.daylight55.dev/auth/google/login/callback
+https://hama-movie.daylight55.dev/auth/google/callback
 https://yokohama-cinema-schedule.pages.dev/auth/google/login/callback
 https://yokohama-cinema-schedule.pages.dev/auth/google/callback
 ```
@@ -422,6 +427,10 @@ npm run ci:pr
 生の招待トークンはリンク発行時だけ返し、D1にはSHA-256ハッシュだけを保存します。
 ユーザー作成・Google ID連携・招待消費はD1 batchトランザクションで処理します。
 招待は常にメンバー権限で登録し、メールアドレスを知っているだけでは登録できません。
+
+招待リンクのホスト名はPagesの `APP_ORIGIN=https://hama-movie.daylight55.dev` に固定します。
+旧URLから管理画面を開いた場合も、新しいホスト名のリンクを発行します。
+メールWorkerの `APP_ORIGIN` も同じ値に設定します。
 
 送信元は `noreply@notify.daylight55.dev`。Cloudflare Email Serviceの送信ドメインを
 有効化し、SPF・DKIM・DMARCを設定します。Pagesは`send_email`バインディングに
