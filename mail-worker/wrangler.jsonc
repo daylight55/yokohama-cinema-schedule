@@ -1,0 +1,17 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "yokohama-cinema-schedule-mail",
+  "main": "index.ts",
+  "compatibility_date": "2026-09-25",
+  "workers_dev": false,
+  "preview_urls": false,
+  "send_email": [
+    {
+      "name": "EMAIL"
+    }
+  ],
+  "vars": {
+    "APP_ORIGIN": "https://yokohama-cinema-schedule.pages.dev",
+    "INVITE_FROM_EMAIL": "noreply@notify.daylight55.dev"
+  }
+}

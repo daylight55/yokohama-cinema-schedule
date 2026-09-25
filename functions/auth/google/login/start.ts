@@ -1,3 +1,4 @@
+import { findValidInvite } from "../../../_lib/invitations";
 import type { PagesEnv } from "../../../_lib/env";
 import {
   createSession,
@@ -22,6 +23,13 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     "/auth/google/login/callback",
     requestUrl.origin,
   ).toString();
+  const inviteToken = requestUrl.searchParams.get("invite") ?? "";
+  if (inviteToken && !(await findValidInvite(context.env.DB, inviteToken))) {
+    return new Response(
+      "招待の期限が切れているか、使用済みです。管理者に再発行を依頼してください。",
+      { status: 410, headers: { "cache-control": "no-store" } },
+    );
+  }
   const state = randomOauthValue();
   const verifier = randomOauthValue(48);
   const authorizationUrl = new URL(
@@ -40,6 +48,17 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
 
   const headers = new Headers({ location: authorizationUrl.toString() });
   const secure = requestUrl.protocol === "https:";
+  headers.set("cache-control", "no-store");
+  headers.set("referrer-policy", "no-referrer");
+  headers.append(
+    "set-cookie",
+    oauthCookie(
+      "google_login_invite",
+      inviteToken,
+      secure,
+      inviteToken ? 600 : 0,
+    ),
+  );
   headers.append(
     "set-cookie",
     oauthCookie("google_login_state", state, secure),
@@ -48,14 +67,8 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     "set-cookie",
     oauthCookie("google_login_verifier", verifier, secure),
   );
-  const currentSession = await resolveSession(
-    context.request,
-    context.env,
-  );
-  if (
-    currentSession?.legacy &&
-    currentSession.user.id === LEGACY_USER_ID
-  ) {
+  const currentSession = await resolveSession(context.request, context.env);
+  if (currentSession?.legacy && currentSession.user.id === LEGACY_USER_ID) {
     headers.append(
       "set-cookie",
       oauthCookie(

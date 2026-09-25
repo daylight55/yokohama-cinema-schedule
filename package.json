@@ -16,7 +16,8 @@
     "worker:dev": "wrangler dev --config worker/wrangler.jsonc --persist-to .wrangler/state",
     "worker:deploy": "wrangler deploy --config worker/wrangler.jsonc",
     "db:migrate:local": "wrangler d1 migrations apply yokohama-cinema-schedule --local --config worker/wrangler.jsonc --persist-to .wrangler/state",
-    "db:migrate:remote": "wrangler d1 migrations apply yokohama-cinema-schedule --remote --config worker/wrangler.jsonc"
+    "db:migrate:remote": "wrangler d1 migrations apply yokohama-cinema-schedule --remote --config worker/wrangler.jsonc",
+    "ci:pr:clean": "bash scripts/ci-pr-clean.sh"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
@@ -27,9 +28,11 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260723.1",
+    "@types/node": "^22.20.4",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10",

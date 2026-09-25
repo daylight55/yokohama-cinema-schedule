@@ -3,12 +3,14 @@
   "name": "yokohama-cinema-schedule-refresh",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-23",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "triggers": {
     "crons": [
-      "7 21 * * *",
-      "17 21 * * *",
-      "27 21 * * *"
+      "7 3,9,15,21 * * *",
+      "17 3,9,15,21 * * *",
+      "27 3,9,15,21 * * *"
     ]
   },
   "d1_databases": [
@@ -20,7 +22,8 @@
     }
   ],
   "vars": {
-    "SCHEDULE_DAYS": "7"
+    "SCHEDULE_DAYS": "7",
+    "EXTERNAL_TJOY_COLLECTION": "true"
   },
   "observability": {
     "enabled": true,
@@ -31,5 +34,8 @@
       "invocation_logs": true,
       "persist": true
     }
+  },
+  "limits": {
+    "subrequests": 1000
   }
 }

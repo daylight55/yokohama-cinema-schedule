@@ -81,9 +81,9 @@
 ### 3つの収集バッチ
 
 外部リクエスト数と取得元への負荷を抑えるため、10館を3バッチに分割しています。
-各バッチは1日1回、日本時間の`06`時台に10分ずつずらして実行します。
-CloudflareアカウントのCron Trigger上限（無料枠はアカウント合計5個で、
-他Workerと共有）に余裕を持たせるため、専用の再試行Cronは設けていません。
+各バッチは6時間ごと、日本時間の`00・06・12・18`時台に10分ずつずらして実行します。
+T・ジョイ横浜と横浜ブルク13は、下記のGitHub Actions収集で更新します。
+CloudflareアカウントのCron Trigger上限（他Workerと共有）に余裕を持たせるため、専用の再試行Cronは設けていません。
 エラーになった映画館も次回の所属バッチで自動的に再試行します。
 `worker/wrangler.jsonc`のCron式はUTCで記述されています。
 
@@ -115,12 +115,12 @@ Workerは毎回「日本時間の今日を含む7日」を全映画館へ要求�
 設定不備で古いデータだけが残る状態を監視で検知できます。
 
 日付別URLを持つ取得元は、1日だけ失敗しても残りの日付を継続して取得します。
-同じHTTPリクエストは`403`・`429`・`5xx`の場合だけ、待ち時間を増やしながら
-最大3回まで再試行します。公式未公開の日を推測で補完することはしません。
+同じHTTPリクエストは通信エラー・`429`・`5xx`の場合だけ、最大2回まで試行します。
+1回20秒のタイムアウトを設け、失敗応答の本文を解放します。`403`は再試行しません。公式未公開の日を推測で補完することはしません。
 
 1日1回の全バッチで、外部サイトへのリクエストは通常およそ50回前後です。
 各映画館は直列に処理し、1館あたりの週間取得は1〜8回程度です。Cron Triggerは
-月約120回のWorker呼び出しに収まり、通常はWorkersの標準的な無料・有料枠に対して
+月約360回のWorker呼び出しに収まり、通常はWorkersの標準的な有料枠に対して
 十分小さい処理です。この収集は決められたURLの取得とパーサー実行なので
 Browser Rendering、Workers AI、Cloudflare Agentsは使いません。実測で1回の
 実行時間や外部
@@ -183,7 +183,7 @@ npx wrangler d1 execute yokohama-cinema-schedule \
 
 デプロイ済みWorkerの`GET /health`は、当日から7日分について、全映画館の
 `published`・`not_published`・`error`・`missing`・`stale`をJSONで返します。
-`error`・未実行の`missing`・36時間を超えた`stale`が1つでもあれば`ok: false`です。
+`error`・未実行の`missing`・36時間を超えた`stale`が1つでもあれば`ok: false`、HTTP 503です。
 
 ```bash
 curl https://yokohama-cinema-schedule-refresh.<subdomain>.workers.dev/health
@@ -337,8 +337,8 @@ Googleログインでは、検証済みメールアドレスを一意な検索�
 Googleの`sub`を変更されない認証主体IDとして保持します。初回管理者は、従来の
 `APP_PASSWORD`でログインしてから`#account`でGoogleアカウントを連携します。
 既存の映画設定やベース出発地点、移動時間、はしごプランはその管理者へ引き継がれます。
-以降の新規ユーザーは、管理者がメールアドレスを招待リストへ追加してから
-Googleログインします。
+以降の新規ユーザーは、管理者が`#admin-users`で発行した招待リンクから
+Googleで本人確認して登録します。旧メール許可リストだけでは新規登録できません。
 
 ユーザーが設定する予備パスワードは暗号化して復元する方式ではなく、
 ユーザーごとのランダムsaltとPBKDF2-HMAC-SHA256（600,000回）による不可逆ハッシュ
@@ -412,3 +412,62 @@ npm run ci:pr
 ```
 
 型検査、単体テスト、プロダクションビルドを順に実行します。
+
+
+## 期限付き招待とメール送信
+
+マイページ →「ユーザー管理・招待」（`#admin-users`）でリンクを発行します。
+リンクは発行から24時間、1人1回限り有効です。メールアドレスを指定すると、
+そのアドレスの検証済みGoogleアカウントだけが登録できます。未指定ならLINE等で
+共有し、最初の1人が登録できます。リンクのプレビューや開封だけでは消費しません。
+管理者は登録前の招待を取り消せます。Google登録後は既存のパスキー・予備パスワードも使えます。
+
+生の招待トークンはリンク発行時だけ返し、D1にはSHA-256ハッシュだけを保存します。
+ユーザー作成・Google ID連携・招待消費はD1 batchトランザクションで処理します。
+招待は常にメンバー権限で登録し、メールアドレスを知っているだけでは登録できません。
+
+送信元は `noreply@notify.daylight55.dev`。Cloudflare Email Serviceの送信ドメインを
+有効化し、SPF・DKIM・DMARCを設定します。Pagesは`send_email`バインディングに
+対応していないため、非公開の`yokohama-cinema-schedule-mail` Workerを
+`INVITE_MAILER`サービスバインディングで呼び出します。公開URLは無効です。
+メール送信が失敗した場合も、画面は失敗を明示して共有可能なリンクを表示します。
+
+デプロイ順序:
+
+```bash
+npm run db:migrate:remote
+npx wrangler deploy --config mail-worker/wrangler.jsonc
+npm run worker:deploy
+npm run pages:deploy
+```
+
+PagesとメールWorkerの`INVITE_FROM_EMAIL`を揃えてください。
+本番ホストを変更する場合は、メールWorkerの`APP_ORIGIN`も合わせます。
+プレビュー環境から本番ホスト以外のリンクをメール送信することは拒否します。
+
+## T・ジョイ系の取得経路と障害の再発防止
+
+2026-09-25の本番監視では、T・ジョイ横浜・横浜ブルク13のCloudflare発リクエストが
+403となり、各日3回の再試行によってサブリクエスト上限を超え、後続のイオンシネマも
+失敗していました。Paidプランでは`limits.subrequests: 1000`を明示していますが、
+上限を増やすだけでは403を解決できません。
+
+T・ジョイ2館はGitHub Actions（`.github/workflows/collect-tjoy.yml`）が公式の公開HTMLを
+通常のGETで取得し、共有パーサーで変換して、Cloudflare Workerの`POST /ingest`へ渡します。
+Workerは専用Bearerトークン、対象2館、当日から7日の日付、全上映の型・URLを検証してから
+既存のD1更新処理で保存します。本文は1MBまで。エラーの日は前回正常データを保持します。
+公式HTMLの日付不一致やスケジュール構造消失は未公開ではなく解析エラーにします。
+
+`EXTERNAL_TJOY_COLLECTION=true`によりCloudflare Cronではこの2館をスキップします。
+他館は従来のCronで収集します。Actionsは日本時間00:37・06:37・12:37・18:37に実行し、失敗時は
+ワークフローを失敗させます。最後に全館の`/health`もチェックするため、別の館の失敗や
+36時間を超える未更新もGitHub Actionsの失敗通知で検知できます（GitHubの通知設定に従います）。
+Actionsの実行時刻は遅延する場合があります。
+
+専用のランダムな`COLLECTOR_INGEST_TOKEN`をWorker secretとGitHub Actions secretの
+両方に同じ値で設定してください。トークンをコマンド引数・ログ・リポジトリに含めないでください。
+初回デプロイ直後はActionsを手動実行して全館の`/health`が正常になることを確認します。
+
+CIはPRマージ状態で`npm ci`と`npm run ci:pr`を実行します。ローカルの再現確認は
+変更をコミットした後で`npm run ci:pr:clean`を実行してください。
+一時worktreeへ最新mainをマージし、`npm ci`と同じ検証を実行して後片付けします。

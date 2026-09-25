@@ -61,6 +61,7 @@ export const onRequest: PagesFunction<
 
 export function isPublicAuthPath(pathname: string): boolean {
   return (
+    pathname === "/auth/invite" ||
     pathname === "/auth/login" ||
     pathname === "/auth/logout" ||
     pathname === "/auth/password/login" ||
@@ -75,6 +76,8 @@ export function isPublicAuthPath(pathname: string): boolean {
 export function isPublicShellAssetPath(pathname: string): boolean {
   return (
     pathname.startsWith("/brand/") ||
+    pathname === "/base-theme.css" ||
+    pathname === "/page-layout.css" ||
     pathname === "/site.webmanifest" ||
     pathname === "/login-route.js" ||
     pathname === "/passkey-login.js"

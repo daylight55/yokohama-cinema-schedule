@@ -1,3 +1,9 @@
+import {
+  EXTERNAL_SOURCES,
+  readLimitedJson,
+  validateCollectionPayload,
+  validBearer,
+} from "./ingest";
 import { CINEMAS } from "../../shared/cinemas";
 import { activeDatesForCinema } from "../../shared/cinema-availability";
 import {
@@ -6,10 +12,7 @@ import {
   timestampForCacheBuster,
   todayInJst,
 } from "../../shared/date";
-import {
-  movieDisplayTitle,
-  moviePreferenceKey,
-} from "../../shared/movie";
+import { movieDisplayTitle, moviePreferenceKey } from "../../shared/movie";
 import { showingSearchText } from "../../shared/search";
 import type { NormalizedShowing } from "../../shared/types";
 import { parseAeonSchedule } from "./parsers/aeon";
@@ -22,10 +25,7 @@ import {
 } from "./parsers/novecento";
 import { parseTohoSchedule } from "./parsers/toho";
 import { parseTjoySchedule } from "./parsers/tjoy";
-import {
-  parseUnitedMovieImages,
-  parseUnitedSchedule,
-} from "./parsers/united";
+import { parseUnitedMovieImages, parseUnitedSchedule } from "./parsers/united";
 import { fetchTmdbReleaseDates } from "./tmdb";
 
 interface Env {
@@ -33,6 +33,8 @@ interface Env {
   SCHEDULE_DAYS?: string;
   TMDB_API_READ_TOKEN?: string;
   WORKER_TRIGGER_TOKEN?: string;
+  COLLECTOR_INGEST_TOKEN?: string;
+  EXTERNAL_TJOY_COLLECTION?: string;
 }
 
 interface Source {
@@ -40,7 +42,7 @@ interface Source {
   fetch: (dates: string[]) => Promise<SourceFetchResult>;
 }
 
-interface SourceFetchResult {
+export interface SourceFetchResult {
   showings: NormalizedShowing[];
   dateErrors: Map<string, string>;
 }
@@ -73,15 +75,8 @@ const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
     "yokohama-burg13",
     "aeon-minatomirai",
   ]),
-  1: new Set([
-    "united-minatomirai",
-    "kino-minatomirai",
-    "jack-and-betty",
-  ]),
-  2: new Set([
-    "cinemarine",
-    "novecento",
-  ]),
+  1: new Set(["united-minatomirai", "kino-minatomirai", "jack-and-betty"]),
+  2: new Set(["cinemarine", "novecento"]),
 };
 
 const USER_AGENT =
@@ -103,6 +98,7 @@ export default {
           cron: controller.cron,
           error: safeError(error),
         });
+        throw error;
       }),
     );
   },
@@ -110,18 +106,47 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/health") {
-      return Response.json(await collectionHealth(env), {
+      const health = await collectionHealth(env);
+      return Response.json(health, {
+        status: health.ok ? 200 : 503,
+        headers: { "cache-control": "no-store" },
+      });
+    }
+    if (request.method === "POST" && url.pathname === "/ingest") {
+      if (!(await validBearer(request, env.COLLECTOR_INGEST_TOKEN)))
+        return new Response("Unauthorized", { status: 401 });
+      let payload;
+      try {
+        payload = validateCollectionPayload(await readLimitedJson(request));
+      } catch {
+        return Response.json(
+          { error: "invalid_collection_payload" },
+          { status: 400 },
+        );
+      }
+      const result = await refreshBatch(
+        env,
+        0,
+        new Set([payload.sourceId]),
+        new Map([
+          [
+            payload.sourceId,
+            {
+              showings: payload.showings,
+              dateErrors: new Map(payload.dateErrors),
+            },
+          ],
+        ]),
+      );
+      return Response.json(result, {
+        status: result.failed ? 207 : 200,
         headers: { "cache-control": "no-store" },
       });
     }
     if (request.method !== "POST" || url.pathname !== "/refresh") {
       return new Response("Not found", { status: 404 });
     }
-    if (
-      !env.WORKER_TRIGGER_TOKEN ||
-      request.headers.get("authorization") !==
-        `Bearer ${env.WORKER_TRIGGER_TOKEN}`
-    ) {
+    if (!(await validBearer(request, env.WORKER_TRIGGER_TOKEN))) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -151,8 +176,10 @@ export function isStaleSourceDate(
 ): boolean {
   if (!lastAttemptAt) return true;
   const attemptedAt = Date.parse(lastAttemptAt);
-  return !Number.isFinite(attemptedAt) ||
-    now - attemptedAt > SOURCE_DATE_STALE_AFTER_MS;
+  return (
+    !Number.isFinite(attemptedAt) ||
+    now - attemptedAt > SOURCE_DATE_STALE_AFTER_MS
+  );
 }
 
 export function sourceDateOutcomes(
@@ -198,6 +225,7 @@ export async function refreshBatch(
   env: Env,
   batch: SourceBatch,
   onlySourceIds?: ReadonlySet<string>,
+  collected?: ReadonlyMap<string, SourceFetchResult>,
 ): Promise<{
   startedAt: string;
   completedAt: string;
@@ -219,14 +247,14 @@ export async function refreshBatch(
   }
   const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
 
-  const activeCinemaWindows = await listActiveCinemaWindows(
-    env.DB,
-    dates[0],
-  );
+  const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
   const sourceIds = SOURCE_BATCH_IDS[batch];
   const sources = buildSources().filter(
     (source) =>
       sourceIds.has(source.id) &&
+      (collected?.has(source.id) ||
+        env.EXTERNAL_TJOY_COLLECTION !== "true" ||
+        !EXTERNAL_SOURCES.some((id) => id === source.id)) &&
       (!onlySourceIds || onlySourceIds.has(source.id)),
   );
   const results: Array<{
@@ -239,15 +267,13 @@ export async function refreshBatch(
   for (const source of sources) {
     const cinemaWindow = activeCinemaWindows.get(source.id);
     if (!cinemaWindow) continue;
-    const sourceDates = activeDatesForCinema(
-      dates,
-      cinemaWindow.active_until,
-    );
+    const sourceDates = activeDatesForCinema(dates, cinemaWindow.active_until);
     if (sourceDates.length === 0) continue;
 
     const sourceStartedAt = new Date().toISOString();
     try {
-      const fetched = await source.fetch(sourceDates);
+      const fetched =
+        collected?.get(source.id) ?? (await source.fetch(sourceDates));
       const showings = deduplicate(
         fetched.showings.map(normalizeShowingMovieTitle),
       );
@@ -255,9 +281,7 @@ export async function refreshBatch(
         const detail = [...fetched.dateErrors.entries()]
           .map(([date, error]) => `${date}: ${error}`)
           .join(" / ");
-        throw new Error(
-          detail || "上映回を1件も取得できませんでした",
-        );
+        throw new Error(detail || "上映回を1件も取得できませんでした");
       }
       const dateOutcomes = sourceDateOutcomes(
         sourceDates,
@@ -312,14 +336,7 @@ export async function refreshBatch(
         message,
         stack: error instanceof Error ? error.stack : undefined,
       });
-      await recordRun(
-        env.DB,
-        source.id,
-        sourceStartedAt,
-        "failed",
-        0,
-        message,
-      );
+      await recordRun(env.DB, source.id, sourceStartedAt, "failed", 0, message);
       await recordDateOutcomes(
         env.DB,
         source.id,
@@ -451,9 +468,7 @@ async function fetchMovil(dates: string[]): Promise<SourceFetchResult> {
   });
 }
 
-async function fetchTohoKamiooka(
-  dates: string[],
-): Promise<SourceFetchResult> {
+async function fetchTohoKamiooka(dates: string[]): Promise<SourceFetchResult> {
   const bookingUrl =
     "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do";
   return fetchDatesIndependently(dates, async (date) => {
@@ -511,23 +526,18 @@ async function fetchKino(dates: string[]): Promise<SourceFetchResult> {
     ),
   ]);
   return successfulFetch(
-    parseKinoSchedule(
-      await scheduleResponse.text(),
-      dates[0],
-      movieImages,
-    ),
+    parseKinoSchedule(await scheduleResponse.text(), dates[0], movieImages),
   );
 }
 
-async function fetchNovecento(
-  dates: string[],
-): Promise<SourceFetchResult> {
-  const scheduleUrl =
-    "https://cinema1900.wixsite.com/home/filmtheater1900";
+async function fetchNovecento(dates: string[]): Promise<SourceFetchResult> {
+  const scheduleUrl = "https://cinema1900.wixsite.com/home/filmtheater1900";
   const response = await checkedFetch(scheduleUrl);
   const images = parseNovecentoScheduleImages(await response.text(), dates);
   if (images.length === 0) {
-    throw new Error("ノヴェチェントの週間スケジュール画像を取得できませんでした");
+    throw new Error(
+      "ノヴェチェントの週間スケジュール画像を取得できませんでした",
+    );
   }
   return successfulFetch(parseReviewedNovecentoSchedule(images, dates));
 }
@@ -573,7 +583,7 @@ async function fetchEigaland(
   });
 }
 
-async function fetchTjoy(
+export async function fetchTjoy(
   dates: string[],
   sourceId: string,
   cinemaId: string,
@@ -593,29 +603,21 @@ async function fetchTjoy(
   });
 }
 
-export function tjoyScheduleUrl(
-  theaterUrl: string,
-  date: string,
-): string {
+export function tjoyScheduleUrl(theaterUrl: string, date: string): string {
   const scheduleUrl = new URL(theaterUrl);
   scheduleUrl.searchParams.set("date", date);
   return scheduleUrl.toString();
 }
 
-export function tjoyRequestHeaders(
-  theaterUrl: string,
-): Record<string, string> {
+export function tjoyRequestHeaders(theaterUrl: string): Record<string, string> {
   return {
-    accept:
-      "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     referer: theaterUrl,
     "user-agent": STANDARD_BROWSER_USER_AGENT,
   };
 }
 
-function successfulFetch(
-  showings: NormalizedShowing[],
-): SourceFetchResult {
+function successfulFetch(showings: NormalizedShowing[]): SourceFetchResult {
   return { showings, dateErrors: new Map() };
 }
 
@@ -635,12 +637,12 @@ async function fetchDatesIndependently(
   return { showings, dateErrors };
 }
 
-async function checkedFetch(
+export async function checkedFetch(
   input: string | URL,
   init: RequestInit = {},
 ): Promise<Response> {
   const host = new URL(input.toString()).hostname;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     const headers = new Headers(init.headers);
     if (!headers.has("user-agent")) headers.set("user-agent", USER_AGENT);
     headers.set("accept-language", "ja,en;q=0.5");
@@ -650,22 +652,20 @@ async function checkedFetch(
         ...init,
         headers,
         redirect: "follow",
+        signal: init.signal ?? AbortSignal.timeout(20_000),
       });
     } catch (error) {
-      if (attempt < 2) {
+      if (attempt < 1) {
         await delay(attempt === 0 ? 1_000 : 3_000);
         continue;
       }
       throw new Error(`${host}: ${safeError(error)}`);
     }
     if (response.ok) return response;
-    if (
-      attempt < 2 &&
-      (response.status === 403 ||
-        response.status === 429 ||
-        response.status >= 500)
-    ) {
-      const retryAfterSeconds = Number(response.headers.get("retry-after"));
+    await response.body?.cancel();
+    if (attempt < 1 && (response.status === 429 || response.status >= 500)) {
+      const retryAfter = response.headers.get("retry-after");
+      const retryAfterSeconds = retryAfter === null ? NaN : Number(retryAfter);
       const retryDelay = Number.isFinite(retryAfterSeconds)
         ? Math.min(Math.max(retryAfterSeconds * 1_000, 1_000), 10_000)
         : attempt === 0
@@ -746,9 +746,7 @@ async function listActiveCinemaWindows(
     )
     .bind(date)
     .all<ActiveCinemaWindow>();
-  return new Map(
-    (result.results ?? []).map((cinema) => [cinema.id, cinema]),
-  );
+  return new Map((result.results ?? []).map((cinema) => [cinema.id, cinema]));
 }
 
 async function replaceSourceDates(
@@ -799,8 +797,7 @@ async function replaceSourceDates(
           showing.movieKey,
           showing.title,
           showing.imageUrl,
-          releaseDateByTitle.get(moviePreferenceKey(showing.title)) ??
-            null,
+          releaseDateByTitle.get(moviePreferenceKey(showing.title)) ?? null,
           showing.startsAt,
           showing.endsAt,
           showing.screen,
@@ -808,10 +805,12 @@ async function replaceSourceDates(
           showing.bookingUrl,
           showing.purchasable === null ? null : Number(showing.purchasable),
           fetchedAt,
-      );
+        );
     }),
     ...publishedShowings.map((showing) => {
-      const cinema = CINEMAS.find((candidate) => candidate.id === showing.cinemaId);
+      const cinema = CINEMAS.find(
+        (candidate) => candidate.id === showing.cinemaId,
+      );
       return db
         .prepare(
           `INSERT INTO showing_search (
@@ -849,11 +848,9 @@ async function refreshTmdbReleaseDateCatalog(
   }
 
   try {
-    const lastFetched = await env.DB
-      .prepare(
-        "SELECT MAX(fetched_at) AS fetched_at FROM movie_release_dates",
-      )
-      .first<{ fetched_at: string | null }>();
+    const lastFetched = await env.DB.prepare(
+      "SELECT MAX(fetched_at) AS fetched_at FROM movie_release_dates",
+    ).first<{ fetched_at: string | null }>();
     if (
       lastFetched?.fetched_at &&
       Date.now() - new Date(lastFetched.fetched_at).getTime() <
@@ -862,17 +859,13 @@ async function refreshTmdbReleaseDateCatalog(
       return;
     }
 
-    const records = await fetchTmdbReleaseDates(
-      accessToken,
-      today,
-    );
+    const records = await fetchTmdbReleaseDates(accessToken, today);
     const fetchedAt = new Date().toISOString();
     for (let offset = 0; offset < records.length; offset += 50) {
       await env.DB.batch(
         records.slice(offset, offset + 50).map((record) =>
-          env.DB
-            .prepare(
-              `INSERT INTO movie_release_dates (
+          env.DB.prepare(
+            `INSERT INTO movie_release_dates (
                 title_key, tmdb_movie_id, tmdb_title, release_date,
                 fetched_at
               ) VALUES (?, ?, ?, ?, ?)
@@ -881,14 +874,13 @@ async function refreshTmdbReleaseDateCatalog(
                 tmdb_title = excluded.tmdb_title,
                 release_date = excluded.release_date,
                 fetched_at = excluded.fetched_at`,
-            )
-            .bind(
-              record.titleKey,
-              record.tmdbMovieId,
-              record.tmdbTitle,
-              record.releaseDate,
-              fetchedAt,
-            ),
+          ).bind(
+            record.titleKey,
+            record.tmdbMovieId,
+            record.tmdbTitle,
+            record.releaseDate,
+            fetchedAt,
+          ),
         ),
       );
     }
@@ -916,10 +908,7 @@ async function loadMovieReleaseDates(
     .prepare("SELECT title_key, release_date FROM movie_release_dates")
     .all<{ title_key: string; release_date: string }>();
   return new Map(
-    (result.results ?? []).map((row) => [
-      row.title_key,
-      row.release_date,
-    ]),
+    (result.results ?? []).map((row) => [row.title_key, row.release_date]),
   );
 }
 
@@ -985,18 +974,14 @@ async function collectionHealth(env: Env): Promise<{
 }> {
   const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
   const dates = dateRange(todayInJst(), days);
-  const activeCinemaWindows = await listActiveCinemaWindows(
-    env.DB,
-    dates[0],
-  );
-  const rows = await env.DB
-    .prepare(
-      `SELECT
+  const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
+  const rows = await env.DB.prepare(
+    `SELECT
         source_id, schedule_date, last_attempt_at, status, showing_count,
         error_message
       FROM source_date_health
       WHERE schedule_date >= ? AND schedule_date <= ?`,
-    )
+  )
     .bind(dates[0], dates.at(-1) ?? dates[0])
     .all<{
       source_id: string;
@@ -1016,17 +1001,15 @@ async function collectionHealth(env: Env): Promise<{
     cinemaId: cinema.id,
     dates: activeDatesForCinema(dates, cinema.active_until).map((date) => {
       const row = rowBySourceAndDate.get(`${cinema.id}|${date}`);
-      const status = row?.status === "error"
-        ? "error"
-        : row && isStaleSourceDate(row.last_attempt_at)
-          ? "stale"
-          : (row?.status ?? "missing");
+      const status =
+        row?.status === "error"
+          ? "error"
+          : row && isStaleSourceDate(row.last_attempt_at)
+            ? "stale"
+            : (row?.status ?? "missing");
       return {
         date,
-        status: status as
-          | SourceDateOutcome["status"]
-          | "missing"
-          | "stale",
+        status: status as SourceDateOutcome["status"] | "missing" | "stale",
         count: Number(row?.showing_count ?? 0),
         lastAttemptAt: row?.last_attempt_at ?? null,
         ...(row?.error_message ? { error: row.error_message } : {}),
@@ -1037,9 +1020,8 @@ async function collectionHealth(env: Env): Promise<{
   const summary = {
     published: dateStatuses.filter((date) => date.status === "published")
       .length,
-    notPublished: dateStatuses.filter(
-      (date) => date.status === "not_published",
-    ).length,
+    notPublished: dateStatuses.filter((date) => date.status === "not_published")
+      .length,
     errors: dateStatuses.filter((date) => date.status === "error").length,
     missing: dateStatuses.filter((date) => date.status === "missing").length,
     stale: dateStatuses.filter((date) => date.status === "stale").length,
@@ -1075,15 +1057,7 @@ async function recordRun(
           error_message
         ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(
-        id,
-        sourceId,
-        startedAt,
-        completedAt,
-        status,
-        count,
-        errorMessage,
-      ),
+      .bind(id, sourceId, startedAt, completedAt, status, count, errorMessage),
     db
       .prepare(
         `INSERT INTO source_health (
@@ -1113,7 +1087,9 @@ async function recordRun(
 
 function deduplicate(showings: NormalizedShowing[]): NormalizedShowing[] {
   return [
-    ...new Map(showings.map((showing) => [showingId(showing), showing])).values(),
+    ...new Map(
+      showings.map((showing) => [showingId(showing), showing]),
+    ).values(),
   ].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 

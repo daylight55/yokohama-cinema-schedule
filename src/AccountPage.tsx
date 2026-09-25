@@ -3,8 +3,6 @@ import {
   GoogleLogoIcon,
   KeyIcon,
   TrashIcon,
-  UserPlusIcon,
-  UsersIcon,
 } from "@phosphor-icons/react";
 import {
   type FormEvent,
@@ -153,56 +151,6 @@ export function AccountPage({
       await loadAccount();
     } catch {
       setError("パスキーを削除できませんでした");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const invite = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formElement = event.currentTarget;
-    const email = String(new FormData(formElement).get("email") ?? "");
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/account/invites", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-      if (!response.ok) throw new Error();
-      formElement.reset();
-      setMessage("ログイン許可リストに追加しました");
-      await loadAccount();
-    } catch {
-      setError("メールアドレスを確認してください");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const updateUserStatus = async (
-    userId: string,
-    status: "active" | "disabled",
-  ) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/account/users", {
-        method: "PATCH",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify({ userId, status }),
-      });
-      if (!response.ok) throw new Error();
-      await loadAccount();
-    } catch {
-      setError("ユーザー状態を変更できませんでした");
     } finally {
       setBusy(false);
     }
@@ -370,63 +318,8 @@ export function AccountPage({
         </>
       )}
 
-      {account.user.role === "admin" && !account.user.legacy && (
-        <section className="account-section">
-          <div className="account-section-title">
-            <UsersIcon size={24} aria-hidden="true" />
-            <div>
-              <h2>利用ユーザー</h2>
-              <p>
-                許可リストに追加したメールアドレスだけGoogleログインできます。
-              </p>
-            </div>
-          </div>
-          <form className="account-invite-form" onSubmit={invite}>
-            <label>
-              許可するメールアドレス
-              <input
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-              />
-            </label>
-            <button type="submit" disabled={busy}>
-              <UserPlusIcon size={18} aria-hidden="true" />
-              追加
-            </button>
-          </form>
-          {account.pendingInvites.length > 0 && (
-            <div className="pending-invites">
-              <strong>初回ログイン待ち</strong>
-              {account.pendingInvites.map((invite) => (
-                <span key={invite.email}>{invite.email}</span>
-              ))}
-            </div>
-          )}
-          <ul className="account-user-list">
-            {account.users.map((user) => (
-              <li key={user.id}>
-                <span>
-                  <strong>{user.email}</strong>
-                  <small>{user.role === "admin" ? "管理者" : "メンバー"}</small>
-                </span>
-                <button
-                  type="button"
-                  disabled={busy || user.id === account.user.id}
-                  onClick={() =>
-                    void updateUserStatus(
-                      user.id,
-                      user.status === "active" ? "disabled" : "active",
-                    )
-                  }
-                >
-                  {user.status === "active" ? "無効化" : "有効化"}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
+      {account.user.role === "admin" && (
+        <section className="account-section"><h2>管理者メニュー</h2><a href="#admin-users">ユーザー管理・招待</a></section>
       )}
     </PageShell>
   );

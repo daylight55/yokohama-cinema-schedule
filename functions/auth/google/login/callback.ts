@@ -7,10 +7,7 @@ import {
   sessionCookie,
   verifyLegacySession,
 } from "../../../_lib/auth";
-import {
-  requireProfileEncryptionKey,
-  type PagesEnv,
-} from "../../../_lib/env";
+import { requireProfileEncryptionKey, type PagesEnv } from "../../../_lib/env";
 import {
   exchangeGoogleAuthorizationCode,
   getGoogleOAuthCredentials,
@@ -78,10 +75,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       throw new Error("google_identity_not_verified");
     }
 
-    let currentSession = await resolveSession(
-      context.request,
-      context.env,
-    );
+    let currentSession = await resolveSession(context.request, context.env);
     const legacyProof = parseCookie(
       context.request,
       "google_login_legacy_proof",
@@ -112,25 +106,22 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       },
       currentSession,
       requireProfileEncryptionKey(context.env),
+      parseCookie(context.request, "google_login_invite") ?? "",
     );
     const session = await createUserSession(context.env, user.id);
     const headers = new Headers({
       location: new URL("/#schedule", requestUrl.origin).toString(),
     });
-    headers.append(
-      "set-cookie",
-      sessionCookie(session.value, session.maxAge),
-    );
+    headers.append("set-cookie", sessionCookie(session.value, session.maxAge));
     clearOauthCookies(headers, requestUrl);
     return new Response(null, { status: 303, headers });
   } catch (error) {
-    const code =
-      error instanceof Error ? error.message : "google_login_failed";
+    const code = error instanceof Error ? error.message : "google_login_failed";
     const message =
       code === "admin_bootstrap_required"
         ? "初回管理者は、先に「管理者用の閲覧パスワード」でログインしてからGoogleアカウントを連携してください。"
         : code === "invite_required"
-          ? "このメールアドレスはまだ招待されていません。"
+          ? "招待リンクが無効・期限切れ・使用済みか、招待先と異なるGoogleアカウントです。管理者に確認してください。"
           : code === "user_disabled"
             ? "このユーザーは無効化されています。"
             : "Googleログインに失敗しました。もう一度お試しください。";
@@ -140,6 +131,10 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
 
 function clearOauthCookies(headers: Headers, requestUrl: URL): void {
   const secure = requestUrl.protocol === "https:";
+  headers.append(
+    "set-cookie",
+    oauthCookie("google_login_invite", "", secure, 0),
+  );
   headers.append(
     "set-cookie",
     oauthCookie("google_login_state", "", secure, 0),

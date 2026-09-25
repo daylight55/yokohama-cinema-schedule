@@ -1,5 +1,7 @@
 export interface PagesEnv {
   DB: D1Database;
+  INVITE_MAILER?: Fetcher;
+  INVITE_FROM_EMAIL?: string;
   APP_PASSWORD: string;
   SESSION_SECRET: string;
   GOOGLE_MAPS_API_KEY?: string;

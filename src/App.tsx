@@ -97,6 +97,7 @@ import {
   type ScheduleTimePeriod,
 } from "./lib";
 import { PlannerPage } from "./PlannerPage";
+import { AdminUsersPage } from "./AdminUsersPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
@@ -2433,7 +2434,7 @@ export function App() {
         </section>
         )}
 
-      {view === "account" ? (
+      {view === "adminUsers" ? <AdminUsersPage /> : view === "account" ? (
         <AccountPage
             profileSettings={
               !loading && !error ? (

@@ -12,8 +12,14 @@ export function parseTjoySchedule(
 ): NormalizedShowing[] {
   const $ = load(html);
   const result: NormalizedShowing[] = [];
+  const selectedDate = $(".calendar-active[data-date]").first().attr("data-date");
+  if (selectedDate && selectedDate !== date) throw new Error("T-Joy returned a different schedule date");
+  if (!$(".calendar-item[data-date]").length && !$("section.section-container").length) {
+    throw new Error("T-Joy schedule markup is missing");
+  }
 
-  $("section.section-container").each((_, sectionElement) => {
+  const sections = $("#film").length ? $("#film section.section-container") : $("section.section-container");
+  sections.each((_, sectionElement) => {
     const section = $(sectionElement);
     const rawTitle = cleanText(section.find(".js-title-film").first().text());
     const title = rawTitle.replace(/^【[^】]+】\s*/, "");

@@ -1,3 +1,4 @@
+import { registerInvitedGoogleUser } from "./invitations";
 import type { AuthUser, ResolvedSession } from "./auth";
 import { findUserByEmail, LEGACY_USER_ID, normalizeEmail } from "./auth";
 import { prepareDepartureLocationTransfer } from "./user-profile";
@@ -44,22 +45,6 @@ async function findGoogleIdentity(
     .bind(subject)
     .first<IdentityRow>();
   return row ? mapIdentityUser(row) : null;
-}
-
-async function hasAcceptedInvite(
-  db: D1Database,
-  email: string,
-): Promise<boolean> {
-  const row = await db
-    .prepare(
-      `SELECT email
-         FROM user_invites
-        WHERE email = ?
-          AND accepted_at IS NULL`,
-    )
-    .bind(email)
-    .first<{ email: string }>();
-  return Boolean(row);
 }
 
 async function realUserCount(db: D1Database): Promise<number> {
@@ -127,6 +112,7 @@ export async function completeGoogleLogin(
   identity: GoogleIdentity,
   currentSession: ResolvedSession | null,
   profileEncryptionKey: string,
+  inviteToken = "",
 ): Promise<AuthUser> {
   const normalizedEmail = normalizeEmail(identity.email);
   if (
@@ -176,9 +162,10 @@ export async function completeGoogleLogin(
     count === 0 &&
     currentSession?.legacy === true &&
     currentSession.user.id === LEGACY_USER_ID;
-  const invited =
-    count > 0 && (await hasAcceptedInvite(db, normalizedEmail));
-  if (!claimingLegacy && !invited) {
+  if (!claimingLegacy && count > 0) {
+    return registerInvitedGoogleUser(db, inviteToken, identity);
+  }
+  if (!claimingLegacy) {
     throw new Error(
       count === 0 ? "admin_bootstrap_required" : "invite_required",
     );
@@ -256,26 +243,4 @@ async function linkGoogleIdentity(
       )
       .bind(now, now, userId),
   ]);
-}
-
-export async function inviteUser(
-  db: D1Database,
-  emailValue: string,
-  invitedBy: string,
-): Promise<string> {
-  const email = normalizeEmail(emailValue);
-  if (!email) throw new RangeError("invalid_email");
-  const now = new Date().toISOString();
-  await db
-    .prepare(
-      `INSERT INTO user_invites (email, invited_by, created_at, accepted_at)
-       VALUES (?, ?, ?, NULL)
-       ON CONFLICT(email) DO UPDATE SET
-         invited_by = excluded.invited_by,
-         created_at = excluded.created_at,
-         accepted_at = NULL`,
-    )
-    .bind(email, invitedBy, now)
-    .run();
-  return email;
 }
