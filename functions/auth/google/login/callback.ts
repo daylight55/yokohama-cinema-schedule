@@ -31,6 +31,20 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   const code = requestUrl.searchParams.get("code");
   const expectedState = parseCookie(context.request, "google_login_state");
   const verifier = parseCookie(context.request, "google_login_verifier");
+  const inviteToken = parseCookie(context.request, "google_login_invite") ?? "";
+  const failedLogin = (message: string): Response => {
+    // Preserve the invitation on the retry action while discarding the spent
+    // OAuth state. The start endpoint revalidates expiry/revocation on retry.
+    const response = loginPage(
+      true,
+      "",
+      Boolean(credentials),
+      message,
+      inviteToken,
+    );
+    clearOauthCookies(response.headers, requestUrl);
+    return response;
+  };
   if (
     !credentials ||
     !state ||
@@ -39,10 +53,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     !verifier ||
     !(await secureStringEqual(state, expectedState))
   ) {
-    return loginPage(
-      true,
-      "",
-      Boolean(credentials),
+    return failedLogin(
       "Googleログインを確認できませんでした。もう一度お試しください。",
     );
   }
@@ -106,11 +117,13 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       },
       currentSession,
       requireProfileEncryptionKey(context.env),
-      parseCookie(context.request, "google_login_invite") ?? "",
+      inviteToken,
     );
     const session = await createUserSession(context.env, user.id);
     const headers = new Headers({
       location: new URL("/#schedule", requestUrl.origin).toString(),
+      "cache-control": "no-store",
+      "referrer-policy": "no-referrer",
     });
     headers.append("set-cookie", sessionCookie(session.value, session.maxAge));
     clearOauthCookies(headers, requestUrl);
@@ -125,7 +138,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
           : code === "user_disabled"
             ? "このユーザーは無効化されています。"
             : "Googleログインに失敗しました。もう一度お試しください。";
-    return loginPage(true, "", true, message);
+    return failedLogin(message);
   }
 };
 

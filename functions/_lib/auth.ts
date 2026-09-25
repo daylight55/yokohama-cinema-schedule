@@ -482,6 +482,7 @@ export function loginPage(
   returnHash = "",
   googleConfigured = false,
   errorMessage = "",
+  inviteToken = "",
 ): Response {
   const message =
     errorMessage || (error ? "管理者用パスワードが違います。" : "");
@@ -489,8 +490,10 @@ export function loginPage(
     ? `<p class="error" role="alert">${escapeHtml(message)}</p>`
     : "";
   const escapedReturnHash = escapeHtml(returnHash);
+  const inviteRetry = /^[a-f0-9]{64}$/.test(inviteToken);
+  const googleHref = `/auth/google/login/start${inviteRetry ? `?invite=${inviteToken}` : ""}`;
   const googleMarkup = googleConfigured
-    ? `<a class="primary google" href="/auth/google/login/start">Googleでログイン</a>`
+    ? `<a class="primary google" href="${googleHref}">${inviteRetry ? "Googleで登録をやり直す" : "Googleでログイン"}</a>`
     : `<p class="setup-note">GoogleログインはOAuth設定後に利用できます。</p>`;
   const html = `<!doctype html>
 <html lang="ja">
@@ -556,6 +559,7 @@ export function loginPage(
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
+      "referrer-policy": "no-referrer",
       "x-robots-tag": "noindex, nofollow, noarchive",
       "content-security-policy":
         "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",

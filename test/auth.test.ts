@@ -156,6 +156,13 @@ describe("private site authentication", () => {
     expect(isPublicShellAssetPath("/assets/index.js")).toBe(false);
   });
 
+  it("does not reflect an untrusted invitation cookie into a retry link", async () => {
+    const response = loginPage(true, "", true, "Retry", '\" onclick=\"alert(1)');
+    const html = await response.text();
+    expect(html).toContain('href="/auth/google/login/start"');
+    expect(html).not.toContain("alert(1)");
+  });
+
   it("keeps only login and OAuth callback endpoints public", () => {
     expect(isPublicAuthPath("/auth/google/login/start")).toBe(true);
     expect(isPublicAuthPath("/auth/google/login/callback")).toBe(true);

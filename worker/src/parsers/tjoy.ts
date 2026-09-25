@@ -12,18 +12,37 @@ export function parseTjoySchedule(
 ): NormalizedShowing[] {
   const $ = load(html);
   const result: NormalizedShowing[] = [];
-  const selectedDate = $(".calendar-active[data-date]").first().attr("data-date");
-  if (selectedDate && selectedDate !== date) throw new Error("T-Joy returned a different schedule date");
-  if (!$(".calendar-item[data-date]").length && !$("section.section-container").length) {
+  const schedule = $("#film").length ? $("#film") : $("html");
+  const selectedDate = schedule
+    .find(".calendar-active[data-date]")
+    .first()
+    .attr("data-date");
+  if (selectedDate && selectedDate !== date)
+    throw new Error("T-Joy returned a different schedule date");
+  if (schedule.find(".calendar-item[data-date]").length && !selectedDate) {
+    throw new Error("T-Joy selected schedule date is missing");
+  }
+  const sections = schedule.find("section.section-container");
+  // A calendar alone can be a truncated or changed page. Only the site's
+  // explicit unpublished notice is evidence of an empty schedule.
+  if (
+    !sections.length &&
+    !(
+      selectedDate === date &&
+      schedule.find(".text-notify").text().includes("スケジュールは調整中")
+    )
+  ) {
     throw new Error("T-Joy schedule markup is missing");
   }
 
-  const sections = $("#film").length ? $("#film section.section-container") : $("section.section-container");
   sections.each((_, sectionElement) => {
     const section = $(sectionElement);
     const rawTitle = cleanText(section.find(".js-title-film").first().text());
     const title = rawTitle.replace(/^【[^】]+】\s*/, "");
-    if (!title) return;
+    if (!title) throw new Error("T-Joy movie title is missing");
+    if (!section.find(".schedule-box").length) {
+      throw new Error("T-Joy movie schedule is missing");
+    }
     const detailOnclick =
       section.find("a[onclick*='cinema_detail']").first().attr("onclick") ?? "";
     const movieHref =
@@ -41,7 +60,9 @@ export function parseTjoySchedule(
       const box = $(boxElement);
       const timeText = cleanText(box.find(".schedule-time").first().text());
       const match = timeText.match(/(\d{1,2}:\d{2})\s*[～~]\s*(\d{1,2}:\d{2})/);
-      if (!match) return;
+      // Reject the entire date: silently dropping a row would replace the
+      // previous complete day with an incomplete schedule.
+      if (!match) throw new Error("T-Joy showing time is invalid");
       const screen =
         cleanText(box.find(".theater-name").first().text()) || null;
       const onclick = box.find(".schedule-box-body").attr("onclick") ?? "";
@@ -66,6 +87,9 @@ export function parseTjoySchedule(
     });
   });
 
+  if (result.length !== schedule.find(".schedule-box").length) {
+    throw new Error("T-Joy schedule contains unparsed showings");
+  }
   return result;
 }
 
