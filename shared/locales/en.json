@@ -456,5 +456,7 @@
   "吹替版": "Dubbed",
   "日本語吹替": "Japanese dubbed",
   "「": "“",
-  "」": "”"
+  "」": "”",
+  "24時間有効・1回限り": "Valid for 24 hours · Single use",
+  "登録を許可するGoogleメールアドレス（任意）": "Allowed Google email address (optional)"
 }

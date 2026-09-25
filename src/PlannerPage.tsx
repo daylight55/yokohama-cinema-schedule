@@ -272,11 +272,6 @@ export function PlannerPage({
       <PageHeader
         eyebrow={localize("1年先まで予定を記録")}
         title={localize("映画はしごガチャ")}
-        meta={
-          <span className="page-badge favorite">
-            {localize("気になる作品を優先")}
-          </span>
-        }
       />
 
       <form
@@ -353,11 +348,7 @@ export function PlannerPage({
               <CalendarCheckIcon size={20} aria-hidden="true" />
               {localize("Google カレンダーと連携")}
             </a>
-          ) : (
-            <p className="calendar-setup-note">
-              {localize("Google カレンダー連携はOAuth設定後に利用できます。")}
-            </p>
-          ),
+          ) : null,
         )}
 
         <button

@@ -106,7 +106,6 @@ export function AdminUsersPage() {
       <PageHeader
         eyebrow={localize("管理者用")}
         title={localize("ユーザー管理")}
-        lead={localize("招待リンクから、新しいユーザーを登録できます。")}
       />
       {localize(
         error && (
@@ -190,11 +189,7 @@ export function AdminUsersPage() {
             >
               <section className="account-section admin-invite-section">
                 <h2>{localize("ユーザーを招待")}</h2>
-                <p>
-                  {localize(
-                    "有効期限は24時間、1人1回限りです。LINEなどでリンクを共有できます。",
-                  )}
-                </p>
+                <p>{localize("24時間有効・1回限り")}</p>
                 <form
                   onSubmit={issue}
                   className="admin-invite-form account-form"
@@ -211,7 +206,7 @@ export function AdminUsersPage() {
                     <option value="en">English</option>
                   </select>
                   <label htmlFor="invite-email">
-                    {localize("招待先メールアドレス（任意）")}
+                    {localize("登録を許可するGoogleメールアドレス（任意）")}
                   </label>
                   <input
                     id="invite-email"
@@ -219,26 +214,14 @@ export function AdminUsersPage() {
                     type="email"
                     autoComplete="email"
                     maxLength={254}
-                    aria-describedby="invite-email-help"
                   />
-                  <small id="invite-email-help">
-                    {localize(
-                      "指定すると、そのアドレスのGoogleアカウントだけが登録できます。",
-                    )}
-                  </small>
                   {localize(
                     emailConfigured ? (
                       <label className="admin-checkbox">
                         <input type="checkbox" name="sendEmail" />
                         {localize("招待メールも送信する")}
                       </label>
-                    ) : (
-                      <small>
-                        {localize(
-                          "メール送信は設定待ちです。招待リンクは発行できます。",
-                        )}
-                      </small>
-                    ),
+                    ) : null,
                   )}
                   <button type="submit" disabled={busy}>
                     {localize(busy ? "処理中…" : "招待リンクを発行")}

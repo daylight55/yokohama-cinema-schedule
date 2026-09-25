@@ -2422,82 +2422,64 @@ export function App() {
                 )}
               </div>
 
-              <div className="control-row">
-                {localize(
-                  view === "schedule" && selectedDate === dates[0] ? (
-                    <div
-                      className="time-filter"
-                      role="group"
-                      aria-label={localize("時間")}
+              {view === "schedule" && selectedDate === dates[0] && (
+                <div className="control-row">
+                  <div
+                    className="time-filter"
+                    role="group"
+                    aria-label={localize("時間")}
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={futureOnly}
+                      className={futureOnly ? "active" : ""}
+                      onClick={() => setFutureOnly(true)}
                     >
-                      <button
-                        type="button"
-                        aria-pressed={futureOnly}
-                        className={futureOnly ? "active" : ""}
-                        onClick={() => setFutureOnly(true)}
-                      >
-                        {localize("これから")}
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={!futureOnly}
-                        className={!futureOnly ? "active" : ""}
-                        onClick={() => setFutureOnly(false)}
-                      >
-                        {localize("全時間")}
-                      </button>
-                    </div>
-                  ) : view === "schedule" ? (
-                    <span className="all-day-label">
-                      {localize("全時間を表示")}
-                    </span>
-                  ) : view === "movies" ? (
-                    <span className="all-day-label">
-                      {localize(
-                        schedule?.preferencesEnabled
-                          ? "スター済みを先頭に表示"
-                          : "作品名順に表示",
-                      )}
-                    </span>
-                  ) : (
-                    <span className="all-day-label">
-                      {localize("移動方法と自分の所要時間を保存")}
-                    </span>
-                  ),
-                )}
-              </div>
+                      {localize("これから")}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={!futureOnly}
+                      className={!futureOnly ? "active" : ""}
+                      onClick={() => setFutureOnly(false)}
+                    >
+                      {localize("全時間")}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {localize(
-                view !== "movies" && userProfile.departureRegistered && (
-                  <p
-                    className={[
-                      "inline-status",
-                      routeState === "error" ? "error" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    role="status"
-                  >
-                    {localize(
-                      routeState === "error" ? (
-                        <WarningCircleIcon size={16} aria-hidden="true" />
-                      ) : (
-                        <CheckCircleIcon
-                          size={16}
-                          weight="fill"
-                          aria-hidden="true"
-                        />
-                      ),
-                    )}
-                    {localize(
-                      routeState === "loading"
-                        ? "ベース出発地点からの移動時間を読み込んでいます"
-                        : routeState === "error"
-                          ? "ベース出発地点からの移動時間を読み込めませんでした"
-                          : "ベース出発地点からの固定移動時間を反映しています",
-                    )}
-                  </p>
-                ),
+                view !== "movies" &&
+                  userProfile.departureRegistered &&
+                  (routeState === "loading" || routeState === "error") && (
+                    <p
+                      className={[
+                        "inline-status",
+                        routeState === "error" ? "error" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      role="status"
+                    >
+                      {localize(
+                        routeState === "error" ? (
+                          <WarningCircleIcon size={16} aria-hidden="true" />
+                        ) : (
+                          <CheckCircleIcon
+                            size={16}
+                            weight="fill"
+                            aria-hidden="true"
+                          />
+                        ),
+                      )}
+                      {localize(
+                        routeState === "loading"
+                          ? "ベース出発地点からの移動時間を読み込んでいます"
+                          : "ベース出発地点からの移動時間を読み込めませんでした",
+                      )}
+                    </p>
+                  ),
               )}
               {localize(
                 view !== "movies" && !userProfile.departureRegistered && (
@@ -2683,16 +2665,6 @@ export function App() {
                   view === "movies" &&
                   movieList.length > 0 && (
                     <>
-                      <p className="movie-release-source">
-                        {localize("日本公開日の情報：")}
-                        <a
-                          href="https://www.themoviedb.org/"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {localize("TMDB")}
-                        </a>
-                      </p>
                       <ul className="movie-list">
                         {localize(
                           movieList.map((movie, index) => {
@@ -2975,11 +2947,6 @@ export function App() {
                                   <strong>
                                     {localize("上映スケジュールに表示")}
                                   </strong>
-                                  <small>
-                                    {localize(
-                                      "この映画館の上映だけを表示・非表示にします",
-                                    )}
-                                  </small>
                                 </span>
                                 <input
                                   type="checkbox"
@@ -3005,9 +2972,6 @@ export function App() {
                                       {localize("約")}
                                       {localize(route.durationMinutes)}
                                       {localize("分")}
-                                      <small>
-                                        {localize(routeEstimateDetail(route))}
-                                      </small>
                                     </strong>
                                     <GoogleMapsRouteLink
                                       cinema={cinema}
@@ -3019,13 +2983,6 @@ export function App() {
                               <p className="cinema-address">
                                 {localize(cinema.address)}
                               </p>
-                              {localize(
-                                route?.transitDetails && (
-                                  <p className="cinema-transit-breakdown">
-                                    {localize(transitRouteSummary(route))}
-                                  </p>
-                                ),
-                              )}
                               <div className="cinema-preference-row">
                                 <label htmlFor={`travel-mode-${cinema.id}`}>
                                   {localize("移動方法")}
@@ -3059,7 +3016,7 @@ export function App() {
                                   )}
                                 </select>
                                 <span aria-live="polite">
-                                  {localize(isSaving ? "保存中" : "保存済み")}
+                                  {isSaving ? localize("保存中") : null}
                                 </span>
                               </div>
                               <div className="cinema-duration-row">
@@ -3133,11 +3090,6 @@ export function App() {
                                     </button>
                                   ),
                                 )}
-                                <small>
-                                  {localize(
-                                    "保存した分数を表示と「間に合う」判定に使います",
-                                  )}
-                                </small>
                               </div>
                               <div className="cinema-note-row">
                                 <label htmlFor={`cinema-note-${cinema.id}`}>
@@ -3378,14 +3330,6 @@ export function App() {
             </nav>
           ),
       )}
-
-      <footer>
-        <p>
-          {localize(
-            "上映時刻は参考情報です。購入前に各映画館の公式サイトでご確認ください。",
-          )}
-        </p>
-      </footer>
     </>
   );
 }
@@ -3473,9 +3417,6 @@ function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
           >
             <BuildingsIcon size={28} />
             <strong>{localize("映画館の地図を読み込む")}</strong>
-            <span>
-              {localize("表示位置までスクロールすると自動で読み込みます")}
-            </span>
           </button>
         ),
       )}
@@ -3556,7 +3497,6 @@ function ProfilePanel({
           <h2 id="schedule-display-title">
             {localize("上映スケジュール表示")}
           </h2>
-          <p>{localize("上映時間をまとめて表示する間隔を設定します。")}</p>
         </div>
         <div className="profile-display-setting">
           <label htmlFor="schedule-collapse-minutes">
@@ -3582,7 +3522,7 @@ function ProfilePanel({
                 ? "保存中"
                 : collapseState === "saved"
                   ? "保存しました"
-                  : "端末間で共有されます",
+                  : null,
             )}
           </small>
         </div>
@@ -3610,13 +3550,6 @@ function ProfilePanel({
                 : "ベース出発地点を登録",
             )}
           </h2>
-          <p>
-            {localize(
-              profile.departureRegistered
-                ? "映画館までの時間は、登録したベース出発地点を基準に固定して表示します。"
-                : "現在地を一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。",
-            )}
-          </p>
           {localize(
             profile.departureUpdatedAt && (
               <small>
@@ -3628,14 +3561,6 @@ function ProfilePanel({
             ),
           )}
         </div>
-        <aside className="profile-location-notice">
-          <WarningCircleIcon size={20} weight="fill" aria-hidden="true" />
-          <p>
-            {localize(
-              "映画館に向かうためのいつもの出発地点を登録してください。出発地点を登録しなくても、各映画館までの時間は手動でも登録可能です。",
-            )}
-          </p>
-        </aside>
         <button
           type="button"
           className="profile-primary-action"
@@ -3651,11 +3576,6 @@ function ProfilePanel({
                 : "現在地をベース出発地点として登録",
           )}
         </button>
-        <p className="profile-privacy-note">
-          {localize(
-            "GPSはこの操作時だけ使用します。座標は約10m単位に丸め、ユーザーごとの鍵で暗号化して保存し、通常の画面や一覧APIには返しません。",
-          )}
-        </p>
         {localize(
           profile.departureRegistered && (
             <button
@@ -3699,37 +3619,6 @@ function routeTravelLabel(route: RouteEstimate): string {
     bicycle: "自転車",
   };
   return labels[route.travelMode];
-}
-
-function routeEstimateDetail(route: RouteEstimate): string {
-  if (route.customDurationMinutes !== undefined) {
-    return route.calculatedDurationMinutes === undefined
-      ? "ユーザー設定"
-      : `ユーザー設定 / 自動目安${route.calculatedDurationMinutes}分`;
-  }
-  if (route.transitDetails) {
-    return `${route.transitDetails.originStationName}→${route.transitDetails.destinationStationName}`;
-  }
-  return route.travelMode === "transit"
-    ? "駅徒歩・待ち・余裕10分込みの目安"
-    : `${routeTravelLabel(route)}の目安`;
-}
-
-function transitRouteSummary(route: RouteEstimate): string {
-  const details = route.transitDetails;
-  if (!details) {
-    return "";
-  }
-  const stationSegment =
-    details.stationTravelMinutes === 0
-      ? `${details.destinationStationName}を利用`
-      : `${details.originStationName}→${details.destinationStationName} ${details.stationTravelMinutes}分（平均待ち込）`;
-  const calculatedLabel =
-    route.customDurationMinutes !== undefined &&
-    route.calculatedDurationMinutes !== undefined
-      ? `自動目安${route.calculatedDurationMinutes}分：`
-      : "";
-  return `${calculatedLabel}駅まで徒歩${details.originWalkMinutes}分・${stationSegment}・映画館まで徒歩${details.destinationWalkMinutes}分・余裕${details.bufferMinutes}分`;
 }
 
 function GoogleMapsRouteLink({

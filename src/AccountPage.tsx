@@ -170,25 +170,12 @@ export function AccountPage({
       {localize(profileSettings)}
 
       {localize(
-        account.user.legacy && (
+        account.user.legacy && account.googleConfigured && (
           <section className="account-notice">
             <strong>{localize("Googleアカウントを管理者として登録")}</strong>
-            <p>
-              {localize(
-                "今の映画設定を引き継いで、端末をまたいで使えるようにします。",
-              )}
-            </p>
-            {localize(
-              account.googleConfigured ? (
-                <a href="/auth/google/login/start">
-                  {localize("Googleアカウントを連携")}
-                </a>
-              ) : (
-                <small>
-                  {localize("Google OAuthの設定後に連携できます。")}
-                </small>
-              ),
-            )}
+            <a href="/auth/google/login/start">
+              {localize("Googleアカウントを連携")}
+            </a>
           </section>
         ),
       )}
@@ -210,13 +197,6 @@ export function AccountPage({
                 <GoogleLogoIcon size={23} aria-hidden="true" />
                 <div>
                   <h2>{localize("Google")}</h2>
-                  <p>
-                    {localize(
-                      account.methods.google
-                        ? "Googleアカウントをログインに使用しています。"
-                        : "Googleアカウントを主なログイン方法にします。",
-                    )}
-                  </p>
                 </div>
                 {localize(
                   account.methods.google ? (
@@ -244,7 +224,6 @@ export function AccountPage({
                 <KeyIcon size={22} aria-hidden="true" />
                 <div>
                   <h2>{localize("パスワード")}</h2>
-                  <p>{localize("Googleが使えないときの予備ログインです。")}</p>
                 </div>
               </div>
               <form className="account-form" onSubmit={setPassword}>
@@ -289,9 +268,6 @@ export function AccountPage({
                 <FingerprintIcon size={24} aria-hidden="true" />
                 <div>
                   <h2>{localize("パスキー")}</h2>
-                  <p>
-                    {localize("端末の顔・指紋・画面ロックでログインします。")}
-                  </p>
                 </div>
               </div>
               {localize(
