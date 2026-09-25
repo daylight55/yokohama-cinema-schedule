@@ -62,6 +62,7 @@ function allowedReturnHash() {
     "#movies",
     "#cinemas",
     "#viewing-plans",
+    "#shared",
     "#planner",
     "#profile",
     "#account",

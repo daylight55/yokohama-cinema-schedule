@@ -93,6 +93,7 @@ export function normalizeReturnHash(value: FormDataEntryValue | null): string {
     "#movies",
     "#cinemas",
     "#viewing-plans",
+    "#shared",
     "#planner",
     "#profile",
     "#account",

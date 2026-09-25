@@ -3,6 +3,7 @@ const allowedHashes = new Set([
   "#movies",
   "#cinemas",
   "#viewing-plans",
+    "#shared",
   "#planner",
   "#profile",
   "#account",

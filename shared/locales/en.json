@@ -458,5 +458,19 @@
   "「": "“",
   "」": "”",
   "24時間有効・1回限り": "Valid for 24 hours · Single use",
-  "登録を許可するGoogleメールアドレス（任意）": "Allowed Google email address (optional)"
+  "登録を許可するGoogleメールアドレス（任意）": "Allowed Google email address (optional)",
+  "みんなの映画": "Movies together",
+  "共有": "Shared",
+  "共有する情報": "Shared information",
+  "全員": "Everyone",
+  "（自分）": "(you)",
+  "鑑賞するメンバー": "Who is going",
+  "気になっているメンバー": "Who is interested",
+  "共有データを取得できませんでした。再読み込みしてください。": "Could not load shared plans. Please reload.",
+  "共有されている鑑賞予定はありません。": "No upcoming plans yet.",
+  "気になる作品はまだありません。": "No films on the watchlist yet.",
+  "作品情報": "Film information",
+  "上映日へ移動": "Jump to a screening date",
+  "上映予定なし": "No screenings listed",
+  "みんなの予定": "Screenings"
 }

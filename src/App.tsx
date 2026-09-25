@@ -112,6 +112,7 @@ import { AdminUsersPage } from "./AdminUsersPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
+import { SharedPage } from "./SharedPage";
 import { ViewingPlansPage } from "./ViewingPlansPage";
 
 const timeFormatter = localizedDate({
@@ -2080,6 +2081,15 @@ export function App() {
               {localize("鑑賞予定")}
             </a>
             <a
+              href={hashForAppView("shared")}
+              className={view === "shared" ? "active" : ""}
+              aria-current={view === "shared" ? "page" : undefined}
+              onClick={closeNavigation}
+            >
+              <UsersThreeIcon size={20} aria-hidden="true" />
+              {localize("共有")}
+            </a>
+            <a
               href={hashForAppView("planner", {
                 date: view === "planner" ? plannerDate : selectedDate,
               })}
@@ -2536,6 +2546,8 @@ export function App() {
                 ) : null
               }
             />
+          ) : view === "shared" ? (
+            <SharedPage />
           ) : view === "viewingPlans" ? (
             <ViewingPlansPage
               plans={viewingPlans}
