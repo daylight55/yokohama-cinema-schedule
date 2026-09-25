@@ -56,7 +56,12 @@ export function parseAeonSchedule(
           endsAt: show.endDate ? new Date(show.endDate).toISOString() : null,
           screen: show.location?.name?.ja ?? null,
           format,
-          bookingUrl: `https://theater.aeoncinema.com/theaters/minatomirai/?date=${compactDate}`,
+          // Matches the official schedule's purchase entry point, retaining the event
+          // through member login or guest checkout.
+          bookingUrl:
+            show.id && /^[a-f0-9]{24}$/i.test(show.id)
+              ? `https://login.watatheatre.aeoncinema.com/auth?eventId=${encodeURIComponent(show.id)}`
+              : `https://theater.aeoncinema.com/theaters/minatomirai/?date=${compactDate}`,
           purchasable: show.offers ? true : null,
         });
       }

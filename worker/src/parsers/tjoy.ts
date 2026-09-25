@@ -1,4 +1,5 @@
 import { load } from "cheerio";
+import { resolveBookingUrl } from "./booking";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
 import { safeImageUrl } from "../../../shared/movie";
 import type { NormalizedShowing } from "../../../shared/types";
@@ -65,11 +66,24 @@ export function parseTjoySchedule(
       if (!match) throw new Error("T-Joy showing time is invalid");
       const screen =
         cleanText(box.find(".theater-name").first().text()) || null;
-      const onclick = box.find(".schedule-box-body").attr("onclick") ?? "";
-      const path = onclick.match(/location\.href\s*=\s*['"]([^'"]+)/)?.[1];
-      const bookingUrl = path
-        ? new URL(path, origin).toString()
-        : `${origin}#schedule-content`;
+      const reservationNodes = box.find(
+        ".schedule-box-body, .schedule-status, .schedule-box-body a[href], .schedule-status a[href]",
+      );
+      let directBookingUrl: string | null = null;
+      for (const node of reservationNodes.toArray()) {
+        const element = $(node);
+        const onclick = element.attr("onclick") ?? "";
+        const path = onclick.match(/location\.href\s*=\s*['"]([^'"]+)/)?.[1];
+        directBookingUrl = resolveBookingUrl(
+          path ?? element.attr("href"),
+          origin,
+        );
+        if (directBookingUrl) break;
+      }
+      const fallback = new URL(origin);
+      fallback.searchParams.set("date", date);
+      fallback.hash = "schedule-content";
+      const bookingUrl = directBookingUrl ?? fallback.toString();
 
       result.push({
         sourceId,
@@ -82,7 +96,7 @@ export function parseTjoySchedule(
         screen,
         format: detectFormat(rawTitle),
         bookingUrl,
-        purchasable: Boolean(path),
+        purchasable: Boolean(directBookingUrl),
       });
     });
   });
