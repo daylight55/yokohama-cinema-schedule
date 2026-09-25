@@ -35,6 +35,16 @@ export interface ResearchModel {
   decide(messages: Array<{ role: string; content: string }>): Promise<string>;
 }
 
+/** Workers AI JSON mode can return an object in `response`, not JSON text. */
+export function modelActionText(value: unknown): string {
+  if (typeof value === "string") return value;
+  const envelope = object(value);
+  const response = envelope.response ?? envelope;
+  if (typeof response === "string") return response;
+  const action = object(response);
+  return typeof action.action === "string" ? JSON.stringify(action) : "";
+}
+
 /** Only reference fields can be accepted. The model cannot invent or translate a title. */
 export function verifiedCandidate(
   entity: unknown,
@@ -350,11 +360,7 @@ export async function refreshMovieTitleResearch(
         max_tokens: 300,
         response_format: { type: "json_object" },
       });
-      return typeof response === "string"
-        ? response
-        : "response" in response
-          ? (response.response ?? "")
-          : "";
+      return modelActionText(response);
     },
   };
   for (const row of pending.results) {
@@ -379,7 +385,7 @@ export async function refreshMovieTitleResearch(
       if (candidate)
         await db
           .prepare(
-            "UPDATE movie_title_research SET english_title=?, original_title=?, source_url=?, entity_id=?, source_kind=?, status='verified', updated_at=? WHERE title_key=?",
+            "UPDATE movie_title_research SET english_title=?, original_title=?, source_url=?, entity_id=?, source_kind=?, status='verified', updated_at=? WHERE title_key=? AND status != 'verified'",
           )
           .bind(
             candidate.englishTitle,
@@ -394,7 +400,7 @@ export async function refreshMovieTitleResearch(
       else
         await db
           .prepare(
-            "UPDATE movie_title_research SET status='unresolved' WHERE title_key=?",
+            "UPDATE movie_title_research SET status='unresolved' WHERE title_key=? AND status != 'verified'",
           )
           .bind(row.title_key)
           .run();

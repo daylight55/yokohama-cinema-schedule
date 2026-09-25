@@ -521,6 +521,27 @@ migration 0024を先に適用し、AIバインディングを含む収集Worker�
 Workers AIはCloudflareアカウントの利用枠・従量課金を使用します。新規タイトルの調査は
 バックグラウンドで順次進むため、全作品が即時に英語題になるわけではありません。
 
+### 確認済み英題の補完
+
+`data/movie-titles/2026-09-26.json` に、現在の上映作品について公開資料を照合した英題・
+国際公開題、実際の上映タイトル表記、出典URLと照合根拠を記録しています。
+同名の小説・漫画、別年のリメイクはそのまま流用しません。英語圏でも原語で公開される作品は
+その国際公開題を使います。舞台挨拶等のイベント説明だけを翻訳する場合は根拠欄で区別します。
+一部は英語メディアに掲載されたローマ字表記です。確認できない作品は日本語のまま残します。
+
+Cloudflareの自動調査が利用できなくても、Node.js 22.22以降でSQLを生成して補完できます。
+生成処理はネットワークにアクセスせず、SQLを標準出力に出すだけです。
+
+```sh
+node --experimental-strip-types scripts/reviewed-titles.mjs > /tmp/reviewed-movie-titles.sql
+# ローカルで確認する場合は --remote を --local に変更
+npx wrangler d1 execute yokohama-cinema-schedule --remote --config worker/wrangler.jsonc --file /tmp/reviewed-movie-titles.sql
+```
+
+既存の作品キーを使い、確認済みデータ・調査回数を上書きしない冪等な取り込みです。
+出典のあるデータだけを追加してください。取り込み前に `npm run ci:pr` で検証します。
+取り込み後、上映画面を再読み込みすると英題が反映されます。
+
 ## 登録ユーザー間の共有
 
 サイドバーの「共有」 (`#shared`) で、有効な登録ユーザー全員の今後の鑑賞予定と

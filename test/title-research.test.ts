@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   officialPageMatches,
+  modelActionText,
   officialUrl,
   researchMovieTitle,
   verifiedCandidate,
@@ -157,5 +158,43 @@ it("persists a 24-hour cooldown and stops after five unsuccessful research runs"
   } finally {
     sqlite.close();
     vi.useRealTimers();
+  }
+});
+
+it("executes structured Workers AI JSON actions instead of marking every title unresolved", async () => {
+  const actions = [
+    { response: { action: "search", query: input.title } },
+    { response: { action: "read", id: entity.id } },
+    { response: { action: "accept", id: entity.id } },
+  ];
+  const fetcher = vi.fn<typeof fetch>()
+    .mockResolvedValueOnce(Response.json({search: [{id: entity.id}]}))
+    .mockResolvedValueOnce(Response.json({entities: {[entity.id]: entity}}));
+  const result = await researchMovieTitle(input, {
+    decide: async () => modelActionText(actions.shift()),
+  }, fetcher);
+  expect(result?.englishTitle).toBe("Your Name");
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(modelActionText({response: '{"action":"stop"}'})).toBe('{"action":"stop"}');
+  expect(modelActionText({response: null})).toBe("");
+  expect(modelActionText({response: [{action: "accept"}]})).toBe("");
+});
+
+it("preserves titles verified by an import while an AI research attempt is running", async () => {
+  const { testDatabase } = await import("./helpers/sqlite-d1");
+  const { refreshMovieTitleResearch } = await import("../worker/src/title-research");
+  const { db, sqlite } = testDatabase();
+  try {
+    sqlite.exec("INSERT INTO showings(id,source_id,cinema_id,movie_key,title,starts_at,booking_url,fetched_at) VALUES ('concurrent','toho-kamiooka','toho-kamiooka','君の名は。','君の名は。','2099-01-01T00:00:00Z','https://example.com','now')");
+    const ai = { run: vi.fn(async () => {
+      sqlite.prepare("UPDATE movie_title_research SET status='verified', english_title='Your Name', source_url='https://gkids.com/films/your-name/' WHERE title_key=?")
+        .run("君の名は。");
+      return { response: { action: "stop" } };
+    }) } as unknown as Ai;
+    await refreshMovieTitleResearch(db, ai);
+    const row = sqlite.prepare("SELECT status, english_title FROM movie_title_research").get();
+    expect(row).toMatchObject({ status: "verified", english_title: "Your Name" });
+  } finally {
+    sqlite.close();
   }
 });
