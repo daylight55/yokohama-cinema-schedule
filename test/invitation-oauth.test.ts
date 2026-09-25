@@ -78,10 +78,11 @@ it("can retry a wrong Google account from the error page and consume the origina
       invite.token,
     );
     expect(failed.headers.get("referrer-policy")).toBe("no-referrer");
-    expect(failed.headers.getSetCookie()).toHaveLength(4);
+    expect(failed.headers.getSetCookie()).toHaveLength(6);
     expect(
       failed.headers
         .getSetCookie()
+        .filter((cookie) => cookie.startsWith("google_login_"))
         .every((cookie) => cookie.includes("Max-Age=0")),
     ).toBe(true);
     const second = await start(context(env, retryHref));
@@ -125,9 +126,9 @@ it.each(["error=access_denied&state=expected", "code=test-code&state=wrong"])(
       );
       expect(response.status).toBe(401);
       expect(await response.text()).toContain(
-        `/auth/google/login/start?invite=${token}`,
+        `/auth/google/login/start?lang=ja&invite=${token}`,
       );
-      expect(response.headers.getSetCookie()).toHaveLength(4);
+      expect(response.headers.getSetCookie()).toHaveLength(6);
       expect(fetcher).not.toHaveBeenCalled();
     } finally {
       sqlite.close();

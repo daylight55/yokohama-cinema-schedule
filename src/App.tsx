@@ -1,3 +1,14 @@
+import { UsersThreeIcon } from "@phosphor-icons/react";
+import { movieTitle, screeningInfo } from "./i18n";
+import {
+  useLanguage,
+  useUserRole,
+  saveLanguage,
+  registerTitleTranslations,
+  englishText,
+} from "./i18n";
+import { MoviePage } from "./MoviePage";
+import { localize, localizedDate } from "./i18n";
 import {
   ArrowSquareOutIcon,
   BuildingsIcon,
@@ -103,31 +114,31 @@ import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
 import { ViewingPlansPage } from "./ViewingPlansPage";
 
-const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
+const timeFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
 });
-const dayFormatter = new Intl.DateTimeFormat("ja-JP", {
+const dayFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   month: "numeric",
   day: "numeric",
   weekday: "short",
 });
-const fullDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+const fullDateFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   month: "long",
   day: "numeric",
   weekday: "short",
 });
-const closureDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+const closureDateFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   year: "numeric",
   month: "numeric",
   day: "numeric",
 });
-const updatedFormatter = new Intl.DateTimeFormat("ja-JP", {
+const updatedFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   month: "numeric",
   day: "numeric",
@@ -151,7 +162,9 @@ interface MoviePreferenceTarget {
 
 function getStoredColorTheme(): ColorTheme | null {
   try {
-    return parseColorTheme(window.localStorage.getItem(COLOR_THEME_STORAGE_KEY));
+    return parseColorTheme(
+      window.localStorage.getItem(COLOR_THEME_STORAGE_KEY),
+    );
   } catch {
     return null;
   }
@@ -166,6 +179,22 @@ function storeColorTheme(theme: ColorTheme): void {
 }
 
 export function App() {
+  const language = useLanguage();
+  const userRole = useUserRole();
+  const [languageSaving, setLanguageSaving] = useState(false);
+  const [languageError, setLanguageError] = useState("");
+  async function changeLanguage(value: "ja" | "en") {
+    setLanguageSaving(true);
+    setLanguageError("");
+    try {
+      await saveLanguage(value);
+    } catch {
+      setLanguageError("言語設定を保存できませんでした。");
+    } finally {
+      setLanguageSaving(false);
+    }
+  }
+
   const [now, setNow] = useState(() => new Date());
   const [theme, setTheme] = useState<ColorTheme>(() => {
     const bootstrappedTheme = parseColorTheme(
@@ -229,7 +258,8 @@ export function App() {
   const [plannerDate, setPlannerDate] = useState(initialPlannerDate);
   const [selectedMovieKey, setSelectedMovieKey] = useState<string | null>(
     initialHashState.view === "schedule" ||
-      initialHashState.view === "movies"
+      initialHashState.view === "movies" ||
+      initialHashState.view === "movie"
       ? initialHashState.movie
       : null,
   );
@@ -257,9 +287,9 @@ export function App() {
   const [cinemaNotes, setCinemaNotes] = useState<Map<string, string>>(
     () => new Map(),
   );
-  const [cinemaNoteDrafts, setCinemaNoteDrafts] = useState<
-    Map<string, string>
-  >(() => new Map());
+  const [cinemaNoteDrafts, setCinemaNoteDrafts] = useState<Map<string, string>>(
+    () => new Map(),
+  );
   const [savingCinemaIds, setSavingCinemaIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -438,7 +468,9 @@ export function App() {
       const hashState = appHashStateFromHash(window.location.hash);
       const nextView = hashState.view;
       const usesWeeklyDate =
-        nextView === "schedule" || nextView === "movies";
+        nextView === "schedule" ||
+        nextView === "movies" ||
+        nextView === "movie";
       const nextShowAllMovieDates =
         nextView === "movies" && hashState.date === null;
       const nextScheduleDate =
@@ -503,6 +535,7 @@ export function App() {
         return response.json() as Promise<ScheduleResponse>;
       })
       .then((data) => {
+        registerTitleTranslations(data.movieTitles ?? []);
         setSchedule(data);
         setStarredMovieKeys(
           new Set(
@@ -521,10 +554,7 @@ export function App() {
                   status: MoviePreferenceStatus;
                 } => preference.status !== null,
               )
-              .map((preference) => [
-                preference.movieKey,
-                preference.status,
-              ]),
+              .map((preference) => [preference.movieKey, preference.status]),
           ),
         );
         setCinemaTravelModes(
@@ -636,8 +666,7 @@ export function App() {
     () =>
       (schedule?.cinemas ?? [])
         .filter(
-          (cinema) =>
-            selectedArea === "all" || cinema.area === selectedArea,
+          (cinema) => selectedArea === "all" || cinema.area === selectedArea,
         )
         .sort(
           (cinemaA, cinemaB) =>
@@ -661,9 +690,9 @@ export function App() {
           !movieStatusByKey.has(normalizeMovieTitle(showing.title)) &&
           matchesShowingSearchQuery(
             interactiveSearchQuery,
-            showing.title,
-            showing.cinemaName,
-            showing.cinemaShortName,
+            `${showing.title} ${englishText(showing.title)}`,
+            `${showing.cinemaName} ${englishText(showing.cinemaName)}`,
+            `${showing.cinemaShortName} ${englishText(showing.cinemaShortName)}`,
           ),
       ),
     [
@@ -702,9 +731,9 @@ export function App() {
         (selectedArea === "all" || showing.area === selectedArea) &&
         matchesShowingSearchQuery(
           interactiveSearchQuery,
-          showing.title,
-          showing.cinemaName,
-          showing.cinemaShortName,
+          `${showing.title} ${englishText(showing.title)}`,
+          `${showing.cinemaName} ${englishText(showing.cinemaName)}`,
+          `${showing.cinemaShortName} ${englishText(showing.cinemaShortName)}`,
         ),
     );
     return groupByMovie(areaShowings).sort((movieA, movieB) => {
@@ -713,7 +742,10 @@ export function App() {
         Number(starredMovieKeys.has(movieA.preferenceKey));
       return (
         starredDifference ||
-        movieA.title.localeCompare(movieB.title, "ja")
+        movieTitle(movieA.title).localeCompare(
+          movieTitle(movieB.title),
+          language,
+        )
       );
     });
   }, [
@@ -721,20 +753,17 @@ export function App() {
     schedule?.showings,
     selectedArea,
     starredMovieKeys,
+    language,
   ]);
   const movieCount = useMemo(
     () =>
       new Set(
-        timeGroups.flatMap((group) =>
-          group.movies.map((movie) => movie.key),
-        ),
+        timeGroups.flatMap((group) => group.movies.map((movie) => movie.key)),
       ).size,
     [timeGroups],
   );
   const currentTimeMarkerIndex =
-    selectedDate === today
-      ? findCurrentTimeMarkerIndex(timeGroups, now)
-      : -1;
+    selectedDate === today ? findCurrentTimeMarkerIndex(timeGroups, now) : -1;
   const showCurrentTimeMarkerAtEnd =
     selectedDate === today &&
     timeGroups.length > 0 &&
@@ -1027,7 +1056,8 @@ export function App() {
   };
 
   const deleteDepartureProfile = async () => {
-    if (!window.confirm("登録したベース出発地点を削除しますか？")) return;
+    if (!window.confirm(localize("登録したベース出発地点を削除しますか？")))
+      return;
 
     setProfileState("deleting");
     setProfileError(null);
@@ -1132,13 +1162,11 @@ export function App() {
         body: JSON.stringify({
           cinemaId,
           travelMode,
-          customDurationMinutes:
-            cinemaCustomDurations.get(cinemaId) ?? null,
+          customDurationMinutes: cinemaCustomDurations.get(cinemaId) ?? null,
         }),
       });
       if (!response.ok) throw new Error();
-      const preference =
-        (await response.json()) as CinemaTravelPreference;
+      const preference = (await response.json()) as CinemaTravelPreference;
       setCinemaTravelModes((current) => {
         const next = new Map(current);
         next.set(cinemaId, preference.travelMode);
@@ -1197,7 +1225,9 @@ export function App() {
         next.set(cinemaId, previous);
         return next;
       });
-      setCinemaPreferenceError("上映スケジュールの表示設定を保存できませんでした");
+      setCinemaPreferenceError(
+        "上映スケジュールの表示設定を保存できませんでした",
+      );
     } finally {
       setSavingCinemaIds((current) => {
         const next = new Set(current);
@@ -1232,8 +1262,7 @@ export function App() {
         }),
       });
       if (!response.ok) throw new Error();
-      const preference =
-        (await response.json()) as CinemaTravelPreference;
+      const preference = (await response.json()) as CinemaTravelPreference;
       setCinemaCustomDurations((current) => {
         const next = new Map(current);
         next.set(cinemaId, preference.customDurationMinutes);
@@ -1241,10 +1270,7 @@ export function App() {
       });
       setCinemaDurationDrafts((current) => {
         const next = new Map(current);
-        next.set(
-          cinemaId,
-          preference.customDurationMinutes?.toString() ?? "",
-        );
+        next.set(cinemaId, preference.customDurationMinutes?.toString() ?? "");
         return next;
       });
       if (userProfile.departureRegistered) await fetchRoutes();
@@ -1280,8 +1306,7 @@ export function App() {
         body: JSON.stringify({ cinemaId, note }),
       });
       if (!response.ok) throw new Error();
-      const preference =
-        (await response.json()) as CinemaTravelPreference;
+      const preference = (await response.json()) as CinemaTravelPreference;
       setCinemaNotes((current) => {
         const next = new Map(current);
         next.set(cinemaId, preference.note);
@@ -1334,12 +1359,7 @@ export function App() {
   };
 
   const navigateHashLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    ) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return;
     }
     event.preventDefault();
@@ -1398,9 +1418,7 @@ export function App() {
       const savedPlan = (await response.json()) as ViewingPlan;
       setViewingPlans((current) =>
         [
-          ...current.filter(
-            (plan) => plan.showingId !== savedPlan.showingId,
-          ),
+          ...current.filter((plan) => plan.showingId !== savedPlan.showingId),
           savedPlan,
         ].sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
       );
@@ -1445,9 +1463,7 @@ export function App() {
     plan: ViewingPlan,
     reserved: boolean,
   ): Promise<void> => {
-    setSavingViewingPlanIds((current) =>
-      new Set(current).add(plan.showingId),
-    );
+    setSavingViewingPlanIds((current) => new Set(current).add(plan.showingId));
     setViewingPlanError(null);
     try {
       const response = await fetch(
@@ -1575,12 +1591,7 @@ export function App() {
   };
 
   const goHomeToCurrentTime = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    ) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return;
     }
 
@@ -1626,15 +1637,7 @@ export function App() {
     scrollToInitialTimeMarker(currentTimeMarkerRef.current);
     pendingHomeScrollRef.current = false;
     didInitialTimeScrollRef.current = true;
-  }, [
-    error,
-    loading,
-    schedule?.date,
-    selectedDate,
-    timeGroups,
-    today,
-    view,
-  ]);
+  }, [error, loading, schedule?.date, selectedDate, timeGroups, today, view]);
 
   const rememberMovieAnchor = (element: HTMLElement | null) => {
     if (!element) return;
@@ -1659,9 +1662,7 @@ export function App() {
     };
   };
 
-  const toggleMovieStar = async (
-    movie: MoviePreferenceTarget,
-  ) => {
+  const toggleMovieStar = async (movie: MoviePreferenceTarget) => {
     if (savingMovieKeys.has(movie.preferenceKey)) return;
     rememberMovieScroll();
     const wasStarred = starredMovieKeys.has(movie.preferenceKey);
@@ -1673,9 +1674,7 @@ export function App() {
       else next.delete(movie.preferenceKey);
       return next;
     });
-    setSavingMovieKeys((current) =>
-      new Set(current).add(movie.preferenceKey),
-    );
+    setSavingMovieKeys((current) => new Set(current).add(movie.preferenceKey));
 
     try {
       const response = await fetch("/api/preferences", {
@@ -1719,7 +1718,7 @@ export function App() {
     const nextStatus =
       previousStatus === requestedStatus ? null : requestedStatus;
     if (nextStatus) {
-      const confirmed = window.confirm(MOVIE_HIDE_CONFIRMATION);
+      const confirmed = window.confirm(localize(MOVIE_HIDE_CONFIRMATION));
       if (!confirmed) return undefined;
     }
 
@@ -1732,9 +1731,7 @@ export function App() {
       else next.delete(movie.preferenceKey);
       return next;
     });
-    setSavingMovieKeys((current) =>
-      new Set(current).add(movie.preferenceKey),
-    );
+    setSavingMovieKeys((current) => new Set(current).add(movie.preferenceKey));
 
     try {
       const response = await fetch("/api/preferences", {
@@ -1786,9 +1783,7 @@ export function App() {
     moviePreferenceDialogRef.current?.close();
   };
 
-  const selectMovieStatusFromDialog = async (
-    status: MoviePreferenceStatus,
-  ) => {
+  const selectMovieStatusFromDialog = async (status: MoviePreferenceStatus) => {
     if (!activeMoviePreference) return;
     const savedStatus = await updateMovieStatus(
       activeMoviePreference,
@@ -1803,17 +1798,17 @@ export function App() {
       ? "今後1週間"
       : selectedDate === dates[0]
         ? "今日"
-        : fullDateFormatter.format(
-            new Date(`${selectedDate}T12:00:00+09:00`),
-          );
+        : fullDateFormatter.format(new Date(`${selectedDate}T12:00:00+09:00`));
 
   const renderScheduleTimeGroup = (
     group: (typeof timeGroups)[number],
     index: number,
   ) => (
     <Fragment key={group.time}>
-      {index === currentTimeMarkerIndex && (
-        <CurrentTimeMarker markerRef={currentTimeMarkerRef} now={now} />
+      {localize(
+        index === currentTimeMarkerIndex && (
+          <CurrentTimeMarker markerRef={currentTimeMarkerRef} now={now} />
+        ),
       )}
       <section
         className="timeline-hour"
@@ -1826,105 +1821,113 @@ export function App() {
             id={`time-label-${group.time.replace(":", "-")}`}
             dateTime={`${selectedDate}T${group.time}:00+09:00`}
           >
-            {group.label}
+            {localize(group.label)}
           </time>
-          <small>{group.showingCount}上映</small>
+          <small>{localize(`${group.showingCount}上映`)}</small>
         </div>
         <div className="hour-programs">
-          {group.movies.map((movie) => {
-            const presentation = getScheduleMoviePresentation(
-              movie.showings,
-              now,
-              routeByCinema,
-            );
-            const isStarred = starredMovieKeys.has(movie.preferenceKey);
-            return (
-              <article
-                className={scheduleProgramClassName({
-                  isPast: presentation.isPast,
-                  isReachable: presentation.isReachable,
-                  isUnreachable: presentation.isUnreachable,
-                  isStarred,
-                  isLinked: selectedMovieKey === movie.preferenceKey,
-                })}
-                data-movie-key={movie.preferenceKey}
-                key={movie.key}
-              >
-                <div className="program-title">
-                  <h2>
-                    {schedule?.preferencesEnabled ? (
-                      <button
-                        className="program-title-button"
-                        type="button"
-                        onClick={(event) =>
-                          openMoviePreferenceDialog(
-                            movie,
-                            event.currentTarget.closest<HTMLElement>(
-                              ".program-block",
-                            ),
-                          )
-                        }
-                      >
-                        {movie.title}
-                      </button>
-                    ) : (
-                      <a
-                        href={hashForAppView("movies", {
-                          date: selectedDate,
-                          movie: movie.preferenceKey,
-                          query: normalizedSearchQuery,
-                        })}
-                        onClick={navigateHashLink}
-                      >
-                        {movie.title}
-                      </a>
-                    )}
-                  </h2>
-                  {schedule?.preferencesEnabled && (
-                    <FavoriteButton
-                      title={movie.title}
-                      isStarred={isStarred}
-                      isSaving={savingMovieKeys.has(movie.preferenceKey)}
-                      compact
-                      onClick={() => void toggleMovieStar(movie)}
-                    />
-                  )}
-                </div>
-                <div
-                  className="cinema-strip"
-                  data-horizontal-scroll
-                  role="list"
-                  aria-label={`${movie.title}の上映館`}
+          {localize(
+            group.movies.map((movie) => {
+              const presentation = getScheduleMoviePresentation(
+                movie.showings,
+                now,
+                routeByCinema,
+              );
+              const isStarred = starredMovieKeys.has(movie.preferenceKey);
+              return (
+                <article
+                  className={scheduleProgramClassName({
+                    isPast: presentation.isPast,
+                    isReachable: presentation.isReachable,
+                    isUnreachable: presentation.isUnreachable,
+                    isStarred,
+                    isLinked: selectedMovieKey === movie.preferenceKey,
+                  })}
+                  data-movie-key={movie.preferenceKey}
+                  key={movie.key}
                 >
-                  {presentation.showings.map(
-                    ({
-                      showing,
-                      isPast,
-                      isReachable,
-                      isUnreachable,
-                      travelMinutes,
-                    }) => {
-                      return (
-                        <CinemaSlot
-                          key={showing.id}
-                          showing={showing}
-                          isPast={isPast}
-                          isReachable={isReachable}
-                          isUnreachable={isUnreachable}
-                          travelMinutes={travelMinutes}
-                          isPlanned={viewingPlans.some(
-                            (plan) => plan.showingId === showing.id,
-                          )}
-                          isSaving={savingViewingPlanIds.has(showing.id)}
-                          onToggle={toggleViewingPlan}
+                  <div className="program-title">
+                    <h2>
+                      {localize(
+                        schedule?.preferencesEnabled ? (
+                          <button
+                            className="program-title-button"
+                            type="button"
+                            onClick={(event) =>
+                              openMoviePreferenceDialog(
+                                movie,
+                                event.currentTarget.closest<HTMLElement>(
+                                  ".program-block",
+                                ),
+                              )
+                            }
+                          >
+                            {movieTitle(movie.title)}
+                          </button>
+                        ) : (
+                          <a
+                            href={hashForAppView("movies", {
+                              date: selectedDate,
+                              movie: movie.preferenceKey,
+                              query: normalizedSearchQuery,
+                            })}
+                            onClick={navigateHashLink}
+                          >
+                            {movieTitle(movie.title)}
+                          </a>
+                        ),
+                      )}
+                    </h2>
+                    {localize(
+                      schedule?.preferencesEnabled && (
+                        <FavoriteButton
+                          title={movieTitle(movie.title)}
+                          isStarred={isStarred}
+                          isSaving={savingMovieKeys.has(movie.preferenceKey)}
+                          compact
+                          onClick={() => void toggleMovieStar(movie)}
                         />
-                      );
-                    },
-                  )}
-                </div>
-              </article>
-            );
-          })}
+                      ),
+                    )}
+                  </div>
+                  <div
+                    className="cinema-strip"
+                    data-horizontal-scroll
+                    role="list"
+                    aria-label={localize(`${movieTitle(movie.title)}の上映館`)}
+                  >
+                    {localize(
+                      presentation.showings.map(
+                        ({
+                          showing,
+                          isPast,
+                          isReachable,
+                          isUnreachable,
+                          travelMinutes,
+                        }) => {
+                          return (
+                            <CinemaSlot
+                              key={showing.id}
+                              showing={showing}
+                              isPast={isPast}
+                              isReachable={isReachable}
+                              isUnreachable={isUnreachable}
+                              travelMinutes={travelMinutes}
+                              isPlanned={viewingPlans.some(
+                                (plan) => plan.showingId === showing.id,
+                              )}
+                              isSaving={savingViewingPlanIds.has(showing.id)}
+                              onToggle={toggleViewingPlan}
+                            />
+                          );
+                        },
+                      ),
+                    )}
+                  </div>
+                </article>
+              );
+            }),
+          )}
         </div>
       </section>
     </Fragment>
@@ -1932,44 +1935,67 @@ export function App() {
 
   return (
     <>
+      <a className="skip-link" href="#main">
+        {localize("上映スケジュールへ移動")}
+      </a>
       <header className="site-header">
         <div className="header-inner">
           <button
             className="icon-button menu-button"
             type="button"
-            aria-label="メニューを開く"
+            aria-label={localize("メニューを開く")}
             aria-controls="primary-navigation"
             aria-expanded={isNavigationOpen}
             onClick={openNavigation}
           >
             <ListIcon size={21} aria-hidden="true" />
           </button>
-        <a
-          className="brand"
-          href={hashForAppView("schedule", { date: today })}
-          aria-label="今日の現在時刻の上映へ戻る"
-          onClick={goHomeToCurrentTime}
+          <a
+            className="brand"
+            href={hashForAppView("schedule", { date: today })}
+            aria-label={localize("今日の現在時刻の上映へ戻る")}
+            onClick={goHomeToCurrentTime}
           >
             <img
               className="brand-mark"
               src="/brand/hamamubi-icon-v2.svg"
               width="34"
               height="34"
-              alt=""
+              alt={localize("")}
               aria-hidden="true"
               fetchPriority="high"
             />
             <strong className="brand-wordmark" aria-hidden="true">
-              はまむび！
+              {localize("はまむび！")}
             </strong>
           </a>
           <div className="header-status">
-            <time dateTime={now.toISOString()}>{timeFormatter.format(now)}</time>
+            <button
+              className="language-toggle"
+              type="button"
+              role="switch"
+              aria-checked={language === "en"}
+              aria-label={localize("英語で表示")}
+              title={localize(
+                language === "en" ? "日本語に切り替える" : "英語に切り替える",
+              )}
+              aria-busy={languageSaving}
+              disabled={languageSaving}
+              onClick={() =>
+                void changeLanguage(language === "en" ? "ja" : "en")
+              }
+            >
+              <span data-selected={language === "ja"}>JP</span>
+              <span data-selected={language === "en"}>EN</span>
+            </button>
+            <time dateTime={now.toISOString()}>
+              {localize(timeFormatter.format(now))}
+            </time>
             <button
               className="icon-button theme-toggle-button"
               type="button"
-              aria-label={colorThemeToggleLabel(theme)}
-              title={colorThemeToggleLabel(theme)}
+              aria-label={localize(colorThemeToggleLabel(theme))}
+              title={localize(colorThemeToggleLabel(theme))}
               onClick={() => {
                 const nextTheme = theme === "dark" ? "light" : "dark";
                 storeColorTheme(nextTheme);
@@ -1977,24 +2003,18 @@ export function App() {
                 setTheme(nextTheme);
               }}
             >
-              {theme === "dark" ? (
-                <SunIcon size={20} weight="fill" aria-hidden="true" />
-              ) : (
-                <MoonIcon size={20} weight="fill" aria-hidden="true" />
+              {localize(
+                theme === "dark" ? (
+                  <SunIcon size={20} weight="fill" aria-hidden="true" />
+                ) : (
+                  <MoonIcon size={20} weight="fill" aria-hidden="true" />
+                ),
               )}
             </button>
-            <form method="post" action="/auth/logout">
-              <button
-                className="icon-button"
-                type="submit"
-                aria-label="ログアウト"
-              >
-                <SignOutIcon size={19} aria-hidden="true" />
-              </button>
-            </form>
           </div>
         </div>
       </header>
+      {languageError && <p role="alert">{localize(languageError)}</p>}
 
       <dialog
         className="navigation-drawer"
@@ -2008,17 +2028,17 @@ export function App() {
       >
         <div className="navigation-sheet">
           <div className="navigation-heading">
-            <strong id="navigation-title">メニュー</strong>
+            <strong id="navigation-title">{localize("メニュー")}</strong>
             <button
               className="icon-button"
               type="button"
-              aria-label="メニューを閉じる"
+              aria-label={localize("メニューを閉じる")}
               onClick={closeNavigation}
             >
               <XIcon size={20} aria-hidden="true" />
             </button>
           </div>
-          <nav aria-label="メイン">
+          <nav aria-label={localize("メイン")}>
             <a
               href={hashForAppView("schedule", { date: today })}
               className={view === "schedule" ? "active" : ""}
@@ -2026,7 +2046,7 @@ export function App() {
               onClick={goHomeFromNavigation}
             >
               <CalendarDotsIcon size={20} aria-hidden="true" />
-              上映スケジュール
+              {localize("上映スケジュール")}
             </a>
             <a
               href={hashForAppView("movies", {
@@ -2039,7 +2059,7 @@ export function App() {
               onClick={closeNavigation}
             >
               <FilmSlateIcon size={20} aria-hidden="true" />
-              上映作品
+              {localize("上映作品")}
             </a>
             <a
               href={hashForAppView("cinemas")}
@@ -2048,7 +2068,7 @@ export function App() {
               onClick={closeNavigation}
             >
               <BuildingsIcon size={20} aria-hidden="true" />
-              映画館一覧
+              {localize("映画館一覧")}
             </a>
             <a
               href={hashForAppView("viewingPlans")}
@@ -2057,7 +2077,7 @@ export function App() {
               onClick={closeNavigation}
             >
               <CalendarDotsIcon size={20} aria-hidden="true" />
-              鑑賞予定
+              {localize("鑑賞予定")}
             </a>
             <a
               href={hashForAppView("planner", {
@@ -2068,27 +2088,50 @@ export function App() {
               onClick={closeNavigation}
             >
               <PathIcon size={20} aria-hidden="true" />
-              映画はしごガチャ
+              {localize("映画はしごガチャ")}
             </a>
-          <a
-            href={hashForAppView("account")}
+            <a
+              href={hashForAppView("account")}
               className={view === "account" ? "active" : ""}
               aria-current={view === "account" ? "page" : undefined}
               onClick={closeNavigation}
             >
-            <UserCircleIcon size={20} aria-hidden="true" />
-            マイページ
-          </a>
-          <a
-            href={hashForAppView("about")}
-            className={view === "about" ? "active" : ""}
-            aria-current={view === "about" ? "page" : undefined}
-            onClick={closeNavigation}
-          >
-            <InfoIcon size={20} aria-hidden="true" />
-            このサイトについて
-          </a>
-        </nav>
+              <UserCircleIcon size={20} aria-hidden="true" />
+              {localize("マイページ")}
+            </a>
+            <a
+              href={hashForAppView("about")}
+              className={view === "about" ? "active" : ""}
+              aria-current={view === "about" ? "page" : undefined}
+              onClick={closeNavigation}
+            >
+              <InfoIcon size={20} aria-hidden="true" />
+              {localize("このサイトについて")}
+            </a>
+            <form
+              className="navigation-logout"
+              method="post"
+              action="/auth/logout"
+            >
+              <button type="submit">
+                <SignOutIcon size={20} aria-hidden="true" />
+                {localize("ログアウト")}
+              </button>
+            </form>
+            {userRole === "admin" && (
+              <div className="navigation-admin">
+                <a
+                  href={hashForAppView("adminUsers")}
+                  className={view === "adminUsers" ? "active" : ""}
+                  aria-current={view === "adminUsers" ? "page" : undefined}
+                  onClick={closeNavigation}
+                >
+                  <UsersThreeIcon size={20} aria-hidden="true" />
+                  {localize("管理画面")}
+                </a>
+              </div>
+            )}
+          </nav>
         </div>
       </dialog>
 
@@ -2109,115 +2152,113 @@ export function App() {
           if (!isInside) closeMoviePreferenceDialog();
         }}
       >
-        {activeMoviePreference && (
-          <div className="movie-preference-sheet">
-            <div className="movie-preference-heading">
-              <div>
-                <small>作品の設定</small>
-                <h2 id="movie-preference-title">
-                  {activeMoviePreference.title}
-                </h2>
+        {localize(
+          activeMoviePreference && (
+            <div className="movie-preference-sheet">
+              <div className="movie-preference-heading">
+                <div>
+                  <small>{localize("作品の設定")}</small>
+                  <h2 id="movie-preference-title">
+                    {movieTitle(activeMoviePreference.title)}
+                  </h2>
+                </div>
+                <button
+                  className="icon-button"
+                  type="button"
+                  aria-label={localize("作品の設定を閉じる")}
+                  onClick={closeMoviePreferenceDialog}
+                >
+                  <XIcon size={20} aria-hidden="true" />
+                </button>
               </div>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="作品の設定を閉じる"
-                onClick={closeMoviePreferenceDialog}
-              >
-                <XIcon size={20} aria-hidden="true" />
-              </button>
-            </div>
-            <div
-              className="movie-preference-actions"
-              role="group"
-              aria-label={`${activeMoviePreference.title}の状態`}
-            >
-              <button
-                type="button"
-                className={
-                  starredMovieKeys.has(
-                    activeMoviePreference.preferenceKey,
-                  )
-                    ? "favorite active"
-                    : "favorite"
-                }
-                aria-pressed={starredMovieKeys.has(
-                  activeMoviePreference.preferenceKey,
+              <div
+                className="movie-preference-actions"
+                role="group"
+                aria-label={localize(
+                  `${movieTitle(activeMoviePreference.title)}の状態`,
                 )}
-                disabled={savingMovieKeys.has(
-                  activeMoviePreference.preferenceKey,
-                )}
-                onClick={() =>
-                  void toggleMovieStar(activeMoviePreference)
-                }
               >
-                <StarIcon
-                  size={20}
-                  weight={
-                    starredMovieKeys.has(
-                      activeMoviePreference.preferenceKey,
-                    )
-                      ? "fill"
-                      : "regular"
+                <button
+                  type="button"
+                  className={
+                    starredMovieKeys.has(activeMoviePreference.preferenceKey)
+                      ? "favorite active"
+                      : "favorite"
                   }
-                  aria-hidden="true"
-                />
-                気になる
-              </button>
-              <button
-                type="button"
-                className={
-                  movieStatusByKey.get(
+                  aria-pressed={starredMovieKeys.has(
                     activeMoviePreference.preferenceKey,
-                  ) === "watched"
-                    ? "active"
-                    : ""
-                }
-                aria-pressed={
-                  movieStatusByKey.get(
+                  )}
+                  disabled={savingMovieKeys.has(
                     activeMoviePreference.preferenceKey,
-                  ) === "watched"
-                }
-                disabled={savingMovieKeys.has(
-                  activeMoviePreference.preferenceKey,
-                )}
-                onClick={() =>
-                  void selectMovieStatusFromDialog("watched")
-                }
-              >
-                鑑賞済み
-              </button>
-              <button
-                type="button"
-                className={
-                  movieStatusByKey.get(
+                  )}
+                  onClick={() => void toggleMovieStar(activeMoviePreference)}
+                >
+                  <StarIcon
+                    size={20}
+                    weight={
+                      starredMovieKeys.has(activeMoviePreference.preferenceKey)
+                        ? "fill"
+                        : "regular"
+                    }
+                    aria-hidden="true"
+                  />
+                  {localize("気になる")}
+                </button>
+                <button
+                  type="button"
+                  className={
+                    movieStatusByKey.get(
+                      activeMoviePreference.preferenceKey,
+                    ) === "watched"
+                      ? "active"
+                      : ""
+                  }
+                  aria-pressed={
+                    movieStatusByKey.get(
+                      activeMoviePreference.preferenceKey,
+                    ) === "watched"
+                  }
+                  disabled={savingMovieKeys.has(
                     activeMoviePreference.preferenceKey,
-                  ) === "not_interested"
-                    ? "not-interested active"
-                    : "not-interested"
-                }
-                aria-pressed={
-                  movieStatusByKey.get(
+                  )}
+                  onClick={() => void selectMovieStatusFromDialog("watched")}
+                >
+                  {localize("鑑賞済み")}
+                </button>
+                <button
+                  type="button"
+                  className={
+                    movieStatusByKey.get(
+                      activeMoviePreference.preferenceKey,
+                    ) === "not_interested"
+                      ? "not-interested active"
+                      : "not-interested"
+                  }
+                  aria-pressed={
+                    movieStatusByKey.get(
+                      activeMoviePreference.preferenceKey,
+                    ) === "not_interested"
+                  }
+                  disabled={savingMovieKeys.has(
                     activeMoviePreference.preferenceKey,
-                  ) === "not_interested"
-                }
-                disabled={savingMovieKeys.has(
-                  activeMoviePreference.preferenceKey,
-                )}
-                onClick={() =>
-                  void selectMovieStatusFromDialog("not_interested")
-                }
-              >
-                興味なし
-              </button>
+                  )}
+                  onClick={() =>
+                    void selectMovieStatusFromDialog("not_interested")
+                  }
+                >
+                  {localize("興味なし")}
+                </button>
+              </div>
+              {localize(
+                preferenceError && (
+                  <p className="inline-status error" role="status">
+                    <WarningCircleIcon size={16} aria-hidden="true" />
+                    {localize(preferenceError)}
+                  </p>
+                ),
+              )}
             </div>
-            {preferenceError && (
-              <p className="inline-status error" role="status">
-                <WarningCircleIcon size={16} aria-hidden="true" />
-                {preferenceError}
-              </p>
-            )}
-          </div>
+          ),
         )}
       </dialog>
 
@@ -2230,914 +2271,1119 @@ export function App() {
           dateSwipeStartRef.current = null;
         }}
       >
-        {(view === "schedule" || view === "movies") && (
-        <nav className="date-nav" aria-label="上映日">
-          <div className="date-strip" data-horizontal-scroll>
-            {view === "movies" && (
-              <a
-                className={
-                  showAllMovieDates
-                    ? "day-button active"
-                    : "day-button"
-                }
-                href={hashForAppView("movies", {
-                  query: normalizedSearchQuery,
-                })}
-                aria-current={showAllMovieDates ? "page" : undefined}
-              >
-                <span>すべて</span>
-                <small>1週間</small>
-              </a>
-            )}
-            {dates.map((date, index) => {
-              const displayDate = dayFormatter.format(
-                new Date(`${date}T12:00:00+09:00`),
-              );
-              const [monthDay, weekday = ""] = displayDate.split(/[()]/);
-              return (
-                <a
-                  key={date}
-                  className={
-                    !showAllMovieDates && date === selectedDate
-                      ? "day-button active"
-                      : "day-button"
-                  }
-                  href={hashForAppView(view, {
-                    date,
-                    query: normalizedSearchQuery,
-                  })}
-                  aria-current={
-                    !showAllMovieDates && date === selectedDate
-                      ? "date"
-                      : undefined
-                  }
-                >
-                  <span>{index === 0 ? "今日" : monthDay}</span>
-                  <small>{weekday}</small>
-                </a>
-              );
-            })}
-          </div>
-          </nav>
-        )}
-
-        {(view === "schedule" || view === "movies") && (
-          <search className="schedule-search">
-            <form
-              className="schedule-search-form"
-              method="get"
-              onSubmit={submitScheduleSearch}
-            >
-              <div className="schedule-search-field">
-                <label htmlFor="schedule-search-query">
-                  作品名・映画館名
-                </label>
-                <span className="schedule-search-input">
-                  <MagnifyingGlassIcon size={18} aria-hidden="true" />
-                  <input
-                    id="schedule-search-query"
-                    type="search"
-                    name="q"
-                    value={searchDraft}
-                    placeholder="例：スパイダーマン、TOHOシネマズ"
-                    autoComplete="off"
-                    enterKeyHint="search"
-                    onChange={(event) => setSearchDraft(event.target.value)}
-                  />
-                  {normalizedSearchQuery && (
-                    <button
-                      className="schedule-search-clear"
-                      type="button"
-                      aria-label="検索条件を解除"
-                      onClick={clearScheduleSearch}
+        {localize(
+          (view === "schedule" || view === "movies") && (
+            <nav className="date-nav" aria-label={localize("上映日")}>
+              <div className="date-strip" data-horizontal-scroll>
+                {localize(
+                  view === "movies" && (
+                    <a
+                      className={
+                        showAllMovieDates ? "day-button active" : "day-button"
+                      }
+                      href={hashForAppView("movies", {
+                        query: normalizedSearchQuery,
+                      })}
+                      aria-current={showAllMovieDates ? "page" : undefined}
                     >
-                      <XIcon size={17} aria-hidden="true" />
-                    </button>
-                  )}
-                </span>
+                      <span>{localize("すべて")}</span>
+                      <small>{localize("1週間")}</small>
+                    </a>
+                  ),
+                )}
+                {localize(
+                  dates.map((date, index) => {
+                    const displayDate = dayFormatter.format(
+                      new Date(`${date}T12:00:00+09:00`),
+                    );
+                    const dateValue = new Date(`${date}T12:00:00+09:00`);
+                    const monthDay =
+                      language === "en"
+                        ? localizedDate({
+                            month: "short",
+                            day: "numeric",
+                          }).format(dateValue)
+                        : displayDate.split(/[()]/)[0];
+                    const weekday = localizedDate({ weekday: "short" }).format(
+                      dateValue,
+                    );
+                    return (
+                      <a
+                        key={date}
+                        className={
+                          !showAllMovieDates && date === selectedDate
+                            ? "day-button active"
+                            : "day-button"
+                        }
+                        href={hashForAppView(view, {
+                          date,
+                          query: normalizedSearchQuery,
+                        })}
+                        aria-current={
+                          !showAllMovieDates && date === selectedDate
+                            ? "date"
+                            : undefined
+                        }
+                      >
+                        <span>{localize(index === 0 ? "今日" : monthDay)}</span>
+                        <small>{localize(weekday)}</small>
+                      </a>
+                    );
+                  }),
+                )}
               </div>
-              <button className="schedule-search-submit" type="submit">
-                検索
-              </button>
-            </form>
-            {interactiveSearchQuery && (
-              <p className="schedule-search-result" role="status">
-                「{interactiveSearchQuery}」で絞り込み中
-              </p>
-            )}
-          </search>
+            </nav>
+          ),
         )}
 
-      {(view === "schedule" ||
-        view === "movies" ||
-        view === "cinemas") && (
-        <section className="schedule-controls" aria-label="上映の絞り込み">
-          <div
-            className="area-strip"
-            data-horizontal-scroll
-            role="group"
-            aria-label="エリア"
-          >
-            {AREA_OPTIONS.map((area) => (
-              <button
-                key={area.id}
-                type="button"
-                className={
-                  selectedArea === area.id ? "filter-chip active" : "filter-chip"
-                }
-                aria-pressed={selectedArea === area.id}
-                onClick={() => setSelectedArea(area.id)}
+        {localize(
+          (view === "schedule" || view === "movies") && (
+            <search className="schedule-search">
+              <form
+                className="schedule-search-form"
+                method="get"
+                onSubmit={submitScheduleSearch}
               >
-                {area.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="control-row">
-            {view === "schedule" && selectedDate === dates[0] ? (
-              <div className="time-filter" role="group" aria-label="時間">
-                <button
-                  type="button"
-                  aria-pressed={futureOnly}
-                  className={futureOnly ? "active" : ""}
-                  onClick={() => setFutureOnly(true)}
-                >
-                  これから
+                <div className="schedule-search-field">
+                  <label htmlFor="schedule-search-query">
+                    {localize("作品名・映画館名")}
+                  </label>
+                  <span className="schedule-search-input">
+                    <MagnifyingGlassIcon size={18} aria-hidden="true" />
+                    <input
+                      id="schedule-search-query"
+                      type="search"
+                      name="q"
+                      value={searchDraft}
+                      placeholder={localize("例：スパイダーマン、TOHOシネマズ")}
+                      autoComplete="off"
+                      enterKeyHint="search"
+                      onChange={(event) => setSearchDraft(event.target.value)}
+                    />
+                    {localize(
+                      normalizedSearchQuery && (
+                        <button
+                          className="schedule-search-clear"
+                          type="button"
+                          aria-label={localize("検索条件を解除")}
+                          onClick={clearScheduleSearch}
+                        >
+                          <XIcon size={17} aria-hidden="true" />
+                        </button>
+                      ),
+                    )}
+                  </span>
+                </div>
+                <button className="schedule-search-submit" type="submit">
+                  {localize("検索")}
                 </button>
-                <button
-                  type="button"
-                  aria-pressed={!futureOnly}
-                  className={!futureOnly ? "active" : ""}
-                  onClick={() => setFutureOnly(false)}
-                >
-                  全時間
-                </button>
-              </div>
-            ) : view === "schedule" ? (
-              <span className="all-day-label">全時間を表示</span>
-            ) : view === "movies" ? (
-              <span className="all-day-label">
-                {schedule?.preferencesEnabled
-                  ? "スター済みを先頭に表示"
-                  : "作品名順に表示"}
-              </span>
-            ) : (
-              <span className="all-day-label">
-                移動方法と自分の所要時間を保存
-              </span>
-            )}
-          </div>
-
-          {view !== "movies" && userProfile.departureRegistered && (
-            <p
-              className={[
-                "inline-status",
-                routeState === "error" ? "error" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              role="status"
-            >
-              {routeState === "error" ? (
-                <WarningCircleIcon size={16} aria-hidden="true" />
-              ) : (
-                <CheckCircleIcon size={16} weight="fill" aria-hidden="true" />
+              </form>
+              {localize(
+                interactiveSearchQuery && (
+                  <p className="schedule-search-result" role="status">
+                    {localize("「")}
+                    {localize(interactiveSearchQuery)}
+                    {localize("」で絞り込み中")}
+                  </p>
+                ),
               )}
-              {routeState === "loading"
-                ? "ベース出発地点からの移動時間を読み込んでいます"
-                : routeState === "error"
-                  ? "ベース出発地点からの移動時間を読み込めませんでした"
-                  : "ベース出発地点からの固定移動時間を反映しています"}
-            </p>
-          )}
-          {view !== "movies" && !userProfile.departureRegistered && (
-            <a
-              className="home-profile-link"
-              href={hashForAppView("account")}
-            >
-              <HouseLineIcon size={16} aria-hidden="true" />
-              マイページでベース出発地点を登録
-            </a>
-          )}
-          {cinemaPreferenceError && (
-            <p className="inline-status error" role="status">
-              <WarningCircleIcon size={16} aria-hidden="true" />
-              {cinemaPreferenceError}
-            </p>
-          )}
-          {preferenceError && (
-            <p className="inline-status error" role="status">
-              <WarningCircleIcon size={16} aria-hidden="true" />
-              {preferenceError}
-            </p>
-          )}
-        </section>
+            </search>
+          ),
         )}
 
-      {view === "adminUsers" ? <AdminUsersPage /> : view === "account" ? (
-        <AccountPage
-            profileSettings={
-              !loading && !error ? (
-                <ProfilePanel
-                  enabled={Boolean(schedule?.userProfileEnabled)}
-                  profile={userProfile}
-                  state={profileState}
-                  collapseState={collapsePreferenceState}
-                  error={profileError}
-                  onRegister={() => void registerDepartureLocation()}
-                  onDelete={() => void deleteDepartureProfile()}
-                  onCollapseChange={(value) =>
-                    void saveScheduleCollapsePreference(value)
-                  }
-                />
-              ) : null
-            }
-          />
-      ) : view === "viewingPlans" ? (
-        <ViewingPlansPage
-          plans={viewingPlans}
-          starredMovieKeys={starredMovieKeys}
-          loading={viewingPlansState === "loading"}
-          error={viewingPlanError}
-          savingIds={savingViewingPlanIds}
-          onRemove={removeViewingPlan}
-          onReservationChange={updateViewingPlanReservation}
-        />
-      ) : view === "planner" ? (
-        <PlannerPage
-            selectedDate={plannerDate}
-            onSelectedDateChange={(date) => {
-              window.location.hash = hashForAppView("planner", { date });
-            }}
-          />
-      ) : view === "about" ? (
-        <AboutPage />
-      ) : (
-        <PageShell className="guide" live="polite" busy={loading}>
-          <PageHeader
-            eyebrow={view === "cinemas" ? "対象エリア" : selectedDateLabel}
-            title={
-              view === "schedule"
-                ? "上映スケジュール"
-                : view === "movies"
-                  ? "上映中の作品"
-                  : "映画館"
-            }
-            meta={
-              !loading &&
-              !error && (
-                <span className="page-count">
-                  {view === "schedule"
-                    ? `${movieCount}作品`
-                    : view === "movies"
-                      ? `${movieList.length}作品`
-                      : `${cinemaList.length}館`}
-                  {view === "schedule" && (
-                    <small>{visibleShowings.length}上映</small>
-                  )}
-                </span>
-              )
-            }
-          />
-
-          {schedule?.lastUpdatedAt && !loading && (
-            <p className="update-status">
-              {updatedFormatter.format(new Date(schedule.lastUpdatedAt))}更新
-              {schedule.sourceHealth.total > 0 &&
-                schedule.sourceHealth.healthy < schedule.sourceHealth.total &&
-                ` / ${schedule.sourceHealth.total - schedule.sourceHealth.healthy}館は更新確認できず`}
-            </p>
-          )}
-
-          {loading && view === "schedule" && <LoadingTimeline />}
-          {!loading && error && (
-            <div className="state-card error-state" role="alert">
-              <WarningCircleIcon size={25} aria-hidden="true" />
-              <div>
-                <strong>読み込みに失敗しました</strong>
-                <p>{error}</p>
+        {localize(
+          (view === "schedule" || view === "movies" || view === "cinemas") && (
+            <section
+              className="schedule-controls"
+              aria-label={localize("上映の絞り込み")}
+            >
+              <div
+                className="area-strip"
+                data-horizontal-scroll
+                role="group"
+                aria-label={localize("エリア")}
+              >
+                {localize(
+                  AREA_OPTIONS.map((area) => (
+                    <button
+                      key={area.id}
+                      type="button"
+                      className={
+                        selectedArea === area.id
+                          ? "filter-chip active"
+                          : "filter-chip"
+                      }
+                      aria-pressed={selectedArea === area.id}
+                      onClick={() => setSelectedArea(area.id)}
+                    >
+                      {localize(area.label)}
+                    </button>
+                  )),
+                )}
               </div>
-              <button type="button" onClick={() => window.location.reload()}>
-                再読み込み
-              </button>
-            </div>
-          )}
-          {!loading &&
-            !error &&
-            (view === "schedule"
-              ? timeGroups.length === 0
-              : view === "movies"
-                ? movieList.length === 0
-                : cinemaList.length === 0) && (
-              <div className="state-card">
-                <ClockIcon size={25} aria-hidden="true" />
-                <div>
-                  <strong>
-                    {view === "schedule"
-                      ? "条件に合う上映がありません"
-                      : view === "movies"
-                        ? "上映中の作品がありません"
-                        : "対象の映画館がありません"}
-                  </strong>
-                  <p>
-                    {interactiveSearchQuery &&
-                      (view === "schedule" || view === "movies")
-                      ? "作品名や映画館名を変えて検索してください。"
-                      : view === "cinemas"
-                        ? "エリアを広げてください。"
-                        : "エリアを広げるか、別の日を選んでください。"}
-                  </p>
-                </div>
+
+              <div className="control-row">
+                {localize(
+                  view === "schedule" && selectedDate === dates[0] ? (
+                    <div
+                      className="time-filter"
+                      role="group"
+                      aria-label={localize("時間")}
+                    >
+                      <button
+                        type="button"
+                        aria-pressed={futureOnly}
+                        className={futureOnly ? "active" : ""}
+                        onClick={() => setFutureOnly(true)}
+                      >
+                        {localize("これから")}
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={!futureOnly}
+                        className={!futureOnly ? "active" : ""}
+                        onClick={() => setFutureOnly(false)}
+                      >
+                        {localize("全時間")}
+                      </button>
+                    </div>
+                  ) : view === "schedule" ? (
+                    <span className="all-day-label">
+                      {localize("全時間を表示")}
+                    </span>
+                  ) : view === "movies" ? (
+                    <span className="all-day-label">
+                      {localize(
+                        schedule?.preferencesEnabled
+                          ? "スター済みを先頭に表示"
+                          : "作品名順に表示",
+                      )}
+                    </span>
+                  ) : (
+                    <span className="all-day-label">
+                      {localize("移動方法と自分の所要時間を保存")}
+                    </span>
+                  ),
+                )}
               </div>
-          )}
-          {!loading && !error && view === "movies" && movieList.length > 0 && (
-            <>
-              <p className="movie-release-source">
-                日本公開日の情報：
-                <a
-                  href="https://www.themoviedb.org/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  TMDB
-                </a>
-              </p>
-              <ul className="movie-list">
-                {movieList.map((movie, index) => {
-                const isStarred = starredMovieKeys.has(movie.preferenceKey);
-                const status =
-                  movieStatusByKey.get(movie.preferenceKey) ?? null;
-                const externalLinks = buildMovieExternalLinks(movie.title);
-                const releaseDateLabel = movie.releaseDate
-                  ? dayFormatter.format(
-                      new Date(`${movie.releaseDate}T12:00:00+09:00`),
-                    )
-                  : null;
-                const showingDateLabels = listMovieShowingDates(
-                  movie.showings,
-                ).map((date) => {
-                  if (date === today) return "今日";
-                  return dayFormatter
-                    .format(new Date(`${date}T12:00:00+09:00`))
-                    .split(/[()]/)[0];
-                });
-                return (
-                  <li
+
+              {localize(
+                view !== "movies" && userProfile.departureRegistered && (
+                  <p
                     className={[
-                      "movie-list-item",
-                      isStarred ? "starred" : "",
-                      status === "watched" ? "watched" : "",
-                      status === "not_interested"
-                        ? "not-interested"
-                        : "",
-                      selectedMovieKey === movie.preferenceKey ? "linked" : "",
-                      schedule?.preferencesEnabled
-                        ? ""
-                        : "preferences-disabled",
+                      "inline-status",
+                      routeState === "error" ? "error" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    data-movie-key={movie.preferenceKey}
-                    key={movie.preferenceKey}
+                    role="status"
                   >
-                    {movie.imageUrl ? (
-                      <img
-                        src={movie.imageUrl}
-                        alt=""
-                        width="104"
-                        height="66"
-                        loading={index < 3 ? "eager" : "lazy"}
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="movie-image-placeholder" aria-hidden="true">
-                        {movie.title.slice(0, 1)}
-                      </div>
+                    {localize(
+                      routeState === "error" ? (
+                        <WarningCircleIcon size={16} aria-hidden="true" />
+                      ) : (
+                        <CheckCircleIcon
+                          size={16}
+                          weight="fill"
+                          aria-hidden="true"
+                        />
+                      ),
                     )}
-                    <div className="movie-list-copy">
-                      <strong>
-                        <a
-                          href={hashForAppView("movies", {
-                            date: selectedMovieListDate,
-                            movie: movie.preferenceKey,
-                            query: normalizedSearchQuery,
-                          })}
-                          onClick={navigateHashLink}
-                          aria-current={
-                            selectedMovieKey === movie.preferenceKey
-                              ? "location"
-                              : undefined
-                          }
-                        >
-                          {movie.title}
-                        </a>
-                      </strong>
-                      {movie.releaseDate && releaseDateLabel && (
-                        <p
-                          className="movie-release-date"
-                          aria-label={`${movie.title}の日本公開日`}
-                        >
-                          <CalendarDotsIcon size={13} aria-hidden="true" />
-                          <time dateTime={movie.releaseDate}>
-                            日本公開 {releaseDateLabel}
-                          </time>
-                        </p>
+                    {localize(
+                      routeState === "loading"
+                        ? "ベース出発地点からの移動時間を読み込んでいます"
+                        : routeState === "error"
+                          ? "ベース出発地点からの移動時間を読み込めませんでした"
+                          : "ベース出発地点からの固定移動時間を反映しています",
+                    )}
+                  </p>
+                ),
+              )}
+              {localize(
+                view !== "movies" && !userProfile.departureRegistered && (
+                  <a
+                    className="home-profile-link"
+                    href={hashForAppView("account")}
+                  >
+                    <HouseLineIcon size={16} aria-hidden="true" />
+                    {localize("マイページでベース出発地点を登録")}
+                  </a>
+                ),
+              )}
+              {localize(
+                cinemaPreferenceError && (
+                  <p className="inline-status error" role="status">
+                    <WarningCircleIcon size={16} aria-hidden="true" />
+                    {localize(cinemaPreferenceError)}
+                  </p>
+                ),
+              )}
+              {localize(
+                preferenceError && (
+                  <p className="inline-status error" role="status">
+                    <WarningCircleIcon size={16} aria-hidden="true" />
+                    {localize(preferenceError)}
+                  </p>
+                ),
+              )}
+            </section>
+          ),
+        )}
+
+        {localize(
+          view === "movie" ? (
+            <MoviePage movieKey={selectedMovieKey} today={today} />
+          ) : view === "adminUsers" ? (
+            <AdminUsersPage />
+          ) : view === "account" ? (
+            <AccountPage
+              profileSettings={
+                !loading && !error ? (
+                  <ProfilePanel
+                    enabled={Boolean(schedule?.userProfileEnabled)}
+                    profile={userProfile}
+                    state={profileState}
+                    collapseState={collapsePreferenceState}
+                    error={profileError}
+                    onRegister={() => void registerDepartureLocation()}
+                    onDelete={() => void deleteDepartureProfile()}
+                    onCollapseChange={(value) =>
+                      void saveScheduleCollapsePreference(value)
+                    }
+                  />
+                ) : null
+              }
+            />
+          ) : view === "viewingPlans" ? (
+            <ViewingPlansPage
+              plans={viewingPlans}
+              starredMovieKeys={starredMovieKeys}
+              loading={viewingPlansState === "loading"}
+              error={viewingPlanError}
+              savingIds={savingViewingPlanIds}
+              onRemove={removeViewingPlan}
+              onReservationChange={updateViewingPlanReservation}
+            />
+          ) : view === "planner" ? (
+            <PlannerPage
+              selectedDate={plannerDate}
+              onSelectedDateChange={(date) => {
+                window.location.hash = hashForAppView("planner", { date });
+              }}
+            />
+          ) : view === "about" ? (
+            <AboutPage />
+          ) : (
+            <PageShell className="guide" live="polite" busy={loading}>
+              <PageHeader
+                eyebrow={localize(
+                  view === "cinemas" ? "対象エリア" : selectedDateLabel,
+                )}
+                title={localize(
+                  view === "schedule"
+                    ? "上映スケジュール"
+                    : view === "movies"
+                      ? "上映中の作品"
+                      : "映画館",
+                )}
+                meta={
+                  !loading &&
+                  !error && (
+                    <span className="page-count">
+                      {localize(
+                        view === "schedule"
+                          ? `${movieCount}作品`
+                          : view === "movies"
+                            ? `${movieList.length}作品`
+                            : `${cinemaList.length}館`,
                       )}
-                      <div
-                        className="movie-external-links"
-                        aria-label={`${movie.title}の作品情報`}
-                      >
-                        <a
-                          href={externalLinks.eiga}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          映画.com
-                          <ArrowSquareOutIcon
-                            size={12}
-                            aria-hidden="true"
-                          />
-                        </a>
-                        <a
-                          href={externalLinks.filmarks}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Filmarks
-                          <ArrowSquareOutIcon
-                            size={12}
-                            aria-hidden="true"
-                          />
-                        </a>
-                      </div>
-                      {showAllMovieDates && (
-                        <p
-                          className="movie-showing-dates"
-                          aria-label={`${movie.title}の上映日`}
-                        >
-                          <CalendarDotsIcon size={13} aria-hidden="true" />
-                          {showingDateLabels.join("・")}
-                        </p>
+                      {localize(
+                        view === "schedule" && (
+                          <small>
+                            {localize(`${visibleShowings.length}上映`)}
+                          </small>
+                        ),
                       )}
+                    </span>
+                  )
+                }
+              />
+
+              {localize(
+                schedule?.lastUpdatedAt && !loading && (
+                  <p className="update-status">
+                    {localize(
+                      `更新：${updatedFormatter.format(new Date(schedule.lastUpdatedAt))}`,
+                    )}
+                    {localize(
+                      schedule.sourceHealth.total > 0 &&
+                        schedule.sourceHealth.healthy <
+                          schedule.sourceHealth.total &&
+                        ` / ${schedule.sourceHealth.total - schedule.sourceHealth.healthy}館は更新確認できず`,
+                    )}
+                  </p>
+                ),
+              )}
+
+              {localize(loading && view === "schedule" && <LoadingTimeline />)}
+              {localize(
+                !loading && error && (
+                  <div className="state-card error-state" role="alert">
+                    <WarningCircleIcon size={25} aria-hidden="true" />
+                    <div>
+                      <strong>{localize("読み込みに失敗しました")}</strong>
+                      <p>{localize(error)}</p>
                     </div>
-                    {schedule?.preferencesEnabled && (
-                      <FavoriteButton
-                        title={movie.title}
-                        isStarred={isStarred}
-                        isSaving={savingMovieKeys.has(movie.preferenceKey)}
-                        onClick={() => void toggleMovieStar(movie)}
-                      />
-                    )}
-                    {schedule?.preferencesEnabled && (
-                      <div
-                        className="movie-status-actions"
-                        role="group"
-                        aria-label={`${movie.title}の鑑賞状態`}
-                      >
-                        <button
-                          type="button"
-                          className={
-                            status === "watched" ? "active" : ""
-                          }
-                          aria-pressed={status === "watched"}
-                          disabled={savingMovieKeys.has(
-                            movie.preferenceKey,
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                    >
+                      {localize("再読み込み")}
+                    </button>
+                  </div>
+                ),
+              )}
+              {localize(
+                !loading &&
+                  !error &&
+                  (view === "schedule"
+                    ? timeGroups.length === 0
+                    : view === "movies"
+                      ? movieList.length === 0
+                      : cinemaList.length === 0) && (
+                    <div className="state-card">
+                      <ClockIcon size={25} aria-hidden="true" />
+                      <div>
+                        <strong>
+                          {localize(
+                            view === "schedule"
+                              ? "条件に合う上映がありません"
+                              : view === "movies"
+                                ? "上映中の作品がありません"
+                                : "対象の映画館がありません",
                           )}
-                          onClick={(event) =>
-                            void updateMovieStatus(
-                              movie,
-                              "watched",
-                              event.currentTarget.closest<HTMLElement>(
-                                ".movie-list-item",
-                              ),
-                            )
-                          }
-                        >
-                          鑑賞済み
-                        </button>
-                        <button
-                          type="button"
-                          className={
-                            status === "not_interested"
-                              ? "active"
-                              : ""
-                          }
-                          aria-pressed={status === "not_interested"}
-                          disabled={savingMovieKeys.has(
-                            movie.preferenceKey,
+                        </strong>
+                        <p>
+                          {localize(
+                            interactiveSearchQuery &&
+                              (view === "schedule" || view === "movies")
+                              ? "作品名や映画館名を変えて検索してください。"
+                              : view === "cinemas"
+                                ? "エリアを広げてください。"
+                                : "エリアを広げるか、別の日を選んでください。",
                           )}
-                          onClick={(event) =>
-                            void updateMovieStatus(
-                              movie,
-                              "not_interested",
-                              event.currentTarget.closest<HTMLElement>(
-                                ".movie-list-item",
-                              ),
-                            )
-                          }
-                        >
-                          興味なし
-                        </button>
+                        </p>
                       </div>
-                    )}
-                  </li>
-                );
-                })}
-              </ul>
-            </>
-          )}
-          {!loading &&
-            !error &&
-            view === "cinemas" &&
-            cinemaList.length > 0 && (
-              <ul className="cinema-list">
-                {cinemaList.map((cinema) => {
-                  const route = routeByCinema.get(cinema.id);
-                  const travelMode =
-                    cinemaTravelModes.get(cinema.id) ?? "transit";
-                  const customDuration =
-                    cinemaCustomDurations.get(cinema.id) ?? null;
-                  const durationDraft =
-                    cinemaDurationDrafts.get(cinema.id) ?? "";
-                  const savedNote = cinemaNotes.get(cinema.id) ?? "";
-                  const noteDraft = cinemaNoteDrafts.get(cinema.id) ?? "";
-                  const isSaving = savingCinemaIds.has(cinema.id);
-                  const showInSchedule =
-                    cinemaScheduleVisibility.get(cinema.id) ?? true;
-                  return (
-                    <li className="cinema-list-item" key={cinema.id}>
-                      <div className="cinema-list-heading">
-                        <h2>
-                          {cinema.name}
-                          {cinema.activeUntil && (
-                            <span className="cinema-closure-date">
-                              （
-                              {closureDateFormatter.format(
-                                new Date(
-                                  `${cinema.activeUntil}T12:00:00+09:00`,
+                    </div>
+                  ),
+              )}
+              {localize(
+                !loading &&
+                  !error &&
+                  view === "movies" &&
+                  movieList.length > 0 && (
+                    <>
+                      <p className="movie-release-source">
+                        {localize("日本公開日の情報：")}
+                        <a
+                          href="https://www.themoviedb.org/"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {localize("TMDB")}
+                        </a>
+                      </p>
+                      <ul className="movie-list">
+                        {localize(
+                          movieList.map((movie, index) => {
+                            const isStarred = starredMovieKeys.has(
+                              movie.preferenceKey,
+                            );
+                            const status =
+                              movieStatusByKey.get(movie.preferenceKey) ?? null;
+                            const externalLinks = buildMovieExternalLinks(
+                              movie.title,
+                            );
+                            const releaseDateLabel = movie.releaseDate
+                              ? dayFormatter.format(
+                                  new Date(
+                                    `${movie.releaseDate}T12:00:00+09:00`,
+                                  ),
+                                )
+                              : null;
+                            const showingDateLabels = listMovieShowingDates(
+                              movie.showings,
+                            ).map((date) => {
+                              if (date === today) return "今日";
+                              return dayFormatter
+                                .format(new Date(`${date}T12:00:00+09:00`))
+                                .split(/[()]/)[0];
+                            });
+                            return (
+                              <li
+                                className={[
+                                  "movie-list-item",
+                                  isStarred ? "starred" : "",
+                                  status === "watched" ? "watched" : "",
+                                  status === "not_interested"
+                                    ? "not-interested"
+                                    : "",
+                                  selectedMovieKey === movie.preferenceKey
+                                    ? "linked"
+                                    : "",
+                                  schedule?.preferencesEnabled
+                                    ? ""
+                                    : "preferences-disabled",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" ")}
+                                data-movie-key={movie.preferenceKey}
+                                key={movie.preferenceKey}
+                              >
+                                {localize(
+                                  movie.imageUrl ? (
+                                    <img
+                                      src={movie.imageUrl}
+                                      alt={localize("")}
+                                      width="104"
+                                      height="66"
+                                      loading={index < 3 ? "eager" : "lazy"}
+                                      decoding="async"
+                                    />
+                                  ) : (
+                                    <div
+                                      className="movie-image-placeholder"
+                                      aria-hidden="true"
+                                    >
+                                      {movieTitle(movie.title).slice(0, 1)}
+                                    </div>
+                                  ),
+                                )}
+                                <div className="movie-list-copy">
+                                  <strong>
+                                    <a
+                                      href={hashForAppView("movie", {
+                                        date: selectedMovieListDate,
+                                        movie: movie.preferenceKey,
+                                        query: normalizedSearchQuery,
+                                      })}
+                                      onClick={navigateHashLink}
+                                      aria-current={
+                                        selectedMovieKey === movie.preferenceKey
+                                          ? "location"
+                                          : undefined
+                                      }
+                                    >
+                                      {movieTitle(movie.title)}
+                                    </a>
+                                  </strong>
+                                  {localize(
+                                    movie.releaseDate && releaseDateLabel && (
+                                      <p
+                                        className="movie-release-date"
+                                        aria-label={localize(
+                                          `${movieTitle(movie.title)}の日本公開日`,
+                                        )}
+                                      >
+                                        <CalendarDotsIcon
+                                          size={13}
+                                          aria-hidden="true"
+                                        />
+                                        <time dateTime={movie.releaseDate}>
+                                          {localize(
+                                            `日本公開 ${releaseDateLabel}`,
+                                          )}
+                                        </time>
+                                      </p>
+                                    ),
+                                  )}
+                                  <div
+                                    className="movie-external-links"
+                                    aria-label={localize(
+                                      `${movieTitle(movie.title)}の作品情報`,
+                                    )}
+                                  >
+                                    <a
+                                      href={externalLinks.eiga}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      {localize("映画.com")}
+                                      <ArrowSquareOutIcon
+                                        size={12}
+                                        aria-hidden="true"
+                                      />
+                                    </a>
+                                    <a
+                                      href={externalLinks.filmarks}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      {localize("Filmarks")}
+                                      <ArrowSquareOutIcon
+                                        size={12}
+                                        aria-hidden="true"
+                                      />
+                                    </a>
+                                  </div>
+                                  {localize(
+                                    showAllMovieDates && (
+                                      <p
+                                        className="movie-showing-dates"
+                                        aria-label={localize(
+                                          `${movieTitle(movie.title)}の上映日`,
+                                        )}
+                                      >
+                                        <CalendarDotsIcon
+                                          size={13}
+                                          aria-hidden="true"
+                                        />
+                                        {localize(showingDateLabels.join("・"))}
+                                      </p>
+                                    ),
+                                  )}
+                                </div>
+                                {localize(
+                                  schedule?.preferencesEnabled && (
+                                    <FavoriteButton
+                                      title={movieTitle(movie.title)}
+                                      isStarred={isStarred}
+                                      isSaving={savingMovieKeys.has(
+                                        movie.preferenceKey,
+                                      )}
+                                      onClick={() =>
+                                        void toggleMovieStar(movie)
+                                      }
+                                    />
+                                  ),
+                                )}
+                                {localize(
+                                  schedule?.preferencesEnabled && (
+                                    <div
+                                      className="movie-status-actions"
+                                      role="group"
+                                      aria-label={localize(
+                                        `${movieTitle(movie.title)}の鑑賞状態`,
+                                      )}
+                                    >
+                                      <button
+                                        type="button"
+                                        className={
+                                          status === "watched" ? "active" : ""
+                                        }
+                                        aria-pressed={status === "watched"}
+                                        disabled={savingMovieKeys.has(
+                                          movie.preferenceKey,
+                                        )}
+                                        onClick={(event) =>
+                                          void updateMovieStatus(
+                                            movie,
+                                            "watched",
+                                            event.currentTarget.closest<HTMLElement>(
+                                              ".movie-list-item",
+                                            ),
+                                          )
+                                        }
+                                      >
+                                        {localize("鑑賞済み")}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className={
+                                          status === "not_interested"
+                                            ? "active"
+                                            : ""
+                                        }
+                                        aria-pressed={
+                                          status === "not_interested"
+                                        }
+                                        disabled={savingMovieKeys.has(
+                                          movie.preferenceKey,
+                                        )}
+                                        onClick={(event) =>
+                                          void updateMovieStatus(
+                                            movie,
+                                            "not_interested",
+                                            event.currentTarget.closest<HTMLElement>(
+                                              ".movie-list-item",
+                                            ),
+                                          )
+                                        }
+                                      >
+                                        {localize("興味なし")}
+                                      </button>
+                                    </div>
+                                  ),
+                                )}
+                              </li>
+                            );
+                          }),
+                        )}
+                      </ul>
+                    </>
+                  ),
+              )}
+              {localize(
+                !loading &&
+                  !error &&
+                  view === "cinemas" &&
+                  cinemaList.length > 0 && (
+                    <ul className="cinema-list">
+                      {localize(
+                        cinemaList.map((cinema) => {
+                          const route = routeByCinema.get(cinema.id);
+                          const travelMode =
+                            cinemaTravelModes.get(cinema.id) ?? "transit";
+                          const customDuration =
+                            cinemaCustomDurations.get(cinema.id) ?? null;
+                          const durationDraft =
+                            cinemaDurationDrafts.get(cinema.id) ?? "";
+                          const savedNote = cinemaNotes.get(cinema.id) ?? "";
+                          const noteDraft =
+                            cinemaNoteDrafts.get(cinema.id) ?? "";
+                          const isSaving = savingCinemaIds.has(cinema.id);
+                          const showInSchedule =
+                            cinemaScheduleVisibility.get(cinema.id) ?? true;
+                          return (
+                            <li className="cinema-list-item" key={cinema.id}>
+                              <div className="cinema-list-heading">
+                                <h2>
+                                  {localize(cinema.name)}
+                                  {localize(
+                                    cinema.activeUntil && (
+                                      <span className="cinema-closure-date">
+                                        {localize("（")}
+                                        {localize(
+                                          closureDateFormatter.format(
+                                            new Date(
+                                              `${cinema.activeUntil}T12:00:00+09:00`,
+                                            ),
+                                          ),
+                                        )}
+                                        {localize("閉館予定）")}
+                                      </span>
+                                    ),
+                                  )}
+                                </h2>
+                                <p>
+                                  <MapPinIcon size={15} aria-hidden="true" />
+                                  {localize(cinema.areaLabel)}
+                                </p>
+                              </div>
+                              <label className="cinema-schedule-toggle">
+                                <span>
+                                  <strong>
+                                    {localize("上映スケジュールに表示")}
+                                  </strong>
+                                  <small>
+                                    {localize(
+                                      "この映画館の上映だけを表示・非表示にします",
+                                    )}
+                                  </small>
+                                </span>
+                                <input
+                                  type="checkbox"
+                                  role="switch"
+                                  checked={showInSchedule}
+                                  disabled={
+                                    isSaving ||
+                                    !schedule?.cinemaTravelPreferencesEnabled
+                                  }
+                                  onChange={(event) =>
+                                    void saveCinemaScheduleVisibility(
+                                      cinema.id,
+                                      event.currentTarget.checked,
+                                    )
+                                  }
+                                />
+                              </label>
+                              <CinemaExteriorThumbnail cinema={cinema} />
+                              {localize(
+                                route && (
+                                  <div className="cinema-route-actions">
+                                    <strong className="cinema-route-time">
+                                      {localize("約")}
+                                      {localize(route.durationMinutes)}
+                                      {localize("分")}
+                                      <small>
+                                        {localize(routeEstimateDetail(route))}
+                                      </small>
+                                    </strong>
+                                    <GoogleMapsRouteLink
+                                      cinema={cinema}
+                                      route={route}
+                                    />
+                                  </div>
                                 ),
                               )}
-                              閉館予定）
-                            </span>
-                          )}
-                        </h2>
-                        <p>
-                          <MapPinIcon size={15} aria-hidden="true" />
-                          {cinema.areaLabel}
-                        </p>
-                      </div>
-                      <label className="cinema-schedule-toggle">
-                        <span>
-                          <strong>上映スケジュールに表示</strong>
-                          <small>
-                            この映画館の上映だけを表示・非表示にします
-                          </small>
-                        </span>
-                        <input
-                          type="checkbox"
-                          role="switch"
-                          checked={showInSchedule}
-                          disabled={
-                            isSaving ||
-                            !schedule?.cinemaTravelPreferencesEnabled
-                          }
-                          onChange={(event) =>
-                            void saveCinemaScheduleVisibility(
-                              cinema.id,
-                              event.currentTarget.checked,
-                            )
-                          }
-                        />
-                      </label>
-                      <CinemaExteriorThumbnail cinema={cinema} />
-                      {route && (
-                        <div className="cinema-route-actions">
-                          <strong className="cinema-route-time">
-                            約{route.durationMinutes}分
-                            <small>{routeEstimateDetail(route)}</small>
-                          </strong>
-                          <GoogleMapsRouteLink
-                            cinema={cinema}
-                            route={route}
-                          />
-                        </div>
-                      )}
-                      <p className="cinema-address">{cinema.address}</p>
-                      {route?.transitDetails && (
-                        <p className="cinema-transit-breakdown">
-                          {transitRouteSummary(route)}
-                        </p>
-                      )}
-                      <div className="cinema-preference-row">
-                        <label htmlFor={`travel-mode-${cinema.id}`}>
-                          移動方法
-                        </label>
-                        <select
-                          id={`travel-mode-${cinema.id}`}
-                          value={travelMode}
-                          disabled={
-                            isSaving ||
-                            !schedule?.cinemaTravelPreferencesEnabled
-                          }
-                          onChange={(event) =>
-                            void saveCinemaTravelMode(
-                              cinema.id,
-                              event.target.value as TravelMode,
-                              event.currentTarget.closest<HTMLElement>(
-                                ".cinema-list-item",
-                              ),
-                            )
-                          }
-                        >
-                          {TRAVEL_MODE_OPTIONS.map((option) => (
-                            <option value={option.value} key={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <span aria-live="polite">
-                          {isSaving ? "保存中" : "保存済み"}
-                        </span>
-                      </div>
-                      <div className="cinema-duration-row">
-                        <label htmlFor={`custom-duration-${cinema.id}`}>
-                          自分の所要時間
-                        </label>
-                        <div className="duration-input">
-                          <input
-                            id={`custom-duration-${cinema.id}`}
-                            type="number"
-                            inputMode="numeric"
-                            min="1"
-                            max="1440"
-                            step="1"
-                            placeholder={
-                              route?.calculatedDurationMinutes?.toString() ??
-                              route?.durationMinutes.toString() ??
-                              "30"
-                            }
-                            value={durationDraft}
-                            disabled={
-                              isSaving ||
-                              !schedule?.cinemaTravelPreferencesEnabled
-                            }
-                            onChange={(event) => {
-                              const value = event.target.value;
-                              setCinemaDurationDrafts((current) => {
-                                const next = new Map(current);
-                                next.set(cinema.id, value);
-                                return next;
-                              });
-                            }}
-                          />
-                          <span>分</span>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={
-                            isSaving ||
-                            !schedule?.cinemaTravelPreferencesEnabled ||
-                            durationDraft === customDuration?.toString()
-                          }
-                          onClick={(event) =>
-                            saveCinemaDurationDraft(
-                              cinema.id,
-                              event.currentTarget.closest<HTMLElement>(
-                                ".cinema-list-item",
-                              ),
-                            )
-                          }
-                        >
-                          保存
-                        </button>
-                        {customDuration !== null && (
-                          <button
-                            type="button"
-                            className="duration-reset"
-                            disabled={isSaving}
-                            onClick={(event) =>
-                              void saveCinemaCustomDuration(
-                                cinema.id,
-                                null,
-                                event.currentTarget.closest<HTMLElement>(
-                                  ".cinema-list-item",
+                              <p className="cinema-address">
+                                {localize(cinema.address)}
+                              </p>
+                              {localize(
+                                route?.transitDetails && (
+                                  <p className="cinema-transit-breakdown">
+                                    {localize(transitRouteSummary(route))}
+                                  </p>
                                 ),
-                              )
-                            }
-                          >
-                            自動に戻す
-                          </button>
-                        )}
-                        <small>
-                          保存した分数を表示と「間に合う」判定に使います
-                        </small>
-                      </div>
-                      <div className="cinema-note-row">
-                        <label htmlFor={`cinema-note-${cinema.id}`}>
-                          館内・座席メモ
-                        </label>
-                        <textarea
-                          id={`cinema-note-${cinema.id}`}
-                          rows={3}
-                          maxLength={2000}
-                          placeholder="例：シアター3は中央のG〜I列が見やすい"
-                          value={noteDraft}
-                          disabled={
-                            isSaving ||
-                            !schedule?.cinemaTravelPreferencesEnabled
-                          }
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            setCinemaNoteDrafts((current) => {
-                              const next = new Map(current);
-                              next.set(cinema.id, value);
-                              return next;
-                            });
-                          }}
-                        />
-                        <div className="cinema-note-actions">
-                          <small>{noteDraft.length}/2000</small>
-                          <button
-                            type="button"
-                            disabled={isSaving || noteDraft.trim() === savedNote}
-                            onClick={(event) =>
-                              void saveCinemaNote(
-                                cinema.id,
-                                event.currentTarget.closest<HTMLElement>(
-                                  ".cinema-list-item",
-                                ),
-                              )
-                            }
-                          >
-                            {isSaving ? "保存中" : "メモを保存"}
-                          </button>
-                        </div>
-                      </div>
-                      <a
-                        className="cinema-official-link"
-                        href={cinema.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        公式サイト
-                        <ArrowSquareOutIcon size={16} aria-hidden="true" />
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          {!loading &&
-            !error &&
-            view === "schedule" &&
-            timeGroups.length > 0 && (
-            <div className="timeline">
-              {userProfile.scheduleCollapseMinutes === 0
-                ? timeGroups.map(renderScheduleTimeGroup)
-                : scheduleTimeBuckets.map((bucket) => {
-                    const markerGroup =
-                      currentTimeMarkerIndex >= 0
-                        ? timeGroups[currentTimeMarkerIndex]
-                        : null;
-                    const containsCurrentMarker = Boolean(
-                      markerGroup &&
-                        bucket.groups.some(
-                          (group) => group.time === markerGroup.time,
-                        ),
-                    );
-                    const defaultOpen = shouldExpandScheduleBucket(
-                      interactiveSearchQuery,
-                      containsCurrentMarker ||
-                        shouldDefaultExpandScheduleBucket(
-                          bucket,
-                          now,
-                          selectedDate,
-                          today,
-                        ),
-                    );
-                    return (
-                      <details
-                        className="schedule-window"
-                        key={`${selectedDate}-${userProfile.scheduleCollapseMinutes}-${bucket.key}`}
-                        open={defaultOpen || undefined}
-                      >
-                        <summary>
-                          <span>{bucket.label}</span>
-                          <small>
-                            {bucket.movieCount}作品 / {bucket.showingCount}上映
-                          </small>
-                        </summary>
-                        <div className="schedule-window-content">
-                          {bucket.groups.map((group) =>
-                            renderScheduleTimeGroup(
-                              group,
-                              timeGroups.indexOf(group),
-                            ),
-                          )}
-                        </div>
-                      </details>
-                    );
-                  })}
-              {showCurrentTimeMarkerAtEnd && (
-                <CurrentTimeMarker
-                  markerRef={currentTimeMarkerRef}
-                  now={now}
-                />
+                              )}
+                              <div className="cinema-preference-row">
+                                <label htmlFor={`travel-mode-${cinema.id}`}>
+                                  {localize("移動方法")}
+                                </label>
+                                <select
+                                  id={`travel-mode-${cinema.id}`}
+                                  value={travelMode}
+                                  disabled={
+                                    isSaving ||
+                                    !schedule?.cinemaTravelPreferencesEnabled
+                                  }
+                                  onChange={(event) =>
+                                    void saveCinemaTravelMode(
+                                      cinema.id,
+                                      event.target.value as TravelMode,
+                                      event.currentTarget.closest<HTMLElement>(
+                                        ".cinema-list-item",
+                                      ),
+                                    )
+                                  }
+                                >
+                                  {localize(
+                                    TRAVEL_MODE_OPTIONS.map((option) => (
+                                      <option
+                                        value={option.value}
+                                        key={option.value}
+                                      >
+                                        {localize(option.label)}
+                                      </option>
+                                    )),
+                                  )}
+                                </select>
+                                <span aria-live="polite">
+                                  {localize(isSaving ? "保存中" : "保存済み")}
+                                </span>
+                              </div>
+                              <div className="cinema-duration-row">
+                                <label htmlFor={`custom-duration-${cinema.id}`}>
+                                  {localize("自分の所要時間")}
+                                </label>
+                                <div className="duration-input">
+                                  <input
+                                    id={`custom-duration-${cinema.id}`}
+                                    type="number"
+                                    inputMode="numeric"
+                                    min="1"
+                                    max="1440"
+                                    step="1"
+                                    placeholder={localize(
+                                      route?.calculatedDurationMinutes?.toString() ??
+                                        route?.durationMinutes.toString() ??
+                                        "30",
+                                    )}
+                                    value={durationDraft}
+                                    disabled={
+                                      isSaving ||
+                                      !schedule?.cinemaTravelPreferencesEnabled
+                                    }
+                                    onChange={(event) => {
+                                      const value = event.target.value;
+                                      setCinemaDurationDrafts((current) => {
+                                        const next = new Map(current);
+                                        next.set(cinema.id, value);
+                                        return next;
+                                      });
+                                    }}
+                                  />
+                                  <span>{localize("分")}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={
+                                    isSaving ||
+                                    !schedule?.cinemaTravelPreferencesEnabled ||
+                                    durationDraft === customDuration?.toString()
+                                  }
+                                  onClick={(event) =>
+                                    saveCinemaDurationDraft(
+                                      cinema.id,
+                                      event.currentTarget.closest<HTMLElement>(
+                                        ".cinema-list-item",
+                                      ),
+                                    )
+                                  }
+                                >
+                                  {localize("保存")}
+                                </button>
+                                {localize(
+                                  customDuration !== null && (
+                                    <button
+                                      type="button"
+                                      className="duration-reset"
+                                      disabled={isSaving}
+                                      onClick={(event) =>
+                                        void saveCinemaCustomDuration(
+                                          cinema.id,
+                                          null,
+                                          event.currentTarget.closest<HTMLElement>(
+                                            ".cinema-list-item",
+                                          ),
+                                        )
+                                      }
+                                    >
+                                      {localize("自動に戻す")}
+                                    </button>
+                                  ),
+                                )}
+                                <small>
+                                  {localize(
+                                    "保存した分数を表示と「間に合う」判定に使います",
+                                  )}
+                                </small>
+                              </div>
+                              <div className="cinema-note-row">
+                                <label htmlFor={`cinema-note-${cinema.id}`}>
+                                  {localize("館内・座席メモ")}
+                                </label>
+                                <textarea
+                                  id={`cinema-note-${cinema.id}`}
+                                  rows={3}
+                                  maxLength={2000}
+                                  placeholder={localize(
+                                    "例：シアター3は中央のG〜I列が見やすい",
+                                  )}
+                                  value={noteDraft}
+                                  disabled={
+                                    isSaving ||
+                                    !schedule?.cinemaTravelPreferencesEnabled
+                                  }
+                                  onChange={(event) => {
+                                    const value = event.target.value;
+                                    setCinemaNoteDrafts((current) => {
+                                      const next = new Map(current);
+                                      next.set(cinema.id, value);
+                                      return next;
+                                    });
+                                  }}
+                                />
+                                <div className="cinema-note-actions">
+                                  <small>
+                                    {localize(noteDraft.length)}
+                                    {localize("/2000")}
+                                  </small>
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      isSaving || noteDraft.trim() === savedNote
+                                    }
+                                    onClick={(event) =>
+                                      void saveCinemaNote(
+                                        cinema.id,
+                                        event.currentTarget.closest<HTMLElement>(
+                                          ".cinema-list-item",
+                                        ),
+                                      )
+                                    }
+                                  >
+                                    {localize(
+                                      isSaving ? "保存中" : "メモを保存",
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                              <a
+                                className="cinema-official-link"
+                                href={cinema.sourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {localize("公式サイト")}
+                                <ArrowSquareOutIcon
+                                  size={16}
+                                  aria-hidden="true"
+                                />
+                              </a>
+                            </li>
+                          );
+                        }),
+                      )}
+                    </ul>
+                  ),
               )}
-            </div>
-          )}
-        </PageShell>
-      )}
+              {localize(
+                !loading &&
+                  !error &&
+                  view === "schedule" &&
+                  timeGroups.length > 0 && (
+                    <div className="timeline">
+                      {localize(
+                        userProfile.scheduleCollapseMinutes === 0
+                          ? timeGroups.map(renderScheduleTimeGroup)
+                          : scheduleTimeBuckets.map((bucket) => {
+                              const markerGroup =
+                                currentTimeMarkerIndex >= 0
+                                  ? timeGroups[currentTimeMarkerIndex]
+                                  : null;
+                              const containsCurrentMarker = Boolean(
+                                markerGroup &&
+                                  bucket.groups.some(
+                                    (group) => group.time === markerGroup.time,
+                                  ),
+                              );
+                              const defaultOpen = shouldExpandScheduleBucket(
+                                interactiveSearchQuery,
+                                containsCurrentMarker ||
+                                  shouldDefaultExpandScheduleBucket(
+                                    bucket,
+                                    now,
+                                    selectedDate,
+                                    today,
+                                  ),
+                              );
+                              return (
+                                <details
+                                  className="schedule-window"
+                                  key={`${selectedDate}-${userProfile.scheduleCollapseMinutes}-${bucket.key}`}
+                                  open={defaultOpen || undefined}
+                                >
+                                  <summary>
+                                    <span>{localize(bucket.label)}</span>
+                                    <small>
+                                      {localize(`${bucket.movieCount}作品`)} /{" "}
+                                      {localize(`${bucket.showingCount}上映`)}
+                                    </small>
+                                  </summary>
+                                  <div className="schedule-window-content">
+                                    {localize(
+                                      bucket.groups.map((group) =>
+                                        renderScheduleTimeGroup(
+                                          group,
+                                          timeGroups.indexOf(group),
+                                        ),
+                                      ),
+                                    )}
+                                  </div>
+                                </details>
+                              );
+                            }),
+                      )}
+                      {localize(
+                        showCurrentTimeMarkerAtEnd && (
+                          <CurrentTimeMarker
+                            markerRef={currentTimeMarkerRef}
+                            now={now}
+                          />
+                        ),
+                      )}
+                    </div>
+                  ),
+              )}
+            </PageShell>
+          ),
+        )}
       </main>
 
-      {shouldShowCurrentLocationRefresh(view, selectedDate, today) && (
-        <button
-          type="button"
-          className={`current-location-routes-button${
-            routeState === "error" ? " error" : ""
-          }`}
-          aria-label={
-            routeState === "loading"
-              ? "現在地から間に合う上映を更新中"
-              : "現在地から間に合う上映を更新"
-          }
-          title={
-            routeOrigin === "current" && routeUpdatedAt
-              ? `最終更新 ${updatedFormatter.format(new Date(routeUpdatedAt))}`
-              : undefined
-          }
-          disabled={routeState === "loading"}
-          onClick={() => void fetchCurrentLocationRoutes()}
-        >
-          <CrosshairIcon size={18} weight="bold" aria-hidden="true" />
-          {routeState === "loading"
-            ? "取得中…"
-            : routeState === "error"
-              ? "再取得"
-              : routeOrigin === "current"
-                ? "現在地で再取得"
-                : "現在地で更新"}
-        </button>
+      {localize(
+        shouldShowCurrentLocationRefresh(view, selectedDate, today) && (
+          <button
+            type="button"
+            className={`current-location-routes-button${
+              routeState === "error" ? " error" : ""
+            }`}
+            aria-label={localize(
+              routeState === "loading"
+                ? "現在地から間に合う上映を更新中"
+                : "現在地から間に合う上映を更新",
+            )}
+            title={localize(
+              routeOrigin === "current" && routeUpdatedAt
+                ? `最終更新 ${updatedFormatter.format(new Date(routeUpdatedAt))}`
+                : undefined,
+            )}
+            disabled={routeState === "loading"}
+            onClick={() => void fetchCurrentLocationRoutes()}
+          >
+            <CrosshairIcon size={18} weight="bold" aria-hidden="true" />
+            {localize(
+              routeState === "loading"
+                ? "取得中…"
+                : routeState === "error"
+                  ? "再取得"
+                  : routeOrigin === "current"
+                    ? "現在地で再取得"
+                    : "現在地で更新",
+            )}
+          </button>
+        ),
       )}
 
-      {showJumpToNow && (
-        <button
-          type="button"
-          className={`jump-to-now-button${
-            view === "schedule" ? " with-location-button" : ""
-          }`}
-          aria-label="現在時刻の上映位置へ移動"
-          onClick={jumpToCurrentTime}
-        >
-          <ClockIcon size={18} weight="bold" aria-hidden="true" />
-          今の上映へ
-        </button>
+      {localize(
+        showJumpToNow && (
+          <button
+            type="button"
+            className={`jump-to-now-button${
+              view === "schedule" ? " with-location-button" : ""
+            }`}
+            aria-label={localize("現在時刻の上映位置へ移動")}
+            onClick={jumpToCurrentTime}
+          >
+            <ClockIcon size={18} weight="bold" aria-hidden="true" />
+            {localize("今の上映へ")}
+          </button>
+        ),
       )}
 
-      {!loading &&
-        !error &&
-        timeGroups.length > 0 &&
-        shouldShowScheduleTimeJumps(view, selectedDate, today) && (
-          <nav className="schedule-time-jumps" aria-label="時間帯へ移動">
-            {SCHEDULE_TIME_PERIODS.map((period) => {
-              const Icon =
-                period.id === "morning"
-                  ? SunHorizonIcon
-                  : period.id === "daytime"
-                    ? SunIcon
-                    : period.id === "evening"
-                      ? SunDimIcon
-                      : MoonStarsIcon;
-              const isActive = activeScheduleTimePeriod === period.id;
-              const hasTarget = scheduleTimeJumpTargets[period.id] !== null;
-              return (
-                <button
-                  type="button"
-                  className={isActive ? "active" : undefined}
-                  aria-current={isActive ? "true" : undefined}
-                  aria-label={`${period.label}の上映へ移動`}
-                  title={
-                    hasTarget
-                      ? isActive
-                        ? `${period.label}の時間帯を表示中`
-                        : `${period.label}の上映へ移動`
-                      : `${period.label}の上映はありません`
-                  }
-                  disabled={isActive || !hasTarget}
-                  onClick={() => jumpToScheduleTimePeriod(period.id)}
-                  key={period.id}
-                >
-                  <Icon size={19} weight="bold" aria-hidden="true" />
-                  <span>{period.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        )}
+      {localize(
+        !loading &&
+          !error &&
+          timeGroups.length > 0 &&
+          shouldShowScheduleTimeJumps(view, selectedDate, today) && (
+            <nav
+              className="schedule-time-jumps"
+              aria-label={localize("時間帯へ移動")}
+            >
+              {localize(
+                SCHEDULE_TIME_PERIODS.map((period) => {
+                  const Icon =
+                    period.id === "morning"
+                      ? SunHorizonIcon
+                      : period.id === "daytime"
+                        ? SunIcon
+                        : period.id === "evening"
+                          ? SunDimIcon
+                          : MoonStarsIcon;
+                  const isActive = activeScheduleTimePeriod === period.id;
+                  const hasTarget = scheduleTimeJumpTargets[period.id] !== null;
+                  return (
+                    <button
+                      type="button"
+                      className={isActive ? "active" : undefined}
+                      aria-current={isActive ? "true" : undefined}
+                      aria-label={localize(`${period.label}の上映へ移動`)}
+                      title={localize(
+                        hasTarget
+                          ? isActive
+                            ? `${period.label}の時間帯を表示中`
+                            : `${period.label}の上映へ移動`
+                          : `${period.label}の上映はありません`,
+                      )}
+                      disabled={isActive || !hasTarget}
+                      onClick={() => jumpToScheduleTimePeriod(period.id)}
+                      key={period.id}
+                    >
+                      <Icon size={19} weight="bold" aria-hidden="true" />
+                      <span>{localize(period.label)}</span>
+                    </button>
+                  );
+                }),
+              )}
+            </nav>
+          ),
+      )}
 
       <footer>
         <p>
-          上映時刻は参考情報です。購入前に各映画館の公式サイトでご確認ください。
+          {localize(
+            "上映時刻は参考情報です。購入前に各映画館の公式サイトでご確認ください。",
+          )}
         </p>
       </footer>
     </>
@@ -3155,9 +3401,12 @@ function CurrentTimeMarker({
     <div
       className="current-time-marker"
       ref={markerRef}
-      aria-label={`現在時刻 ${timeFormatter.format(now)}`}
+      aria-label={localize(`現在時刻 ${timeFormatter.format(now)}`)}
     >
-      <time dateTime={now.toISOString()}>現在 {timeFormatter.format(now)}</time>
+      <time dateTime={now.toISOString()}>
+        {localize("現在")}
+        {localize(timeFormatter.format(now))}
+      </time>
       <span aria-hidden="true" />
     </div>
   );
@@ -3196,37 +3445,41 @@ function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
       ref={containerRef}
       className={`cinema-exterior${isOpen ? " cinema-exterior-open" : ""}`}
     >
-      {isOpen ? (
-        <>
-          <iframe
-            className="cinema-street-view-frame"
-            src={`/api/cinema-exterior/${encodeURIComponent(cinema.id)}`}
-            title={`${cinema.name}のGoogle マップ`}
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
+      {localize(
+        isOpen ? (
+          <>
+            <iframe
+              className="cinema-street-view-frame"
+              src={`/api/cinema-exterior/${encodeURIComponent(cinema.id)}`}
+              title={localize(`${cinema.name}のGoogle マップ`)}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+            <button
+              type="button"
+              className="cinema-street-view-close"
+              onClick={() => setIsOpen(false)}
+            >
+              {localize("閉じる")}
+            </button>
+          </>
+        ) : (
           <button
             type="button"
-            className="cinema-street-view-close"
-            onClick={() => setIsOpen(false)}
+            className="cinema-exterior-placeholder"
+            onClick={() => setIsOpen(true)}
+            aria-label={localize(`${cinema.name}の地図を今すぐ読み込む`)}
           >
-            閉じる
+            <BuildingsIcon size={28} />
+            <strong>{localize("映画館の地図を読み込む")}</strong>
+            <span>
+              {localize("表示位置までスクロールすると自動で読み込みます")}
+            </span>
           </button>
-        </>
-      ) : (
-        <button
-          type="button"
-          className="cinema-exterior-placeholder"
-          onClick={() => setIsOpen(true)}
-          aria-label={`${cinema.name}の地図を今すぐ読み込む`}
-        >
-          <BuildingsIcon size={28} />
-          <strong>映画館の地図を読み込む</strong>
-          <span>表示位置までスクロールすると自動で読み込みます</span>
-        </button>
+        ),
       )}
-      <figcaption>Google マップ</figcaption>
+      <figcaption>{localize("Google マップ")}</figcaption>
     </figure>
   );
 }
@@ -3254,7 +3507,9 @@ function FavoriteButton({
       ]
         .filter(Boolean)
         .join(" ")}
-      aria-label={`${title}を${isStarred ? "スターから外す" : "スターする"}`}
+      aria-label={localize(
+        `${movieTitle(title)}を${isStarred ? "スターから外す" : "スターする"}`,
+      )}
       aria-pressed={isStarred}
       disabled={isSaving}
       onClick={onClick}
@@ -3298,12 +3553,14 @@ function ProfilePanel({
           <ClockIcon size={27} />
         </div>
         <div className="profile-copy">
-          <h2 id="schedule-display-title">上映スケジュール表示</h2>
-          <p>上映時間をまとめて表示する間隔を設定します。</p>
+          <h2 id="schedule-display-title">
+            {localize("上映スケジュール表示")}
+          </h2>
+          <p>{localize("上映時間をまとめて表示する間隔を設定します。")}</p>
         </div>
         <div className="profile-display-setting">
           <label htmlFor="schedule-collapse-minutes">
-            上映時間の折りたたみ
+            {localize("上映時間の折りたたみ")}
           </label>
           <select
             id="schedule-collapse-minutes"
@@ -3315,20 +3572,26 @@ function ProfilePanel({
               )
             }
           >
-            <option value={0}>なし</option>
-            <option value={30}>30分</option>
-            <option value={60}>1時間</option>
+            <option value={0}>{localize("なし")}</option>
+            <option value={30}>{localize("30分")}</option>
+            <option value={60}>{localize("1時間")}</option>
           </select>
           <small className="profile-save-status" aria-live="polite">
-            {collapseState === "saving"
-              ? "保存中"
-              : collapseState === "saved"
-                ? "保存しました"
-                : "端末間で共有されます"}
+            {localize(
+              collapseState === "saving"
+                ? "保存中"
+                : collapseState === "saved"
+                  ? "保存しました"
+                  : "端末間で共有されます",
+            )}
           </small>
         </div>
-        {!enabled && (
-          <p className="inline-status error">公開モードでは利用できません</p>
+        {localize(
+          !enabled && (
+            <p className="inline-status error">
+              {localize("公開モードでは利用できません")}
+            </p>
+          ),
         )}
       </section>
 
@@ -3341,26 +3604,36 @@ function ProfilePanel({
         </div>
         <div className="profile-copy">
           <h2 id="departure-profile-title">
-            {profile.departureRegistered
-              ? "ベース出発地点を登録済み"
-              : "ベース出発地点を登録"}
+            {localize(
+              profile.departureRegistered
+                ? "ベース出発地点を登録済み"
+                : "ベース出発地点を登録",
+            )}
           </h2>
           <p>
-            {profile.departureRegistered
-              ? "映画館までの時間は、登録したベース出発地点を基準に固定して表示します。"
-              : "現在地を一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。"}
+            {localize(
+              profile.departureRegistered
+                ? "映画館までの時間は、登録したベース出発地点を基準に固定して表示します。"
+                : "現在地を一度登録すると、次回からGPSを取得せず同じ移動時間を表示します。",
+            )}
           </p>
-          {profile.departureUpdatedAt && (
-            <small>
-              {updatedFormatter.format(new Date(profile.departureUpdatedAt))}
-              登録
-            </small>
+          {localize(
+            profile.departureUpdatedAt && (
+              <small>
+                {localize(
+                  updatedFormatter.format(new Date(profile.departureUpdatedAt)),
+                )}
+                {localize("登録")}
+              </small>
+            ),
           )}
         </div>
         <aside className="profile-location-notice">
           <WarningCircleIcon size={20} weight="fill" aria-hidden="true" />
           <p>
-            映画館に向かうためのいつもの出発地点を登録してください。出発地点を登録しなくても、各映画館までの時間は手動でも登録可能です。
+            {localize(
+              "映画館に向かうためのいつもの出発地点を登録してください。出発地点を登録しなくても、各映画館までの時間は手動でも登録可能です。",
+            )}
           </p>
         </aside>
         <button
@@ -3370,34 +3643,48 @@ function ProfilePanel({
           onClick={onRegister}
         >
           <CrosshairIcon size={18} aria-hidden="true" />
-          {state === "saving"
-            ? "登録中"
-            : profile.departureRegistered
-              ? "現在地でベース出発地点を更新"
-              : "現在地をベース出発地点として登録"}
+          {localize(
+            state === "saving"
+              ? "登録中"
+              : profile.departureRegistered
+                ? "現在地でベース出発地点を更新"
+                : "現在地をベース出発地点として登録",
+          )}
         </button>
         <p className="profile-privacy-note">
-          GPSはこの操作時だけ使用します。座標は約10m単位に丸め、ユーザーごとの鍵で暗号化して保存し、通常の画面や一覧APIには返しません。
+          {localize(
+            "GPSはこの操作時だけ使用します。座標は約10m単位に丸め、ユーザーごとの鍵で暗号化して保存し、通常の画面や一覧APIには返しません。",
+          )}
         </p>
-        {profile.departureRegistered && (
-          <button
-            type="button"
-            className="profile-delete-action"
-            disabled={isBusy}
-            onClick={onDelete}
-          >
-            <TrashIcon size={15} aria-hidden="true" />
-            {state === "deleting" ? "削除中" : "ベース出発地点を削除"}
-          </button>
+        {localize(
+          profile.departureRegistered && (
+            <button
+              type="button"
+              className="profile-delete-action"
+              disabled={isBusy}
+              onClick={onDelete}
+            >
+              <TrashIcon size={15} aria-hidden="true" />
+              {localize(
+                state === "deleting" ? "削除中" : "ベース出発地点を削除",
+              )}
+            </button>
+          ),
         )}
-        {!enabled && (
-          <p className="inline-status error">公開モードでは利用できません</p>
+        {localize(
+          !enabled && (
+            <p className="inline-status error">
+              {localize("公開モードでは利用できません")}
+            </p>
+          ),
         )}
-        {error && (
-          <p className="inline-status error" role="status">
-            <WarningCircleIcon size={16} aria-hidden="true" />
-            {error}
-          </p>
+        {localize(
+          error && (
+            <p className="inline-status error" role="status">
+              <WarningCircleIcon size={16} aria-hidden="true" />
+              {localize(error)}
+            </p>
+          ),
         )}
       </section>
     </>
@@ -3458,9 +3745,11 @@ function GoogleMapsRouteLink({
       href={`/api/route-guidance/${encodeURIComponent(cinema.id)}`}
       target="_blank"
       rel="noreferrer"
-      aria-label={`${cinema.name}までの${routeTravelLabel(route)}経路をGoogle マップで開く`}
+      aria-label={localize(
+        `${cinema.name}までの${routeTravelLabel(route)}経路をGoogle マップで開く`,
+      )}
     >
-      Googleマップで案内
+      {localize("Googleマップで案内")}
       <ArrowSquareOutIcon size={12} aria-hidden="true" />
     </a>
   );
@@ -3490,7 +3779,10 @@ function CinemaSlot({
   const end = showing.endsAt
     ? timeFormatter.format(new Date(showing.endsAt))
     : null;
-  const metadata = [showing.screen, showing.format].filter(Boolean).join(" / ");
+  const metadata = [showing.screen, showing.format]
+    .filter((value): value is string => Boolean(value))
+    .map(screeningInfo)
+    .join(" / ");
   const reachableLabel = isReachable
     ? travelMinutes === null
       ? "間に合う"
@@ -3531,25 +3823,44 @@ function CinemaSlot({
         href={showing.bookingUrl}
         target="_blank"
         rel="noreferrer"
-        aria-label={`${reachableLabel ? `${reachableLabel} ` : ""}${unreachableLabel ? `${unreachableLabel} ` : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`}
+        aria-label={localize(
+          `${reachableLabel ? `${reachableLabel} ` : ""}${unreachableLabel ? `${unreachableLabel} ` : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`,
+        )}
       >
         <div className="slot-time">
-          <strong>{start}</strong>
+          <strong>{localize(start)}</strong>
           <span className="slot-time-details">
-            {end && <span>{end}終了</span>}
-            {reachableLabel && (
-              <span className="reachable-label">{reachableLabel}</span>
+            {localize(
+              end && (
+                <span>
+                  {localize(end)}
+                  {localize("終了")}
+                </span>
+              ),
             )}
-            {unreachableLabel && (
-              <span className="unreachable-label">{unreachableLabel}</span>
+            {localize(
+              reachableLabel && (
+                <span className="reachable-label">
+                  {localize(reachableLabel)}
+                </span>
+              ),
+            )}
+            {localize(
+              unreachableLabel && (
+                <span className="unreachable-label">
+                  {localize(unreachableLabel)}
+                </span>
+              ),
             )}
           </span>
         </div>
         <div className="slot-cinema">
-          <strong>{showing.cinemaShortName}</strong>
+          <strong>{localize(showing.cinemaShortName)}</strong>
           <ArrowSquareOutIcon size={15} aria-hidden="true" />
         </div>
-        {metadata && <span className="slot-meta">{metadata}</span>}
+        {localize(
+          metadata && <span className="slot-meta">{localize(metadata)}</span>,
+        )}
       </a>
       <button
         type="button"
@@ -3562,7 +3873,9 @@ function CinemaSlot({
           .filter(Boolean)
           .join(" ")}
         aria-pressed={isPlanned}
-        aria-label={`${showing.title} ${start} ${showing.cinemaShortName}を鑑賞予定${isPlanned ? "から外す" : "に追加"}`}
+        aria-label={localize(
+          `${movieTitle(showing.title)} ${start} ${showing.cinemaShortName}を鑑賞予定${isPlanned ? "から外す" : "に追加"}`,
+        )}
         disabled={viewingPlanButtonState.disabled}
         onClick={() => void toggle()}
       >
@@ -3572,19 +3885,23 @@ function CinemaSlot({
               ? "/brand/hamamubi-icon-wink.svg"
               : "/brand/hamamubi-icon-v2.svg"
           }
-          alt=""
+          alt={localize("")}
         />
         <span className="viewing-plan-toggle-label">
-          {isSaving ? "保存中" : isPlanned ? "予定済" : "観に行く"}
+          {localize(isSaving ? "保存中" : isPlanned ? "予定済" : "観に行く")}
         </span>
-        {feedback && (
-          <span
-            className="viewing-plan-feedback"
-            role="status"
-            aria-live="polite"
-          >
-            {feedback === "added" ? "チェックしたよ！" : "予定から外したよ"}
-          </span>
+        {localize(
+          feedback && (
+            <span
+              className="viewing-plan-feedback"
+              role="status"
+              aria-live="polite"
+            >
+              {localize(
+                feedback === "added" ? "チェックしたよ！" : "予定から外したよ",
+              )}
+            </span>
+          ),
         )}
       </button>
     </div>
@@ -3593,23 +3910,31 @@ function CinemaSlot({
 
 function LoadingTimeline() {
   return (
-    <div className="timeline loading-timeline" aria-label="読み込み中">
-      {[9, 10, 11].map((hour) => (
-        <div className="timeline-hour" key={hour}>
-          <div className="hour-label">
-            <time>{hour}:00</time>
-          </div>
-          <div className="hour-programs">
-            <div className="program-block skeleton-program">
-              <span />
-              <div>
+    <div
+      className="timeline loading-timeline"
+      aria-label={localize("読み込み中")}
+    >
+      {localize(
+        [9, 10, 11].map((hour) => (
+          <div className="timeline-hour" key={hour}>
+            <div className="hour-label">
+              <time>
+                {localize(hour)}
+                {localize(":00")}
+              </time>
+            </div>
+            <div className="hour-programs">
+              <div className="program-block skeleton-program">
                 <span />
-                <span />
+                <div>
+                  <span />
+                  <span />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        )),
+      )}
     </div>
   );
 }

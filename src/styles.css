@@ -3604,3 +3604,309 @@ html[data-theme="light"] .account-secondary-button {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.movie-page {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.movie-original-title {
+  color: var(--muted);
+}
+.movie-day {
+  padding-block: 20px;
+  border-top: 1px solid var(--line);
+}
+.movie-day h2 {
+  margin: 0 0 16px;
+}
+.movie-cinema {
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.movie-screenings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.movie-screenings li {
+  min-width: 0;
+  max-width: 100%;
+}
+.movie-screenings a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.movie-screenings span {
+  font-size: 12px;
+}
+html[lang="en"] .brand-wordmark {
+  font-size: 18px;
+}
+@media (max-width: 390px) {
+  .header-status {
+    gap: 3px;
+  }
+  .header-status > time {
+    display: none;
+  }
+  html[lang="en"] .brand-wordmark {
+    font-size: 15px;
+  }
+}
+.movie-page a {
+  color: var(--text);
+  text-underline-offset: 3px;
+}
+.movie-page > a,
+.movie-page > p a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.movie-screenings a {
+  text-decoration: none;
+}
+.movie-screenings a:hover {
+  border-color: var(--accent);
+}
+.movie-screenings a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.movie-cinema h3 {
+  font-size: 1rem;
+}
+.admin-users-page select {
+  min-height: 44px;
+  max-width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 3px;
+  gap: 2px;
+  min-height: 48px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+  isolation: isolate;
+}
+.language-toggle span {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+.language-toggle span[data-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+}
+.language-toggle:hover {
+  border-color: var(--control-border);
+}
+.language-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.language-toggle[aria-busy="true"] {
+  opacity: 0.65;
+}
+.language-toggle:disabled {
+  cursor: wait;
+}
+
+.navigation-logout {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+.navigation-logout button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+@media (max-width: 560px) {
+  .header-status > time {
+    display: none;
+  }
+}
+@media (max-width: 350px) {
+  .brand-mark {
+    display: none;
+  }
+  .brand-wordmark,
+  html[lang="en"] .brand-wordmark {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .language-toggle span {
+    transition: none;
+  }
+}
+/* Settings navigation: preserve the existing palette, use rows for destinations. */
+.navigation-admin {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+.navigation-admin > span {
+  display: block;
+  padding: 0 14px 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.admin-users-page .page-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-bottom: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: none;
+}
+.admin-users-page .page-back-link:hover {
+  color: var(--text);
+}
+.admin-tabs {
+  display: flex;
+  gap: 20px;
+  margin-top: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.admin-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  position: relative;
+  min-height: 48px;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.admin-tabs button[aria-selected="true"] {
+  color: var(--text);
+}
+.admin-tabs button[aria-selected="true"]::after {
+  position: absolute;
+  content: "";
+  height: 2px;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  background: var(--accent);
+  border-radius: 2px;
+}
+.tab-count {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.admin-users-page [role="tabpanel"] > .account-section:first-child {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 26px;
+}
+.admin-users-page .account-section h2 {
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+.admin-invite-form {
+  max-width: 480px;
+  margin-top: 24px;
+  gap: 10px;
+}
+.admin-invite-form label:not(.admin-checkbox) {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-invite-form > button {
+  margin-top: 12px;
+  min-height: 46px;
+}
+.admin-users-page [role="tabpanel"][hidden] {
+  display: none;
+}
+.account-page input:not([type="checkbox"]),
+.account-page .account-secondary-button {
+  color: var(--text);
+  background: var(--control-surface);
+}
+.account-page .account-method-link,
+.account-page .passkey-list button {
+  min-height: 44px;
+}
+@media (min-width: 640px) {
+  .admin-tabs {
+    gap: 32px;
+  }
+  .admin-users-page .account-user-list li {
+    flex-wrap: nowrap;
+  }
+}
+
+.navigation-sheet {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.navigation-heading {
+  flex: 0 0 auto;
+}
+.navigation-sheet nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.navigation-sheet nav > * {
+  flex-shrink: 0;
+}
+.navigation-sheet .navigation-logout {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 0;
+}
+.navigation-sheet .navigation-admin {
+  margin-top: 12px;
+}

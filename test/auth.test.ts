@@ -157,9 +157,15 @@ describe("private site authentication", () => {
   });
 
   it("does not reflect an untrusted invitation cookie into a retry link", async () => {
-    const response = loginPage(true, "", true, "Retry", '\" onclick=\"alert(1)');
+    const response = loginPage(
+      true,
+      "",
+      true,
+      "Retry",
+      '\" onclick=\"alert(1)',
+    );
     const html = await response.text();
-    expect(html).toContain('href="/auth/google/login/start"');
+    expect(html).toContain('href="/auth/google/login/start?lang=ja"');
     expect(html).not.toContain("alert(1)");
   });
 

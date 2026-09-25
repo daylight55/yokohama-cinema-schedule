@@ -3,26 +3,20 @@
   "name": "yokohama-cinema-schedule-refresh",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-23",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "triggers": {
-    "crons": [
-      "7 3,9,15,21 * * *",
-      "17 3,9,15,21 * * *",
-      "27 3,9,15,21 * * *"
-    ]
+    "crons": ["7 3,9,15,21 * * *", "17 3,9,15,21 * * *", "27 3,9,15,21 * * *"],
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "yokohama-cinema-schedule",
       "database_id": "e657eee0-8431-4641-a5b9-bd08cb70d191",
-      "migrations_dir": "../migrations"
-    }
+      "migrations_dir": "../migrations",
+    },
   ],
   "vars": {
-    "SCHEDULE_DAYS": "7"
+    "SCHEDULE_DAYS": "7",
   },
   "observability": {
     "enabled": true,
@@ -31,13 +25,16 @@
       "enabled": true,
       "head_sampling_rate": 1,
       "invocation_logs": true,
-      "persist": true
-    }
+      "persist": true,
+    },
   },
   "limits": {
-    "subrequests": 1000
+    "subrequests": 1000,
   },
   "browser": {
-    "binding": "BROWSER"
-  }
+    "binding": "BROWSER",
+  },
+  "ai": {
+    "binding": "AI",
+  },
 }

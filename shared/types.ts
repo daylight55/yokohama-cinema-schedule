@@ -52,7 +52,16 @@ export interface Showing {
   fetchedAt: string;
 }
 
+export interface MovieTitleRecord {
+  titleKey: string;
+  japaneseTitle: string;
+  sourceKind: "reference" | "official";
+  originalTitle: string | null;
+  englishTitle: string | null;
+  sourceUrl: string | null;
+}
 export interface ScheduleResponse {
+  movieTitles?: MovieTitleRecord[];
   date: string;
   generatedAt: string;
   lastUpdatedAt: string | null;

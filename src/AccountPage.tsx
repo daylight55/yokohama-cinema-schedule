@@ -1,15 +1,11 @@
+import { localeCode, localize } from "./i18n";
 import {
   FingerprintIcon,
   GoogleLogoIcon,
   KeyIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
-import {
-  type FormEvent,
-  type ReactNode,
-  useEffect,
-  useState,
-} from "react";
+import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import type { AccountResponse } from "../shared/types";
 import { PageHeader, PageShell } from "./PageLayout";
 
@@ -36,9 +32,7 @@ export function AccountPage({
   };
 
   useEffect(() => {
-    loadAccount().catch(() =>
-      setError("アカウント情報を読み込めませんでした"),
-    );
+    loadAccount().catch(() => setError("アカウント情報を読み込めませんでした"));
   }, []);
 
   const setPassword = async (event: FormEvent<HTMLFormElement>) => {
@@ -87,20 +81,18 @@ export function AccountPage({
     setError(null);
     setMessage(null);
     try {
-      const optionsResponse = await fetch(
-        "/api/passkeys/register/options",
-        {
-          method: "POST",
-          headers: { accept: "application/json" },
-        },
-      );
+      const optionsResponse = await fetch("/api/passkeys/register/options", {
+        method: "POST",
+        headers: { accept: "application/json" },
+      });
       if (!optionsResponse.ok) throw new Error();
       const payload = (await optionsResponse.json()) as {
         options: PublicKeyCredentialCreationOptionsJSON;
         challengeId: string;
       };
-      const publicKey =
-        PublicKeyCredential.parseCreationOptionsFromJSON(payload.options);
+      const publicKey = PublicKeyCredential.parseCreationOptionsFromJSON(
+        payload.options,
+      );
       const credential = await navigator.credentials.create({ publicKey });
       if (
         !(credential instanceof PublicKeyCredential) ||
@@ -108,21 +100,18 @@ export function AccountPage({
       ) {
         throw new Error();
       }
-      const verifyResponse = await fetch(
-        "/api/passkeys/register/verify",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify({
-            challengeId: payload.challengeId,
-            response: credential.toJSON(),
-            name: devicePasskeyName(),
-          }),
+      const verifyResponse = await fetch("/api/passkeys/register/verify", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeId: payload.challengeId,
+          response: credential.toJSON(),
+          name: devicePasskeyName(),
+        }),
+      });
       if (!verifyResponse.ok) throw new Error();
       setMessage("パスキーを追加しました");
       await loadAccount();
@@ -139,7 +128,7 @@ export function AccountPage({
   };
 
   const deletePasskey = async (id: string) => {
-    if (!window.confirm("このパスキーを削除しますか？")) return;
+    if (!window.confirm(localize("このパスキーを削除しますか？"))) return;
     setBusy(true);
     setError(null);
     try {
@@ -158,11 +147,12 @@ export function AccountPage({
 
   if (!account) {
     return (
-      <PageShell className="account-page" label="マイページ">
-        <PageHeader eyebrow="設定" title="マイページ" />
-        {profileSettings}
+      <PageShell className="account-page" label={localize("マイページ")}>
+        <PageHeader eyebrow={localize("設定")} title={localize("マイページ")} />
+
+        {localize(profileSettings)}
         <p className={error ? "account-message error" : "account-muted"}>
-          {error ?? "アカウント情報を読み込んでいます…"}
+          {localize(error ?? "アカウント情報を読み込んでいます…")}
         </p>
       </PageShell>
     );
@@ -170,156 +160,192 @@ export function AccountPage({
 
   const email = account.user.displayEmail ?? account.user.email;
   return (
-    <PageShell className="account-page" label="マイページ">
+    <PageShell className="account-page" label={localize("マイページ")}>
       <PageHeader
-        eyebrow="設定"
-        title="マイページ"
-        lead={email ?? "管理者用セッション"}
+        eyebrow={localize("設定")}
+        title={localize("マイページ")}
+        lead={localize(email ?? "管理者用セッション")}
       />
 
-      {profileSettings}
+      {localize(profileSettings)}
 
-      {account.user.legacy && (
-        <section className="account-notice">
-          <strong>Googleアカウントを管理者として登録</strong>
-          <p>
-            今の映画設定を引き継いで、端末をまたいで使えるようにします。
-          </p>
-          {account.googleConfigured ? (
-            <a href="/auth/google/login/start">Googleアカウントを連携</a>
-          ) : (
-            <small>Google OAuthの設定後に連携できます。</small>
-          )}
-        </section>
-      )}
-
-      {error && <p className="account-message error">{error}</p>}
-      {message && <p className="account-message success">{message}</p>}
-
-      {!account.user.legacy && (
-        <>
-          <section className="account-section">
-            <div className="account-section-title account-google-row">
-              <GoogleLogoIcon size={23} aria-hidden="true" />
-              <div>
-                <h2>Google</h2>
-                <p>
-                  {account.methods.google
-                    ? "Googleアカウントをログインに使用しています。"
-                    : "Googleアカウントを主なログイン方法にします。"}
-                </p>
-              </div>
-              {account.methods.google ? (
-                <strong className="account-method-status">連携済み</strong>
-              ) : account.googleConfigured ? (
-                <a
-                  className="account-method-link"
-                  href="/auth/google/login/start"
-                >
-                  連携
+      {localize(
+        account.user.legacy && (
+          <section className="account-notice">
+            <strong>{localize("Googleアカウントを管理者として登録")}</strong>
+            <p>
+              {localize(
+                "今の映画設定を引き継いで、端末をまたいで使えるようにします。",
+              )}
+            </p>
+            {localize(
+              account.googleConfigured ? (
+                <a href="/auth/google/login/start">
+                  {localize("Googleアカウントを連携")}
                 </a>
               ) : (
-                <small className="account-method-status">設定待ち</small>
-              )}
-            </div>
-          </section>
-
-          <section className="account-section">
-            <div className="account-section-title">
-              <KeyIcon size={22} aria-hidden="true" />
-              <div>
-                <h2>パスワード</h2>
-                <p>Googleが使えないときの予備ログインです。</p>
-              </div>
-            </div>
-            <form className="account-form" onSubmit={setPassword}>
-              <input
-                name="username"
-                type="email"
-                value={email ?? ""}
-                autoComplete="username"
-                readOnly
-                hidden
-              />
-              <label>
-                新しいパスワード
-                <input
-                  name="password"
-                  type="password"
-                  minLength={12}
-                  maxLength={256}
-                  required
-                  autoComplete="new-password"
-                />
-              </label>
-              <label>
-                確認
-                <input
-                  name="confirmation"
-                  type="password"
-                  minLength={12}
-                  maxLength={256}
-                  required
-                  autoComplete="new-password"
-                />
-              </label>
-              <button type="submit" disabled={busy}>
-                {account.methods.password ? "更新する" : "設定する"}
-              </button>
-            </form>
-          </section>
-
-          <section className="account-section">
-            <div className="account-section-title">
-              <FingerprintIcon size={24} aria-hidden="true" />
-              <div>
-                <h2>パスキー</h2>
-                <p>端末の顔・指紋・画面ロックでログインします。</p>
-              </div>
-            </div>
-            {passkeyAvailable ? (
-              <button
-                className="account-secondary-button"
-                type="button"
-                disabled={busy}
-                onClick={() => void registerPasskey()}
-              >
-                パスキーを追加
-              </button>
-            ) : (
-              <p className="account-muted">
-                この端末またはブラウザではパスキーを利用できません。
-              </p>
-            )}
-            {account.passkeys.length > 0 && (
-              <ul className="passkey-list">
-                {account.passkeys.map((passkey) => (
-                  <li key={passkey.id}>
-                    <span>
-                      <strong>{passkey.name}</strong>
-                      <small>
-                        {new Date(passkey.createdAt).toLocaleDateString("ja-JP")}
-                        に追加
-                      </small>
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={`${passkey.name}を削除`}
-                      disabled={busy}
-                      onClick={() => void deletePasskey(passkey.id)}
-                    >
-                      <TrashIcon size={18} aria-hidden="true" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                <small>
+                  {localize("Google OAuthの設定後に連携できます。")}
+                </small>
+              ),
             )}
           </section>
-        </>
+        ),
       )}
 
-      {account.user.role === "admin" && (
-        <section className="account-section"><h2>管理者メニュー</h2><a href="#admin-users">ユーザー管理・招待</a></section>
+      {localize(
+        error && <p className="account-message error">{localize(error)}</p>,
+      )}
+      {localize(
+        message && (
+          <p className="account-message success">{localize(message)}</p>
+        ),
+      )}
+
+      {localize(
+        !account.user.legacy && (
+          <>
+            <section className="account-section">
+              <div className="account-section-title account-google-row">
+                <GoogleLogoIcon size={23} aria-hidden="true" />
+                <div>
+                  <h2>{localize("Google")}</h2>
+                  <p>
+                    {localize(
+                      account.methods.google
+                        ? "Googleアカウントをログインに使用しています。"
+                        : "Googleアカウントを主なログイン方法にします。",
+                    )}
+                  </p>
+                </div>
+                {localize(
+                  account.methods.google ? (
+                    <strong className="account-method-status">
+                      {localize("連携済み")}
+                    </strong>
+                  ) : account.googleConfigured ? (
+                    <a
+                      className="account-method-link"
+                      href="/auth/google/login/start"
+                    >
+                      {localize("連携")}
+                    </a>
+                  ) : (
+                    <small className="account-method-status">
+                      {localize("設定待ち")}
+                    </small>
+                  ),
+                )}
+              </div>
+            </section>
+
+            <section className="account-section">
+              <div className="account-section-title">
+                <KeyIcon size={22} aria-hidden="true" />
+                <div>
+                  <h2>{localize("パスワード")}</h2>
+                  <p>{localize("Googleが使えないときの予備ログインです。")}</p>
+                </div>
+              </div>
+              <form className="account-form" onSubmit={setPassword}>
+                <input
+                  name="username"
+                  type="email"
+                  value={email ?? ""}
+                  autoComplete="username"
+                  readOnly
+                  hidden
+                />
+                <label>
+                  {localize("新しいパスワード")}
+                  <input
+                    name="password"
+                    type="password"
+                    minLength={12}
+                    maxLength={256}
+                    required
+                    autoComplete="new-password"
+                  />
+                </label>
+                <label>
+                  {localize("確認")}
+                  <input
+                    name="confirmation"
+                    type="password"
+                    minLength={12}
+                    maxLength={256}
+                    required
+                    autoComplete="new-password"
+                  />
+                </label>
+                <button type="submit" disabled={busy}>
+                  {localize(account.methods.password ? "更新する" : "設定する")}
+                </button>
+              </form>
+            </section>
+
+            <section className="account-section">
+              <div className="account-section-title">
+                <FingerprintIcon size={24} aria-hidden="true" />
+                <div>
+                  <h2>{localize("パスキー")}</h2>
+                  <p>
+                    {localize("端末の顔・指紋・画面ロックでログインします。")}
+                  </p>
+                </div>
+              </div>
+              {localize(
+                passkeyAvailable ? (
+                  <button
+                    className="account-secondary-button"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void registerPasskey()}
+                  >
+                    {localize("パスキーを追加")}
+                  </button>
+                ) : (
+                  <p className="account-muted">
+                    {localize(
+                      "この端末またはブラウザではパスキーを利用できません。",
+                    )}
+                  </p>
+                ),
+              )}
+              {localize(
+                account.passkeys.length > 0 && (
+                  <ul className="passkey-list">
+                    {localize(
+                      account.passkeys.map((passkey) => (
+                        <li key={passkey.id}>
+                          <span>
+                            <strong>{localize(passkey.name)}</strong>
+                            <small>
+                              {localize(
+                                new Date(passkey.createdAt).toLocaleDateString(
+                                  localeCode(),
+                                ),
+                              )}
+                              {localize("に追加")}
+                            </small>
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={localize(`${passkey.name}を削除`)}
+                            disabled={busy}
+                            onClick={() => void deletePasskey(passkey.id)}
+                          >
+                            <TrashIcon size={18} aria-hidden="true" />
+                          </button>
+                        </li>
+                      )),
+                    )}
+                  </ul>
+                ),
+              )}
+            </section>
+          </>
+        ),
       )}
     </PageShell>
   );

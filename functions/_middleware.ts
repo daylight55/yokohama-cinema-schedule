@@ -1,3 +1,4 @@
+import { requestLanguage } from "../shared/language";
 import { loginPage, resolveSession } from "./_lib/auth";
 import type { AuthContextData, PagesEnv } from "./_lib/env";
 
@@ -7,10 +8,7 @@ export const onRequest: PagesFunction<
   AuthContextData
 > = async (context) => {
   const url = new URL(context.request.url);
-  if (
-    isPublicAuthPath(url.pathname) ||
-    isPublicShellAssetPath(url.pathname)
-  ) {
+  if (isPublicAuthPath(url.pathname) || isPublicShellAssetPath(url.pathname)) {
     return context.next();
   }
 
@@ -33,9 +31,10 @@ export const onRequest: PagesFunction<
     return loginPage(
       false,
       "",
-      Boolean(
-        context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET,
-      ),
+      Boolean(context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET),
+      "",
+      "",
+      requestLanguage(context.request),
     );
   }
 

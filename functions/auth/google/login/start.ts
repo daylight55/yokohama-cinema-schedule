@@ -1,3 +1,5 @@
+import { requestLanguage } from "../../../../shared/language";
+import { translate } from "../../../../shared/i18n";
 import { findValidInvite } from "../../../_lib/invitations";
 import type { PagesEnv } from "../../../_lib/env";
 import {
@@ -13,6 +15,7 @@ import {
 } from "../../../_lib/google-oauth";
 
 export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
+  const language = requestLanguage(context.request);
   const credentials = getGoogleOAuthCredentials(context.env);
   if (!credentials) {
     return new Response("Google OAuth is not configured", { status: 503 });
@@ -26,7 +29,10 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   const inviteToken = requestUrl.searchParams.get("invite") ?? "";
   if (inviteToken && !(await findValidInvite(context.env.DB, inviteToken))) {
     return new Response(
-      "招待の期限が切れているか、使用済みです。管理者に再発行を依頼してください。",
+      translate(
+        "招待の期限が切れているか、使用済みです。管理者に再発行を依頼してください。",
+        language,
+      ),
       { status: 410, headers: { "cache-control": "no-store" } },
     );
   }
@@ -48,6 +54,10 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
 
   const headers = new Headers({ location: authorizationUrl.toString() });
   const secure = requestUrl.protocol === "https:";
+  headers.append(
+    "set-cookie",
+    oauthCookie("google_login_language", language, secure),
+  );
   headers.set("cache-control", "no-store");
   headers.set("referrer-policy", "no-referrer");
   headers.append(

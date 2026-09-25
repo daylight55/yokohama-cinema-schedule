@@ -1,3 +1,4 @@
+import { refreshMovieTitleResearch } from "./title-research";
 import { validBearer } from "./request-auth";
 import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
@@ -26,6 +27,7 @@ import { fetchTmdbReleaseDates } from "./tmdb";
 
 interface Env {
   DB: D1Database;
+  AI?: Ai;
   SCHEDULE_DAYS?: string;
   TMDB_API_READ_TOKEN?: string;
   WORKER_TRIGGER_TOKEN?: string;
@@ -86,7 +88,14 @@ export default {
   ): Promise<void> {
     ctx.waitUntil(
       refreshBatch(env, sourceBatchForCron(controller.cron))
-        .then((result) => {
+        .then(async (result) => {
+          if (env.AI) {
+            try {
+              await refreshMovieTitleResearch(env.DB, env.AI);
+            } catch {
+              console.warn("Movie title research unavailable");
+            }
+          }
           if (result.failed)
             throw new Error(`${result.failed} cinema sources failed`);
         })

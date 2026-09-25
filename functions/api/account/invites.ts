@@ -1,3 +1,4 @@
+import { isLanguage } from "../../../shared/language";
 import { createInvite, type SignupInvite } from "../../_lib/invitations";
 import type { AuthContextData, PagesEnv } from "../../_lib/env";
 
@@ -48,7 +49,7 @@ export const onRequestPost: PagesFunction<
       { status: 409, headers },
     );
   }
-  let body: { email?: unknown; sendEmail?: unknown };
+  let body: { email?: unknown; sendEmail?: unknown; language?: unknown };
   try {
     body = await context.request.json();
   } catch {
@@ -58,7 +59,8 @@ export const onRequestPost: PagesFunction<
     !body ||
     typeof body !== "object" ||
     (body.email !== undefined && typeof body.email !== "string") ||
-    (body.sendEmail !== undefined && typeof body.sendEmail !== "boolean")
+    (body.sendEmail !== undefined && typeof body.sendEmail !== "boolean") ||
+    (body.language !== undefined && !isLanguage(body.language))
   ) {
     return Response.json(
       { error: "invalid_request" },
@@ -100,6 +102,7 @@ export const onRequestPost: PagesFunction<
     context.env.APP_ORIGIN || context.request.url,
   );
   url.searchParams.set("token", invite.token);
+  if (body.language === "en") url.searchParams.set("lang", "en");
   let emailStatus: "not_requested" | "sent" | "failed" = "not_requested";
   if (
     body.sendEmail &&
@@ -117,6 +120,7 @@ export const onRequestPost: PagesFunction<
             to: invite.email,
             url: url.toString(),
             expiresAt: invite.expiresAt,
+            language: body.language ?? "ja",
           }),
         },
       );

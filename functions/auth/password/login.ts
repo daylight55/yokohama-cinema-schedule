@@ -1,3 +1,4 @@
+import { requestLanguage } from "../../../shared/language";
 import {
   authenticationRateKey,
   authenticationRetryAfter,
@@ -29,26 +30,21 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     context.request,
     email ?? emailValue.trim().toLowerCase(),
   );
-  const retryAfter = await authenticationRetryAfter(
-    context.env.DB,
-    rateKey,
-  );
+  const retryAfter = await authenticationRetryAfter(context.env.DB, rateKey);
   if (retryAfter > 0) {
     const response = loginPage(
       true,
       returnHash,
-      Boolean(
-        context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET,
-      ),
+      Boolean(context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET),
       "ログイン試行が多すぎます。15分ほど待ってからお試しください。",
+      "",
+      requestLanguage(context.request),
     );
     response.headers.set("retry-after", String(retryAfter));
     return response;
   }
 
-  const user = email
-    ? await findUserByEmail(context.env.DB, email)
-    : null;
+  const user = email ? await findUserByEmail(context.env.DB, email) : null;
   const verified =
     user?.status === "active"
       ? await verifyUserPassword(context.env.DB, user.id, password)
@@ -59,10 +55,10 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     return loginPage(
       true,
       returnHash,
-      Boolean(
-        context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET,
-      ),
+      Boolean(context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET),
       "メールアドレスまたはパスワードを確認してください。",
+      "",
+      requestLanguage(context.request),
     );
   }
 

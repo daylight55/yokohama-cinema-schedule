@@ -1,3 +1,4 @@
+import { requestLanguage } from "../../shared/language";
 import {
   authenticationRateKey,
   authenticationRetryAfter,
@@ -18,9 +19,10 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   return loginPage(
     false,
     "",
-    Boolean(
-      context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET,
-    ),
+    Boolean(context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET),
+    "",
+    "",
+    requestLanguage(context.request),
   );
 };
 
@@ -43,10 +45,10 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     const response = loginPage(
       true,
       returnHash,
-      Boolean(
-        context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET,
-      ),
+      Boolean(context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET),
       "ログイン試行が多すぎます。15分ほど待ってからお試しください。",
+      "",
+      requestLanguage(context.request),
     );
     response.headers.set("retry-after", String(retryAfter));
     return response;
@@ -58,9 +60,10 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
     return loginPage(
       true,
       returnHash,
-      Boolean(
-        context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET,
-      ),
+      Boolean(context.env.GOOGLE_CLIENT_ID && context.env.GOOGLE_CLIENT_SECRET),
+      "",
+      "",
+      requestLanguage(context.request),
     );
   }
 

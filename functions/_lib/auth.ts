@@ -1,3 +1,5 @@
+import { translate } from "../../shared/i18n";
+import { languageCookie, type Language } from "../../shared/language";
 import type { PagesEnv } from "./env";
 
 export const SESSION_COOKIE = "yc_session";
@@ -255,14 +257,8 @@ export async function passwordMatches(
 ): Promise<boolean> {
   if (!expected) return false;
   const [actualDigest, expectedDigest] = await Promise.all([
-    crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(actual).buffer,
-    ),
-    crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(expected).buffer,
-    ),
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(actual).buffer),
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(expected).buffer),
   ]);
   return timingSafeEqualBytes(
     new Uint8Array(actualDigest),
@@ -361,7 +357,9 @@ export async function verifyUserPassword(
   return timingSafeEqual(actual, row.password_hash);
 }
 
-export async function burnPasswordVerification(password: string): Promise<void> {
+export async function burnPasswordVerification(
+  password: string,
+): Promise<void> {
   await derivePasswordHash(
     password.slice(0, MAX_PASSWORD_LENGTH + 1),
     new Uint8Array(16),
@@ -414,8 +412,7 @@ export async function recordAuthenticationFailure(
     .first<RateLimitRow>();
   const windowExpired =
     !row ||
-    now.getTime() - new Date(row.window_started_at).getTime() >
-      15 * 60 * 1000;
+    now.getTime() - new Date(row.window_started_at).getTime() > 15 * 60 * 1000;
   const attempts = windowExpired ? 1 : row.attempts + 1;
   const windowStartedAt = windowExpired
     ? now.toISOString()
@@ -483,25 +480,27 @@ export function loginPage(
   googleConfigured = false,
   errorMessage = "",
   inviteToken = "",
+  language: Language = "ja",
 ): Response {
+  const t = (text: string) => translate(text, language);
   const message =
     errorMessage || (error ? "管理者用パスワードが違います。" : "");
   const errorMarkup = message
-    ? `<p class="error" role="alert">${escapeHtml(message)}</p>`
+    ? `<p class="error" role="alert">${escapeHtml(t(message))}</p>`
     : "";
   const escapedReturnHash = escapeHtml(returnHash);
   const inviteRetry = /^[a-f0-9]{64}$/.test(inviteToken);
-  const googleHref = `/auth/google/login/start${inviteRetry ? `?invite=${inviteToken}` : ""}`;
+  const googleHref = `/auth/google/login/start?lang=${language}${inviteRetry ? `&invite=${inviteToken}` : ""}`;
   const googleMarkup = googleConfigured
-    ? `<a class="primary google" href="${googleHref}">${inviteRetry ? "Googleで登録をやり直す" : "Googleでログイン"}</a>`
-    : `<p class="setup-note">GoogleログインはOAuth設定後に利用できます。</p>`;
+    ? `<a class="primary google" href="${googleHref}">${t(inviteRetry ? "Googleで登録をやり直す" : "Googleでログイン")}</a>`
+    : `<p class="setup-note">${t("GoogleログインはOAuth設定後に利用できます。")}</p>`;
   const html = `<!doctype html>
-<html lang="ja">
+<html lang="${language}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>はまむび！ — ログイン</title>
+  <title>${t("はまむび！ — ログイン")}</title>
   <link rel="icon" href="/brand/hamamubi-icon-v2.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/brand/hamamubi-icon-v2-180.png">
   <script src="/login-route.js" defer></script>
@@ -524,31 +523,32 @@ export function loginPage(
 </head>
 <body>
   <main>
-    <div class="brand"><img src="/brand/hamamubi-icon-v2.svg" alt=""><h1>はまむび！</h1></div>
-    <p class="lead">Googleアカウント、パスキー、または登録済みパスワードでログインできます。</p>
+    <nav aria-label="Language"><a href="${inviteRetry ? `/auth/invite?token=${inviteToken}&amp;lang=ja` : `/auth/login?lang=ja`}">日本語</a> · <a href="${inviteRetry ? `/auth/invite?token=${inviteToken}&amp;lang=en` : `/auth/login?lang=en`}">English</a></nav>
+    <div class="brand"><img src="/brand/hamamubi-icon-v2.svg" alt=""><h1>${t("はまむび！")}</h1></div>
+    <p class="lead">${t("Googleアカウント、パスキー、または登録済みパスワードでログインできます。")}</p>
     ${errorMarkup}
     <div class="stack">
       ${googleMarkup}
-      <button id="passkey-login" class="passkey hidden" type="button">パスキーでログイン</button>
+      <button id="passkey-login" class="passkey hidden" type="button">${t("パスキーでログイン")}</button>
       <p id="passkey-message" class="setup-note hidden" role="status"></p>
     </div>
-    <div class="divider">メールとパスワード</div>
+    <div class="divider">${t("メールとパスワード")}</div>
     <form method="post" action="/auth/password/login">
       <input name="returnHash" type="hidden" value="${escapedReturnHash}">
-      <label for="email">メールアドレス</label>
+      <label for="email">${t("メールアドレス")}</label>
       <input id="email" name="email" type="email" required autocomplete="username webauthn" enterkeyhint="next">
-      <label for="current-password">パスワード</label>
+      <label for="current-password">${t("パスワード")}</label>
       <input id="current-password" name="password" type="password" required autocomplete="current-password" enterkeyhint="done">
-      <button type="submit">ログイン</button>
+      <button type="submit">${t("ログイン")}</button>
     </form>
     <details>
-      <summary>管理者用の閲覧パスワードを使う</summary>
+      <summary>${t("管理者用の閲覧パスワードを使う")}</summary>
       <form method="post" action="/auth/login">
         <input name="returnHash" type="hidden" value="${escapedReturnHash}">
         <input name="username" type="text" value="administrator" autocomplete="username" hidden>
-        <label for="admin-password">閲覧パスワード</label>
+        <label for="admin-password">${t("閲覧パスワード")}</label>
         <input id="admin-password" name="password" type="password" required autocomplete="current-password">
-        <button type="submit">管理者としてログイン</button>
+        <button type="submit">${t("管理者としてログイン")}</button>
       </form>
     </details>
   </main>
@@ -559,6 +559,7 @@ export function loginPage(
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
+      "set-cookie": languageCookie(language),
       "referrer-policy": "no-referrer",
       "x-robots-tag": "noindex, nofollow, noarchive",
       "content-security-policy":

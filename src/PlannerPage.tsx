@@ -1,3 +1,5 @@
+import { movieTitle } from "./i18n";
+import { localize, localizedDate } from "./i18n";
 import {
   ArrowSquareOutIcon,
   CalendarCheckIcon,
@@ -18,14 +20,14 @@ import type {
 } from "../shared/types";
 import { PageHeader, PageShell } from "./PageLayout";
 
-const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
+const timeFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
 });
 
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+const dateFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   year: "numeric",
   month: "long",
@@ -59,12 +61,8 @@ export function PlannerPage({
   const maxDate = addDays(today, 365);
   const [startTime, setStartTime] = useState("10:00");
   const [endTime, setEndTime] = useState("23:00");
-  const [data, setData] = useState<MovieMarathonPlannerResponse | null>(
-    null,
-  );
-  const [proposal, setProposal] = useState<MovieMarathonProposal | null>(
-    null,
-  );
+  const [data, setData] = useState<MovieMarathonPlannerResponse | null>(null);
+  const [proposal, setProposal] = useState<MovieMarathonProposal | null>(null);
   const [state, setState] = useState<
     "loading" | "idle" | "generating" | "saving" | "calendar"
   >("loading");
@@ -100,9 +98,7 @@ export function PlannerPage({
 
   const savedForSelectedDate = useMemo(
     () =>
-      (data?.savedPlans ?? []).filter(
-        (plan) => plan.planDate === selectedDate,
-      ),
+      (data?.savedPlans ?? []).filter((plan) => plan.planDate === selectedDate),
     [data?.savedPlans, selectedDate],
   );
 
@@ -135,9 +131,7 @@ export function PlannerPage({
     setError(null);
     setNotice(null);
     try {
-      const next = (await postPlanner(
-        "generate",
-      )) as MovieMarathonProposal;
+      const next = (await postPlanner("generate")) as MovieMarathonProposal;
       setProposal(next);
       if (next.items.length === 0) {
         setNotice(
@@ -214,7 +208,9 @@ export function PlannerPage({
       : "";
     if (
       !window.confirm(
-        `${formatPlanDate(plan.planDate)}の予定を削除しますか？${calendarNote}`,
+        localize(
+          `${formatPlanDate(plan.planDate)}の予定を削除しますか？${calendarNote}`,
+        ),
       )
     ) {
       return;
@@ -274,9 +270,13 @@ export function PlannerPage({
   return (
     <PageShell className="planner-page" busy={busy}>
       <PageHeader
-        eyebrow="1年先まで予定を記録"
-        title="映画はしごガチャ"
-        meta={<span className="page-badge favorite">気になる作品を優先</span>}
+        eyebrow={localize("1年先まで予定を記録")}
+        title={localize("映画はしごガチャ")}
+        meta={
+          <span className="page-badge favorite">
+            {localize("気になる作品を優先")}
+          </span>
+        }
       />
 
       <form
@@ -287,7 +287,7 @@ export function PlannerPage({
         }}
       >
         <label>
-          <span>空いている日</span>
+          <span>{localize("空いている日")}</span>
           <input
             name="date"
             type="date"
@@ -301,7 +301,7 @@ export function PlannerPage({
         </label>
         <div className="planner-time-fields">
           <label>
-            <span>開始</span>
+            <span>{localize("開始")}</span>
             <input
               name="startTime"
               type="time"
@@ -313,9 +313,9 @@ export function PlannerPage({
               }}
             />
           </label>
-          <span aria-hidden="true">〜</span>
+          <span aria-hidden="true">{localize("〜")}</span>
           <label>
-            <span>終了</span>
+            <span>{localize("終了")}</span>
             <input
               name="endTime"
               type="time"
@@ -329,33 +329,35 @@ export function PlannerPage({
           </label>
         </div>
 
-        {data?.calendar.connected ? (
-          <div className="calendar-connection connected">
-            <div>
-              <CheckCircleIcon size={19} weight="fill" aria-hidden="true" />
-              <span>
-                <strong>Google カレンダー連携中</strong>
-                <small>{data.calendar.email}</small>
-              </span>
+        {localize(
+          data?.calendar.connected ? (
+            <div className="calendar-connection connected">
+              <div>
+                <CheckCircleIcon size={19} weight="fill" aria-hidden="true" />
+                <span>
+                  <strong>{localize("Google カレンダー連携中")}</strong>
+                  <small>{localize(data.calendar.email)}</small>
+                </span>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={busy}
+                onClick={() => void useGoogleAvailability()}
+              >
+                {localize("空き時間を反映")}
+              </button>
             </div>
-            <button
-              type="button"
-              className="secondary-button"
-              disabled={busy}
-              onClick={() => void useGoogleAvailability()}
-            >
-              空き時間を反映
-            </button>
-          </div>
-        ) : data?.calendar.configured ? (
-          <a className="google-connect-button" href="/auth/google/start">
-            <CalendarCheckIcon size={20} aria-hidden="true" />
-            Google カレンダーと連携
-          </a>
-        ) : (
-          <p className="calendar-setup-note">
-            Google カレンダー連携はOAuth設定後に利用できます。
-          </p>
+          ) : data?.calendar.configured ? (
+            <a className="google-connect-button" href="/auth/google/start">
+              <CalendarCheckIcon size={20} aria-hidden="true" />
+              {localize("Google カレンダーと連携")}
+            </a>
+          ) : (
+            <p className="calendar-setup-note">
+              {localize("Google カレンダー連携はOAuth設定後に利用できます。")}
+            </p>
+          ),
         )}
 
         <button
@@ -363,190 +365,237 @@ export function PlannerPage({
           className="planner-primary-button"
           disabled={busy}
         >
-          {state === "generating" ? "組み合わせ中…" : "理想のはしごを提案"}
+          {localize(
+            state === "generating" ? "組み合わせ中…" : "理想のはしごを提案",
+          )}
         </button>
       </form>
 
-      {error && (
-        <p className="planner-message error" role="alert">
-          <WarningCircleIcon size={18} aria-hidden="true" />
-          {error}
-        </p>
+      {localize(
+        error && (
+          <p className="planner-message error" role="alert">
+            <WarningCircleIcon size={18} aria-hidden="true" />
+            {localize(error)}
+          </p>
+        ),
       )}
-      {notice && (
-        <p className="planner-message" role="status">
-          {notice}
-        </p>
-      )}
-
-      {state === "loading" && (
-        <div className="planner-loading" role="status">
-          予定を読み込んでいます…
-        </div>
+      {localize(
+        notice && (
+          <p className="planner-message" role="status">
+            {localize(notice)}
+          </p>
+        ),
       )}
 
-      {data && !data.schedulePublished && state !== "loading" && (
-        <div className="planner-unpublished">
-          <CalendarCheckIcon size={24} aria-hidden="true" />
-          <div>
-            <strong>上映スケジュールはまだ未公開です</strong>
-            <p>
-              日付と空き時間だけ先に保存して、公開後に提案を作り直せます。
-            </p>
+      {localize(
+        state === "loading" && (
+          <div className="planner-loading" role="status">
+            {localize("予定を読み込んでいます…")}
           </div>
-        </div>
+        ),
       )}
 
-      {proposal && proposal.items.length > 0 && (
-        <section className="planner-proposal" aria-labelledby="proposal-title">
-          <div className="planner-section-heading">
+      {localize(
+        data && !data.schedulePublished && state !== "loading" && (
+          <div className="planner-unpublished">
+            <CalendarCheckIcon size={24} aria-hidden="true" />
             <div>
-              <p>おすすめ</p>
-              <h2 id="proposal-title">
-                {proposal.movieCount}本の映画はしご
-              </h2>
+              <strong>{localize("上映スケジュールはまだ未公開です")}</strong>
+              <p>
+                {localize(
+                  "日付と空き時間だけ先に保存して、公開後に提案を作り直せます。",
+                )}
+              </p>
             </div>
-            <span>
-              ★ {proposal.starredCount} / 移動{" "}
-              {proposal.totalTransferMinutes}分
-            </span>
           </div>
-          <PlanTimeline items={proposal.items} />
+        ),
+      )}
+
+      {localize(
+        proposal && proposal.items.length > 0 && (
+          <section
+            className="planner-proposal"
+            aria-labelledby="proposal-title"
+          >
+            <div className="planner-section-heading">
+              <div>
+                <p>{localize("おすすめ")}</p>
+                <h2 id="proposal-title">
+                  {localize(proposal.movieCount)}
+                  {localize("本の映画はしご")}
+                </h2>
+              </div>
+              <span>
+                {localize("★")}
+                {localize(proposal.starredCount)}
+                {localize("/ 移動")}
+                {localize(" ")}
+                {localize(proposal.totalTransferMinutes)}
+                {localize("分")}
+              </span>
+            </div>
+            <PlanTimeline items={proposal.items} />
+            <button
+              type="button"
+              className="planner-primary-button"
+              disabled={busy}
+              onClick={() => void save()}
+            >
+              {localize(state === "saving" ? "保存中…" : "このプランを保存")}
+            </button>
+          </section>
+        ),
+      )}
+
+      {localize(
+        !proposal && data && !data.schedulePublished && (
           <button
             type="button"
-            className="planner-primary-button"
+            className="planner-save-date-button"
             disabled={busy}
             onClick={() => void save()}
           >
-            {state === "saving" ? "保存中…" : "このプランを保存"}
+            {localize("この日と空き時間を保存")}
           </button>
-        </section>
+        ),
       )}
 
-      {!proposal && data && !data.schedulePublished && (
-        <button
-          type="button"
-          className="planner-save-date-button"
-          disabled={busy}
-          onClick={() => void save()}
-        >
-          この日と空き時間を保存
-        </button>
-      )}
-
-      {savedForSelectedDate.length > 0 && (
-        <section className="saved-plans" aria-labelledby="saved-plans-title">
-          <div className="planner-section-heading">
-            <div>
-              <p>{formatPlanDate(selectedDate)}</p>
-              <h2 id="saved-plans-title">保存した予定</h2>
-            </div>
-          </div>
-          {savedForSelectedDate.map((plan) => (
-            <article className="saved-plan" key={plan.id}>
-              <div className="saved-plan-heading">
-                <div>
-                  <strong>
-                    {plan.status === "planned"
-                      ? `${plan.items.length}本の映画はしご`
-                      : "日付・空き時間を記録"}
-                  </strong>
-                  <span>
-                    {localTime(plan.availableStart)}〜
-                    {localTime(plan.availableEnd)}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="icon-button"
-                  aria-label="この予定を削除"
-                  onClick={() => void deletePlan(plan)}
-                >
-                  <TrashIcon size={18} aria-hidden="true" />
-                </button>
+      {localize(
+        savedForSelectedDate.length > 0 && (
+          <section className="saved-plans" aria-labelledby="saved-plans-title">
+            <div className="planner-section-heading">
+              <div>
+                <p>{localize(formatPlanDate(selectedDate))}</p>
+                <h2 id="saved-plans-title">{localize("保存した予定")}</h2>
               </div>
-              {plan.items.length > 0 && <PlanTimeline items={plan.items} />}
-              {plan.items.length > 0 &&
-                data?.calendar.connected &&
-                (plan.googleCalendarEventId ? (
-                  <p className="calendar-synced">
-                    <CheckCircleIcon
-                      size={17}
-                      weight="fill"
-                      aria-hidden="true"
-                    />
-                    Google カレンダーに追加済み
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    className="secondary-button calendar-export-button"
-                    disabled={busy}
-                    onClick={() => void syncCalendar(plan)}
-                  >
-                    <CalendarCheckIcon size={18} aria-hidden="true" />
-                    Google カレンダーに追加
-                  </button>
-                ))}
-            </article>
-          ))}
-        </section>
+            </div>
+            {localize(
+              savedForSelectedDate.map((plan) => (
+                <article className="saved-plan" key={plan.id}>
+                  <div className="saved-plan-heading">
+                    <div>
+                      <strong>
+                        {localize(
+                          plan.status === "planned"
+                            ? `${plan.items.length}本の映画はしご`
+                            : "日付・空き時間を記録",
+                        )}
+                      </strong>
+                      <span>
+                        {localize(localTime(plan.availableStart))}
+                        {localize("〜")}
+                        {localize(localTime(plan.availableEnd))}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label={localize("この予定を削除")}
+                      onClick={() => void deletePlan(plan)}
+                    >
+                      <TrashIcon size={18} aria-hidden="true" />
+                    </button>
+                  </div>
+                  {localize(
+                    plan.items.length > 0 && (
+                      <PlanTimeline items={plan.items} />
+                    ),
+                  )}
+                  {localize(
+                    plan.items.length > 0 &&
+                      data?.calendar.connected &&
+                      (plan.googleCalendarEventId ? (
+                        <p className="calendar-synced">
+                          <CheckCircleIcon
+                            size={17}
+                            weight="fill"
+                            aria-hidden="true"
+                          />
+                          {localize("Google カレンダーに追加済み")}
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          className="secondary-button calendar-export-button"
+                          disabled={busy}
+                          onClick={() => void syncCalendar(plan)}
+                        >
+                          <CalendarCheckIcon size={18} aria-hidden="true" />
+                          {localize("Google カレンダーに追加")}
+                        </button>
+                      )),
+                  )}
+                </article>
+              )),
+            )}
+          </section>
+        ),
       )}
 
-      {data?.calendar.connected && (
-        <form method="post" action="/auth/google/disconnect">
-          <button className="calendar-disconnect" type="submit">
-            Google カレンダー連携を解除
-          </button>
-        </form>
+      {localize(
+        data?.calendar.connected && (
+          <form method="post" action="/auth/google/disconnect">
+            <button className="calendar-disconnect" type="submit">
+              {localize("Google カレンダー連携を解除")}
+            </button>
+          </form>
+        ),
       )}
     </PageShell>
   );
 }
 
-function PlanTimeline({
-  items,
-}: {
-  items: MovieMarathonProposal["items"];
-}) {
+function PlanTimeline({ items }: { items: MovieMarathonProposal["items"] }) {
   return (
     <ol className="plan-timeline">
-      {items.map((item, index) => (
-        <li key={`${item.showingId}-${item.sequence}`}>
-          <div className="plan-transfer">
-            <span>{index === 0 ? "ベース出発地点から" : "移動"}</span>
-            <strong>約{item.transferMinutes}分</strong>
-          </div>
-          <article>
-            <div className="plan-time">
-              <ClockIcon size={16} aria-hidden="true" />
-              <time dateTime={item.startsAt}>
-                {localTime(item.startsAt)}
-              </time>
-              <span>〜</span>
-              <time dateTime={item.endsAt}>{localTime(item.endsAt)}</time>
+      {localize(
+        items.map((item, index) => (
+          <li key={`${item.showingId}-${item.sequence}`}>
+            <div className="plan-transfer">
+              <span>
+                {localize(index === 0 ? "ベース出発地点から" : "移動")}
+              </span>
+              <strong>
+                {localize("約")}
+                {localize(item.transferMinutes)}
+                {localize("分")}
+              </strong>
             </div>
-            <h3>
-              {item.starred && (
-                <StarIcon
-                  size={18}
-                  weight="fill"
-                  aria-label="気になる作品"
-                />
-              )}
-              {item.title}
-            </h3>
-            <p>
-              <MapPinIcon size={15} aria-hidden="true" />
-              {item.cinemaName}
-            </p>
-            <a href={item.bookingUrl} target="_blank" rel="noreferrer">
-              公式サイト
-              <ArrowSquareOutIcon size={14} aria-hidden="true" />
-            </a>
-          </article>
-        </li>
-      ))}
+            <article>
+              <div className="plan-time">
+                <ClockIcon size={16} aria-hidden="true" />
+                <time dateTime={item.startsAt}>
+                  {localize(localTime(item.startsAt))}
+                </time>
+                <span>{localize("〜")}</span>
+                <time dateTime={item.endsAt}>
+                  {localize(localTime(item.endsAt))}
+                </time>
+              </div>
+              <h3>
+                {localize(
+                  item.starred && (
+                    <StarIcon
+                      size={18}
+                      weight="fill"
+                      aria-label={localize("気になる作品")}
+                    />
+                  ),
+                )}
+                {movieTitle(item.title)}
+              </h3>
+              <p>
+                <MapPinIcon size={15} aria-hidden="true" />
+                {localize(item.cinemaName)}
+              </p>
+              <a href={item.bookingUrl} target="_blank" rel="noreferrer">
+                {localize("公式サイト")}
+                <ArrowSquareOutIcon size={14} aria-hidden="true" />
+              </a>
+            </article>
+          </li>
+        )),
+      )}
     </ol>
   );
 }

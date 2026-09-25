@@ -1,3 +1,4 @@
+import { isLanguage } from "../../../../shared/language";
 import { completeGoogleLogin } from "../../../_lib/accounts";
 import {
   createUserSession,
@@ -32,6 +33,8 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   const expectedState = parseCookie(context.request, "google_login_state");
   const verifier = parseCookie(context.request, "google_login_verifier");
   const inviteToken = parseCookie(context.request, "google_login_invite") ?? "";
+  const rawLanguage = parseCookie(context.request, "google_login_language");
+  const language = isLanguage(rawLanguage) ? rawLanguage : "ja";
   const failedLogin = (message: string): Response => {
     // Preserve the invitation on the retry action while discarding the spent
     // OAuth state. The start endpoint revalidates expiry/revocation on retry.
@@ -41,6 +44,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       Boolean(credentials),
       message,
       inviteToken,
+      language,
     );
     clearOauthCookies(response.headers, requestUrl);
     return response;
@@ -118,6 +122,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       currentSession,
       requireProfileEncryptionKey(context.env),
       inviteToken,
+      language,
     );
     const session = await createUserSession(context.env, user.id);
     const headers = new Headers({
@@ -144,6 +149,10 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
 
 function clearOauthCookies(headers: Headers, requestUrl: URL): void {
   const secure = requestUrl.protocol === "https:";
+  headers.append(
+    "set-cookie",
+    oauthCookie("google_login_language", "", secure, 0),
+  );
   headers.append(
     "set-cookie",
     oauthCookie("google_login_invite", "", secure, 0),

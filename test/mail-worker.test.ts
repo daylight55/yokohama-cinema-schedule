@@ -53,3 +53,29 @@ it("reports service failure instead of claiming delivery", async () => {
   });
   expect(response.status).toBe(502);
 });
+it("sends an English invitation with a matching signup language", async () => {
+  const send = vi.fn(async () => ({ messageId: "test-message" }));
+  const response = await mailer.fetch(
+    new Request("https://mailer/send", {
+      method: "POST",
+      body: JSON.stringify({
+        ...payload,
+        language: "en",
+        url: payload.url + "&lang=en",
+      }),
+    }),
+    {
+      EMAIL: { send },
+      INVITE_FROM_EMAIL: "noreply@notify.daylight55.dev",
+      APP_ORIGIN: origin,
+    },
+  );
+  expect(response.status).toBe(200);
+  expect(send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      subject: "Your Hama Movie! invitation (valid for 24 hours)",
+      html: expect.stringContaining("&amp;lang=en"),
+      text: expect.stringContaining("&lang=en"),
+    }),
+  );
+});

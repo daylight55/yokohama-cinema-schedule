@@ -1,3 +1,4 @@
+import type { Language } from "../../shared/language";
 import { registerInvitedGoogleUser } from "./invitations";
 import type { AuthUser, ResolvedSession } from "./auth";
 import { findUserByEmail, LEGACY_USER_ID, normalizeEmail } from "./auth";
@@ -69,9 +70,7 @@ async function claimLegacyAccount(
   );
   await db.batch([
     db
-      .prepare(
-        "UPDATE movie_preferences SET user_id = ? WHERE user_id = ?",
-      )
+      .prepare("UPDATE movie_preferences SET user_id = ? WHERE user_id = ?")
       .bind(userId, LEGACY_USER_ID),
     db
       .prepare(
@@ -88,9 +87,7 @@ async function claimLegacyAccount(
       )
       .bind(userId, LEGACY_USER_ID),
     db
-      .prepare(
-        "UPDATE movie_marathon_plans SET user_id = ? WHERE user_id = ?",
-      )
+      .prepare("UPDATE movie_marathon_plans SET user_id = ? WHERE user_id = ?")
       .bind(userId, LEGACY_USER_ID),
     db
       .prepare(
@@ -113,6 +110,7 @@ export async function completeGoogleLogin(
   currentSession: ResolvedSession | null,
   profileEncryptionKey: string,
   inviteToken = "",
+  language: Language = "ja",
 ): Promise<AuthUser> {
   const normalizedEmail = normalizeEmail(identity.email);
   if (
@@ -163,7 +161,7 @@ export async function completeGoogleLogin(
     currentSession?.legacy === true &&
     currentSession.user.id === LEGACY_USER_ID;
   if (!claimingLegacy && count > 0) {
-    return registerInvitedGoogleUser(db, inviteToken, identity);
+    return registerInvitedGoogleUser(db, inviteToken, identity, language);
   }
   if (!claimingLegacy) {
     throw new Error(
@@ -179,8 +177,8 @@ export async function completeGoogleLogin(
       .prepare(
         `INSERT INTO users (
            id, email, display_email, role, status, created_at, updated_at,
-           last_login_at
-         ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?)`,
+           last_login_at, language
+         ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
       )
       .bind(
         userId,
@@ -190,6 +188,7 @@ export async function completeGoogleLogin(
         now,
         now,
         now,
+        language,
       ),
     db
       .prepare(

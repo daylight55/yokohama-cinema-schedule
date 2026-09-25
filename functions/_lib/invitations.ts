@@ -1,3 +1,4 @@
+import type { Language } from "../../shared/language";
 import { normalizeEmail, type AuthUser } from "./auth";
 import type { GoogleIdentity } from "./accounts";
 
@@ -66,6 +67,7 @@ export async function registerInvitedGoogleUser(
   db: D1Database,
   token: string,
   identity: GoogleIdentity,
+  language: Language = "ja",
 ): Promise<AuthUser> {
   const email = normalizeEmail(identity.email);
   if (
@@ -84,11 +86,22 @@ export async function registerInvitedGoogleUser(
   const results = await db.batch([
     db
       .prepare(
-        `INSERT INTO users (id, email, display_email, role, status, created_at, updated_at, last_login_at)
-      SELECT ?, ?, ?, 'member', 'active', ?, ?, ? FROM signup_invites
+        `INSERT INTO users (id, email, display_email, role, status, created_at, updated_at, last_login_at, language)
+      SELECT ?, ?, ?, 'member', 'active', ?, ?, ?, ? FROM signup_invites
       WHERE token_hash = ? AND expires_at > ? AND accepted_at IS NULL AND revoked_at IS NULL AND (email IS NULL OR email = ?)`,
       )
-      .bind(id, email, identity.email, now, now, now, tokenHash, now, email),
+      .bind(
+        id,
+        email,
+        identity.email,
+        now,
+        now,
+        now,
+        language,
+        tokenHash,
+        now,
+        email,
+      ),
     db
       .prepare(
         `INSERT INTO user_auth_identities (provider, provider_subject, user_id, provider_email, created_at, updated_at)
