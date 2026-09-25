@@ -471,3 +471,8 @@ Actionsの実行時刻は遅延する場合があります。
 CIはPRマージ状態で`npm ci`と`npm run ci:pr`を実行します。ローカルの再現確認は
 変更をコミットした後で`npm run ci:pr:clean`を実行してください。
 一時worktreeへ最新mainをマージし、`npm ci`と同じ検証を実行して後片付けします。
+
+GitHub Actionsの請求ロック等でジョブが起動しない場合、CI成功とは扱いません。
+収集ワークフローも動かないため、GitHubの請求・Actions利用可否を復旧してから
+マージ・運用開始してください。`gh run view <run-id>`とcheck-run annotationsで
+実行前の失敗とテスト失敗を区別できます。
