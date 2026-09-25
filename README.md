@@ -61,8 +61,8 @@
    取得処理へ渡します。
 4. 公式JSON APIまたはHTMLを取得し、上映時刻・作品・スクリーン・上映形式・
    公式予約URLを共通形式へ正規化します。
-   T・ジョイ横浜と横浜ブルク13は、ブラウザ互換のUser-Agentで公開日付URLを
-   通常のGETとして取得します。
+   T・ジョイ横浜と横浜ブルク13は、Cloudflare Browser Runの`content`で
+   公開日付URLのHTMLを取得します。
 5. 作品名から字幕・吹替・IMAX・4DX・レイティング等の上映形式表記を除き、
    全角・半角や日英併記の区切りも揃えた作品キーを再生成して重複上映を削除します。
    上映形式そのものは別フィールドに保持します。
@@ -82,7 +82,7 @@
 
 外部リクエスト数と取得元への負荷を抑えるため、10館を3バッチに分割しています。
 各バッチは6時間ごと、日本時間の`00・06・12・18`時台に10分ずつずらして実行します。
-T・ジョイ横浜と横浜ブルク13は、下記のGitHub Actions収集で更新します。
+T・ジョイ横浜と横浜ブルク13は、Cloudflare Browser Runで公開HTMLを取得します。
 CloudflareアカウントのCron Trigger上限（他Workerと共有）に余裕を持たせるため、専用の再試行Cronは設けていません。
 エラーになった映画館も次回の所属バッチで自動的に再試行します。
 `worker/wrangler.jsonc`のCron式はUTCで記述されています。
@@ -110,7 +110,7 @@ Workerは毎回「日本時間の今日を含む7日」を全映画館へ要求�
 - `not_published`: 取得処理は正常終了したが0件。公式未公開・休館・上映なしを含む
 - `error`: HTTPエラーまたは解析エラー。前回正常データは削除せず、次回実行で再試行
 
-`GET /health`では、最後の取得試行から36時間を超えた日付を`stale`として明示します。
+`GET /health`では、最後の取得試行から12時間を超えた日付を`stale`として明示します。
 `error`・`missing`・`stale`のいずれかがあれば`ok: false`になるため、Cron停止や
 設定不備で古いデータだけが残る状態を監視で検知できます。
 
@@ -118,14 +118,11 @@ Workerは毎回「日本時間の今日を含む7日」を全映画館へ要求�
 同じHTTPリクエストは通信エラー・`429`・`5xx`の場合だけ、最大2回まで試行します。
 1回20秒のタイムアウトを設け、失敗応答の本文を解放します。`403`は再試行しません。公式未公開の日を推測で補完することはしません。
 
-1日1回の全バッチで、外部サイトへのリクエストは通常およそ50回前後です。
+1回の全バッチで、公式サイトの取得は通常およそ50回前後です。
 各映画館は直列に処理し、1館あたりの週間取得は1〜8回程度です。Cron Triggerは
 月約360回のWorker呼び出しに収まり、通常はWorkersの標準的な有料枠に対して
-十分小さい処理です。この収集は決められたURLの取得とパーサー実行なので
-Browser Rendering、Workers AI、Cloudflare Agentsは使いません。実測で1回の
-実行時間や外部
-サブリクエスト上限に達した場合は、Agentsより先にWorkflowsまたはQueuesへの
-分割を検討します。
+十分小さい処理です。T・ジョイ2館だけは通常のWorkerからのGETが403になるためBrowser Runを使います。
+その他は公開APIまたはHTMLの直接取得です。Workers AIやCloudflare Agentsは使いません。
 
 日本公開日の取得にはTMDBの`discover/movie`を`region=JP`、
 `with_release_type=2|3`で使用します。直近120日から14日先までを対象にし、
@@ -183,7 +180,7 @@ npx wrangler d1 execute yokohama-cinema-schedule \
 
 デプロイ済みWorkerの`GET /health`は、当日から7日分について、全映画館の
 `published`・`not_published`・`error`・`missing`・`stale`をJSONで返します。
-`error`・未実行の`missing`・36時間を超えた`stale`が1つでもあれば`ok: false`、HTTP 503です。
+`error`・未実行の`missing`・12時間を超えた`stale`が1つでもあれば`ok: false`、HTTP 503です。
 
 ```bash
 curl https://yokohama-cinema-schedule-refresh.<subdomain>.workers.dev/health
@@ -452,27 +449,28 @@ PagesとメールWorkerの`INVITE_FROM_EMAIL`を揃えてください。
 失敗していました。Paidプランでは`limits.subrequests: 1000`を明示していますが、
 上限を増やすだけでは403を解決できません。
 
-T・ジョイ2館はGitHub Actions（`.github/workflows/collect-tjoy.yml`）が公式の公開HTMLを
-通常のGETで取得し、共有パーサーで変換して、Cloudflare Workerの`POST /ingest`へ渡します。
-Workerは専用Bearerトークン、対象2館、当日から7日の日付、全上映の型・URLを検証してから
-既存のD1更新処理で保存します。本文は1MBまで。エラーの日は前回正常データを保持します。
-公式HTMLの日付不一致やスケジュール構造消失は未公開ではなく解析エラーにします。
+T・ジョイ2館はCloudflare Browser Runの`BROWSER.quickAction("content", ...)`で
+公式ページを取得します。通常のWorkerのfetchが403でも、公開ページのブラウザ描画で
+スケジュールを取得できることを確認しています。CAPTCHAを解く処理や非公開APIは使いません。
+各日付を直列に処理し、画像・フォント・動画・CSSの取得を省き、遷移の上限を20秒に設定します。
+Browser Runにも失敗した日付は解析エラーとして記録し、前回正常データを保持します。
+公式HTMLの日付不一致やスケジュール構造消失も未公開ではなく解析エラーです。
 
-`EXTERNAL_TJOY_COLLECTION=true`によりCloudflare Cronではこの2館をスキップします。
-他館は従来のCronで収集します。Actionsは日本時間00:37・06:37・12:37・18:37に実行し、失敗時は
-ワークフローを失敗させます。最後に全館の`/health`もチェックするため、別の館の失敗や
-36時間を超える未更新もGitHub Actionsの失敗通知で検知できます（GitHubの通知設定に従います）。
-Actionsの実行時刻は遅延する場合があります。
+全館をCloudflare Cronで6時間おきに収集し、GitHub Actionsを定期収集には使いません。
+1館でも失敗した定期実行は例外としてCloudflare Observabilityに記録されます。
+`GET /health`は全館・全日付をチェックし、エラー・欠測・12時間を超える未更新でHTTP 503を返します。
+外部のHTTP監視からもこのURLを監視できます。GitHubのCIが停止しても定期収集は継続します。
 
-専用のランダムな`COLLECTOR_INGEST_TOKEN`をWorker secretとGitHub Actions secretの
-両方に同じ値で設定してください。トークンをコマンド引数・ログ・リポジトリに含めないでください。
-初回デプロイ直後はActionsを手動実行して全館の`/health`が正常になることを確認します。
+Browser Run Quick Actionsはブラウザ利用時間で課金されます。公式料金（2026-09-25確認）は
+Workers Paidに月10時間が含まれ、超過は1時間0.09米ドルです。
+ブラウザ利用時間はCloudflare Dashboardで確認してください。
+ローカルで実サービスの動作を確認する場合は、browser bindingの`remote: true`か
+`wrangler dev --remote`を明示します（通常のローカルモードではQuick Actionsは動きません）。
 
 CIはPRマージ状態で`npm ci`と`npm run ci:pr`を実行します。ローカルの再現確認は
 変更をコミットした後で`npm run ci:pr:clean`を実行してください。
 一時worktreeへ最新mainをマージし、`npm ci`と同じ検証を実行して後片付けします。
 
 GitHub Actionsの請求ロック等でジョブが起動しない場合、CI成功とは扱いません。
-収集ワークフローも動かないため、GitHubの請求・Actions利用可否を復旧してから
-マージ・運用開始してください。`gh run view <run-id>`とcheck-run annotationsで
+GitHubの請求・Actions利用可否を復旧してからマージしてください。`gh run view <run-id>`とcheck-run annotationsで
 実行前の失敗とテスト失敗を区別できます。

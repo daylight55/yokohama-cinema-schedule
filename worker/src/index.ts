@@ -1,9 +1,4 @@
-import {
-  EXTERNAL_SOURCES,
-  readLimitedJson,
-  validateCollectionPayload,
-  validBearer,
-} from "./ingest";
+import { validBearer } from "./request-auth";
 import { CINEMAS } from "../../shared/cinemas";
 import { activeDatesForCinema } from "../../shared/cinema-availability";
 import {
@@ -33,8 +28,7 @@ interface Env {
   SCHEDULE_DAYS?: string;
   TMDB_API_READ_TOKEN?: string;
   WORKER_TRIGGER_TOKEN?: string;
-  COLLECTOR_INGEST_TOKEN?: string;
-  EXTERNAL_TJOY_COLLECTION?: string;
+  BROWSER?: BrowserRun;
 }
 
 interface Source {
@@ -61,11 +55,8 @@ interface ActiveCinemaWindow {
 
 export type SourceBatch = 0 | 1 | 2;
 
-// Each source/date is refreshed once per day. Allow for the three batches to
-// run at slightly different times before flagging a healthy result as stale.
-// A missed daily trigger will therefore be visible in /health within the next
-// run window without producing false positives immediately before batch 2.
-export const SOURCE_DATE_STALE_AFTER_MS = 36 * 60 * 60 * 1000;
+// Six-hour collection cadence: report a missed pair of runs as stale.
+export const SOURCE_DATE_STALE_AFTER_MS = 12 * 60 * 60 * 1000;
 
 const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
   0: new Set([
@@ -93,13 +84,18 @@ export default {
     ctx: ExecutionContext,
   ): Promise<void> {
     ctx.waitUntil(
-      refreshBatch(env, sourceBatchForCron(controller.cron)).catch((error) => {
-        console.error("Schedule batch execution failed", {
-          cron: controller.cron,
-          error: safeError(error),
-        });
-        throw error;
-      }),
+      refreshBatch(env, sourceBatchForCron(controller.cron))
+        .then((result) => {
+          if (result.failed)
+            throw new Error(`${result.failed} cinema sources failed`);
+        })
+        .catch((error) => {
+          console.error("Schedule batch execution failed", {
+            cron: controller.cron,
+            error: safeError(error),
+          });
+          throw error;
+        }),
     );
   },
 
@@ -109,37 +105,6 @@ export default {
       const health = await collectionHealth(env);
       return Response.json(health, {
         status: health.ok ? 200 : 503,
-        headers: { "cache-control": "no-store" },
-      });
-    }
-    if (request.method === "POST" && url.pathname === "/ingest") {
-      if (!(await validBearer(request, env.COLLECTOR_INGEST_TOKEN)))
-        return new Response("Unauthorized", { status: 401 });
-      let payload;
-      try {
-        payload = validateCollectionPayload(await readLimitedJson(request));
-      } catch {
-        return Response.json(
-          { error: "invalid_collection_payload" },
-          { status: 400 },
-        );
-      }
-      const result = await refreshBatch(
-        env,
-        0,
-        new Set([payload.sourceId]),
-        new Map([
-          [
-            payload.sourceId,
-            {
-              showings: payload.showings,
-              dateErrors: new Map(payload.dateErrors),
-            },
-          ],
-        ]),
-      );
-      return Response.json(result, {
-        status: result.failed ? 207 : 200,
         headers: { "cache-control": "no-store" },
       });
     }
@@ -225,7 +190,6 @@ export async function refreshBatch(
   env: Env,
   batch: SourceBatch,
   onlySourceIds?: ReadonlySet<string>,
-  collected?: ReadonlyMap<string, SourceFetchResult>,
 ): Promise<{
   startedAt: string;
   completedAt: string;
@@ -249,12 +213,9 @@ export async function refreshBatch(
 
   const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
   const sourceIds = SOURCE_BATCH_IDS[batch];
-  const sources = buildSources().filter(
+  const sources = buildSources(env.BROWSER).filter(
     (source) =>
       sourceIds.has(source.id) &&
-      (collected?.has(source.id) ||
-        env.EXTERNAL_TJOY_COLLECTION !== "true" ||
-        !EXTERNAL_SOURCES.some((id) => id === source.id)) &&
       (!onlySourceIds || onlySourceIds.has(source.id)),
   );
   const results: Array<{
@@ -272,8 +233,7 @@ export async function refreshBatch(
 
     const sourceStartedAt = new Date().toISOString();
     try {
-      const fetched =
-        collected?.get(source.id) ?? (await source.fetch(sourceDates));
+      const fetched = await source.fetch(sourceDates);
       const showings = deduplicate(
         fetched.showings.map(normalizeShowingMovieTitle),
       );
@@ -374,7 +334,7 @@ export async function refreshBatch(
   return summary;
 }
 
-function buildSources(): Source[] {
+function buildSources(browser?: BrowserRun): Source[] {
   return [
     {
       id: "tjoy-yokohama",
@@ -384,6 +344,7 @@ function buildSources(): Source[] {
           "tjoy-yokohama",
           "tjoy-yokohama",
           "https://tjoy.jp/t-joy_yokohama",
+          browser,
         ),
     },
     {
@@ -402,6 +363,7 @@ function buildSources(): Source[] {
           "yokohama-burg13",
           "yokohama-burg13",
           "https://tjoy.jp/yokohama_burg13",
+          browser,
         ),
     },
     {
@@ -588,18 +550,33 @@ export async function fetchTjoy(
   sourceId: string,
   cinemaId: string,
   theaterUrl: string,
+  browser?: BrowserRun,
 ): Promise<SourceFetchResult> {
   return fetchDatesIndependently(dates, async (date) => {
-    const response = await checkedFetch(tjoyScheduleUrl(theaterUrl, date), {
-      headers: tjoyRequestHeaders(theaterUrl),
-    });
-    return parseTjoySchedule(
-      await response.text(),
-      date,
-      sourceId,
-      cinemaId,
-      theaterUrl,
-    );
+    let html: string;
+    if (browser) {
+      const response = await browser.quickAction("content", {
+        url: tjoyScheduleUrl(theaterUrl, date),
+        gotoOptions: { waitUntil: "domcontentloaded", timeout: 20_000 },
+        rejectResourceTypes: ["image", "font", "media", "stylesheet"],
+      });
+      if (!response.ok) {
+        await response.body?.cancel();
+        throw new Error(`Browser Run: HTTP ${response.status}`);
+      }
+      const payload = await response.json<
+        BrowserRunContentSuccessResponse | BrowserRunErrorResponse
+      >();
+      if (!payload.success || typeof payload.result !== "string")
+        throw new Error("Browser Run: invalid content response");
+      html = payload.result;
+    } else {
+      const response = await checkedFetch(tjoyScheduleUrl(theaterUrl, date), {
+        headers: tjoyRequestHeaders(theaterUrl),
+      });
+      html = await response.text();
+    }
+    return parseTjoySchedule(html, date, sourceId, cinemaId, theaterUrl);
   });
 }
 

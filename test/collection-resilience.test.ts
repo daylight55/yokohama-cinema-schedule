@@ -1,11 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { checkedFetch } from "../worker/src/index";
+import { checkedFetch, fetchTjoy } from "../worker/src/index";
 import { parseTjoySchedule } from "../worker/src/parsers/tjoy";
-import {
-  readLimitedJson,
-  validateCollectionPayload,
-  validBearer,
-} from "../worker/src/ingest";
+import { validBearer } from "../worker/src/request-auth";
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
@@ -53,34 +50,39 @@ it("rejects a challenge/error HTML page and wrong-date schedule as parse errors"
     ),
   ).toThrow("different");
 });
-it("limits ingestion to authorized requests, current dates and the T-Joy sources", async () => {
+it("keeps manual refresh restricted to its dedicated secret", async () => {
   expect(
-    await validBearer(new Request("https://worker/ingest"), "secret"),
+    await validBearer(new Request("https://worker/refresh"), "secret"),
   ).toBe(false);
   expect(
     await validBearer(
-      new Request("https://worker/ingest", {
+      new Request("https://worker/refresh", {
         headers: { authorization: "Bearer secret" },
       }),
       "secret",
     ),
   ).toBe(true);
-  expect(() => validateCollectionPayload({ sourceId: "movil" })).toThrow(
-    "source",
-  );
-  expect(() =>
-    validateCollectionPayload({
-      sourceId: "tjoy-yokohama",
-      dates: ["2020-01-01"],
-    }),
-  ).toThrow("dates");
-  await expect(
-    readLimitedJson(
-      new Request("https://worker/ingest", {
-        method: "POST",
-        body: "too large",
+});
+it("uses Browser Run and isolates one date failure from the remaining dates", async () => {
+  const quickAction = vi
+    .fn()
+    .mockResolvedValueOnce(new Response(null, { status: 503 }))
+    .mockResolvedValueOnce(
+      Response.json({
+        success: true,
+        result:
+          '<a class="calendar-active calendar-item" data-date="2026-09-26"></a>',
       }),
-      2,
-    ),
-  ).rejects.toThrow("body_too_large");
+    );
+  const browser = { quickAction } as unknown as BrowserRun;
+  const result = await fetchTjoy(
+    ["2026-09-25", "2026-09-26"],
+    "tjoy-yokohama",
+    "tjoy-yokohama",
+    "https://tjoy.jp/t-joy_yokohama",
+    browser,
+  );
+  expect(quickAction).toHaveBeenCalledTimes(2);
+  expect(result.dateErrors.has("2026-09-25")).toBe(true);
+  expect(result.dateErrors.has("2026-09-26")).toBe(false);
 });
