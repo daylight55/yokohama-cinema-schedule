@@ -61,21 +61,12 @@ def paragraph(d, xy, value, width, size=31, color=INK, bold=False, gap=12):
 def box(d, bounds, fill='white', outline=None, radius=20, width=2):
     d.rounded_rectangle(bounds, radius=radius, fill=fill, outline=outline, width=width)
 
-def button(d, x,y,label,w=270,active=False,size=29):
-    box(d,(x,y,x+w,y+68),GREEN if active else 'white',INK,16,3)
-    tw=d.textlength(label,font=font(size,True))
-    text(d,(x+(w-tw)/2,y+20),label,size,'white' if active else INK,True)
-
 def star(d,x,y,r=20,fill=GOLD):
     pts=[]
     for i in range(10):
         a=-math.pi/2+i*math.pi/5; s=r if i%2==0 else r*.44
         pts.append((x+math.cos(a)*s,y+math.sin(a)*s))
     d.polygon(pts,fill=fill)
-
-def arrow(d,x,y):
-    d.line((x,y,x+50,y),fill=GREEN,width=6)
-    d.line((x+35,y-14,x+50,y,x+35,y+14),fill=GREEN,width=6)
 
 def tap(im, xy, t):
     if not 1.3<t<4.5: return
@@ -84,12 +75,6 @@ def tap(im, xy, t):
     d.ellipse((x-radius,y-radius,x+radius,y+radius),outline=CORAL,width=4)
     d.ellipse((x-8,y-8,x+8,y+8),fill=CORAL)
 
-def panel(d,lang):
-    box(d,(58,295,842,914),'#fffefa',INK,26,4)
-    text(d,(90,324),'はまむび！' if lang=='ja' else 'Hama Movie!',31,CORAL,True)
-    text(d,(655,331),'JP / EN',24,MUTED)
-    d.line((82,376,818,376),fill=LINE,width=2)
-
 @lru_cache(maxsize=1)
 def brand_icon():
     logo=Image.open(ROOT/'public/brand/hamamubi-icon-v2-512.png').convert('RGBA')
@@ -97,75 +82,80 @@ def brand_icon():
     return logo
 
 def diagram(lang,index,t):
+    """One action per illustrated screen; no unrelated navigation or fine print."""
     jp=lang=='ja'; tr=lambda a,b:a if jp else b
     im=Image.new('RGB',(W,H),BG); d=ImageDraw.Draw(im)
     target=None
-    panel(d,lang)
-    film=tr('サンプル作品','Sample film')
+    box(d,(58,295,842,914),'#fffefa',INK,26,4)
+    film=tr('観たい映画','Your film')
+
+    def action(y,label,active=True):
+        box(d,(110,y,790,y+100),GREEN if active else PALE,INK,20,3)
+        tw=d.textlength(label,font=font(40,True))
+        text(d,((W-tw)/2,y+29),label,40,'white' if active else INK,True)
+
+    def down(y):
+        d.line((450,y,450,y+43),fill=GREEN,width=6)
+        d.polygon([(436,y+30),(464,y+30),(450,y+47)],fill=GREEN)
+
     if index==1:
-        for i,label in enumerate([tr('今日','Today'),tr('明日','Tomorrow'),'…']):
-            button(d,90+i*244,406,label,226,i==0,27)
-        box(d,(90,501,628,574),'white',LINE,14)
-        text(d,(112,522),film if t>2 else tr('作品名・映画館名','Film or cinema'),28,MUTED)
-        button(d,646,501,tr('検索','Search'),164,True,26)
-        button(d,90,602,tr('これから','Upcoming'),244,t>3,27)
-        button(d,354,602,tr('横浜駅','Yokohama Stn.'),310,False,26)
-        d.line((90,711,810,711),fill=LINE,width=2)
-        text(d,(90,750),'14:00',43,GREEN,True)
-        text(d,(284,750),film,34,INK,True)
-        text(d,(284,811),'T・ジョイ横浜' if jp else 'T-Joy Yokohama',27,MUTED)
-        target=(714,534)
+        box(d,(110,375,790,482),'white',INK,18,3)
+        text(d,(139,409),film if t>1 else tr('映画のタイトル','Film title'),43,INK)
+        action(530,tr('検索','Search'))
+        if t>2:
+            box(d,(110,716,790,833),PALE,None,22)
+            text(d,(143,754),film,43,GREEN,True)
+        target=(690,580)
     elif index==2:
-        text(d,(90,410),film,41,INK,True)
-        text(d,(90,474),tr('週間スケジュール','Showtimes for the coming week'),27,GREEN)
-        d.line((122,555,122,854),fill=LINE,width=4)
-        for i,(time,cinema) in enumerate([('14:00',tr('T・ジョイ横浜','T-Joy Yokohama')),('16:30',tr('横浜ブルク13','Yokohama Burg 13')),('19:10',tr('イオンシネマ','AEON Cinema'))]):
-            y=553+i*109
-            d.ellipse((110,y+8,134,y+32),fill=GREEN)
-            text(d,(163,y),time,36,INK,True)
-            text(d,(328,y+4),cinema,30,INK)
-            if i<2: d.line((163,y+75,783,y+75),fill=LINE,width=1)
-        target=(725,493)
+        text(d,(110,361),film,49,INK,True)
+        d.line((110,424,368 if jp else 338,424),fill=GREEN,width=3)
+        d.line((128,505,128,828),fill=LINE,width=5)
+        for i,(time,cinema) in enumerate([
+            ('14:00',tr('T・ジョイ横浜','T-Joy Yokohama')),
+            ('16:30',tr('横浜ブルク13','Yokohama Burg 13')),
+            ('19:10',tr('イオンシネマ','AEON Cinema')),
+        ]):
+            y=495+i*140
+            d.ellipse((115,y+10,141,y+36),fill=GREEN)
+            text(d,(167,y),time,42,INK,True)
+            text(d,(340,y+5),cinema,33,INK)
+        target=(378,401)
     elif index==3:
-        text(d,(90,410),film,38,INK,True)
-        text(d,(90,478),'14:00',46,GREEN,True)
-        text(d,(290,490),tr('T・ジョイ横浜','T-Joy Yokohama'),31,INK)
-        button(d,90,559,tr('予約 ↗','Book ↗'),320,True)
-        button(d,440,559,tr('観に行く','Add to plans'),370)
-        d.line((450,669,450,719),fill=GREEN,width=5)
-        d.polygon([(438,706),(462,706),(450,724)],fill=GREEN)
-        box(d,(90,752,810,867),PALE)
-        text(d,(126,780),tr('映画館の公式予約サイトへ','Continue to the cinema website'),30,GREEN,True)
-        target=(324,592)
+        text(d,(110,359),film,47,INK,True)
+        text(d,(110,437),'14:00',45,GREEN,True)
+        text(d,(320,448),tr('T・ジョイ横浜','T-Joy Yokohama'),33,INK)
+        action(545,tr('予約 ↗','Book ↗'))
+        down(679)
+        box(d,(110,761,790,856),PALE,None,22)
+        text(d,(154,791),tr('映画館のサイト','Cinema website'),40,GREEN,True)
+        target=(670,596)
     elif index==4:
-        text(d,(90,410),film,38,INK,True)
-        star(d,751,430,24, GOLD if t>1.3 else MUTED)
-        text(d,(660,407),'…',42,INK,True)
-        box(d,(126,504,774,871),'white',LINE)
-        for i,label in enumerate([tr('作品の上映スケジュール','View film showtimes'),tr('★  気になる','★  Watchlist'),tr('鑑賞済み','Watched'),tr('興味なし','Not interested')]):
-            button(d,150,524+i*82,label,600,i==1,27)
-        target=(676,439) if t<2.6 else (639,642)
+        text(d,(110,365),film,48,INK,True)
+        d.ellipse((337,490,563,716),fill='#fff0bf',outline=INK,width=3)
+        star(d,450,604,70,GOLD if t>1.3 else MUTED)
+        if t>2: action(764,tr('気になる','Watchlist'),False)
+        target=(469,626)
     elif index==5:
-        text(d,(90,410),film,38,INK,True)
-        text(d,(90,478),'14:00   T-Joy Yokohama',34,INK)
-        button(d,90,552,tr('予約 ↗','Book ↗'),280)
-        button(d,402,552,tr('観に行く','Add to plans'),408,True)
-        arrow(d,430,680)
-        box(d,(90,736,810,868),PALE)
-        text(d,(118,758),tr('鑑賞予定','My screenings'),30,GREEN,True)
-        text(d,(118,812),'14:00  /  '+film,28,INK)
-        target=(709,586)
+        text(d,(110,359),film,47,INK,True)
+        text(d,(110,437),'14:00',45,GREEN,True)
+        text(d,(320,448),tr('T・ジョイ横浜','T-Joy Yokohama'),33,INK)
+        action(545,tr('観に行く','Add to plans'))
+        down(679)
+        box(d,(110,761,790,856),PALE,None,22)
+        text(d,(154,791),tr('鑑賞予定','My screenings'),40,GREEN,True)
+        target=(670,596)
     elif index==6:
-        text(d,(90,410),tr('共有','Shared'),41,INK,True)
-        button(d,90,489,tr('みんなの予定','Everyone’s plans'),356,t<3,26)
-        button(d,466,489,tr('気になる','Watchlist'),344,t>=3,26)
-        text(d,(90,602),film,34,INK,True)
-        text(d,(90,662),tr('14:00  T・ジョイ横浜','14:00  T-Joy Yokohama') if t<3 else tr('この映画が気になるメンバー','Members interested in this film'),27,MUTED)
-        for i,label in enumerate(['A','B','C']):
-            x=122+i*224
-            d.ellipse((x,728,x+64,792),fill=[GREEN,CORAL,GOLD][i]); text(d,(x+20,746),label,28,'white',True)
-            text(d,(x-4,812),tr('メンバー','Member')+' '+label,21,MUTED)
-        target=(669,524)
+        text(d,(110,359),tr('共有','Shared'),49,INK,True)
+        box(d,(110,467,790,657),PALE,None,22)
+        text(d,(142,498),film,45,INK,True)
+        text(d,(142,574),'14:00',39,GREEN,True)
+        # Two friendly faces communicate members without names or account data.
+        d.line((324,765,576,765),fill=LINE,width=8)
+        for x,color in [(312,GREEN),(588,CORAL)]:
+            d.ellipse((x-64,699,x+64,827),fill=color,outline=INK,width=3)
+            for eye in [x-21,x+21]:
+                d.ellipse((eye-5,738,eye+5,748),fill='white')
+            d.arc((x-25,752,x+25,788),0,180,fill='white',width=5)
     if target: tap(im,target,t)
     return im.crop((54,295,848,916)).convert('RGBA')
 
@@ -214,7 +204,6 @@ def scene(lang,index,t):
         x=35 if i%2 else 865; y=440+i*70+int(8*math.sin(t+i))
         d.line((x-9,y-9,x+9,y+9),fill=[GREEN,CORAL,INK][i%3],width=5)
     text(d,(55,32),'HAMA MOVIE!',27,INK,True)
-    text(d,(548,35),tr('はまむびくんと映画へ！','LET’S GO TO THE MOVIES!'),21,INK,True)
     # The headline lands with a quick spring and then stays readable.
     title=s['title']
     size=73 if jp else 67
@@ -228,21 +217,17 @@ def scene(lang,index,t):
         text(d,(52,top+row*(size+9)),line,size,INK,True)
     box(d,(54,248,854,434),INK,INK,24,3)
     box(d,(46,240,846,426),'#fffefa',INK,24,3)
-    end=paragraph(d,(67,260),s['caption'],756,32,INK,False,10)
+    end=paragraph(d,(67,263),s['caption'],756,38,INK,False,10)
     if end>428: raise ValueError(f'Caption overflow {lang} {index}')
     if index in (0,7):
         burst(d,450,713,242,'#fffefa',.04*math.sin(t))
         paste_mascot(im,450,520,340,t)
-        # Characters' celebratory arms and little sparkle strokes.
-        d.line((243,722,205,677,173,688),fill=INK,width=10)
-        d.line((657,722,694,677,727,688),fill=INK,width=10)
+        # Let the original mascot bounce as-is, with only surrounding sparkles.
         for x,y in [(157,542),(745,555),(157,880),(755,884)]:
             star(d,x,y,18+5*math.sin(t*2),CORAL if x<450 else GREEN)
         if index==0:
             sticker(im,77,471,tr('さがす！','FIND IT!'),t,'#fffefa',32,-6)
             sticker(im,570,471,tr('観に行く！','LET’S GO!'),t,'#ffadba',32,5)
-            sticker(im,68,897,tr('気になる！','LOVE IT!'),t,'#ffdf62',32,4)
-            sticker(im,602,897,tr('みんなで！','TOGETHER!'),t,'#c8f1df',29,-5)
         else:
             sticker(im,90,474,'JP',t,'#fffefa',42,-7)
             sticker(im,668,474,'EN',t,'#ffdf62',42,7)
@@ -258,8 +243,6 @@ def scene(lang,index,t):
         im.paste(inner,(54,451+entrance),inner)
         # The buddy cheers from the margin, away from buttons and captions.
         paste_mascot(im,795,1080,82,t,8)
-    tag=[tr('映画、行こっ！','MOVIE TIME!'),tr('見つけたっ！','FOUND IT!'),tr('ずら〜り！','TA-DA!'),tr('チケットへGO！','TICKET TIME!'),tr('ポチッ！','SAVED!'),tr('予定にIN！','IT’S A PLAN!'),tr('いっしょに観よう！','LET’S WATCH!'),tr('はまむび！','HAMA MOVIE!')][index]
-    sticker(im,62,1091,tag,t,'#fffefa',31,-2)
     return im
 
 
