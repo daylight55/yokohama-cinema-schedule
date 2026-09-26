@@ -1,4 +1,5 @@
-import { localize } from "./i18n";
+import { localize, localeCode } from "./i18n";
+import guide from "../shared/site-guide.json";
 import {
   ArrowRightIcon,
   BuildingsIcon,
@@ -43,7 +44,7 @@ const FEATURES: ReadonlyArray<{
   {
     title: "観に行く上映をまとめる",
     description:
-      "上映回のはまむびくんを押すと、映画館と開始時刻を鑑賞予定としてまとめて確認できます。",
+      "「観に行く」を押すと、映画館と開始時刻を鑑賞予定としてまとめて確認できます。",
     icon: CalendarDotsIcon,
     view: "viewingPlans",
   },
@@ -58,6 +59,8 @@ const FEATURES: ReadonlyArray<{
 
 export function AboutPage() {
   const today = todayInJst();
+  const language = localeCode() === "en-GB" ? "en" : "ja";
+  const tutorial = guide[language];
 
   return (
     <PageShell className="about-page" labelledBy="about-title">
@@ -69,6 +72,44 @@ export function AboutPage() {
           "横浜周辺の映画館を、テレビ番組表のような時間軸で横断して探すためのサイトです。",
         )}
       />
+
+      <section className="about-guide" aria-labelledby="about-guide-title">
+        <h2 id="about-guide-title">{tutorial.heading}</h2>
+        <video
+          key={language}
+          className="about-guide-video"
+          controls
+          playsInline
+          preload="none"
+          poster={`/guide/how-to-${language}.webp`}
+          width="900"
+          height="1200"
+          aria-label={tutorial.label}
+        >
+          <source src={`/guide/how-to-${language}.mp4`} type="video/mp4" />
+          <track
+            kind="captions"
+            src={`/guide/how-to-${language}.vtt`}
+            srcLang={language}
+            label={language === "ja" ? "日本語" : "English"}
+          />
+          <a href={`/guide/how-to-${language}.mp4`}>{tutorial.download}</a>
+        </video>
+        <details className="about-guide-transcript">
+          <summary>{tutorial.transcript}</summary>
+          <ol>
+            {tutorial.scenes.map((scene) => (
+              <li key={scene.short}>
+                <h3>{scene.short}</h3>
+                <p>{scene.caption}</p>
+              </li>
+            ))}
+          </ol>
+          <a href={`/guide/how-to-${language}.mp4`} download>
+            {tutorial.download}
+          </a>
+        </details>
+      </section>
 
       <ul className="about-feature-list" role="list">
         {localize(

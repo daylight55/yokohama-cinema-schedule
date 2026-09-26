@@ -558,3 +558,11 @@ npx wrangler d1 execute yokohama-cinema-schedule --remote --config worker/wrangl
 
 作品詳細 (`#movie?movie=...`) は7日間を日別・時刻順のタイムラインで表示し、
 公式から取得済みの映画画像がある場合は見出しの右側に表示します。
+
+## About の使い方動画
+
+`#about` に48秒の無音の図解動画を掲載しています。上映検索、作品別の週間上映、予約、
+気になる・鑑賞済み、鑑賞予定、ユーザー間の自動共有、JP / EN切り替えを紹介します。
+表示言語に応じて動画・ポスター・字幕・テキスト版を切り替えます。
+自動再生はせず、ブラウザ標準の操作で再生・一時停止・シークできます。
+動画の再生成方法は [scripts/site-guide/README.md](scripts/site-guide/README.md) を参照してください。

@@ -645,6 +645,69 @@ main {
   color: var(--favorite);
 }
 
+.about-guide {
+  margin-block: 1.5rem 2rem;
+  min-width: 0;
+}
+
+.about-guide h2 {
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+}
+
+.about-guide-video {
+  display: block;
+  width: 100%;
+  max-width: 32rem;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #fff8ee;
+}
+
+.about-guide-video:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.about-guide-transcript {
+  max-width: 42rem;
+  margin-top: 0.75rem;
+}
+
+.about-guide-transcript summary {
+  min-height: 44px;
+  padding-block: 0.75rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.about-guide-transcript summary:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.about-guide-transcript ol {
+  padding-left: 1.5rem;
+}
+
+.about-guide-transcript h3 {
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.about-guide-transcript p {
+  line-height: 1.8;
+  margin-top: 0;
+}
+
+.about-guide-transcript > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text);
+}
+
 .about-feature-list {
   display: grid;
   max-width: 620px;
