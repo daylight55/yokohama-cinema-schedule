@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+// Pages Functions also render this shell using Wrangler's classic JSX transform.
+import React, { type ReactNode } from "react";
 
 type PageShellProps = {
   children: ReactNode;

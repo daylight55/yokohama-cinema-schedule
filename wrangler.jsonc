@@ -3,7 +3,9 @@
   "name": "yokohama-cinema-schedule",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-07-23",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "d1_databases": [
     {
       "binding": "DB",
@@ -13,7 +15,15 @@
     }
   ],
   "vars": {
+    "APP_ORIGIN": "https://hama-movie.daylight55.dev",
     "PUBLIC_MODE": "false",
-    "SESSION_TTL_DAYS": "30"
-  }
+    "SESSION_TTL_DAYS": "30",
+    "INVITE_FROM_EMAIL": "noreply@notify.daylight55.dev"
+  },
+  "services": [
+    {
+      "binding": "INVITE_MAILER",
+      "service": "yokohama-cinema-schedule-mail"
+    }
+  ]
 }

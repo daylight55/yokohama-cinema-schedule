@@ -1,3 +1,6 @@
+import { refreshMovieTitleResearch } from "./title-research";
+import { validBearer } from "./request-auth";
+import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
 import { activeDatesForCinema } from "../../shared/cinema-availability";
 import {
@@ -6,10 +9,7 @@ import {
   timestampForCacheBuster,
   todayInJst,
 } from "../../shared/date";
-import {
-  movieDisplayTitle,
-  moviePreferenceKey,
-} from "../../shared/movie";
+import { movieDisplayTitle, moviePreferenceKey } from "../../shared/movie";
 import { showingSearchText } from "../../shared/search";
 import type { NormalizedShowing } from "../../shared/types";
 import { parseAeonSchedule } from "./parsers/aeon";
@@ -22,17 +22,16 @@ import {
 } from "./parsers/novecento";
 import { parseTohoSchedule } from "./parsers/toho";
 import { parseTjoySchedule } from "./parsers/tjoy";
-import {
-  parseUnitedMovieImages,
-  parseUnitedSchedule,
-} from "./parsers/united";
+import { parseUnitedMovieImages, parseUnitedSchedule } from "./parsers/united";
 import { fetchTmdbReleaseDates } from "./tmdb";
 
 interface Env {
   DB: D1Database;
+  AI?: Ai;
   SCHEDULE_DAYS?: string;
   TMDB_API_READ_TOKEN?: string;
   WORKER_TRIGGER_TOKEN?: string;
+  BROWSER?: BrowserRun;
 }
 
 interface Source {
@@ -40,7 +39,7 @@ interface Source {
   fetch: (dates: string[]) => Promise<SourceFetchResult>;
 }
 
-interface SourceFetchResult {
+export interface SourceFetchResult {
   showings: NormalizedShowing[];
   dateErrors: Map<string, string>;
 }
@@ -59,11 +58,8 @@ interface ActiveCinemaWindow {
 
 export type SourceBatch = 0 | 1 | 2;
 
-// Each source/date is refreshed once per day. Allow for the three batches to
-// run at slightly different times before flagging a healthy result as stale.
-// A missed daily trigger will therefore be visible in /health within the next
-// run window without producing false positives immediately before batch 2.
-export const SOURCE_DATE_STALE_AFTER_MS = 36 * 60 * 60 * 1000;
+// Six-hour collection cadence: report a missed pair of runs as stale.
+export const SOURCE_DATE_STALE_AFTER_MS = 12 * 60 * 60 * 1000;
 
 const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
   0: new Set([
@@ -73,15 +69,8 @@ const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
     "yokohama-burg13",
     "aeon-minatomirai",
   ]),
-  1: new Set([
-    "united-minatomirai",
-    "kino-minatomirai",
-    "jack-and-betty",
-  ]),
-  2: new Set([
-    "cinemarine",
-    "novecento",
-  ]),
+  1: new Set(["united-minatomirai", "kino-minatomirai", "jack-and-betty"]),
+  2: new Set(["cinemarine", "novecento"]),
 };
 
 const USER_AGENT =
@@ -98,30 +87,41 @@ export default {
     ctx: ExecutionContext,
   ): Promise<void> {
     ctx.waitUntil(
-      refreshBatch(env, sourceBatchForCron(controller.cron)).catch((error) => {
-        console.error("Schedule batch execution failed", {
-          cron: controller.cron,
-          error: safeError(error),
-        });
-      }),
+      refreshBatch(env, sourceBatchForCron(controller.cron))
+        .then(async (result) => {
+          if (env.AI) {
+            try {
+              await refreshMovieTitleResearch(env.DB, env.AI);
+            } catch {
+              console.warn("Movie title research unavailable");
+            }
+          }
+          if (result.failed)
+            throw new Error(`${result.failed} cinema sources failed`);
+        })
+        .catch((error) => {
+          console.error("Schedule batch execution failed", {
+            cron: controller.cron,
+            error: safeError(error),
+          });
+          throw error;
+        }),
     );
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/health") {
-      return Response.json(await collectionHealth(env), {
+      const health = await collectionHealth(env);
+      return Response.json(health, {
+        status: health.ok ? 200 : 503,
         headers: { "cache-control": "no-store" },
       });
     }
     if (request.method !== "POST" || url.pathname !== "/refresh") {
       return new Response("Not found", { status: 404 });
     }
-    if (
-      !env.WORKER_TRIGGER_TOKEN ||
-      request.headers.get("authorization") !==
-        `Bearer ${env.WORKER_TRIGGER_TOKEN}`
-    ) {
+    if (!(await validBearer(request, env.WORKER_TRIGGER_TOKEN))) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -151,8 +151,10 @@ export function isStaleSourceDate(
 ): boolean {
   if (!lastAttemptAt) return true;
   const attemptedAt = Date.parse(lastAttemptAt);
-  return !Number.isFinite(attemptedAt) ||
-    now - attemptedAt > SOURCE_DATE_STALE_AFTER_MS;
+  return (
+    !Number.isFinite(attemptedAt) ||
+    now - attemptedAt > SOURCE_DATE_STALE_AFTER_MS
+  );
 }
 
 export function sourceDateOutcomes(
@@ -219,12 +221,9 @@ export async function refreshBatch(
   }
   const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
 
-  const activeCinemaWindows = await listActiveCinemaWindows(
-    env.DB,
-    dates[0],
-  );
+  const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
   const sourceIds = SOURCE_BATCH_IDS[batch];
-  const sources = buildSources().filter(
+  const sources = buildSources(env.BROWSER).filter(
     (source) =>
       sourceIds.has(source.id) &&
       (!onlySourceIds || onlySourceIds.has(source.id)),
@@ -239,10 +238,7 @@ export async function refreshBatch(
   for (const source of sources) {
     const cinemaWindow = activeCinemaWindows.get(source.id);
     if (!cinemaWindow) continue;
-    const sourceDates = activeDatesForCinema(
-      dates,
-      cinemaWindow.active_until,
-    );
+    const sourceDates = activeDatesForCinema(dates, cinemaWindow.active_until);
     if (sourceDates.length === 0) continue;
 
     const sourceStartedAt = new Date().toISOString();
@@ -255,9 +251,7 @@ export async function refreshBatch(
         const detail = [...fetched.dateErrors.entries()]
           .map(([date, error]) => `${date}: ${error}`)
           .join(" / ");
-        throw new Error(
-          detail || "上映回を1件も取得できませんでした",
-        );
+        throw new Error(detail || "上映回を1件も取得できませんでした");
       }
       const dateOutcomes = sourceDateOutcomes(
         sourceDates,
@@ -312,14 +306,7 @@ export async function refreshBatch(
         message,
         stack: error instanceof Error ? error.stack : undefined,
       });
-      await recordRun(
-        env.DB,
-        source.id,
-        sourceStartedAt,
-        "failed",
-        0,
-        message,
-      );
+      await recordRun(env.DB, source.id, sourceStartedAt, "failed", 0, message);
       await recordDateOutcomes(
         env.DB,
         source.id,
@@ -357,7 +344,7 @@ export async function refreshBatch(
   return summary;
 }
 
-function buildSources(): Source[] {
+function buildSources(browser?: BrowserRun): Source[] {
   return [
     {
       id: "tjoy-yokohama",
@@ -367,6 +354,7 @@ function buildSources(): Source[] {
           "tjoy-yokohama",
           "tjoy-yokohama",
           "https://tjoy.jp/t-joy_yokohama",
+          browser,
         ),
     },
     {
@@ -385,6 +373,7 @@ function buildSources(): Source[] {
           "yokohama-burg13",
           "yokohama-burg13",
           "https://tjoy.jp/yokohama_burg13",
+          browser,
         ),
     },
     {
@@ -440,94 +429,114 @@ async function fetchAeon(dates: string[]): Promise<SourceFetchResult> {
 }
 
 async function fetchMovil(dates: string[]): Promise<SourceFetchResult> {
+  const budget = new SourceAccessBudget();
   const movieImages = await fetchOptionalMovieImages(
     "https://109cinemas.net/nowshowing/",
     parseMovilMovieImages,
+    undefined,
+    budget,
   );
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = `https://109cinemas.net/movil/schedules/${compactDate(date)}.html?theater_code=72`;
-    const response = await checkedFetch(url);
-    return parseMovilSchedule(await response.text(), date, movieImages);
-  });
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = `https://109cinemas.net/movil/schedules/${compactDate(date)}.html?theater_code=72`;
+      const response = await checkedFetch(url, {}, budget);
+      return parseMovilSchedule(await response.text(), date, movieImages);
+    },
+    budget,
+  );
 }
 
-async function fetchTohoKamiooka(
-  dates: string[],
-): Promise<SourceFetchResult> {
+async function fetchTohoKamiooka(dates: string[]): Promise<SourceFetchResult> {
+  const budget = new SourceAccessBudget();
   const bookingUrl =
     "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do";
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = new URL(
-      "https://api2.tohotheater.jp/api/schedule/v1/schedule/066/TNPI3050J02",
-    );
-    url.searchParams.set("__type__", "html");
-    url.searchParams.set("__useResultInfo__", "no");
-    url.searchParams.set("vg_cd", "066");
-    url.searchParams.set("show_day", compactDate(date));
-    url.searchParams.set("term", "99");
-    url.searchParams.set("isMember", "");
-    url.searchParams.set("enter_kbn", "");
-    url.searchParams.set("_dc", String(Date.now()));
-    const response = await checkedFetch(url, {
-      headers: {
-        accept: "application/json",
-        referer: "https://hlo.tohotheater.jp/",
-      },
-    });
-    return parseTohoSchedule(
-      await response.json(),
-      date,
-      "toho-kamiooka",
-      "toho-kamiooka",
-      bookingUrl,
-    );
-  });
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = new URL(
+        "https://api2.tohotheater.jp/api/schedule/v1/schedule/066/TNPI3050J02",
+      );
+      url.searchParams.set("__type__", "html");
+      url.searchParams.set("__useResultInfo__", "no");
+      url.searchParams.set("vg_cd", "066");
+      url.searchParams.set("show_day", compactDate(date));
+      url.searchParams.set("term", "99");
+      url.searchParams.set("isMember", "");
+      url.searchParams.set("enter_kbn", "");
+      url.searchParams.set("_dc", String(Date.now()));
+      const response = await checkedFetch(
+        url,
+        {
+          headers: {
+            accept: "application/json",
+            referer: "https://hlo.tohotheater.jp/",
+          },
+        },
+        budget,
+      );
+      return parseTohoSchedule(
+        await response.json(),
+        date,
+        "toho-kamiooka",
+        "toho-kamiooka",
+        bookingUrl,
+      );
+    },
+    budget,
+  );
 }
 
 async function fetchUnited(dates: string[]): Promise<SourceFetchResult> {
+  const budget = new SourceAccessBudget();
   const decoder = new TextDecoder("shift_jis");
   const movieImages = await fetchOptionalMovieImages(
     "https://www.unitedcinemas.jp/minatomirai/film.php",
     parseUnitedMovieImages,
     async (response) => decoder.decode(await response.arrayBuffer()),
+    budget,
   );
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = `https://www.unitedcinemas.jp/minatomirai/daily.php?date=${date}`;
-    const response = await checkedFetch(url);
-    return parseUnitedSchedule(
-      decoder.decode(await response.arrayBuffer()),
-      date,
-      movieImages,
-    );
-  });
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = `https://www.unitedcinemas.jp/minatomirai/daily.php?date=${date}`;
+      const response = await checkedFetch(url, {}, budget);
+      return parseUnitedSchedule(
+        decoder.decode(await response.arrayBuffer()),
+        date,
+        movieImages,
+      );
+    },
+    budget,
+  );
 }
 
 async function fetchKino(dates: string[]): Promise<SourceFetchResult> {
-  const [scheduleResponse, movieImages] = await Promise.all([
-    checkedFetch("https://kinocinema.jp/minatomirai/"),
-    fetchOptionalMovieImages(
-      "https://kinocinema.jp/minatomirai/movie/",
-      parseKinoMovieImages,
-    ),
-  ]);
+  const budget = new SourceAccessBudget();
+  const scheduleResponse = await checkedFetch(
+    "https://kinocinema.jp/minatomirai/",
+    {},
+    budget,
+  );
+  const movieImages = await fetchOptionalMovieImages(
+    "https://kinocinema.jp/minatomirai/movie/",
+    parseKinoMovieImages,
+    undefined,
+    budget,
+  );
   return successfulFetch(
-    parseKinoSchedule(
-      await scheduleResponse.text(),
-      dates[0],
-      movieImages,
-    ),
+    parseKinoSchedule(await scheduleResponse.text(), dates[0], movieImages),
   );
 }
 
-async function fetchNovecento(
-  dates: string[],
-): Promise<SourceFetchResult> {
-  const scheduleUrl =
-    "https://cinema1900.wixsite.com/home/filmtheater1900";
+async function fetchNovecento(dates: string[]): Promise<SourceFetchResult> {
+  const scheduleUrl = "https://cinema1900.wixsite.com/home/filmtheater1900";
   const response = await checkedFetch(scheduleUrl);
   const images = parseNovecentoScheduleImages(await response.text(), dates);
   if (images.length === 0) {
-    throw new Error("ノヴェチェントの週間スケジュール画像を取得できませんでした");
+    throw new Error(
+      "ノヴェチェントの週間スケジュール画像を取得できませんでした",
+    );
   }
   return successfulFetch(parseReviewedNovecentoSchedule(images, dates));
 }
@@ -537,11 +546,13 @@ async function fetchOptionalMovieImages(
   parse: (html: string) => Map<string, string>,
   decode: (response: Response) => Promise<string> = (response) =>
     response.text(),
+  budget = new SourceAccessBudget(),
 ): Promise<Map<string, string>> {
   try {
-    const response = await checkedFetch(url);
+    const response = await checkedFetch(url, {}, budget);
     return parse(await decode(response));
   } catch (error) {
+    budget.recordFailure(error);
     console.warn("Movie image enrichment failed", {
       host: new URL(url).hostname,
       message: safeError(error),
@@ -557,90 +568,119 @@ async function fetchEigaland(
   webKey: string,
   bookingUrl: string,
 ): Promise<SourceFetchResult> {
-  return fetchDatesIndependently(dates, async (date) => {
-    const url = new URL(
-      "https://schedule.eigaland.com/api/schedulePage/show/listByCinemaIdAndDate",
-    );
-    url.searchParams.set("webKey", webKey);
-    url.searchParams.set("date", date);
-    const response = await checkedFetch(url);
-    return parseEigalandSchedule(
-      await response.json(),
-      sourceId,
-      cinemaId,
-      bookingUrl,
-    );
-  });
+  const budget = new SourceAccessBudget();
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      const url = new URL(
+        "https://schedule.eigaland.com/api/schedulePage/show/listByCinemaIdAndDate",
+      );
+      url.searchParams.set("webKey", webKey);
+      url.searchParams.set("date", date);
+      const response = await checkedFetch(url, {}, budget);
+      return parseEigalandSchedule(
+        await response.json(),
+        sourceId,
+        cinemaId,
+        bookingUrl,
+      );
+    },
+    budget,
+  );
 }
 
-async function fetchTjoy(
+export async function fetchTjoy(
   dates: string[],
   sourceId: string,
   cinemaId: string,
   theaterUrl: string,
+  browser?: BrowserRun,
 ): Promise<SourceFetchResult> {
-  return fetchDatesIndependently(dates, async (date) => {
-    const response = await checkedFetch(tjoyScheduleUrl(theaterUrl, date), {
-      headers: tjoyRequestHeaders(theaterUrl),
-    });
-    return parseTjoySchedule(
-      await response.text(),
-      date,
-      sourceId,
-      cinemaId,
-      theaterUrl,
-    );
-  });
+  const budget = new SourceAccessBudget();
+  return fetchDatesIndependently(
+    dates,
+    async (date) => {
+      let html: string;
+      if (browser) {
+        const response = await browser.quickAction("content", {
+          url: tjoyScheduleUrl(theaterUrl, date),
+          gotoOptions: { waitUntil: "domcontentloaded", timeout: 20_000 },
+          rejectResourceTypes: ["image", "font", "media", "stylesheet"],
+        });
+        if (!response.ok) {
+          await response.body?.cancel();
+          throw budget.recordFailure(
+            new Error(`Browser Run: HTTP ${response.status}`),
+            response.status === 403 || response.status === 429,
+          );
+        }
+        const payload = await response.json<
+          BrowserRunContentSuccessResponse | BrowserRunErrorResponse
+        >();
+        if (!payload.success || typeof payload.result !== "string")
+          throw new Error("Browser Run: invalid content response");
+        html = payload.result;
+      } else {
+        const response = await checkedFetch(
+          tjoyScheduleUrl(theaterUrl, date),
+          {
+            headers: tjoyRequestHeaders(theaterUrl),
+          },
+          budget,
+        );
+        html = await response.text();
+      }
+      return parseTjoySchedule(html, date, sourceId, cinemaId, theaterUrl);
+    },
+    budget,
+  );
 }
 
-export function tjoyScheduleUrl(
-  theaterUrl: string,
-  date: string,
-): string {
+export function tjoyScheduleUrl(theaterUrl: string, date: string): string {
   const scheduleUrl = new URL(theaterUrl);
   scheduleUrl.searchParams.set("date", date);
   return scheduleUrl.toString();
 }
 
-export function tjoyRequestHeaders(
-  theaterUrl: string,
-): Record<string, string> {
+export function tjoyRequestHeaders(theaterUrl: string): Record<string, string> {
   return {
-    accept:
-      "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     referer: theaterUrl,
     "user-agent": STANDARD_BROWSER_USER_AGENT,
   };
 }
 
-function successfulFetch(
-  showings: NormalizedShowing[],
-): SourceFetchResult {
+function successfulFetch(showings: NormalizedShowing[]): SourceFetchResult {
   return { showings, dateErrors: new Map() };
 }
 
 async function fetchDatesIndependently(
   dates: string[],
   fetchDate: (date: string) => Promise<NormalizedShowing[]>,
+  budget: SourceAccessBudget,
 ): Promise<SourceFetchResult> {
   const showings: NormalizedShowing[] = [];
   const dateErrors = new Map<string, string>();
   for (const date of dates) {
     try {
+      budget.assertAvailable();
       showings.push(...(await fetchDate(date)));
     } catch (error) {
-      dateErrors.set(date, safeError(error));
+      dateErrors.set(date, safeError(budget.recordFailure(error)));
+      if (!budget.stopReason && date !== dates.at(-1)) await delay(1_000);
     }
   }
   return { showings, dateErrors };
 }
 
-async function checkedFetch(
+export async function checkedFetch(
   input: string | URL,
   init: RequestInit = {},
+  budget = new SourceAccessBudget(),
 ): Promise<Response> {
   const host = new URL(input.toString()).hostname;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    budget.assertAvailable();
     const headers = new Headers(init.headers);
     if (!headers.has("user-agent")) headers.set("user-agent", USER_AGENT);
     headers.set("accept-language", "ja,en;q=0.5");
@@ -650,31 +690,34 @@ async function checkedFetch(
         ...init,
         headers,
         redirect: "follow",
+        signal: init.signal ?? AbortSignal.timeout(20_000),
       });
     } catch (error) {
-      if (attempt < 2) {
-        await delay(attempt === 0 ? 1_000 : 3_000);
+      const failure = budget.recordFailure(
+        new Error(`${host}: ${safeError(error)}`),
+      );
+      if (attempt < 1 && !budget.stopReason) {
+        await delay(1_000);
         continue;
       }
-      throw new Error(`${host}: ${safeError(error)}`);
+      throw failure;
     }
     if (response.ok) return response;
-    if (
-      attempt < 2 &&
-      (response.status === 403 ||
-        response.status === 429 ||
-        response.status >= 500)
-    ) {
-      const retryAfterSeconds = Number(response.headers.get("retry-after"));
+    await response.body?.cancel();
+    const failure = budget.recordFailure(
+      new Error(`${host}: HTTP ${response.status}`),
+      response.status === 403 || response.status === 429,
+    );
+    if (attempt < 1 && response.status >= 500 && !budget.stopReason) {
+      const retryAfter = response.headers.get("retry-after");
+      const retryAfterSeconds = retryAfter === null ? NaN : Number(retryAfter);
       const retryDelay = Number.isFinite(retryAfterSeconds)
         ? Math.min(Math.max(retryAfterSeconds * 1_000, 1_000), 10_000)
-        : attempt === 0
-          ? 1_000
-          : 3_000;
+        : 1_000;
       await delay(retryDelay);
       continue;
     }
-    throw new Error(`${host}: HTTP ${response.status}`);
+    throw failure;
   }
   throw new Error(`${host}: fetch failed`);
 }
@@ -746,9 +789,7 @@ async function listActiveCinemaWindows(
     )
     .bind(date)
     .all<ActiveCinemaWindow>();
-  return new Map(
-    (result.results ?? []).map((cinema) => [cinema.id, cinema]),
-  );
+  return new Map((result.results ?? []).map((cinema) => [cinema.id, cinema]));
 }
 
 async function replaceSourceDates(
@@ -799,8 +840,7 @@ async function replaceSourceDates(
           showing.movieKey,
           showing.title,
           showing.imageUrl,
-          releaseDateByTitle.get(moviePreferenceKey(showing.title)) ??
-            null,
+          releaseDateByTitle.get(moviePreferenceKey(showing.title)) ?? null,
           showing.startsAt,
           showing.endsAt,
           showing.screen,
@@ -808,10 +848,12 @@ async function replaceSourceDates(
           showing.bookingUrl,
           showing.purchasable === null ? null : Number(showing.purchasable),
           fetchedAt,
-      );
+        );
     }),
     ...publishedShowings.map((showing) => {
-      const cinema = CINEMAS.find((candidate) => candidate.id === showing.cinemaId);
+      const cinema = CINEMAS.find(
+        (candidate) => candidate.id === showing.cinemaId,
+      );
       return db
         .prepare(
           `INSERT INTO showing_search (
@@ -849,11 +891,9 @@ async function refreshTmdbReleaseDateCatalog(
   }
 
   try {
-    const lastFetched = await env.DB
-      .prepare(
-        "SELECT MAX(fetched_at) AS fetched_at FROM movie_release_dates",
-      )
-      .first<{ fetched_at: string | null }>();
+    const lastFetched = await env.DB.prepare(
+      "SELECT MAX(fetched_at) AS fetched_at FROM movie_release_dates",
+    ).first<{ fetched_at: string | null }>();
     if (
       lastFetched?.fetched_at &&
       Date.now() - new Date(lastFetched.fetched_at).getTime() <
@@ -862,17 +902,13 @@ async function refreshTmdbReleaseDateCatalog(
       return;
     }
 
-    const records = await fetchTmdbReleaseDates(
-      accessToken,
-      today,
-    );
+    const records = await fetchTmdbReleaseDates(accessToken, today);
     const fetchedAt = new Date().toISOString();
     for (let offset = 0; offset < records.length; offset += 50) {
       await env.DB.batch(
         records.slice(offset, offset + 50).map((record) =>
-          env.DB
-            .prepare(
-              `INSERT INTO movie_release_dates (
+          env.DB.prepare(
+            `INSERT INTO movie_release_dates (
                 title_key, tmdb_movie_id, tmdb_title, release_date,
                 fetched_at
               ) VALUES (?, ?, ?, ?, ?)
@@ -881,14 +917,13 @@ async function refreshTmdbReleaseDateCatalog(
                 tmdb_title = excluded.tmdb_title,
                 release_date = excluded.release_date,
                 fetched_at = excluded.fetched_at`,
-            )
-            .bind(
-              record.titleKey,
-              record.tmdbMovieId,
-              record.tmdbTitle,
-              record.releaseDate,
-              fetchedAt,
-            ),
+          ).bind(
+            record.titleKey,
+            record.tmdbMovieId,
+            record.tmdbTitle,
+            record.releaseDate,
+            fetchedAt,
+          ),
         ),
       );
     }
@@ -916,10 +951,7 @@ async function loadMovieReleaseDates(
     .prepare("SELECT title_key, release_date FROM movie_release_dates")
     .all<{ title_key: string; release_date: string }>();
   return new Map(
-    (result.results ?? []).map((row) => [
-      row.title_key,
-      row.release_date,
-    ]),
+    (result.results ?? []).map((row) => [row.title_key, row.release_date]),
   );
 }
 
@@ -985,18 +1017,14 @@ async function collectionHealth(env: Env): Promise<{
 }> {
   const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
   const dates = dateRange(todayInJst(), days);
-  const activeCinemaWindows = await listActiveCinemaWindows(
-    env.DB,
-    dates[0],
-  );
-  const rows = await env.DB
-    .prepare(
-      `SELECT
+  const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
+  const rows = await env.DB.prepare(
+    `SELECT
         source_id, schedule_date, last_attempt_at, status, showing_count,
         error_message
       FROM source_date_health
       WHERE schedule_date >= ? AND schedule_date <= ?`,
-    )
+  )
     .bind(dates[0], dates.at(-1) ?? dates[0])
     .all<{
       source_id: string;
@@ -1016,17 +1044,15 @@ async function collectionHealth(env: Env): Promise<{
     cinemaId: cinema.id,
     dates: activeDatesForCinema(dates, cinema.active_until).map((date) => {
       const row = rowBySourceAndDate.get(`${cinema.id}|${date}`);
-      const status = row?.status === "error"
-        ? "error"
-        : row && isStaleSourceDate(row.last_attempt_at)
-          ? "stale"
-          : (row?.status ?? "missing");
+      const status =
+        row?.status === "error"
+          ? "error"
+          : row && isStaleSourceDate(row.last_attempt_at)
+            ? "stale"
+            : (row?.status ?? "missing");
       return {
         date,
-        status: status as
-          | SourceDateOutcome["status"]
-          | "missing"
-          | "stale",
+        status: status as SourceDateOutcome["status"] | "missing" | "stale",
         count: Number(row?.showing_count ?? 0),
         lastAttemptAt: row?.last_attempt_at ?? null,
         ...(row?.error_message ? { error: row.error_message } : {}),
@@ -1037,9 +1063,8 @@ async function collectionHealth(env: Env): Promise<{
   const summary = {
     published: dateStatuses.filter((date) => date.status === "published")
       .length,
-    notPublished: dateStatuses.filter(
-      (date) => date.status === "not_published",
-    ).length,
+    notPublished: dateStatuses.filter((date) => date.status === "not_published")
+      .length,
     errors: dateStatuses.filter((date) => date.status === "error").length,
     missing: dateStatuses.filter((date) => date.status === "missing").length,
     stale: dateStatuses.filter((date) => date.status === "stale").length,
@@ -1075,15 +1100,7 @@ async function recordRun(
           error_message
         ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(
-        id,
-        sourceId,
-        startedAt,
-        completedAt,
-        status,
-        count,
-        errorMessage,
-      ),
+      .bind(id, sourceId, startedAt, completedAt, status, count, errorMessage),
     db
       .prepare(
         `INSERT INTO source_health (
@@ -1113,7 +1130,9 @@ async function recordRun(
 
 function deduplicate(showings: NormalizedShowing[]): NormalizedShowing[] {
   return [
-    ...new Map(showings.map((showing) => [showingId(showing), showing])).values(),
+    ...new Map(
+      showings.map((showing) => [showingId(showing), showing]),
+    ).values(),
   ].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 

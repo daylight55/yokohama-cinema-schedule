@@ -1,0 +1,39 @@
+:root {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI",
+    "Noto Sans JP", sans-serif;
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--page);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --text: #f4f7f2;
+  --page: #0d1211;
+  --page-background: var(--page);
+  --surface: #161d1a;
+  --surface-raised: #1d2722;
+  --line: #34433c;
+  --line-soft: #26312d;
+  --muted: #9daaa4;
+  --accent: #bfe9d0;
+  --accent-soft: #193426;
+  --accent-ink: #102019;
+  --now: #ffc37d;
+  --favorite: #ffd166;
+  --reachable: #8df0b5;
+  --reachable-ink: #092116;
+  --danger: #ffb4ab;
+  --focus-ring: rgb(191 233 208 / 45%);
+  --sticky-surface: rgb(13 18 17 / 96%);
+  --control-surface: #151d19;
+  --control-border: #46534d;
+  --control-text: #c6d0cb;
+  --strong-text: #fff;
+  --brand-text: #fff4d4;
+  --brand-shadow:
+    0 2px 0 #3a5d4f,
+    0 0 12px rgb(255 214 107 / 18%);
+  --header-height: 54px;
+  --date-height: 72px;
+  --mobile-search-height: 63px;
+}

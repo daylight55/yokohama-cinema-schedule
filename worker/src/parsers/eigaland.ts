@@ -1,3 +1,4 @@
+import { resolveBookingUrl } from "./booking";
 import type { NormalizedShowing } from "../../../shared/types";
 import { safeImageUrl } from "../../../shared/movie";
 
@@ -49,7 +50,9 @@ export function parseEigalandSchedule(
           endsAt: show.endTime ? new Date(show.endTime).toISOString() : null,
           screen: house.houseName ? normalizeJapanese(house.houseName) : null,
           format: show.screeningFormat ?? detectFormat(movie.movieName),
-          bookingUrl: show.ticketingUrl || fallbackBookingUrl,
+          bookingUrl:
+            resolveBookingUrl(show.ticketingUrl, fallbackBookingUrl) ??
+            fallbackBookingUrl,
           purchasable: show.purchasable ?? null,
         });
       }

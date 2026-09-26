@@ -34,9 +34,12 @@ export function colorThemeToggleLabel(theme: ColorTheme): string {
 export type AppView =
   | "schedule"
   | "movies"
+  | "movie"
   | "cinemas"
   | "viewingPlans"
+  | "shared"
   | "planner"
+  | "adminUsers"
   | "account"
   | "about";
 
@@ -48,10 +51,7 @@ export function getAppPageScrollTarget(
   today: string,
   selectedMovieKey: string | null,
 ): AppPageScrollTarget {
-  if (
-    selectedMovieKey &&
-    (view === "schedule" || view === "movies")
-  ) {
+  if (selectedMovieKey && (view === "schedule" || view === "movies")) {
     return "linked-movie";
   }
   if (view === "schedule" && selectedDate === today) {
@@ -77,11 +77,7 @@ export function shouldShowScheduleTimeJumps(
 }
 
 export function scrollPageToTop(scroller: {
-  scrollTo(options: {
-    top: number;
-    left: number;
-    behavior: "instant";
-  }): void;
+  scrollTo(options: { top: number; left: number; behavior: "instant" }): void;
 }): void {
   scroller.scrollTo({ top: 0, left: 0, behavior: "instant" });
 }
@@ -89,21 +85,27 @@ export function scrollPageToTop(scroller: {
 const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#schedule": "schedule",
   "#movies": "movies",
+  "#movie": "movie",
   "#cinemas": "cinemas",
   "#viewing-plans": "viewingPlans",
+  "#shared": "shared",
   "#planner": "planner",
   "#profile": "account",
   "#account": "account",
+  "#admin-users": "adminUsers",
   "#about": "about",
 };
 
 const HASH_BY_APP_VIEW: Record<AppView, string> = {
   schedule: "#schedule",
   movies: "#movies",
+  movie: "#movie",
   cinemas: "#cinemas",
   viewingPlans: "#viewing-plans",
+  shared: "#shared",
   planner: "#planner",
   account: "#account",
+  adminUsers: "#admin-users",
   about: "#about",
 };
 
@@ -196,13 +198,11 @@ export function isDateSwipeBlockedByHorizontalScroll(
   target: EventTarget | null,
 ): boolean {
   const closest = (
-    target as
-      | {
-          closest?: (
-            selector: string,
-          ) => { clientWidth: number; scrollWidth: number } | null;
-        }
-      | null
+    target as {
+      closest?: (
+        selector: string,
+      ) => { clientWidth: number; scrollWidth: number } | null;
+    } | null
   )?.closest;
   if (typeof closest !== "function") return false;
 
@@ -293,7 +293,10 @@ export function getShowingReachability(
   const startsInMinutes =
     (new Date(showing.startsAt).getTime() - now.getTime()) / 60_000;
   const farthestTravelMinutes = Math.max(
-    ...Array.from(routeByCinema.values(), ({ durationMinutes }) => durationMinutes),
+    ...Array.from(
+      routeByCinema.values(),
+      ({ durationMinutes }) => durationMinutes,
+    ),
   );
   const reachabilityWindowMinutes = Math.min(
     farthestTravelMinutes + arrivalMarginMinutes,
@@ -304,8 +307,7 @@ export function getShowingReachability(
   }
 
   const targetStartMinutes = route.durationMinutes + arrivalMarginMinutes;
-  const earliestStartMinutes =
-    targetStartMinutes - marginToleranceMinutes;
+  const earliestStartMinutes = targetStartMinutes - marginToleranceMinutes;
   if (startsInMinutes < earliestStartMinutes) {
     return "unreachable";
   }
@@ -375,11 +377,7 @@ export function getScheduleMoviePresentation(
   routeByCinema: Map<string, RouteEstimate>,
 ): ScheduleMoviePresentation {
   const presentationShowings = showings.map((showing) => {
-    const reachability = getShowingReachability(
-      showing,
-      now,
-      routeByCinema,
-    );
+    const reachability = getShowingReachability(showing, now, routeByCinema);
     const route = routeByCinema.get(showing.cinemaId);
     return {
       showing,
@@ -393,9 +391,7 @@ export function getScheduleMoviePresentation(
   const isPast = presentationShowings.every(({ isPast }) => isPast);
   return {
     isPast,
-    isReachable: presentationShowings.some(
-      ({ isReachable }) => isReachable,
-    ),
+    isReachable: presentationShowings.some(({ isReachable }) => isReachable),
     isUnreachable:
       !isPast &&
       presentationShowings.length > 0 &&
@@ -453,17 +449,17 @@ export function groupByMovie(showings: Showing[]): Array<{
       key,
       preferenceKey: key,
       title: entries[0].title,
-      imageUrl:
-        entries.find((showing) => showing.imageUrl)?.imageUrl ?? null,
+      imageUrl: entries.find((showing) => showing.imageUrl)?.imageUrl ?? null,
       releaseDate:
-        entries.find((showing) => showing.releaseDate)?.releaseDate ??
-        null,
+        entries.find((showing) => showing.releaseDate)?.releaseDate ?? null,
       showings: entries.sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
     }))
     .sort((a, b) => {
       const firstA = a.showings[0]?.startsAt ?? "";
       const firstB = b.showings[0]?.startsAt ?? "";
-      return firstA.localeCompare(firstB) || a.title.localeCompare(b.title, "ja");
+      return (
+        firstA.localeCompare(firstB) || a.title.localeCompare(b.title, "ja")
+      );
     });
 }
 
@@ -472,9 +468,7 @@ export function listMovieShowingDates(
 ): string[] {
   return [
     ...new Set(
-      showings.map((showing) =>
-        formatJstDate(new Date(showing.startsAt)),
-      ),
+      showings.map((showing) => formatJstDate(new Date(showing.startsAt))),
     ),
   ].sort();
 }
@@ -505,8 +499,7 @@ const jstTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 
 export function scheduleTimeSlot(date: Date): string {
   const parts = jstTimeFormatter.formatToParts(date);
-  const hour =
-    parts.find((part) => part.type === "hour")?.value ?? "00";
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "00";
   const minute = Number(
     parts.find((part) => part.type === "minute")?.value ?? "0",
   );
@@ -534,11 +527,7 @@ function minutesFromTime(time: string): number {
   return hour * 60 + minute;
 }
 
-export type ScheduleTimePeriod =
-  | "morning"
-  | "daytime"
-  | "evening"
-  | "night";
+export type ScheduleTimePeriod = "morning" | "daytime" | "evening" | "night";
 
 export const SCHEDULE_TIME_PERIODS: ReadonlyArray<{
   id: ScheduleTimePeriod;
@@ -551,9 +540,7 @@ export const SCHEDULE_TIME_PERIODS: ReadonlyArray<{
   { id: "night", label: "夜", targetMinutes: 20 * 60 },
 ];
 
-export function scheduleTimePeriodForTime(
-  time: string,
-): ScheduleTimePeriod {
+export function scheduleTimePeriodForTime(time: string): ScheduleTimePeriod {
   const minutes = minutesFromTime(time);
   if (minutes >= 5 * 60 && minutes < 12 * 60) return "morning";
   if (minutes >= 12 * 60 && minutes < 16 * 60) return "daytime";
@@ -579,9 +566,9 @@ export function getScheduleTimeJumpTargets(
           ? sortedTimes.length > 0
             ? "top"
             : null
-          : sortedTimes.find(
+          : (sortedTimes.find(
               (time) => minutesFromTime(time) >= period.targetMinutes,
-            ) ?? null;
+            ) ?? null);
       return [period.id, target];
     }),
   ) as Record<ScheduleTimePeriod, string | null>;
@@ -661,14 +648,9 @@ export function findCurrentTimeMarkerIndex(
   return groups.findIndex((group) => group.time >= currentSlot);
 }
 
-export function scrollToInitialTimeMarker(
-  marker: {
-    scrollIntoView(options: {
-      behavior: "instant";
-      block: "start";
-    }): void;
-  },
-): void {
+export function scrollToInitialTimeMarker(marker: {
+  scrollIntoView(options: { behavior: "instant"; block: "start" }): void;
+}): void {
   marker.scrollIntoView({ behavior: "instant", block: "start" });
 }
 

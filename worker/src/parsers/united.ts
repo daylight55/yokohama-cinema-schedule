@@ -1,4 +1,5 @@
 import { load } from "cheerio";
+import { resolveBookingUrl } from "./booking";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
 import { moviePreferenceKey, safeImageUrl } from "../../../shared/movie";
 import type { NormalizedShowing } from "../../../shared/types";
@@ -13,8 +14,17 @@ export function parseUnitedSchedule(
 
   $("li.clearfix").each((_, movieElement) => {
     const movie = $(movieElement);
-    const title = cleanText(movie.find(".movieTitle").first().clone().children().remove().end().text()) ||
-      cleanText(movie.find(".movieTitle a").first().text());
+    const title =
+      cleanText(
+        movie
+          .find(".movieTitle")
+          .first()
+          .clone()
+          .children()
+          .remove()
+          .end()
+          .text(),
+      ) || cleanText(movie.find(".movieTitle a").first().text());
     if (!title || movie.find(".startTime").length === 0) return;
     const detailUrl = movie.find(".movieTitle a").first().attr("href") ?? "";
     const movieKey = detailUrl.match(/film=(\d+)/)?.[1] ?? title;
@@ -36,9 +46,13 @@ export function parseUnitedSchedule(
           "",
         );
         const href = showBlock.find("a[href]").first().attr("href");
-        const bookingUrl = href
-          ? new URL(href, "https://www.unitedcinemas.jp").toString()
-          : "https://www.unitedcinemas.jp/minatomirai/daily.php";
+        const directBookingUrl = resolveBookingUrl(
+          href,
+          "https://www.unitedcinemas.jp/minatomirai/daily.php",
+        );
+        const bookingUrl =
+          directBookingUrl ??
+          `https://www.unitedcinemas.jp/minatomirai/daily.php?date=${date}`;
 
         result.push({
           sourceId: "united-minatomirai",
@@ -51,7 +65,7 @@ export function parseUnitedSchedule(
           screen: screenName ? `スクリーン${screenName}` : null,
           format: detectFormat(movie.text()),
           bookingUrl,
-          purchasable: Boolean(href),
+          purchasable: Boolean(directBookingUrl),
         });
       });
     });
