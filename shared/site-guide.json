@@ -1,28 +1,98 @@
 {
   "ja": {
-    "heading": "48秒でわかる使い方", "transcript": "テキストで読む", "download": "動画をダウンロード", "label": "はまむび！の使い方（48秒・音声なし）",
+    "heading": "はまむび！の使い方",
+    "transcript": "テキストで読む",
+    "download": "動画をダウンロード",
+    "label": "はまむび！の使い方（BGM付き）",
     "scenes": [
-      {"title": "横浜の映画を、もっと身近に。", "caption": "はまむび！は、横浜周辺の上映をまとめて探せるサイトです。", "short": "使い方ガイド"},
-      {"title": "日付と作品で探す", "caption": "日付を選び、作品名や映画館名で検索。エリアや「これから」でも絞り込めます。", "short": "上映を探す"},
-      {"title": "1週間の上映をひと目で", "caption": "作品名を押すと、その作品の今後7日間の上映を映画館を横断して確認できます。", "short": "作品のページ"},
-      {"title": "予約は専用ボタンから", "caption": "上映回の「予約」から映画館の公式サイトへ。最新の時刻と販売状況を確認してください。", "short": "チケットの予約"},
-      {"title": "気になる映画をストック", "caption": "スターで「気になる」に追加。「…」では鑑賞済み・興味なしの設定や作品ページへの移動ができます。", "short": "作品を整理"},
-      {"title": "観に行く回を保存", "caption": "「観に行く」で鑑賞予定に追加。サイドバーの「鑑賞予定」で確認できます。予約は別途必要です。", "short": "鑑賞予定"},
-      {"title": "みんなの予定も一緒に", "caption": "「共有」で、登録ユーザー全員の今後の鑑賞予定と気になる作品を確認。保存した内容は自動共有されます。", "short": "メンバーと共有"},
-      {"title": "いつもの言語で楽しもう", "caption": "上部のJP / ENで言語を切り替え。設定はアカウントに保存されます。さあ、次の1本を探しましょう。", "short": "日本語 / English"}
+      {
+        "title": "映画、行こっ！",
+        "caption": "横浜の映画、まとめてチェック。はまむびくんと、観たい作品を見つけよう！",
+        "short": "使い方ガイド"
+      },
+      {
+        "title": "観たい！を探そう",
+        "caption": "日付を選び、作品名や映画館名で検索。エリアや「これから」でも絞り込めます。",
+        "short": "上映を探す"
+      },
+      {
+        "title": "上映、ずらり！",
+        "caption": "作品名をタップ！映画館を横断して、その作品の週間スケジュールがずらり。",
+        "short": "作品のページ"
+      },
+      {
+        "title": "チケットへGO！",
+        "caption": "上映回の「予約」から映画館の公式サイトへ。最新の時刻と販売状況を確認してください。",
+        "short": "チケットの予約"
+      },
+      {
+        "title": "気になる？ポチッ！",
+        "caption": "スターで「気になる」に追加。「…」では鑑賞済み・興味なしの設定や作品ページへの移動ができます。",
+        "short": "作品を整理"
+      },
+      {
+        "title": "この回に決〜めた！",
+        "caption": "「観に行く」で鑑賞予定に追加。サイドバーの「鑑賞予定」で確認できます。予約は別途必要です。",
+        "short": "鑑賞予定"
+      },
+      {
+        "title": "みんな、何観る？",
+        "caption": "「共有」で、登録ユーザー全員の今後の鑑賞予定と気になる作品を確認。保存した内容は自動共有されます。",
+        "short": "メンバーと共有"
+      },
+      {
+        "title": "さあ、映画へ！",
+        "caption": "JP / ENをポチッと言語切り替え。設定はアカウントに保存。さあ、映画を楽しもう！",
+        "short": "日本語 / English"
+      }
     ]
   },
   "en": {
-    "heading": "How it works in 48 seconds", "transcript": "Read the guide", "download": "Download video", "label": "How to use Hama Movie! (48 seconds, no audio)",
+    "heading": "How to use Hama Movie!",
+    "transcript": "Read the guide",
+    "download": "Download video",
+    "label": "How to use Hama Movie! (with music)",
     "scenes": [
-      {"title": "Your next film,\nright here in Yokohama.", "caption": "Hama Movie! brings showtimes from cinemas around Yokohama together in one place.", "short": "A quick guide"},
-      {"title": "Find your next screening", "caption": "Choose a date and search by film or cinema. Narrow the list by area or select Upcoming.", "short": "Find showtimes"},
-      {"title": "One film.\nSeven days of showtimes.", "caption": "Tap a film title to see its screenings across cinemas for the next seven days.", "short": "Film showtimes"},
-      {"title": "Book with the cinema", "caption": "Tap Book beside a screening to open the cinema's official site. Check the latest times and availability there.", "short": "Book tickets"},
-      {"title": "Keep the films you love", "caption": "Tap the star to save a film. Open the … menu for Watched, Not interested, or View film showtimes.", "short": "Your watchlist"},
-      {"title": "Save a screening", "caption": "Tap Add to plans, then find it under My screenings in the sidebar. Tickets must be booked separately.", "short": "My screenings"},
-      {"title": "See what everyone\nis planning", "caption": "Shared shows all registered members' upcoming plans and watchlists. Your saved plans and watchlist are shared automatically.", "short": "Shared with members"},
-      {"title": "Make yourself at home", "caption": "Use JP / EN in the top bar to switch languages. Your choice is saved to your account. Find your next film!", "short": "Japanese / English"}
+      {
+        "title": "Movie time!",
+        "caption": "Big-screen plans? Find films around Yokohama with your little Hama Movie! buddy.",
+        "short": "A quick guide"
+      },
+      {
+        "title": "Find it. Fancy it.",
+        "caption": "Choose a date and search by film or cinema. Narrow the list by area or select Upcoming.",
+        "short": "Find showtimes"
+      },
+      {
+        "title": "Showtimes?\nAll together!",
+        "caption": "Tap a film title. Explore its showtimes across cinemas for the coming week!",
+        "short": "Film showtimes"
+      },
+      {
+        "title": "Tickets? Let’s go!",
+        "caption": "Tap Book beside a screening to open the cinema's official site. Check the latest times and availability there.",
+        "short": "Book tickets"
+      },
+      {
+        "title": "Love it? Star it!",
+        "caption": "Tap the star to save a film. Open the … menu for Watched, Not interested, or View film showtimes.",
+        "short": "Your watchlist"
+      },
+      {
+        "title": "That’s my\nscreening!",
+        "caption": "Tap Add to plans, then find it under My screenings in the sidebar. Tickets must be booked separately.",
+        "short": "My screenings"
+      },
+      {
+        "title": "Who’s watching\nwhat?",
+        "caption": "Shared shows all registered members' upcoming plans and watchlists. Your saved plans and watchlist are shared automatically.",
+        "short": "Shared with members"
+      },
+      {
+        "title": "Your language.\nYour movie!",
+        "caption": "Use JP / EN in the top bar to switch languages. Your choice is saved to your account. Find your next film!",
+        "short": "Japanese / English"
+      }
     ]
   }
 }
