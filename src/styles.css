@@ -317,6 +317,25 @@ a:active {
   margin-top: 18px;
 }
 
+.movie-schedule-link {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.movie-schedule-link + .movie-preference-actions { margin-top: 8px; }
+.movie-schedule-link svg { flex-shrink: 0; }
+
 .movie-preference-actions button {
   display: flex;
   min-height: 48px;
@@ -1022,13 +1041,22 @@ main {
 
 .program-title h2 {
   min-width: 0;
+  flex: 1;
   margin: 0;
   font-size: 14px;
   line-height: 1.55;
 }
 
-.program-title h2 a,
-.program-title-button,
+.program-title h2 a {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  overflow-wrap: anywhere;
+  color: inherit;
+  text-decoration: none;
+}
+.movie-options-button { flex-shrink: 0; }
+
 .movie-list-copy > strong a {
   display: block;
   color: inherit;
@@ -1036,28 +1064,18 @@ main {
 }
 
 .program-title h2 a:hover,
-.program-title-button:hover,
 .movie-list-copy > strong a:hover {
   text-decoration: underline;
 }
 
 .program-title h2 a:focus-visible,
-.program-title-button:focus-visible,
 .movie-list-copy > strong a:focus-visible {
   border-radius: 3px;
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
-.program-title-button {
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
+
 
 .favorite-button {
   display: grid;
@@ -1122,15 +1140,46 @@ main {
   overflow: visible;
 }
 
-.cinema-slot-booking {
+.cinema-slot-info {
   display: flex;
-  min-height: 100%;
   flex: 1;
   flex-direction: column;
-  padding: 10px 10px 56px;
+  padding: 10px;
   color: inherit;
   text-decoration: none;
 }
+
+.cinema-slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+.screening-reserve {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.screening-reserve:hover, .movie-schedule-link:hover { filter: brightness(1.12); }
+.screening-reserve:focus-visible, .movie-schedule-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.cinema-slot-actions > * { flex: 1; }
 
 .cinema-slot:only-child {
   flex-basis: 100%;
@@ -1179,9 +1228,7 @@ main {
 }
 
 .viewing-plan-toggle {
-  position: absolute;
-  right: 8px;
-  bottom: 7px;
+  position: relative;
   display: inline-flex;
   min-width: 92px;
   min-height: 44px;

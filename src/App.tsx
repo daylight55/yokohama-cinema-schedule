@@ -16,6 +16,7 @@ import {
   CheckCircleIcon,
   ClockIcon,
   CrosshairIcon,
+  DotsThreeIcon,
   FilmSlateIcon,
   HouseLineIcon,
   InfoIcon,
@@ -1849,36 +1850,31 @@ export function App() {
                 >
                   <div className="program-title">
                     <h2>
-                      {localize(
-                        schedule?.preferencesEnabled ? (
-                          <button
-                            className="program-title-button"
-                            type="button"
-                            onClick={(event) =>
-                              openMoviePreferenceDialog(
-                                movie,
-                                event.currentTarget.closest<HTMLElement>(
-                                  ".program-block",
-                                ),
-                              )
-                            }
-                          >
-                            {movieTitle(movie.title)}
-                          </button>
-                        ) : (
-                          <a
-                            href={hashForAppView("movies", {
-                              date: selectedDate,
-                              movie: movie.preferenceKey,
-                              query: normalizedSearchQuery,
-                            })}
-                            onClick={navigateHashLink}
-                          >
-                            {movieTitle(movie.title)}
-                          </a>
-                        ),
-                      )}
+                      <a
+                        href={hashForAppView("movie", {
+                          date: selectedDate,
+                          movie: movie.preferenceKey,
+                          query: normalizedSearchQuery,
+                        })}
+                        onClick={navigateHashLink}
+                      >
+                        {movieTitle(movie.title)}
+                      </a>
                     </h2>
+                    {schedule?.preferencesEnabled && (
+                      <button
+                        className="icon-button movie-options-button"
+                        type="button"
+                        aria-label={`${localize("作品の設定")} · ${movieTitle(movie.title)}`}
+                        aria-haspopup="dialog"
+                        onClick={(event) => openMoviePreferenceDialog(
+                          movie,
+                          event.currentTarget.closest<HTMLElement>(".program-block"),
+                        )}
+                      >
+                        <DotsThreeIcon size={24} aria-hidden="true" />
+                      </button>
+                    )}
                     {localize(
                       schedule?.preferencesEnabled && (
                         <FavoriteButton
@@ -2181,6 +2177,21 @@ export function App() {
                   <XIcon size={20} aria-hidden="true" />
                 </button>
               </div>
+              <a
+                className="movie-schedule-link"
+                href={hashForAppView("movie", {
+                  date: selectedDate,
+                  movie: activeMoviePreference.preferenceKey,
+                  query: normalizedSearchQuery,
+                })}
+                onClick={(event) => {
+                  closeMoviePreferenceDialog();
+                  navigateHashLink(event);
+                }}
+              >
+                <CalendarDotsIcon size={20} aria-hidden="true" />
+                {localize("作品の上映スケジュール")}
+              </a>
               <div
                 className="movie-preference-actions"
                 role="group"
@@ -3719,15 +3730,7 @@ function CinemaSlot({
         .join(" ")}
       role="listitem"
     >
-      <a
-        className="cinema-slot-booking"
-        href={showing.bookingUrl}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={localize(
-          `${reachableLabel ? `${reachableLabel} ` : ""}${unreachableLabel ? `${unreachableLabel} ` : ""}${start} ${showing.cinemaShortName}の公式予約ページを開く`,
-        )}
-      >
+      <div className="cinema-slot-info">
         <div className="slot-time">
           <strong>{localize(start)}</strong>
           <span className="slot-time-details">
@@ -3757,12 +3760,22 @@ function CinemaSlot({
         </div>
         <div className="slot-cinema">
           <strong>{localize(showing.cinemaShortName)}</strong>
-          <ArrowSquareOutIcon size={15} aria-hidden="true" />
         </div>
         {localize(
           metadata && <span className="slot-meta">{localize(metadata)}</span>,
         )}
-      </a>
+      </div>
+      <div className="cinema-slot-actions">
+        <a
+          className="screening-reserve"
+          href={showing.bookingUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`${localize("予約サイトへ")} · ${movieTitle(showing.title)} · ${start} · ${localize(showing.cinemaShortName)}`}
+        >
+          {localize("予約")}
+          <ArrowSquareOutIcon size={16} aria-hidden="true" />
+        </a>
       <button
         type="button"
         className={[
@@ -3805,6 +3818,7 @@ function CinemaSlot({
           ),
         )}
       </button>
+      </div>
     </div>
   );
 }
