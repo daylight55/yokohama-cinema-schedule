@@ -22,11 +22,14 @@ export function testDatabase() {
         meta: {},
       }),
       run: async () => {
-        const result = sqlite.prepare(sql).run(...values);
+        // D1 meta.changes uses the total_changes delta, including triggers/cascades.
+        const before = Number(sqlite.prepare("SELECT total_changes() n").get()?.n);
+        sqlite.prepare(sql).run(...values);
+        const changes = Number(sqlite.prepare("SELECT total_changes() n").get()?.n) - before;
         return {
           success: true,
           results: [],
-          meta: { changes: Number(result.changes) },
+          meta: { changes },
         };
       },
     };

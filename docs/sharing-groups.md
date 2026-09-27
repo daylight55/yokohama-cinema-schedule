@@ -37,5 +37,6 @@ withdrawn inviter, lost inviter membership, rename authorization and cross-group
 isolation. Local mobile verification covers JP/EN, switching, rename, link
 issuance, `#groups` direct/reload/back/forward and 320/390px layouts.
 
-Deploy migration 0031 **before** deploying Pages. The mail Worker changes only
+Deploy migration 0031 **before** deploying Pages. Deploy the refresh Worker too (account purge counts now exclude cascaded rows).
+The mail Worker changes only
 copy to describe joining and sharing, and should be deployed with Pages.

@@ -155,5 +155,6 @@ export async function acceptExistingInvite(
       userId,
     )
     .run();
-  if (result.meta.changes !== 1) throw new Error("invite_required");
+  // D1 counts trigger writes too: one accepted invite may insert a group and members.
+  if (result.meta.changes < 1) throw new Error("invite_required");
 }
