@@ -135,9 +135,12 @@ export const onRequestGet: PagesFunction<
         r.source_url AS sourceUrl, r.source_kind AS sourceKind,
         i.introduction_ja AS introductionJa, i.introduction_en AS introductionEn,
         i.source_url AS introductionSourceUrl,
+        s.synopsis_ja AS synopsisJa, s.synopsis_en AS synopsisEn,
+        s.source_url AS synopsisSourceUrl,
         c.credits_json AS creditsJson
       FROM movie_title_research r
       LEFT JOIN movie_introductions i ON i.title_key = r.title_key
+      LEFT JOIN movie_synopses s ON s.title_key = r.title_key
       LEFT JOIN movie_credits c ON c.title_key = r.title_key AND c.status = 'verified'
       WHERE r.status = 'verified'`,
     ).all<import("../../shared/types").MovieTitleRecord & { creditsJson: string | null }>(),

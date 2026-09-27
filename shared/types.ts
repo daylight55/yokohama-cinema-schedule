@@ -62,6 +62,9 @@ export interface MovieTitleRecord {
   introductionJa?: string | null;
   introductionEn?: string | null;
   introductionSourceUrl?: string | null;
+  synopsisJa?: string | null;
+  synopsisEn?: string | null;
+  synopsisSourceUrl?: string | null;
   credits?: import("./movie-credits").MovieCredits | null;
 }
 export interface ScheduleResponse {
