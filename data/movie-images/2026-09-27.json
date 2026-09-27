@@ -277,16 +277,6 @@
       "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
     },
     {
-      "movieKey": "アベンジャーズエンドゲーム:ア",
-      "showingTitles": [
-        "アベンジャーズ/エンドゲーム:ア"
-      ],
-      "sourceTitle": "【INFINITY VISION・SCREENX with DolbyAtmos・字幕】アベンジャーズ／エンドゲーム：ア",
-      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/17889226756t2lncylm9.jpg",
-      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5089",
-      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
-    },
-    {
       "movieKey": "劇場版魔法少女まどか☆マギカ〈ワルプルギスの廻天〉",
       "showingTitles": [
         "劇場版 魔法少女まどか☆マギカ 〈ワルプルギスの廻天〉",
@@ -637,16 +627,6 @@
       "sourceTitle": "【SCREENX with DolbyAtmos】超かぐや姫！",
       "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1784283125n23awsuupn.jpg",
       "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5017",
-      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
-    },
-    {
-      "movieKey": "インフィニティビジョンアベンジャーズエンドゲーム:アンコール",
-      "showingTitles": [
-        "インフィニティビジョン アベンジャーズ/エンドゲーム:アンコール"
-      ],
-      "sourceTitle": "アベンジャーズ／エンドゲーム：アンコール",
-      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMTYvMTFfNDBfMDJfMTMxXzIzMjMyOF90aHVtYm5haWxzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/232328_thumbnails.jpg",
-      "sourceUrl": "https://109cinemas.net/movies/5625.html",
       "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
     },
     {
