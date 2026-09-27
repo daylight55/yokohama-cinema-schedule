@@ -1,3 +1,4 @@
+import { sharedShowing } from "./helpers/shared-showings";
 import { groupSharedMovies } from "../shared/sharing";
 import { describe, expect, it } from "vitest";
 import { testDatabase } from "./helpers/sqlite-d1";
@@ -44,6 +45,7 @@ function fixture() {
   }
   db.sqlite.exec(`INSERT INTO sharing_groups VALUES ('ab','Alice & Bob','');
     INSERT INTO sharing_group_members VALUES ('ab','alice'),('ab','bob'),('ab','disabled');`);
+  sharedShowing(db.sqlite,"共有映画");
   return db;
 }
 function context(DB: D1Database, userId = "alice", publicMode = false) {

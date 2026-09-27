@@ -1,3 +1,4 @@
+import { sharedShowing } from "./helpers/shared-showings";
 import { completeGoogleLogin } from "../functions/_lib/accounts";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync, readdirSync } from "node:fs";
@@ -38,6 +39,7 @@ function fixture() {
   f.sqlite
     .exec(`INSERT INTO viewing_plans(user_id,showing_id,movie_key,title,cinema_id,cinema_name,cinema_short_name,starts_at,booking_url,created_at,updated_at)
       SELECT id, 'session-'||id,'film','Film','test','Test','Test','2099-01-01T03:00:00Z','https://example.com','','' FROM users WHERE id IN ('a','b','c','d')`);
+  sharedShowing(f.sqlite,"Film");
   return f;
 }
 function ctx(

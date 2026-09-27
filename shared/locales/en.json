@@ -527,5 +527,19 @@
   "Googleで登録・ログインして参加できます。予定と気になる作品をグループ内で共有します。": "Sign up or sign in with Google to join. Your plans and watchlist will be shared within the group.",
   "Googleで参加する": "Join with Google",
   "グループ管理": "Manage groups",
-  "共有に戻る": "Back to sharing"
+  "共有に戻る": "Back to sharing",
+  "グループに共有するひとこと（任意）": "A note for your groups (optional)",
+  "どんなところが気になる？": "What makes you want to see it?",
+  "ひとことを保存": "Save note",
+  "ひとことを保存しました": "Note saved",
+  "ひとことを編集": "Edit note",
+  "一緒に観たい": "Want to see together",
+  "共通の気になる": "Shared interest",
+  "上映時間を選ぶ": "Choose a showtime",
+  "今後の上映がある気になる作品はありません。": "No watchlisted films have upcoming showtimes.",
+  "気になるメンバーは全員鑑賞済みです。": "Everyone interested has already seen this film.",
+  "鑑賞済みの作品": "Already watched",
+  "気になる理由": "Why we want to see it",
+  "私も気になる": "Add to my watchlist",
+  "保存できませんでした。もう一度お試しください。": "Could not save. Please try again."
 }
