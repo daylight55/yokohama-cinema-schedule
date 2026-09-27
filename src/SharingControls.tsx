@@ -22,21 +22,56 @@ export function SharingControls({
     url: string;
     emailStatus: string;
   } | null>(null);
+  const [leaveConfirm, setLeaveConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
   const open = (next: typeof mode) => {
     setMode(next);
+    setLeaveConfirm(false);
     setName(group?.name ?? "");
     setEmail("");
     setResult(null);
     setError(false);
     setCopied(false);
   };
+  async function updateMembership(leave: boolean) {
+    if (!group || busy) return;
+    setBusy(true);
+    setError(false);
+    try {
+      const response = await fetch(
+        leave
+          ? `/api/sharing?group=${encodeURIComponent(group.id)}`
+          : "/api/sharing",
+        {
+          method: leave ? "DELETE" : "PATCH",
+          headers: { "content-type": "application/json" },
+          ...(leave
+            ? {}
+            : {
+                body: JSON.stringify({ action: "prefer", groupId: group.id }),
+              }),
+        },
+      );
+      if (!response.ok) throw new Error();
+      if (leave) {
+        setLeaveConfirm(false);
+        onSelect("");
+      }
+      window.dispatchEvent(new Event("sharing-changed"));
+      onChanged();
+    } catch {
+      setError(true);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <section className="sharing-group-controls" aria-label={t("共有グループ")}>
       {data.groups.length > 1 ? (
         <label>
           {t("共有グループ")}
           <select
+            disabled={busy}
             value={data.groupId ?? ""}
             onChange={(e) => {
               open(null);
@@ -75,6 +110,14 @@ export function SharingControls({
             <button
               className="secondary-button"
               type="button"
+              disabled={busy || !!group.preferred}
+              onClick={() => void updateMembership(false)}
+            >
+              {t(group.preferred ? "優先グループ" : "このグループを優先")}
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
               onClick={() => open("rename")}
             >
               {t("名前を変更")}
@@ -82,6 +125,52 @@ export function SharingControls({
           </>
         )}
       </div>
+      {group && (
+        <div className="group-leave">
+          {!leaveConfirm ? (
+            <button
+              className="text-button"
+              disabled={busy}
+              onClick={() => {
+                open(null);
+                setLeaveConfirm(true);
+              }}
+            >
+              {t("グループから抜ける")}
+            </button>
+          ) : (
+            <div role="group" aria-label={t("グループから抜ける")}>
+              <p>
+                <strong>{group.name}</strong> —{" "}
+                {t(
+                  "抜けると、このグループでの共有が止まるよ。再参加には招待が必要です。",
+                )}
+              </p>
+              <div className="sharing-group-actions">
+                <button
+                  className="secondary-button danger-button"
+                  disabled={busy}
+                  onClick={() => void updateMembership(true)}
+                >
+                  {t("このグループから抜ける")}
+                </button>
+                <button
+                  className="secondary-button"
+                  disabled={busy}
+                  onClick={() => setLeaveConfirm(false)}
+                >
+                  {t("キャンセル")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {error && !mode && (
+        <p role="alert">
+          {t("変更を保存できませんでした。もう一度お試しください。")}
+        </p>
+      )}
       {mode && (
         <form
           className="sharing-group-form"

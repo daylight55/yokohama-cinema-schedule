@@ -26,7 +26,7 @@ export interface SharedMovie {
 }
 export interface SharingResponse {
   userId: string;
-  groups: { id: string; name: string }[];
+  groups: { id: string; name: string; preferred?: number }[];
   groupId: string | null;
   members: SharedMember[];
   plans: SharedPlan[];

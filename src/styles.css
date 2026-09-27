@@ -4053,3 +4053,31 @@ html[lang="en"] .brand-wordmark {
 .shared-watchlist-art { flex: 0 0 auto; }
 .shared-watchlist-content > .secondary-button { min-height: 44px; padding: 8px 12px; color: var(--text); }
 .watchlist-note :is(textarea,button):focus-visible, .shared-note-editor summary:focus-visible, .shared-watched-section summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* Group activity keeps film comments in the full content column. */
+.shared-movies > li { display: block; }
+.shared-watchlist-content, .shared-note-editor, .watchlist-note, .watchlist-note label { width: 100%; min-width: 0; }
+.shared-film-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.shared-film-heading > div { min-width: 0; flex: 1; }
+.group-leave { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.group-leave .text-button { background: transparent; border: 0; color: var(--muted); text-decoration: underline; }
+.group-leave .sharing-group-actions > button:first-child { background: var(--surface-raised); color: var(--text); border-color: var(--line); }
+.notification-bell { position: relative; flex: 0 0 44px; color: var(--text); }
+.notification-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.notification-settings { margin-bottom: 24px; border-bottom: 1px solid var(--line-soft); padding-bottom: 12px; }
+.notification-settings summary { min-height: 44px; padding-block: 12px; cursor: pointer; }
+.browser-notification-setting label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.browser-notification-setting p { margin: 8px 0; }
+.notification-read { margin-bottom: 12px; }
+.notifications-page .secondary-button { min-height: 44px; padding: 10px 14px; color: var(--text); }
+.notification-feed { list-style: none; padding: 0; margin: 0; }
+.notification-feed > li { display: grid; grid-template-columns: 32px minmax(0,1fr); gap: 12px; padding: 22px 0; border-bottom: 1px solid var(--line-soft); }
+.notification-feed > li > div { min-width: 0; }
+.notification-feed p { margin: 0; overflow-wrap: anywhere; }
+.notification-feed .shared-film-title { display: block; margin-top: 8px; }
+.notification-person { display: flex; gap: 6px 10px; flex-wrap: wrap; align-items: baseline; }
+.notification-unread { color: var(--accent); font-size: .8rem; }
+.notification-feed .notification-comment { margin-top: 12px; white-space: pre-wrap; }
+.notification-feed .notification-meta { display: flex; gap: 6px 12px; flex-wrap: wrap; margin-top: 12px; color: var(--muted); font-size: .875rem; }
+.notifications-page :is(a,button,summary,input):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 390px) { .brand-wordmark, html[lang="en"] .brand-wordmark { display: none; } }

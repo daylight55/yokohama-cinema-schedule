@@ -90,6 +90,9 @@ export default {
     ctx: ExecutionContext,
   ): Promise<void> {
     if (controller.cron === "37 * * * *") {
+      ctx.waitUntil(env.DB.prepare("DELETE FROM group_activity WHERE created_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-90 days')").run().catch(error => {
+        console.error(JSON.stringify({event:"activity_cleanup_failed",error:String(error)}));
+      }));
       ctx.waitUntil(purgeExpiredAccounts(env.DB).then((deleted) => {
         console.log(JSON.stringify({ event: "expired_accounts_deleted", deleted }));
       }));

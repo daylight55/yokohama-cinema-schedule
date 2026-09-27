@@ -38,17 +38,38 @@ export function SharedWatchlist({
     return (
       <li key={key} className={archived ? "shared-movie-watched" : ""}>
         <div className="shared-watchlist-content">
-          {active.length > 1 && (
-            <span className="shared-mutual">
-              {t("共通の気になる")} · {active.length}
-            </span>
-          )}
-          <a
-            className="shared-film-title"
-            href={hashForAppView("movie", { movie: key })}
-          >
-            {movieTitle(movie.title)}
-          </a>
+          <div className="shared-film-heading">
+            <div>
+              {active.length > 1 && (
+                <span className="shared-mutual">
+                  {t("共通の気になる")} · {active.length}
+                </span>
+              )}
+              <a
+                className="shared-film-title"
+                href={hashForAppView("movie", { movie: key })}
+              >
+                {movieTitle(movie.title)}
+              </a>
+            </div>
+            {image && (
+              <a
+                className="shared-watchlist-art"
+                href={hashForAppView("movie", { movie: key })}
+                aria-label={movieTitle(movie.title)}
+              >
+                <img
+                  src={image}
+                  alt=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.hidden = true;
+                  }}
+                />
+              </a>
+            )}
+          </div>
           <ul className="shared-interest-notes" aria-label={t("気になる理由")}>
             {rows.map((m) => (
               <li
@@ -131,23 +152,6 @@ export function SharedWatchlist({
             )
           )}
         </div>
-        {image && (
-          <a
-            className="shared-watchlist-art"
-            href={hashForAppView("movie", { movie: key })}
-            aria-label={movieTitle(movie.title)}
-          >
-            <img
-              src={image}
-              alt=""
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                e.currentTarget.hidden = true;
-              }}
-            />
-          </a>
-        )}
       </li>
     );
   }
