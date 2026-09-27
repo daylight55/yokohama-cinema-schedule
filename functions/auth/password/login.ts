@@ -1,4 +1,5 @@
 import { requestLanguage } from "../../../shared/language";
+import { accountCanLogin } from "../../../shared/account-lifecycle";
 import {
   authenticationRateKey,
   authenticationRetryAfter,
@@ -46,7 +47,7 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
 
   const user = email ? await findUserByEmail(context.env.DB, email) : null;
   const verified =
-    user?.status === "active"
+    user && await accountCanLogin(context.env.DB, user.id)
       ? await verifyUserPassword(context.env.DB, user.id, password)
       : false;
   if (!user || !verified) {
@@ -63,7 +64,9 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   }
 
   await clearAuthenticationFailures(context.env.DB, rateKey);
-  const session = await createUserSession(context.env, user.id);
+  let session;
+  try { session = await createUserSession(context.env, user.id); }
+  catch { return loginPage(true, returnHash, false, "メールアドレスまたはパスワードを確認してください。", "", requestLanguage(context.request)); }
   return new Response(null, {
     status: 303,
     headers: {

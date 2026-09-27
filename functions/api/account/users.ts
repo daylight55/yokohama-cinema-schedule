@@ -33,7 +33,7 @@ export const onRequestPatch: PagesFunction<
     return Response.json({ error: "invalid_user_update" }, { status: 400 });
   }
   const result = await context.env.DB.prepare(
-    `UPDATE users SET status = ?, updated_at = ? WHERE id = ?`,
+    `UPDATE users SET status = ?, updated_at = ? WHERE id = ? AND withdrawn_at IS NULL`,
   )
     .bind(body.status, new Date().toISOString(), body.userId)
     .run();

@@ -1,4 +1,5 @@
 import { ProfileEditor } from "./MemberProfile";
+import { WithdrawAccount } from "./WithdrawAccount";
 import { localeCode, localize } from "./i18n";
 import {
   FingerprintIcon,
@@ -323,6 +324,7 @@ export function AccountPage({
                 ),
               )}
             </section>
+            <WithdrawAccount />
           </>
         ),
       )}

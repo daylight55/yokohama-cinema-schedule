@@ -1,4 +1,5 @@
 import type { Language } from "../../shared/language";
+import { accountCanLogin } from "../../shared/account-lifecycle";
 import { registerInvitedGoogleUser } from "./invitations";
 import type { AuthUser, ResolvedSession } from "./auth";
 import { findUserByEmail, LEGACY_USER_ID, normalizeEmail } from "./auth";
@@ -124,7 +125,7 @@ export async function completeGoogleLogin(
 
   const identityUser = await findGoogleIdentity(db, identity.subject);
   if (identityUser) {
-    if (identityUser.status !== "active") {
+    if (!(await accountCanLogin(db, identityUser.id))) {
       throw new Error("user_disabled");
     }
     await db
@@ -145,7 +146,7 @@ export async function completeGoogleLogin(
 
   const emailUser = await findUserByEmail(db, normalizedEmail);
   if (emailUser) {
-    if (emailUser.status !== "active") throw new Error("user_disabled");
+    if (!(await accountCanLogin(db, emailUser.id))) throw new Error("user_disabled");
     await linkGoogleIdentity(
       db,
       emailUser.id,

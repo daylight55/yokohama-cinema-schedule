@@ -72,7 +72,7 @@
   "指定すると、そのアドレスのGoogleアカウントだけが登録できます。": "If specified, only the Google account with this email address can sign up.",
   "招待メールも送信する": "Also send an invitation email",
   "メール送信は設定待ちです。招待リンクは発行できます。": "Email delivery is awaiting setup. You can still create invitation links.",
-  "処理中…": "Working…",
+  "処理中…": "Processing…",
   "招待リンクを発行": "Create invitation link",
   "招待メールを送信しました": "Invitation email sent",
   "招待リンクを発行しました": "Invitation link created",
@@ -498,5 +498,13 @@
   "監督": "Director",
   "初公開年": "First released",
   "出演": "Cast",
-  "クレジット出典": "Credits source"
+  "クレジット出典": "Credits source",
+  "退会する": "Close account",
+  "退会するとログアウトし、共有していた予定やプロフィールは表示されなくなります。": "Closing your account signs you out and hides your shared plans and profile.",
+  "データは1か月間保持します。期限前に再ログインすると復帰でき、ログインしないまま期限を過ぎると自動で削除されます。": "Your data is kept for one calendar month. Sign in before the deadline to restore your account. Otherwise, your account and data will be deleted automatically.",
+  "データの保持期間と削除について確認しました": "I understand when my data will be deleted",
+  "退会できませんでした。もう一度お試しください。": "Could not close your account. Please try again.",
+  "退会してログアウト": "Close account and sign out",
+  "退会しました。1か月以内に再ログインすると復帰できます。": "Your account is closed. Sign in within one calendar month to restore it.",
+  "上映時刻": "Showtimes"
 }
