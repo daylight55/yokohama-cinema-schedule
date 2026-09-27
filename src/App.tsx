@@ -911,7 +911,9 @@ export function App() {
     }
 
     let animationFrame = 0;
+    let scrollTimer = 0;
     const updateActivePeriod = () => {
+      window.clearTimeout(scrollTimer);
       window.cancelAnimationFrame(animationFrame);
       animationFrame = window.requestAnimationFrame(() => {
         const timeline = document.querySelector<HTMLElement>(".timeline");
@@ -968,13 +970,25 @@ export function App() {
       });
     };
 
+    // The active-period indicator can wait until scrolling settles. Do not
+    // measure every timeline row while the browser is processing a fling.
+    const deferActivePeriod = () => {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(updateActivePeriod, 150);
+    };
+    const onScrollEnd = (event: Event) => {
+      if (event.target === document) updateActivePeriod();
+    };
     updateActivePeriod();
-    window.addEventListener("scroll", updateActivePeriod, { passive: true });
+    window.addEventListener("scroll", deferActivePeriod, { passive: true });
+    document.addEventListener("scrollend", onScrollEnd);
     window.addEventListener("resize", updateActivePeriod);
     document.addEventListener("toggle", updateActivePeriod, true);
     return () => {
       window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("scroll", updateActivePeriod);
+      window.clearTimeout(scrollTimer);
+      window.removeEventListener("scroll", deferActivePeriod);
+      document.removeEventListener("scrollend", onScrollEnd);
       window.removeEventListener("resize", updateActivePeriod);
       document.removeEventListener("toggle", updateActivePeriod, true);
     };
@@ -1929,7 +1943,7 @@ export function App() {
                   </div>
                   <div
                     className="cinema-strip"
-                    data-horizontal-scroll
+                    data-horizontal-scroll={`cinema:${group.time}:${movie.key}`}
                     role="list"
                     aria-label={localize(`${movieTitle(movie.title)}の上映館`)}
                   >
@@ -2317,7 +2331,7 @@ export function App() {
         {localize(
           (view === "schedule" || view === "movies") && (
             <nav className="date-nav" aria-label={localize("上映日")}>
-              <div className="date-strip" data-horizontal-scroll>
+              <div className="date-strip" data-horizontal-scroll="dates">
                 {localize(
                   view === "movies" && (
                     <a
@@ -2442,7 +2456,7 @@ export function App() {
             >
               <div
                 className="area-strip"
-                data-horizontal-scroll
+                data-horizontal-scroll="areas"
                 role="group"
                 aria-label={localize("エリア")}
               >

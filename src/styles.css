@@ -3978,3 +3978,19 @@ html[lang="en"] .brand-wordmark {
   .brand-mark { display: block; }
   .brand-wordmark { display: none; }
 }
+
+/* Keep mobile scrolling on ordinary opaque surfaces: overlapping backdrop
+   captures and snap animations add avoidable compositor work on Android GPUs. */
+@media (max-width: 719px), (any-pointer: coarse) {
+  html[data-theme] :is(.site-header, .date-nav, .schedule-search, .schedule-time-jumps) {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .cinema-strip, .date-strip {
+    scroll-snap-type: none;
+  }
+}
+.movie-times {
+  overscroll-behavior-x: contain;
+}

@@ -67,7 +67,7 @@ export const CINEMAS: Cinema[] = [
   {
     id: "aeon-minatomirai",
     name: "イオンシネマみなとみらい",
-    shortName: "イオンシネマ",
+    shortName: "イオンシネマ みなとみらい",
     area: "minatomirai",
     areaLabel: "みなとみらい",
     address: "横浜市中区新港2-2-1 横浜ワールドポーターズ5F",

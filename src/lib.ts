@@ -1,4 +1,5 @@
 import { addDays, formatJstDate, todayInJst } from "../shared/date";
+import { canonicalMovieKey } from "../shared/movie-title-corrections";
 import { moviePreferenceKey } from "../shared/movie";
 import { normalizeSearchQuery } from "../shared/search";
 import type {
@@ -128,7 +129,7 @@ export function appHashStateFromHash(hash: string): AppHashState {
   return {
     view,
     date: date && ISO_DATE_PATTERN.test(date) ? date : null,
-    movie: movie ? movie.slice(0, 240) : null,
+    movie: movie ? canonicalMovieKey(movie.slice(0, 240)) : null,
     query: normalizeSearchQuery(params.get("q")),
     ...(params.get("showing") ? { showing: params.get("showing")!.slice(0, 1000) } : {}),
   };
@@ -210,10 +211,9 @@ export function isDateSwipeBlockedByHorizontalScroll(
   )?.closest;
   if (typeof closest !== "function") return false;
 
-  const scrollRegion = closest.call(target, "[data-horizontal-scroll]");
-  return Boolean(
-    scrollRegion && scrollRegion.scrollWidth > scrollRegion.clientWidth,
-  );
+  // A swipe on a cinema/time/date strip always belongs to that strip, even
+  // when it fits or has reached an edge. Never turn it into a full date reload.
+  return Boolean(closest.call(target, "[data-horizontal-scroll]"));
 }
 
 export function getDateSwipeDirection(
