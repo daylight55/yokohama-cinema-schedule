@@ -130,7 +130,14 @@ export const onRequestGet: PagesFunction<
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
     context.env.DB.prepare(
-      "SELECT title_key AS titleKey, japanese_title AS japaneseTitle, original_title AS originalTitle, english_title AS englishTitle, source_url AS sourceUrl, source_kind AS sourceKind FROM movie_title_research WHERE status = 'verified'",
+      `SELECT r.title_key AS titleKey, r.japanese_title AS japaneseTitle,
+        r.original_title AS originalTitle, r.english_title AS englishTitle,
+        r.source_url AS sourceUrl, r.source_kind AS sourceKind,
+        i.introduction_ja AS introductionJa, i.introduction_en AS introductionEn,
+        i.source_url AS introductionSourceUrl
+      FROM movie_title_research r
+      LEFT JOIN movie_introductions i ON i.title_key = r.title_key
+      WHERE r.status = 'verified'`,
     ).all<import("../../shared/types").MovieTitleRecord>(),
   ]);
   const [preferences, cinemaTravelPreferences, userProfile] = await Promise.all(

@@ -493,5 +493,6 @@
   "プロフィールを保存できませんでした。もう一度お試しください。": "Could not save your profile. Please try again.",
   "5MB以下のJPEG・PNG・WebP画像を選んでください。": "Choose a JPEG, PNG or WebP image up to 5 MB.",
   "画像を読み込めませんでした。別の画像を選んでください。": "Could not load this image. Please choose another.",
-  "プロフィールを読み込めませんでした。": "Could not load your profile."
+  "プロフィールを読み込めませんでした。": "Could not load your profile.",
+  "紹介文の出典": "Introduction source"
 }

@@ -9,6 +9,7 @@ import {
   localize as t,
   localizedDate,
   registerTitleTranslations,
+  localeCode,
 } from "./i18n";
 import { PageHeader, PageShell } from "./PageLayout";
 
@@ -51,12 +52,15 @@ export function MoviePage({
   const showings = (data?.showings ?? []).filter(
     (showing) => moviePreferenceKey(showing.title) === movieKey,
   );
-  const title = showings[0]?.title;
+  const record = data?.movieTitles?.find((row) => row.titleKey === movieKey);
+  const title = showings[0]?.title ?? record?.japaneseTitle;
+  const introduction = localeCode() === "en-GB"
+    ? record?.introductionEn
+    : record?.introductionJa;
   const poster = safeImageUrl(
     showings.find((row) => safeImageUrl(row.imageUrl))?.imageUrl,
   );
   const days = Array.from({ length: 7 }, (_, index) => addDays(today, index));
-  const record = data?.movieTitles?.find((row) => row.titleKey === movieKey);
   const date = localizedDate({
     month: "short",
     day: "numeric",
@@ -84,7 +88,7 @@ export function MoviePage({
             record.originalTitle !== movieTitle(title ?? "") && (
               <p className="movie-original-title">{record.originalTitle}</p>
             )}
-          {record?.sourceUrl && (
+          {!introduction && record?.sourceUrl && (
             <a
               className="movie-source"
               href={record.sourceUrl}
@@ -107,6 +111,17 @@ export function MoviePage({
               e.currentTarget.hidden = true;
             }}
           />
+        )}
+        {introduction && (
+          <div className="movie-introduction">
+            <p>{introduction}</p>
+            {record?.introductionSourceUrl && (
+              <a className="movie-source" href={record.introductionSourceUrl} target="_blank" rel="noreferrer">
+                {t("紹介文の出典")}
+                <ArrowSquareOutIcon size={14} aria-hidden="true" />
+              </a>
+            )}
+          </div>
         )}
       </div>
       {loading ? (

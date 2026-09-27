@@ -59,6 +59,9 @@ export interface MovieTitleRecord {
   originalTitle: string | null;
   englishTitle: string | null;
   sourceUrl: string | null;
+  introductionJa?: string | null;
+  introductionEn?: string | null;
+  introductionSourceUrl?: string | null;
 }
 export interface ScheduleResponse {
   movieTitles?: MovieTitleRecord[];
