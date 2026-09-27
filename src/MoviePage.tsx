@@ -13,6 +13,7 @@ import {
 } from "./i18n";
 import { PageHeader, PageShell } from "./PageLayout";
 import { MovieCredits } from "./MovieCredits";
+import { MovieSynopsis } from "./MovieSynopsis";
 
 export function MoviePage({
   movieKey,
@@ -113,7 +114,7 @@ export function MoviePage({
             }}
           />
         )}
-        {(introduction || record?.credits) && (
+        {(introduction || record?.credits || record?.synopsisJa || record?.synopsisEn) && (
           <div className="movie-introduction">
             {introduction && <p>{introduction}</p>}
             {introduction && record?.introductionSourceUrl && (
@@ -123,6 +124,7 @@ export function MoviePage({
               </a>
             )}
             <MovieCredits credits={record?.credits} language={localeCode() === "en-GB" ? "en" : "ja"} />
+            <MovieSynopsis movie={record} language={localeCode() === "en-GB" ? "en" : "ja"} />
           </div>
         )}
       </div>

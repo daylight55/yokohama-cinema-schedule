@@ -24,6 +24,21 @@ for (const film of catalog.films) {
           !/[<>\r\n]/.test(text);
       })
     )) throw new Error(`Invalid introduction: ${film.japaneseTitles[0]}`);
+  if (film.synopsis != null) {
+    const synopsis = film.synopsis;
+    const source = URL.parse(synopsis.sourceUrl);
+    if (!source || source.protocol !== 'https:' || source.username || source.password ||
+        typeof synopsis.evidence !== 'string' || !synopsis.evidence.trim() ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(synopsis.reviewedAt) ||
+        !Number.isFinite(Date.parse(synopsis.reviewedAt)) ||
+        new Date(synopsis.reviewedAt).toISOString() !== synopsis.reviewedAt ||
+        (synopsis.ja == null && synopsis.en == null) ||
+        !['ja', 'en'].every((language) => {
+          const text = synopsis[language];
+          return text == null || (typeof text === 'string' && text.trim().length > 0 &&
+            text.length <= (language === 'ja' ? 600 : 1600) && !/[<>\r\n]/.test(text));
+        })) throw new Error(`Invalid synopsis: ${film.japaneseTitles[0]}`);
+  }
   for (const japaneseTitle of film.japaneseTitles) {
     const key = moviePreferenceKey(japaneseTitle);
     if (!key) throw new Error('Empty movie key');
@@ -52,6 +67,16 @@ for (const [key, row] of [...rows].sort(([a], [b]) => a.localeCompare(b, 'en')))
         introduction_ja=excluded.introduction_ja, introduction_en=excluded.introduction_en,
         evidence=excluded.evidence, source_url=excluded.source_url, reviewed_at=excluded.reviewed_at
       WHERE excluded.reviewed_at > movie_introductions.reviewed_at;`);
+  }
+  if (row.synopsis) {
+    const synopsis = row.synopsis;
+    console.log(`INSERT INTO movie_synopses
+      (title_key,synopsis_ja,synopsis_en,evidence,source_url,reviewed_at)
+      VALUES (${[key, synopsis.ja ?? null, synopsis.en ?? null, synopsis.evidence, synopsis.sourceUrl, synopsis.reviewedAt].map(sql).join(',')})
+      ON CONFLICT(title_key) DO UPDATE SET
+        synopsis_ja=excluded.synopsis_ja, synopsis_en=excluded.synopsis_en,
+        evidence=excluded.evidence, source_url=excluded.source_url, reviewed_at=excluded.reviewed_at
+      WHERE excluded.reviewed_at > movie_synopses.reviewed_at;`);
   }
 }
 console.error(`${rows.size} reviewed movie title keys`);

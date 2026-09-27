@@ -31,3 +31,34 @@ catalog cannot undo a newer edit. Leaving an introduction out does not delete an
 existing one. Automatic title research does not publish unreviewed descriptions;
 new titles gain an introduction after review and import. No external lookup runs
 when someone opens a film page.
+
+## Independent synopses
+
+After migration 0028, the same importer also accepts an optional `synopsis`:
+
+```json
+{
+  "ja": "確認できた物語の導入を、短く書き直したあらすじ。",
+  "en": "A short editorial paraphrase of a verified premise.",
+  "sourceUrl": "https://example.org/film",
+  "evidence": "Research notes supporting this particular synopsis",
+  "reviewedAt": "2026-09-27T02:32:00.000Z"
+}
+```
+
+At least one language is required; omit or use null for an unavailable language.
+JA is limited to 600 characters and EN to 1,600. The film page only displays the
+selected language, with its own Synopsis heading and source link. A synopsis is
+not inferred from credits or a title match. Retain evidence for the exact film
+and adaptation, paraphrase briefly, and avoid major spoilers or copying source
+marketing text. Keep the introduction focused on production/genre information
+when adding a synopsis so the page does not repeat the plot.
+
+`movie_synopses` stores these separately from `movie_introductions`, with its own
+source, evidence and per-film review timestamp. A newer synopsis review replaces
+both languages together (null explicitly removes a translation); an older/equal
+review is ignored. Omitting `synopsis` preserves existing data. Raw evidence and
+review timestamps remain internal; the API returns only `synopsisJa`,
+`synopsisEn` and `synopsisSourceUrl`. The initial catalog has 15 bilingual
+synopses from retained reviewed sources. New ones require review and import;
+page visits and scheduled collection do not trigger additional source requests.
