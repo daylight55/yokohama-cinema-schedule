@@ -211,10 +211,9 @@ export function isDateSwipeBlockedByHorizontalScroll(
   )?.closest;
   if (typeof closest !== "function") return false;
 
-  const scrollRegion = closest.call(target, "[data-horizontal-scroll]");
-  return Boolean(
-    scrollRegion && scrollRegion.scrollWidth > scrollRegion.clientWidth,
-  );
+  // A swipe on a cinema/time/date strip always belongs to that strip, even
+  // when it fits or has reached an edge. Never turn it into a full date reload.
+  return Boolean(closest.call(target, "[data-horizontal-scroll]"));
 }
 
 export function getDateSwipeDirection(

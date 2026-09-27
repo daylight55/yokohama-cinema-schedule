@@ -450,12 +450,12 @@ describe("date swipe gestures", () => {
     expect(isDateSwipeBlockedByHorizontalScroll(target)).toBe(true);
   });
 
-  it("allows date swipes when the marked region does not overflow", () => {
+  it("keeps non-overflowing strips from triggering a full date change", () => {
     const target = {
       closest: () => ({ clientWidth: 320, scrollWidth: 320 }),
     } as unknown as EventTarget;
 
-    expect(isDateSwipeBlockedByHorizontalScroll(target)).toBe(false);
+    expect(isDateSwipeBlockedByHorizontalScroll(target)).toBe(true);
     expect(isDateSwipeBlockedByHorizontalScroll(null)).toBe(false);
   });
 });

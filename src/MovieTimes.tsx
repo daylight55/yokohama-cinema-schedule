@@ -9,7 +9,7 @@ export function MovieTimes({ showings, language = "ja", title }: { showings: Sho
   const t = (text: string) => translate(text, language);
   const time = new Intl.DateTimeFormat(language === "en" ? "en-GB" : "ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   return (
-    <nav className="movie-times" data-horizontal-scroll aria-label={t("上映時刻")}>
+    <nav className="movie-times" data-horizontal-scroll={`movie:${showings[0] ? moviePreferenceKey(showings[0].title) : "empty"}`} aria-label={t("上映時刻")}>
       {[...showings].sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.cinemaName.localeCompare(b.cinemaName)).map((s) => (
         <a key={s.id} href={hashForAppView("schedule", { date: formatJstDate(new Date(s.startsAt)), movie: moviePreferenceKey(s.title), showing: s.id })}
           aria-label={`${time.format(new Date(s.startsAt))} · ${t(s.cinemaName)} · ${title ?? s.title}`}>
