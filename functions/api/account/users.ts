@@ -10,11 +10,22 @@ export const onRequestPatch: PagesFunction<
   string,
   AuthContextData
 > = async (context) => {
-  if (context.data.authUser.role !== "admin") {
+  if (
+    context.data.authUser.role !== "admin" ||
+    context.request.headers.get("origin") !==
+      new URL(context.request.url).origin
+  ) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const body = await context.request.json<UserRequest>();
+  let body: UserRequest;
+  try {
+    body = await context.request.json<UserRequest>();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
   if (
+    !body ||
+    typeof body.userId !== "string" ||
     !body.userId ||
     body.userId === context.data.userId ||
     !["active", "disabled"].includes(body.status ?? "")

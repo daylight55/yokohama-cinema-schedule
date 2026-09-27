@@ -51,8 +51,8 @@ export const onRequestGet: PagesFunction<
     user.role === "admin"
       ? context.env.DB.prepare(
           `SELECT email, created_at
-             FROM user_invites
-            WHERE accepted_at IS NULL
+             FROM signup_invites
+            WHERE accepted_at IS NULL AND revoked_at IS NULL AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now') AND email IS NOT NULL
             ORDER BY created_at DESC`,
         ).all<InviteRow>()
       : Promise.resolve({ results: [] as InviteRow[] }),

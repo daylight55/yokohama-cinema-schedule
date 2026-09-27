@@ -1,0 +1,98 @@
+{
+  "ja": {
+    "heading": "はまむび！の使い方",
+    "transcript": "テキストで読む",
+    "download": "動画をダウンロード",
+    "label": "はまむび！の使い方（BGM付き）",
+    "scenes": [
+      {
+        "title": "映画、行こっ！",
+        "caption": "ぼく、はまむびくん！\nいっしょに映画を探そうよ！",
+        "short": "使い方ガイド"
+      },
+      {
+        "title": "観たい！を探そう",
+        "caption": "観たい映画の名前を入れてね！\n「検索」で見つかるよ！",
+        "short": "上映を探す"
+      },
+      {
+        "title": "上映、ずらり！",
+        "caption": "作品名を押してみてね！\nいろんな映画館の上映が見られるよ！",
+        "short": "作品のページ"
+      },
+      {
+        "title": "チケットへGO！",
+        "caption": "「予約」で映画館のサイトへ！\nチケットはそこで買ってね！",
+        "short": "チケットの予約"
+      },
+      {
+        "title": "気になる？ポチッ！",
+        "caption": "気になったら、星をポチッ！\nあとで探しやすくなるよ！",
+        "short": "作品を整理"
+      },
+      {
+        "title": "この回に決〜めた！",
+        "caption": "「観に行く」で予定に入るよ！\nチケットの予約は別にしてね！",
+        "short": "鑑賞予定"
+      },
+      {
+        "title": "みんな、何観る？",
+        "caption": "予定も「気になる」も、\nメンバーみんなに自動で伝わるよ！",
+        "short": "メンバーと共有"
+      },
+      {
+        "title": "さあ、映画へ！",
+        "caption": "JP / ENで言葉を切り替えてね！\nさあ、映画を楽しもうよ！",
+        "short": "日本語 / English"
+      }
+    ]
+  },
+  "en": {
+    "heading": "How to use Hama Movie!",
+    "transcript": "Read the guide",
+    "download": "Download video",
+    "label": "How to use Hama Movie! (with music)",
+    "scenes": [
+      {
+        "title": "Movie time!",
+        "caption": "I’m your Hama Movie! buddy.\nLet’s find a film together!",
+        "short": "A quick guide"
+      },
+      {
+        "title": "Find it. Fancy it.",
+        "caption": "Type a film’s name.\nThen tap Search. Easy!",
+        "short": "Find showtimes"
+      },
+      {
+        "title": "Showtimes?\nAll together!",
+        "caption": "Tap a film title!\nI’ll show you where and when it’s on.",
+        "short": "Film showtimes"
+      },
+      {
+        "title": "Tickets? Let’s go!",
+        "caption": "Tap Book to visit the cinema’s site.\nGet your tickets there!",
+        "short": "Book tickets"
+      },
+      {
+        "title": "Love it? Star it!",
+        "caption": "Like the look of a film?\nTap its star to save it for later!",
+        "short": "Your watchlist"
+      },
+      {
+        "title": "That’s my\nscreening!",
+        "caption": "Tap Add to plans to save your outing!\nRemember to book tickets separately.",
+        "short": "My screenings"
+      },
+      {
+        "title": "Who’s watching\nwhat?",
+        "caption": "Your plans and watchlist are shared\nwith all members automatically!",
+        "short": "Shared with members"
+      },
+      {
+        "title": "Your language.\nYour movie!",
+        "caption": "Tap JP / EN to switch languages.\nLet’s go enjoy a movie!",
+        "short": "Japanese / English"
+      }
+    ]
+  }
+}
