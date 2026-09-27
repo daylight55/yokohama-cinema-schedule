@@ -2727,6 +2727,11 @@ export function App() {
                       <ul className="movie-list">
                         {localize(
                           movieList.map((movie, index) => {
+                            const movieHref = hashForAppView("movie", {
+                              date: selectedMovieListDate,
+                              movie: movie.preferenceKey,
+                              query: normalizedSearchQuery,
+                            });
                             const isStarred = starredMovieKeys.has(
                               movie.preferenceKey,
                             );
@@ -2771,33 +2776,36 @@ export function App() {
                                 data-movie-key={movie.preferenceKey}
                                 key={movie.preferenceKey}
                               >
-                                {localize(
-                                  movie.imageUrl ? (
-                                    <img
-                                      src={movie.imageUrl}
-                                      alt={localize("")}
-                                      width="104"
-                                      height="66"
-                                      loading={index < 3 ? "eager" : "lazy"}
-                                      decoding="async"
-                                    />
-                                  ) : (
-                                    <div
-                                      className="movie-image-placeholder"
-                                      aria-hidden="true"
-                                    >
-                                      {movieTitle(movie.title).slice(0, 1)}
-                                    </div>
-                                  ),
-                                )}
+                                <a
+                                  className="movie-image-link"
+                                  href={movieHref}
+                                  onClick={navigateHashLink}
+                                  aria-label={movieTitle(movie.title)}
+                                >
+                                  {localize(
+                                    movie.imageUrl ? (
+                                      <img
+                                        src={movie.imageUrl}
+                                        alt={localize("")}
+                                        width="104"
+                                        height="66"
+                                        loading={index < 3 ? "eager" : "lazy"}
+                                        decoding="async"
+                                      />
+                                    ) : (
+                                      <div
+                                        className="movie-image-placeholder"
+                                        aria-hidden="true"
+                                      >
+                                        {movieTitle(movie.title).slice(0, 1)}
+                                      </div>
+                                    ),
+                                  )}
+                                </a>
                                 <div className="movie-list-copy">
                                   <strong>
                                     <a
-                                      href={hashForAppView("movie", {
-                                        date: selectedMovieListDate,
-                                        movie: movie.preferenceKey,
-                                        query: normalizedSearchQuery,
-                                      })}
+                                      href={movieHref}
                                       onClick={navigateHashLink}
                                       aria-current={
                                         selectedMovieKey === movie.preferenceKey
