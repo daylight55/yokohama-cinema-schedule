@@ -99,7 +99,7 @@ export const onRequestGet: PagesFunction<
     ? [from, to, date, date, through, searchExpression]
     : [from, to, date];
 
-  const [showingResult, health, cinemas] = await Promise.all([
+  const [showingResult, health, cinemas, titleCatalog] = await Promise.all([
     context.env.DB.prepare(
       `SELECT
         s.id, s.source_id, s.cinema_id, c.name AS cinema_name,
@@ -129,9 +129,12 @@ export const onRequestGet: PagesFunction<
       .bind(date)
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
+    context.env.DB.prepare(
+      "SELECT title_key AS titleKey, japanese_title AS japaneseTitle, original_title AS originalTitle, english_title AS englishTitle, source_url AS sourceUrl, source_kind AS sourceKind FROM movie_title_research WHERE status = 'verified'",
+    ).all<import("../../shared/types").MovieTitleRecord>(),
   ]);
-  const [preferences, cinemaTravelPreferences, userProfile] =
-    await Promise.all([
+  const [preferences, cinemaTravelPreferences, userProfile] = await Promise.all(
+    [
       publicOnly
         ? Promise.resolve([])
         : listMoviePreferences(context.env.DB, context.data.userId),
@@ -143,7 +146,7 @@ export const onRequestGet: PagesFunction<
             context.data.userId,
           ),
       publicOnly
-          ? Promise.resolve({
+        ? Promise.resolve({
             departureRegistered: false,
             departureUpdatedAt: null,
             scheduleCollapseMinutes: 60 as const,
@@ -153,7 +156,8 @@ export const onRequestGet: PagesFunction<
             requireProfileEncryptionKey(context.env),
             context.data.userId,
           ),
-    ]);
+    ],
+  );
 
   const showings: Showing[] = (showingResult.results ?? []).map((row) => ({
     id: row.id,
@@ -171,13 +175,13 @@ export const onRequestGet: PagesFunction<
     screen: row.screen,
     format: row.format,
     bookingUrl: row.booking_url,
-    purchasable:
-      row.purchasable === null ? null : Boolean(row.purchasable),
+    purchasable: row.purchasable === null ? null : Boolean(row.purchasable),
     fetchedAt: row.fetched_at,
   }));
 
   const response: ScheduleResponse = {
     date,
+    movieTitles: titleCatalog.results ?? [],
     generatedAt: new Date().toISOString(),
     lastUpdatedAt: health?.last_updated_at ?? null,
     cinemas,

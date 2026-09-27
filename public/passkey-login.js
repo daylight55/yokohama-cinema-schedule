@@ -62,6 +62,7 @@ function allowedReturnHash() {
     "#movies",
     "#cinemas",
     "#viewing-plans",
+    "#shared",
     "#planner",
     "#profile",
     "#account",
@@ -72,6 +73,7 @@ function allowedReturnHash() {
 
 function setMessage(value) {
   if (!(message instanceof HTMLElement)) return;
-  message.textContent = value;
+  const english = {"このブラウザではパスキーを利用できません。":"This browser does not support passkeys.","パスキーでログインできませんでした。":"Could not sign in with a passkey."};
+  message.textContent = document.documentElement.lang === "en" ? english[value] ?? value : value;
   message.classList.toggle("hidden", value.length === 0);
 }

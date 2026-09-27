@@ -1,3 +1,5 @@
+import { movieTitle } from "./i18n";
+import { localize, localizedDate } from "./i18n";
 import {
   ArrowSquareOutIcon,
   CalendarDotsIcon,
@@ -11,14 +13,14 @@ import type { ViewingPlan } from "../shared/types";
 import { hashForAppView } from "./lib";
 import { PageHeader, PageShell } from "./PageLayout";
 
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+const dateFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   month: "long",
   day: "numeric",
   weekday: "short",
 });
 
-const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
+const timeFormatter = localizedDate({
   timeZone: "Asia/Tokyo",
   hour: "2-digit",
   minute: "2-digit",
@@ -65,107 +67,140 @@ export function ViewingPlansPage({
       live="polite"
     >
       <PageHeader
-        eyebrow="映画を観に行く予定"
-        title="鑑賞予定"
+        eyebrow={localize("映画を観に行く予定")}
+        title={localize("鑑賞予定")}
         titleId="viewing-plans-title"
         meta={
           !loading && !error ? (
-            <span className="page-count">{plans.length}本</span>
+            <span className="page-count">
+              {localize(plans.length)}
+              {localize("本")}
+            </span>
           ) : null
         }
       />
 
-      {loading && <p className="viewing-plans-status">読み込み中…</p>}
-      {error && (
-        <p className="viewing-plans-status error" role="alert">
-          {error}
-        </p>
+      {localize(
+        loading && (
+          <p className="viewing-plans-status">{localize("読み込み中…")}</p>
+        ),
       )}
-      {!loading && !error && plans.length === 0 && (
-        <div className="viewing-plans-empty">
-          <CalendarDotsIcon size={30} aria-hidden="true" />
-          <p>登録されている鑑賞予定はありません。</p>
-          <a href={hashForAppView("schedule")}>上映スケジュールから選ぶ</a>
-        </div>
+      {localize(
+        error && (
+          <p className="viewing-plans-status error" role="alert">
+            {localize(error)}
+          </p>
+        ),
+      )}
+      {localize(
+        !loading && !error && plans.length === 0 && (
+          <div className="viewing-plans-empty">
+            <CalendarDotsIcon size={30} aria-hidden="true" />
+            <p>{localize("登録されている鑑賞予定はありません。")}</p>
+            <a href={hashForAppView("schedule")}>
+              {localize("上映スケジュールから選ぶ")}
+            </a>
+          </div>
+        ),
       )}
 
-      {[...groupedPlans.entries()].map(([date, datePlans]) => (
-        <section className="viewing-plan-day" key={date}>
-          <h2>
-            {dateFormatter.format(new Date(`${date}T12:00:00+09:00`))}
-          </h2>
-          <ol className="plan-timeline viewing-plan-timeline">
-            {datePlans.map((plan) => (
-              <li key={plan.showingId}>
-                <article>
-                  <div className="plan-time">
-                    <ClockIcon size={16} aria-hidden="true" />
-                    <time dateTime={plan.startsAt}>
-                      {localTime(plan.startsAt)}
-                    </time>
-                    <span>〜</span>
-                    <time dateTime={plan.endsAt ?? undefined}>
-                      {localTime(plan.endsAt)}
-                    </time>
-                  </div>
-                  <h3>
-                    {starredMovieKeys.has(plan.movieKey) && (
-                      <StarIcon
-                        size={18}
-                        weight="fill"
-                        aria-label="気になる作品"
-                      />
-                    )}
-                    {plan.title}
-                  </h3>
-                  <p>
-                    <MapPinIcon size={15} aria-hidden="true" />
-                    {plan.cinemaName}
-                  </p>
-                  {(plan.screen || plan.format) && (
-                    <p className="viewing-plan-meta">
-                      {[plan.screen, plan.format].filter(Boolean).join(" / ")}
-                    </p>
-                  )}
-                  <div className="viewing-plan-actions">
-                    <label className="viewing-plan-reservation">
-                      <input
-                        type="checkbox"
-                        checked={plan.reservedAt !== null}
-                        disabled={savingIds.has(plan.showingId)}
-                        onChange={(event) =>
-                          void onReservationChange(
-                            plan,
-                            event.currentTarget.checked,
-                          )
-                        }
-                      />
-                      <span>予約済み</span>
-                    </label>
-                    <a
-                      href={plan.bookingUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      公式サイト
-                      <ArrowSquareOutIcon size={14} aria-hidden="true" />
-                    </a>
-                    <button
-                      type="button"
-                      disabled={savingIds.has(plan.showingId)}
-                      onClick={() => void onRemove(plan)}
-                      aria-label={`${plan.title}を鑑賞予定から外す`}
-                    >
-                      <TrashIcon size={16} aria-hidden="true" />
-                      {savingIds.has(plan.showingId) ? "保存中" : "予定から外す"}
-                    </button>
-                  </div>
-                </article>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ))}
+      {localize(
+        [...groupedPlans.entries()].map(([date, datePlans]) => (
+          <section className="viewing-plan-day" key={date}>
+            <h2>
+              {localize(
+                dateFormatter.format(new Date(`${date}T12:00:00+09:00`)),
+              )}
+            </h2>
+            <ol className="plan-timeline viewing-plan-timeline">
+              {localize(
+                datePlans.map((plan) => (
+                  <li key={plan.showingId}>
+                    <article>
+                      <div className="plan-time">
+                        <ClockIcon size={16} aria-hidden="true" />
+                        <time dateTime={plan.startsAt}>
+                          {localize(localTime(plan.startsAt))}
+                        </time>
+                        <span>{localize("〜")}</span>
+                        <time dateTime={plan.endsAt ?? undefined}>
+                          {localize(localTime(plan.endsAt))}
+                        </time>
+                      </div>
+                      <h3>
+                        {localize(
+                          starredMovieKeys.has(plan.movieKey) && (
+                            <StarIcon
+                              size={18}
+                              weight="fill"
+                              aria-label={localize("気になる作品")}
+                            />
+                          ),
+                        )}
+                        {movieTitle(plan.title)}
+                      </h3>
+                      <p>
+                        <MapPinIcon size={15} aria-hidden="true" />
+                        {localize(plan.cinemaName)}
+                      </p>
+                      {localize(
+                        (plan.screen || plan.format) && (
+                          <p className="viewing-plan-meta">
+                            {localize(
+                              [plan.screen, plan.format]
+                                .filter(Boolean)
+                                .join(" / "),
+                            )}
+                          </p>
+                        ),
+                      )}
+                      <div className="viewing-plan-actions">
+                        <label className="viewing-plan-reservation">
+                          <input
+                            type="checkbox"
+                            checked={plan.reservedAt !== null}
+                            disabled={savingIds.has(plan.showingId)}
+                            onChange={(event) =>
+                              void onReservationChange(
+                                plan,
+                                event.currentTarget.checked,
+                              )
+                            }
+                          />
+                          <span>{localize("予約済み")}</span>
+                        </label>
+                        <a
+                          href={plan.bookingUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {localize("公式サイト")}
+                          <ArrowSquareOutIcon size={14} aria-hidden="true" />
+                        </a>
+                        <button
+                          type="button"
+                          disabled={savingIds.has(plan.showingId)}
+                          onClick={() => void onRemove(plan)}
+                          aria-label={localize(
+                            `${movieTitle(plan.title)}を鑑賞予定から外す`,
+                          )}
+                        >
+                          <TrashIcon size={16} aria-hidden="true" />
+                          {localize(
+                            savingIds.has(plan.showingId)
+                              ? "保存中"
+                              : "予定から外す",
+                          )}
+                        </button>
+                      </div>
+                    </article>
+                  </li>
+                )),
+              )}
+            </ol>
+          </section>
+        )),
+      )}
     </PageShell>
   );
 }

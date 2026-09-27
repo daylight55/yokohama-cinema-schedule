@@ -1,4 +1,5 @@
 import { load } from "cheerio";
+import { resolveBookingUrl } from "./booking";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
 import { moviePreferenceKey, safeImageUrl } from "../../../shared/movie";
 import type { NormalizedShowing } from "../../../shared/types";
@@ -23,7 +24,9 @@ export function parseMovilSchedule(
 
     article.find("ul.timetable").each((__, timetableElement) => {
       const timetable = $(timetableElement);
-      const theatreText = cleanText(timetable.find("li.theatre").first().text());
+      const theatreText = cleanText(
+        timetable.find("li.theatre").first().text(),
+      );
       const screen =
         cleanText(timetable.find(".theatre-num").first().text()) || null;
       const format = theatreText.match(/\b(2D|3D|4DX|IMAX)\b/i)?.[1] ?? null;
@@ -33,9 +36,11 @@ export function parseMovilSchedule(
         const start = cleanText(show.find("time.start").text());
         const end = cleanText(show.find("time.end").text());
         if (!start) return;
-        const bookingUrl =
-          show.find("a[href]").first().attr("href") ??
-          "https://109cinemas.net/movil/";
+        const directBookingUrl = resolveBookingUrl(
+          show.find("a[href]").first().attr("href"),
+          "https://109cinemas.net/movil/",
+        );
+        const bookingUrl = directBookingUrl ?? "https://109cinemas.net/movil/";
 
         result.push({
           sourceId: "movil",
@@ -48,7 +53,9 @@ export function parseMovilSchedule(
           screen: screen ? `ムービル${screen}` : theatreText || null,
           format,
           bookingUrl,
-          purchasable: show.find(".available").length > 0,
+          purchasable:
+            Boolean(directBookingUrl) &&
+            (show.hasClass("available") || show.find(".available").length > 0),
         });
       });
     });

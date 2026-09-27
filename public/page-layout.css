@@ -1,0 +1,48 @@
+.page-shell {
+  width: min(100% - 28px, 760px);
+  min-width: 0;
+  margin-inline: auto;
+  padding: 24px 0 max(48px, env(safe-area-inset-bottom));
+}
+
+.page-header {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.page-header-copy,
+.page-header-meta {
+  min-width: 0;
+}
+
+.page-eyebrow {
+  margin: 0 0 4px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.page-header h1 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(24px, 7vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.page-lead {
+  max-width: 620px;
+  margin: 12px 0 0;
+  color: #c2cdc7;
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.page-header-meta {
+  justify-self: start;
+}
+
+@media (max-width: 359px) { .page-shell { width: min(100% - 20px, 760px); } }

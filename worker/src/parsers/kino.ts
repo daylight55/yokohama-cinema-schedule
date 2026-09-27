@@ -1,9 +1,6 @@
 import { load } from "cheerio";
-import {
-  addDays,
-  jstEndToIso,
-  jstLocalToIso,
-} from "../../../shared/date";
+import { resolveBookingUrl } from "./booking";
+import { addDays, jstEndToIso, jstLocalToIso } from "../../../shared/date";
 import type { NormalizedShowing } from "../../../shared/types";
 import { safeImageUrl } from "../../../shared/movie";
 
@@ -29,8 +26,7 @@ export function parseKinoSchedule(
       const title = rawTitle.replace(/^NEW\s*/, "");
       if (!title) return;
       const detailUrl = movie.find(".schedule__title a").first().attr("href");
-      const movieKey =
-        detailUrl?.match(/movie-detail\/(\d+)/)?.[1] ?? title;
+      const movieKey = detailUrl?.match(/movie-detail\/(\d+)/)?.[1] ?? title;
 
       movie.find(".schedule__screen").each((__, screenElement) => {
         const screen = $(screenElement);
@@ -42,16 +38,18 @@ export function parseKinoSchedule(
         screen.find(".schedule__time").each((___, timeElement) => {
           const time = $(timeElement);
           const start = cleanText(time.find(".schedule__start-time").text());
-          const end = cleanText(time.find(".schedule__end-time").text()).replace(
-            /^-\s*/,
-            "",
-          );
+          const end = cleanText(
+            time.find(".schedule__end-time").text(),
+          ).replace(/^-\s*/, "");
           if (!start) return;
           const showContainer = time.closest("li");
+          const directBookingUrl = resolveBookingUrl(
+            showContainer.find("a[href*='booking']").first().attr("href"),
+            "https://kinocinema.jp/minatomirai/",
+          );
+          // Never borrow the first bookable time from another showing of this film.
           const bookingUrl =
-            showContainer.find("a[href*='booking']").attr("href") ??
-            movie.find("a[href*='booking']").first().attr("href") ??
-            "https://kinocinema.jp/minatomirai/#schedule";
+            directBookingUrl ?? "https://kinocinema.jp/minatomirai/#schedule";
 
           result.push({
             sourceId: "kino-minatomirai",
@@ -64,7 +62,7 @@ export function parseKinoSchedule(
             screen: screenName,
             format: detectFormat(rawTitle),
             bookingUrl,
-            purchasable: bookingUrl.includes("booking"),
+            purchasable: Boolean(directBookingUrl),
           });
         });
       });

@@ -1,3 +1,5 @@
+import type { Language } from "../../shared/language";
+import { registerInvitedGoogleUser } from "./invitations";
 import type { AuthUser, ResolvedSession } from "./auth";
 import { findUserByEmail, LEGACY_USER_ID, normalizeEmail } from "./auth";
 import { prepareDepartureLocationTransfer } from "./user-profile";
@@ -46,22 +48,6 @@ async function findGoogleIdentity(
   return row ? mapIdentityUser(row) : null;
 }
 
-async function hasAcceptedInvite(
-  db: D1Database,
-  email: string,
-): Promise<boolean> {
-  const row = await db
-    .prepare(
-      `SELECT email
-         FROM user_invites
-        WHERE email = ?
-          AND accepted_at IS NULL`,
-    )
-    .bind(email)
-    .first<{ email: string }>();
-  return Boolean(row);
-}
-
 async function realUserCount(db: D1Database): Promise<number> {
   const row = await db
     .prepare("SELECT COUNT(*) AS count FROM users WHERE id != ?")
@@ -84,9 +70,7 @@ async function claimLegacyAccount(
   );
   await db.batch([
     db
-      .prepare(
-        "UPDATE movie_preferences SET user_id = ? WHERE user_id = ?",
-      )
+      .prepare("UPDATE movie_preferences SET user_id = ? WHERE user_id = ?")
       .bind(userId, LEGACY_USER_ID),
     db
       .prepare(
@@ -103,9 +87,7 @@ async function claimLegacyAccount(
       )
       .bind(userId, LEGACY_USER_ID),
     db
-      .prepare(
-        "UPDATE movie_marathon_plans SET user_id = ? WHERE user_id = ?",
-      )
+      .prepare("UPDATE movie_marathon_plans SET user_id = ? WHERE user_id = ?")
       .bind(userId, LEGACY_USER_ID),
     db
       .prepare(
@@ -127,6 +109,8 @@ export async function completeGoogleLogin(
   identity: GoogleIdentity,
   currentSession: ResolvedSession | null,
   profileEncryptionKey: string,
+  inviteToken = "",
+  language: Language = "ja",
 ): Promise<AuthUser> {
   const normalizedEmail = normalizeEmail(identity.email);
   if (
@@ -176,9 +160,10 @@ export async function completeGoogleLogin(
     count === 0 &&
     currentSession?.legacy === true &&
     currentSession.user.id === LEGACY_USER_ID;
-  const invited =
-    count > 0 && (await hasAcceptedInvite(db, normalizedEmail));
-  if (!claimingLegacy && !invited) {
+  if (!claimingLegacy && count > 0) {
+    return registerInvitedGoogleUser(db, inviteToken, identity, language);
+  }
+  if (!claimingLegacy) {
     throw new Error(
       count === 0 ? "admin_bootstrap_required" : "invite_required",
     );
@@ -192,8 +177,8 @@ export async function completeGoogleLogin(
       .prepare(
         `INSERT INTO users (
            id, email, display_email, role, status, created_at, updated_at,
-           last_login_at
-         ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?)`,
+           last_login_at, language
+         ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
       )
       .bind(
         userId,
@@ -203,6 +188,7 @@ export async function completeGoogleLogin(
         now,
         now,
         now,
+        language,
       ),
     db
       .prepare(
@@ -256,26 +242,4 @@ async function linkGoogleIdentity(
       )
       .bind(now, now, userId),
   ]);
-}
-
-export async function inviteUser(
-  db: D1Database,
-  emailValue: string,
-  invitedBy: string,
-): Promise<string> {
-  const email = normalizeEmail(emailValue);
-  if (!email) throw new RangeError("invalid_email");
-  const now = new Date().toISOString();
-  await db
-    .prepare(
-      `INSERT INTO user_invites (email, invited_by, created_at, accepted_at)
-       VALUES (?, ?, ?, NULL)
-       ON CONFLICT(email) DO UPDATE SET
-         invited_by = excluded.invited_by,
-         created_at = excluded.created_at,
-         accepted_at = NULL`,
-    )
-    .bind(email, invitedBy, now)
-    .run();
-  return email;
 }
