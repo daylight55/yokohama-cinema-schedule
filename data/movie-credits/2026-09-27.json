@@ -1,0 +1,436 @@
+{
+  "lookups": {
+    "{\"site\":\"jawiki\",\"title\":\"E.T.\"}": {
+      "input": {
+        "japaneseTitle": "E.T.",
+        "englishTitle": "E.T. the Extra-Terrestrial",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/E.T."
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q11621",
+        "releaseYear": 1982,
+        "directors": [
+          {
+            "id": "Q8877",
+            "ja": "スティーヴン・スピルバーグ",
+            "en": "Steven Spielberg"
+          }
+        ],
+        "cast": [
+          {
+            "id": "Q258064",
+            "ja": "ディー・ウォレス",
+            "en": "Dee Wallace"
+          },
+          {
+            "id": "Q354873",
+            "ja": "ピーター・コヨーテ",
+            "en": "Peter Coyote"
+          },
+          {
+            "id": "Q506198",
+            "ja": "ヘンリー・トーマス",
+            "en": "Henry Thomas"
+          },
+          {
+            "id": "Q676094",
+            "ja": "ドリュー・バリモア",
+            "en": "Drew Barrymore"
+          },
+          {
+            "id": "Q230390",
+            "ja": "エリカ・エレニアック",
+            "en": "Erika Eleniak"
+          },
+          {
+            "id": "Q464522",
+            "ja": "C・トーマス・ハウエル",
+            "en": "C. Thomas Howell"
+          }
+        ],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q11621"
+      },
+      "nextAttemptAt": "2026-09-28T02:16:48.578Z",
+      "updatedAt": "2026-09-27T02:16:48.578Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"Michael/マイケル\"}": {
+      "input": {
+        "japaneseTitle": "Michael マイケル",
+        "englishTitle": "Michael",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/Michael/%E3%83%9E%E3%82%A4%E3%82%B1%E3%83%AB"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q116677364",
+        "releaseYear": 2026,
+        "directors": [
+          {
+            "id": "Q465139",
+            "ja": "アントワーン・フークア",
+            "en": "Antoine Fuqua"
+          }
+        ],
+        "cast": [
+          {
+            "id": "Q123693068",
+            "ja": "ジャファー・ジャクソン",
+            "en": "Jaafar Jackson"
+          },
+          {
+            "id": "Q5147723",
+            "ja": "コールマン・ドミンゴ",
+            "en": "Colman Domingo"
+          },
+          {
+            "id": "Q272956",
+            "ja": "ニア・ロング",
+            "en": "Nia Long"
+          },
+          {
+            "id": "Q267330",
+            "ja": "マイルズ・テラー",
+            "en": "Miles Teller"
+          },
+          {
+            "id": "Q33129702",
+            "ja": null,
+            "en": "Joseph David-Jones"
+          },
+          {
+            "id": "Q23894602",
+            "ja": "ローラ・ハリアー",
+            "en": "Laura Harrier"
+          }
+        ],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q116677364"
+      },
+      "nextAttemptAt": "2026-09-28T02:16:50.871Z",
+      "updatedAt": "2026-09-27T02:16:50.871Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"ザ・スーパーマリオギャラクシー・ムービー\"}": {
+      "input": {
+        "japaneseTitle": "4DX最終上映 ザ・スーパーマリオギャラクシー・ムービー",
+        "englishTitle": "The Super Mario Galaxy Movie — Final 4DX Screenings",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%82%B6%E3%83%BB%E3%82%B9%E3%83%BC%E3%83%91%E3%83%BC%E3%83%9E%E3%83%AA%E3%82%AA%E3%82%AE%E3%83%A3%E3%83%A9%E3%82%AF%E3%82%B7%E3%83%BC%E3%83%BB%E3%83%A0%E3%83%BC%E3%83%93%E3%83%BC"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q124806421",
+        "releaseYear": 2026,
+        "directors": [
+          {
+            "id": "Q47492998",
+            "ja": "アーロン・ホーバス",
+            "en": "Aaron Horvath"
+          },
+          {
+            "id": "Q5394838",
+            "ja": "マイケル・イェレニック",
+            "en": "Michael Jelenic"
+          }
+        ],
+        "cast": [],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q124806421"
+      },
+      "nextAttemptAt": "2026-09-28T02:16:52.252Z",
+      "updatedAt": "2026-09-27T02:16:52.252Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"ニュー・シネマ・パラダイス\"}": {
+      "input": {
+        "japaneseTitle": "ニュー・シネマ・パラダイス",
+        "englishTitle": "Cinema Paradiso",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%83%8B%E3%83%A5%E3%83%BC%E3%83%BB%E3%82%B7%E3%83%8D%E3%83%9E%E3%83%BB%E3%83%91%E3%83%A9%E3%83%80%E3%82%A4%E3%82%B9"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q464032",
+        "releaseYear": 1988,
+        "directors": [
+          {
+            "id": "Q53045",
+            "ja": "ジュゼッペ・トルナトーレ",
+            "en": "Giuseppe Tornatore"
+          }
+        ],
+        "cast": [
+          {
+            "id": "Q561124",
+            "ja": "ジャック・ペラン",
+            "en": "Jacques Perrin"
+          },
+          {
+            "id": "Q1052244",
+            "ja": "マルコ・レオナルディ",
+            "en": "Marco Leonardi"
+          },
+          {
+            "id": "Q2279307",
+            "ja": "サルヴァトーレ・カシオ",
+            "en": "Salvatore Cascio"
+          },
+          {
+            "id": "Q106482",
+            "ja": "フィリップ・ノワレ",
+            "en": "Philippe Noiret"
+          },
+          {
+            "id": "Q1141146",
+            "ja": "アニェーゼ・ナーノ",
+            "en": "Agnese Nano"
+          },
+          {
+            "id": "Q291765",
+            "ja": "ブリジット・フォッセー",
+            "en": "Brigitte Fossey"
+          }
+        ],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q464032"
+      },
+      "nextAttemptAt": "2026-09-28T02:16:53.977Z",
+      "updatedAt": "2026-09-27T02:16:53.977Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"グレイテスト・ショーマン\"}": {
+      "input": {
+        "japaneseTitle": "グレイテスト・ショーマン",
+        "englishTitle": "The Greatest Showman",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%AC%E3%82%A4%E3%83%86%E3%82%B9%E3%83%88%E3%83%BB%E3%82%B7%E3%83%A7%E3%83%BC%E3%83%9E%E3%83%B3"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q27942936",
+        "releaseYear": 2017,
+        "directors": [
+          {
+            "id": "Q28152753",
+            "ja": "マイケル・グレイシー",
+            "en": "Michael Gracey"
+          }
+        ],
+        "cast": [
+          {
+            "id": "Q45229",
+            "ja": "ザック・エフロン",
+            "en": "Zac Efron"
+          },
+          {
+            "id": "Q129591",
+            "ja": "ヒュー・ジャックマン",
+            "en": "Hugh Jackman"
+          },
+          {
+            "id": "Q156796",
+            "ja": "ミシェル・ウィリアムズ",
+            "en": "Michelle Williams"
+          },
+          {
+            "id": "Q4947838",
+            "ja": "レベッカ・ファーガソン",
+            "en": "Rebecca Ferguson"
+          },
+          {
+            "id": "Q189489",
+            "ja": "ゼンデイヤ",
+            "en": "Zendaya"
+          },
+          {
+            "id": "Q13560560",
+            "ja": "キアラ・セトル",
+            "en": "Keala Settle"
+          }
+        ],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q27942936"
+      },
+      "nextAttemptAt": "2026-09-28T02:16:55.675Z",
+      "updatedAt": "2026-09-27T02:16:55.675Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"カメラを止めるな!\"}": {
+      "input": {
+        "japaneseTitle": "カメラを止めるな!",
+        "englishTitle": "One Cut of the Dead",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%A1%E3%83%A9%E3%82%92%E6%AD%A2%E3%82%81%E3%82%8B%E3%81%AA%21"
+      },
+      "attempts": 1,
+      "status": "unresolved",
+      "credits": null,
+      "nextAttemptAt": "2026-09-28T02:16:57.434Z",
+      "updatedAt": "2026-09-27T02:16:57.434Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"トイ・ストーリー5\"}": {
+      "input": {
+        "japaneseTitle": "トイ・ストーリー5",
+        "englishTitle": "Toy Story 5",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%83%88%E3%82%A4%E3%83%BB%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC5"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q113641997",
+        "releaseYear": 2026,
+        "directors": [
+          {
+            "id": "Q328723",
+            "ja": "アンドルー・スタントン",
+            "en": "Andrew Stanton"
+          }
+        ],
+        "cast": [
+          {
+            "id": "Q208408",
+            "ja": "ティム・アレン",
+            "en": "Tim Allen"
+          },
+          {
+            "id": "Q2263",
+            "ja": "トム・ハンクス",
+            "en": "Tom Hanks"
+          },
+          {
+            "id": "Q272946",
+            "ja": "ジョーン・キューザック",
+            "en": "Joan Cusack"
+          },
+          {
+            "id": "Q471018",
+            "ja": "アーニー・ハドソン",
+            "en": "Ernie Hudson"
+          },
+          {
+            "id": "Q601032",
+            "ja": "トニー・ヘイル",
+            "en": "Tony Hale"
+          },
+          {
+            "id": "Q486740",
+            "ja": "コナン・オブライエン",
+            "en": "Conan O'Brien"
+          }
+        ],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q113641997"
+      },
+      "nextAttemptAt": "2026-09-28T02:18:28.637Z",
+      "updatedAt": "2026-09-27T02:18:28.637Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"スパイダーマン:ブランド・ニュー・デイ\"}": {
+      "input": {
+        "japaneseTitle": "スパイダーマン:ブランド・ニュー・デイ",
+        "englishTitle": "Spider-Man: Brand New Day",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%82%B9%E3%83%91%E3%82%A4%E3%83%80%E3%83%BC%E3%83%9E%E3%83%B3%3A%E3%83%96%E3%83%A9%E3%83%B3%E3%83%89%E3%83%BB%E3%83%8B%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%87%E3%82%A4"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q113244935",
+        "releaseYear": 2026,
+        "directors": [
+          {
+            "id": "Q15972939",
+            "ja": "デスティン・ダニエル・クレットン",
+            "en": "Destin Daniel Cretton"
+          }
+        ],
+        "cast": [
+          {
+            "id": "Q2023710",
+            "ja": "トム・ホランド",
+            "en": "Tom Holland"
+          },
+          {
+            "id": "Q189489",
+            "ja": "ゼンデイヤ",
+            "en": "Zendaya"
+          },
+          {
+            "id": "Q26213909",
+            "ja": "ジェイコブ・バタロン",
+            "en": "Jacob Batalon"
+          },
+          {
+            "id": "Q27452406",
+            "ja": "セイディー・シンク",
+            "en": "Sadie Sink"
+          },
+          {
+            "id": "Q11833191",
+            "ja": "ライザ・コロン＝ザヤス",
+            "en": "Liza Colón-Zayas"
+          },
+          {
+            "id": "Q362616",
+            "ja": "ジョン・バーンサル",
+            "en": "Jon Bernthal"
+          }
+        ],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q113244935"
+      },
+      "nextAttemptAt": "2026-09-28T02:18:31.843Z",
+      "updatedAt": "2026-09-27T02:18:31.843Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"ナタ 魔童の大暴れ\"}": {
+      "input": {
+        "japaneseTitle": "ナタ 魔童の大暴れ",
+        "englishTitle": "Ne Zha 2",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%83%8A%E3%82%BF%20%E9%AD%94%E7%AB%A5%E3%81%AE%E5%A4%A7%E6%9A%B4%E3%82%8C"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q131937861",
+        "releaseYear": 2025,
+        "directors": [
+          {
+            "id": "Q66470849",
+            "ja": "餃子",
+            "en": "Jiaozi"
+          }
+        ],
+        "cast": [],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q131937861"
+      },
+      "nextAttemptAt": "2026-09-28T02:18:34.722Z",
+      "updatedAt": "2026-09-27T02:18:34.722Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"キングダム 魂の決戦\"}": {
+      "input": {
+        "japaneseTitle": "キングダム 魂の決戦",
+        "englishTitle": "Kingdom 5: The Clash of Souls",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%82%AD%E3%83%B3%E3%82%B0%E3%83%80%E3%83%A0%20%E9%AD%82%E3%81%AE%E6%B1%BA%E6%88%A6"
+      },
+      "attempts": 1,
+      "status": "verified",
+      "credits": {
+        "entityId": "Q140615570",
+        "releaseYear": null,
+        "directors": [
+          {
+            "id": "Q7497770",
+            "ja": "佐藤信介",
+            "en": "Shinsuke Sato"
+          }
+        ],
+        "cast": [],
+        "sourceUrl": "https://www.wikidata.org/wiki/Q140615570"
+      },
+      "nextAttemptAt": "2026-09-28T02:18:37.604Z",
+      "updatedAt": "2026-09-27T02:18:37.604Z"
+    },
+    "{\"site\":\"jawiki\",\"title\":\"ディスクロージャー・デイ\"}": {
+      "input": {
+        "japaneseTitle": "ディスクロージャー・デイ",
+        "englishTitle": "Disclosure Day",
+        "sourceUrl": "https://ja.wikipedia.org/wiki/%E3%83%87%E3%82%A3%E3%82%B9%E3%82%AF%E3%83%AD%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%BC%E3%83%BB%E3%83%87%E3%82%A4"
+      },
+      "attempts": 1,
+      "status": "unresolved",
+      "credits": null,
+      "nextAttemptAt": "2026-09-28T02:18:39.851Z",
+      "updatedAt": "2026-09-27T02:18:39.851Z",
+      "lastError": "credits_access_blocked"
+    }
+  }
+}

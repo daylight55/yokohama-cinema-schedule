@@ -12,6 +12,7 @@ import {
   localeCode,
 } from "./i18n";
 import { PageHeader, PageShell } from "./PageLayout";
+import { MovieCredits } from "./MovieCredits";
 
 export function MoviePage({
   movieKey,
@@ -112,15 +113,16 @@ export function MoviePage({
             }}
           />
         )}
-        {introduction && (
+        {(introduction || record?.credits) && (
           <div className="movie-introduction">
-            <p>{introduction}</p>
-            {record?.introductionSourceUrl && (
+            {introduction && <p>{introduction}</p>}
+            {introduction && record?.introductionSourceUrl && (
               <a className="movie-source" href={record.introductionSourceUrl} target="_blank" rel="noreferrer">
                 {t("紹介文の出典")}
                 <ArrowSquareOutIcon size={14} aria-hidden="true" />
               </a>
             )}
+            <MovieCredits credits={record?.credits} language={localeCode() === "en-GB" ? "en" : "ja"} />
           </div>
         )}
       </div>
