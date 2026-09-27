@@ -134,11 +134,13 @@ export const onRequestGet: PagesFunction<
         r.original_title AS originalTitle, r.english_title AS englishTitle,
         r.source_url AS sourceUrl, r.source_kind AS sourceKind,
         i.introduction_ja AS introductionJa, i.introduction_en AS introductionEn,
-        i.source_url AS introductionSourceUrl
+        i.source_url AS introductionSourceUrl,
+        c.credits_json AS creditsJson
       FROM movie_title_research r
       LEFT JOIN movie_introductions i ON i.title_key = r.title_key
+      LEFT JOIN movie_credits c ON c.title_key = r.title_key AND c.status = 'verified'
       WHERE r.status = 'verified'`,
-    ).all<import("../../shared/types").MovieTitleRecord>(),
+    ).all<import("../../shared/types").MovieTitleRecord & { creditsJson: string | null }>(),
   ]);
   const [preferences, cinemaTravelPreferences, userProfile] = await Promise.all(
     [
@@ -188,7 +190,9 @@ export const onRequestGet: PagesFunction<
 
   const response: ScheduleResponse = {
     date,
-    movieTitles: titleCatalog.results ?? [],
+    movieTitles: (titleCatalog.results ?? []).map(({ creditsJson, ...title }) => ({
+      ...title, credits: creditsJson ? JSON.parse(creditsJson) : null,
+    })),
     generatedAt: new Date().toISOString(),
     lastUpdatedAt: health?.last_updated_at ?? null,
     cinemas,

@@ -1,4 +1,5 @@
 import { refreshMovieTitleResearch } from "./title-research";
+import { refreshMovieCredits } from "./movie-credits";
 import { validBearer } from "./request-auth";
 import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
@@ -94,6 +95,13 @@ export default {
               await refreshMovieTitleResearch(env.DB, env.AI);
             } catch {
               console.warn("Movie title research unavailable");
+            }
+          }
+          if (sourceBatchForCron(controller.cron) === 0) {
+            try {
+              await refreshMovieCredits(env.DB);
+            } catch {
+              console.warn(JSON.stringify({ event: "movie_credits_unavailable" }));
             }
           }
           if (result.failed)

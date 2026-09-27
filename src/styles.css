@@ -3900,6 +3900,11 @@ html[lang="en"] .brand-wordmark {
 .movie-source { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; font-size: 0.875rem; }
 .movie-introduction { grid-column: 1 / -1; min-width: 0; max-width: 68ch; }
 .movie-introduction p { margin: 0; font-size: 1rem; line-height: 1.85; }
+.movie-credits { margin-top: 16px; }
+.movie-credits dl { display: grid; gap: 10px; margin: 0; font-size: 0.9375rem; line-height: 1.7; }
+.movie-credits dl > div { display: grid; grid-template-columns: minmax(0, 5.5em) minmax(0, 1fr); gap: 12px; }
+.movie-credits dt { color: var(--muted); }
+.movie-credits dd { min-width: 0; margin: 0; }
 .movie-day-nav { display: flex; gap: 8px; overflow-x: auto; padding-block: 4px 16px; margin-bottom: 10px; }
 .movie-day-nav button { flex-shrink: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); background: var(--surface); cursor: pointer; }
 .movie-day-empty { color: var(--muted); }
