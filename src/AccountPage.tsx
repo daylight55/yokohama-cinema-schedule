@@ -1,3 +1,4 @@
+import { ProfileEditor } from "./MemberProfile";
 import { localeCode, localize } from "./i18n";
 import {
   FingerprintIcon,
@@ -166,6 +167,8 @@ export function AccountPage({
         title={localize("マイページ")}
         lead={localize(email ?? "管理者用セッション")}
       />
+
+      {!account.user.legacy && <ProfileEditor />}
 
       {localize(profileSettings)}
 

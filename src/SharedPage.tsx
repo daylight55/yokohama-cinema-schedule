@@ -1,3 +1,4 @@
+import { MemberAvatar } from "./MemberProfile";
 import { groupSharedMovies } from "../shared/sharing";
 import { useEffect, useState } from "react";
 import {
@@ -49,7 +50,7 @@ export function SharedPage() {
       });
     return () => controller.abort();
   }, [retry]);
-  const names = new Map(data?.members.map((m) => [m.userId, m.name]));
+  const members = new Map(data?.members.map((m) => [m.userId, m]));
   const plans = new Map<string, SharedPlan[]>();
   for (const plan of data?.plans ?? []) {
     if (member && plan.userId !== member) continue;
@@ -130,6 +131,21 @@ export function SharedPage() {
           </select>
         </label>
       </div>
+      {member && members.has(member) && (
+        <section
+          className="shared-member-summary"
+          aria-label={t("プロフィール")}
+        >
+          <MemberAvatar
+            name={members.get(member)!.name}
+            url={members.get(member)?.avatarUrl}
+          />
+          <div>
+            <strong>{members.get(member)!.name}</strong>
+            {members.get(member)?.bio && <p>{members.get(member)!.bio}</p>}
+          </div>
+        </section>
+      )}
       {loading ? (
         <p role="status">{t("読み込み中…")}</p>
       ) : error ? (
@@ -183,7 +199,13 @@ export function SharedPage() {
                         >
                           {rows.map((p) => (
                             <li key={p.userId}>
-                              <span>{names.get(p.userId)}</span>
+                              <MemberAvatar
+                                name={members.get(p.userId)?.name ?? ""}
+                                url={members.get(p.userId)?.avatarUrl}
+                              />
+                              <span title={members.get(p.userId)?.bio}>
+                                {members.get(p.userId)?.name}
+                              </span>
                               {p.reserved && (
                                 <span className="shared-reserved">
                                   {t("予約済み")}
@@ -230,12 +252,13 @@ export function SharedPage() {
                     >
                       {rows.map((m) => (
                         <li key={m.userId}>
-                          <StarIcon
-                            size={14}
-                            weight="fill"
-                            aria-hidden="true"
+                          <MemberAvatar
+                            name={members.get(m.userId)?.name ?? ""}
+                            url={members.get(m.userId)?.avatarUrl}
                           />
-                          <span>{names.get(m.userId)}</span>
+                          <span title={members.get(m.userId)?.bio}>
+                            {members.get(m.userId)?.name}
+                          </span>
                         </li>
                       ))}
                     </ul>

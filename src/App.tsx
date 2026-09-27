@@ -1,3 +1,4 @@
+import { ProfileMenu } from "./MemberProfile";
 import { UsersThreeIcon } from "@phosphor-icons/react";
 import { movieTitle, screeningInfo } from "./i18n";
 import {
@@ -26,13 +27,11 @@ import {
   MoonIcon,
   MoonStarsIcon,
   PathIcon,
-  SignOutIcon,
   StarIcon,
   SunDimIcon,
   SunHorizonIcon,
   SunIcon,
   TrashIcon,
-  UserCircleIcon,
   WarningCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -2008,6 +2007,7 @@ export function App() {
                 ),
               )}
             </button>
+            <ProfileMenu />
           </div>
         </div>
       </header>
@@ -2097,15 +2097,6 @@ export function App() {
               {localize("映画はしごガチャ")}
             </a>
             <a
-              href={hashForAppView("account")}
-              className={view === "account" ? "active" : ""}
-              aria-current={view === "account" ? "page" : undefined}
-              onClick={closeNavigation}
-            >
-              <UserCircleIcon size={20} aria-hidden="true" />
-              {localize("マイページ")}
-            </a>
-            <a
               href={hashForAppView("about")}
               className={view === "about" ? "active" : ""}
               aria-current={view === "about" ? "page" : undefined}
@@ -2114,16 +2105,6 @@ export function App() {
               <InfoIcon size={20} aria-hidden="true" />
               {localize("このサイトについて")}
             </a>
-            <form
-              className="navigation-logout"
-              method="post"
-              action="/auth/logout"
-            >
-              <button type="submit">
-                <SignOutIcon size={20} aria-hidden="true" />
-                {localize("ログアウト")}
-              </button>
-            </form>
             {userRole === "admin" && (
               <div className="navigation-admin">
                 <a

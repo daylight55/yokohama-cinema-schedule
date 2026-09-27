@@ -476,5 +476,22 @@
   "予約": "Book",
   "予約サイトへ": "Book on cinema website",
   "作品の上映スケジュール": "View film showtimes",
-  "「観に行く」を押すと、映画館と開始時刻を鑑賞予定としてまとめて確認できます。": "Tap Add to plans to save a screening’s cinema and start time to My screenings."
+  "「観に行く」を押すと、映画館と開始時刻を鑑賞予定としてまとめて確認できます。": "Tap Add to plans to save a screening’s cinema and start time to My screenings.",
+  "プロフィールメニュー": "Profile menu",
+  "アカウント": "Account",
+  "プロフィール": "Profile",
+  "プロフィール画像": "Profile photo",
+  "写真を変更": "Change photo",
+  "写真を削除": "Remove photo",
+  "表示名": "Display name",
+  "ひとこと": "About me",
+  "好きな映画やジャンルなど": "Favourite films or genres",
+  "プロフィールは共有メンバーに表示されます。": "Your profile is visible to other members.",
+  "プロフィールを読み込んでいます…": "Loading your profile…",
+  "画像を準備中…": "Preparing photo…",
+  "保存する": "Save",
+  "プロフィールを保存できませんでした。もう一度お試しください。": "Could not save your profile. Please try again.",
+  "5MB以下のJPEG・PNG・WebP画像を選んでください。": "Choose a JPEG, PNG or WebP image up to 5 MB.",
+  "画像を読み込めませんでした。別の画像を選んでください。": "Could not load this image. Please choose another.",
+  "プロフィールを読み込めませんでした。": "Could not load your profile."
 }
