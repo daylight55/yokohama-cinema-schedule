@@ -62,3 +62,28 @@ review timestamps remain internal; the API returns only `synopsisJa`,
 `synopsisEn` and `synopsisSourceUrl`. The initial catalog has 15 bilingual
 synopses from retained reviewed sources. New ones require review and import;
 page visits and scheduled collection do not trigger additional source requests.
+
+## Workers AI synopsis fallback
+
+The first schedule cron batch processes at most one upcoming film without a
+synopsis. Workers AI reads that film's already verified source page and, if
+needed, one same-origin Story/Synopsis link actually present on that page. This
+is source-page research, not an unrestricted web search engine. Only reviewed
+publisher/festival/reference origins are fetchable; redirects are rejected.
+The model cannot supply new URLs. It must quote actual source text and produce
+brief equivalent JA/EN paraphrases, followed by a second evidence/identity check.
+Uncertain adaptations and unsupported plots remain missing. AI checks reduce
+errors but do not provide the certainty of human editorial review.
+
+At most five total page/model calls per film attempt, 15s page and 45s model
+timeouts, 2MB page limit, one attempt per film per 24 hours, five lifetime
+attempts. A global 15-minute lease prevents overlapping/manual bursts; upstream
+or model errors pause this feature for 24 hours. There is no retry in the same
+run. Existing reviewed or generated synopses are never overwritten by the job.
+`generation_method`, `model_name`, quote, source and timestamp are retained in D1.
+
+Inspect `synopsis_research` (attempts, next_attempt_at, last_reason) and
+`synopsis_research_gate` to diagnose missing entries. An authenticated POST to
+`/research-synopses` on the refresh Worker uses the same budgets and cooldowns
+as cron; it does not refresh cinema schedules. No new API key is required: the
+existing `AI` binding runs `@cf/qwen/qwen3-30b-a3b-fp8`.

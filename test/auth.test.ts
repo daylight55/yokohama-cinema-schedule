@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { testDatabase } from "./helpers/sqlite-d1";
 import {
   createSession,
   createUserSession,
@@ -91,34 +92,17 @@ describe("private site authentication", () => {
   });
 
   it("stores only a hash of opaque user session tokens and can revoke it", async () => {
-    let tokenHash = "";
-    let deletedHash = "";
-    const db = {
-      prepare: vi.fn((sql: string) => ({
-        bind: (...values: unknown[]) => ({
-          run: async () => {
-            if (sql.includes("INSERT INTO user_sessions")) {
-              tokenHash = String(values[0]);
-            }
-            if (sql.includes("DELETE FROM user_sessions")) {
-              deletedHash = String(values[0]);
-            }
-          },
-        }),
-      })),
-    } as unknown as D1Database;
-    const sessionEnv = { ...env, DB: db };
-
-    const session = await createUserSession(sessionEnv, "user-1");
-    const rawToken = session.value.replace(/^v2\./, "");
-    expect(tokenHash).not.toBe(rawToken);
-    await deleteSession(
-      new Request("https://example.com", {
-        headers: { cookie: `yc_session=${session.value}` },
-      }),
-      sessionEnv,
-    );
-    expect(deletedHash).toBe(tokenHash);
+    const { db, sqlite } = testDatabase();
+    try {
+      sqlite.exec("INSERT INTO users(id,email,created_at,updated_at) VALUES ('user-1','session@example.com','now','now')");
+      const sessionEnv = { ...env, DB: db };
+      const session = await createUserSession(sessionEnv, "user-1");
+      const tokenHash = sqlite.prepare("SELECT token_hash FROM user_sessions").get()?.token_hash;
+      expect(tokenHash).toBeTruthy();
+      expect(tokenHash).not.toBe(session.value.replace(/^v2\./, ""));
+      await deleteSession(new Request("https://example.com", { headers: { cookie: `yc_session=${session.value}` } }), sessionEnv);
+      expect(sqlite.prepare("SELECT count(*) AS n FROM user_sessions").get()?.n).toBe(0);
+    } finally { sqlite.close(); }
   });
 
   it("creates a hardened session cookie", () => {

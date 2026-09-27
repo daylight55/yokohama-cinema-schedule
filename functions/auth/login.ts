@@ -23,6 +23,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     "",
     "",
     requestLanguage(context.request),
+    new URL(context.request.url).searchParams.get("withdrawn") === "1",
   );
 };
 

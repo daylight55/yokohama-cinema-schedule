@@ -75,7 +75,8 @@ for (const [key, row] of [...rows].sort(([a], [b]) => a.localeCompare(b, 'en')))
       VALUES (${[key, synopsis.ja ?? null, synopsis.en ?? null, synopsis.evidence, synopsis.sourceUrl, synopsis.reviewedAt].map(sql).join(',')})
       ON CONFLICT(title_key) DO UPDATE SET
         synopsis_ja=excluded.synopsis_ja, synopsis_en=excluded.synopsis_en,
-        evidence=excluded.evidence, source_url=excluded.source_url, reviewed_at=excluded.reviewed_at
+        evidence=excluded.evidence, source_url=excluded.source_url, reviewed_at=excluded.reviewed_at,
+        generation_method='reviewed', model_name=NULL
       WHERE excluded.reviewed_at > movie_synopses.reviewed_at;`);
   }
 }

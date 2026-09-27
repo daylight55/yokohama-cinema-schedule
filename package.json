@@ -10,14 +10,15 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ci:pr": "npm run typecheck && npm run test && npm run build",
+    "ci:pr": "npm run typecheck && npm run test && npm run test:worker-runtime && npm run build",
     "pages:dev": "npm run build && wrangler pages dev dist --persist-to .wrangler/state",
     "pages:deploy": "npm run build && wrangler pages deploy dist",
     "worker:dev": "wrangler dev --config worker/wrangler.jsonc --persist-to .wrangler/state",
     "worker:deploy": "wrangler deploy --config worker/wrangler.jsonc",
     "db:migrate:local": "wrangler d1 migrations apply yokohama-cinema-schedule --local --config worker/wrangler.jsonc --persist-to .wrangler/state",
     "db:migrate:remote": "wrangler d1 migrations apply yokohama-cinema-schedule --remote --config worker/wrangler.jsonc",
-    "ci:pr:clean": "bash scripts/ci-pr-clean.sh"
+    "ci:pr:clean": "bash scripts/ci-pr-clean.sh",
+    "test:worker-runtime": "node scripts/worker-runtime-smoke.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

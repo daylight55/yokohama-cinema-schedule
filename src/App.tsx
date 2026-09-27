@@ -9,6 +9,8 @@ import {
   englishText,
 } from "./i18n";
 import { MoviePage } from "./MoviePage";
+import { MovieTimes } from "./MovieTimes";
+import { useHistoryScroll } from "./useHistoryScroll";
 import { localize, localizedDate } from "./i18n";
 import {
   ArrowSquareOutIcon,
@@ -265,10 +267,14 @@ export function App() {
       : null,
   );
   const [selectedArea, setSelectedArea] = useState<CinemaArea | "all">("all");
+  const [selectedShowingId, setSelectedShowingId] = useState(initialHashState.showing ?? null);
+  const lastShowingFocusRef = useRef<string | null>(null);
+  const [loadedScheduleKey, setLoadedScheduleKey] = useState("");
   const [futureOnly, setFutureOnly] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
   const [routes, setRoutes] = useState<RouteEstimate[]>([]);
   const [view, setView] = useState<AppView>(initialHashState.view);
+  const scheduleRequestKey = `${view}:${selectedDate}:${showAllMovieDates}`;
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [showJumpToNow, setShowJumpToNow] = useState(false);
   const [activeScheduleTimePeriod, setActiveScheduleTimePeriod] =
@@ -339,6 +345,11 @@ export function App() {
   const [routeUpdatedAt, setRouteUpdatedAt] = useState<string | null>(null);
   const selectedMovieListDate =
     view === "movies" && showAllMovieDates ? null : selectedDate;
+  const historyScroll = useHistoryScroll(
+    hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie"].includes(view) ? selectedDate : null,
+      movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
+    !loading && loadedScheduleKey === scheduleRequestKey && interactiveSearchQuery === normalizedSearchQuery,
+  );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -397,6 +408,7 @@ export function App() {
           : view;
     if (lastPageScrollKeyRef.current === pageScrollKey) return;
     lastPageScrollKeyRef.current = pageScrollKey;
+    if (historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash) return;
 
     const scrollTarget = getAppPageScrollTarget(
       view,
@@ -408,7 +420,7 @@ export function App() {
     pendingHomeScrollRef.current = false;
     didInitialTimeScrollRef.current = false;
 
-    if (scrollTarget === "linked-movie") {
+    if (scrollTarget === "linked-movie" || selectedShowingId) {
       lastMovieDeepLinkRef.current = null;
       return;
     }
@@ -496,9 +508,10 @@ export function App() {
                 : null,
         movie: nextMovieKey,
         query: usesWeeklyDate ? hashState.query : null,
+        showing: nextView === "schedule" ? hashState.showing : null,
       });
       if (window.location.hash !== canonicalHash) {
-        window.history.replaceState(null, "", canonicalHash);
+        window.history.replaceState(window.history.state, "", canonicalHash);
       }
       setView(nextView);
       setSelectedDate(nextScheduleDate);
@@ -506,6 +519,8 @@ export function App() {
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
       setPlannerDate(nextPlannerDate);
       setSelectedMovieKey(nextMovieKey);
+      setSelectedShowingId(nextView === "schedule" ? hashState.showing ?? null : null);
+      lastShowingFocusRef.current = null;
     };
 
     syncViewFromHash();
@@ -536,6 +551,8 @@ export function App() {
         return response.json() as Promise<ScheduleResponse>;
       })
       .then((data) => {
+        if (controller.signal.aborted) return;
+        setLoadedScheduleKey(scheduleRequestKey);
         registerTitleTranslations(data.movieTitles ?? []);
         setSchedule(data);
         setStarredMovieKeys(
@@ -617,7 +634,7 @@ export function App() {
           );
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [dates, selectedDate, showAllMovieDates, view]);
 
@@ -680,13 +697,15 @@ export function App() {
     [routeByCinema, schedule?.cinemas, selectedArea],
   );
   const visibleShowings = useMemo(
-    () =>
-      filterShowings(schedule?.showings ?? [], {
+    () => {
+      const filtered = new Set(filterShowings(schedule?.showings ?? [], {
         selectedArea,
         futureOnly: futureOnly && selectedDate === dates[0],
         now,
-      }).filter(
-        (showing) =>
+      }).map((showing) => showing.id));
+      return (schedule?.showings ?? []).filter((showing) =>
+        showing.id === selectedShowingId || (
+          filtered.has(showing.id) &&
           (cinemaScheduleVisibility.get(showing.cinemaId) ?? true) &&
           !movieStatusByKey.has(normalizeMovieTitle(showing.title)) &&
           matchesShowingSearchQuery(
@@ -694,8 +713,10 @@ export function App() {
             `${showing.title} ${englishText(showing.title)}`,
             `${showing.cinemaName} ${englishText(showing.cinemaName)}`,
             `${showing.cinemaShortName} ${englishText(showing.cinemaShortName)}`,
-          ),
-      ),
+          )
+        ),
+      );
+    },
     [
       dates,
       cinemaScheduleVisibility,
@@ -706,6 +727,7 @@ export function App() {
       schedule?.showings,
       selectedArea,
       selectedDate,
+      selectedShowingId,
     ],
   );
   const timeGroups = useMemo(
@@ -771,7 +793,23 @@ export function App() {
     currentTimeMarkerIndex === -1;
 
   useLayoutEffect(() => {
+    if (!selectedShowingId || view !== "schedule" || loading || error || loadedScheduleKey !== scheduleRequestKey ||
+      historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash) return;
+    const key = window.location.hash;
+    if (lastShowingFocusRef.current === key) return;
+    const target = Array.from(document.querySelectorAll<HTMLElement>("[data-showing-id]"))
+      .find((el) => el.dataset.showingId === selectedShowingId);
+    if (!target) return;
+    const section = target.closest<HTMLDetailsElement>("details.schedule-window");
+    if (section) section.open = true;
+    target.scrollIntoView({ behavior: "instant", block: "center", inline: "center" });
+    target.focus({ preventScroll: true });
+    lastShowingFocusRef.current = key;
+  }, [selectedShowingId, view, loading, error, loadedScheduleKey, scheduleRequestKey, timeGroups]);
+
+  useLayoutEffect(() => {
     if (
+      selectedShowingId || historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash ||
       loading ||
       error ||
       schedule?.date !== selectedDate ||
@@ -807,6 +845,7 @@ export function App() {
   useLayoutEffect(() => {
     if (
       didInitialTimeScrollRef.current ||
+      selectedShowingId || historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash ||
       loading ||
       error ||
       schedule?.date !== selectedDate ||
@@ -1602,6 +1641,8 @@ export function App() {
     setSelectedArea("all");
     setFutureOnly(false);
     setSelectedMovieKey(null);
+    setSelectedShowingId(null);
+    lastShowingFocusRef.current = null;
 
     const homeHash = hashForAppView("schedule", { date: today });
     if (window.location.hash !== homeHash) {
@@ -2819,6 +2860,7 @@ export function App() {
                                     ),
                                   )}
                                 </div>
+                                {!showAllMovieDates && <MovieTimes showings={movie.showings} language={language} title={movieTitle(movie.title)} />}
                                 {localize(
                                   schedule?.preferencesEnabled && (
                                     <FavoriteButton
@@ -3197,6 +3239,7 @@ export function App() {
                               return (
                                 <details
                                   className="schedule-window"
+                                  id={`schedule-window-${bucket.key}`}
                                   key={`${selectedDate}-${userProfile.scheduleCollapseMinutes}-${bucket.key}`}
                                   open={defaultOpen || undefined}
                                 >
@@ -3710,6 +3753,8 @@ function CinemaSlot({
         .filter(Boolean)
         .join(" ")}
       role="listitem"
+      data-showing-id={showing.id}
+      tabIndex={-1}
     >
       <div className="cinema-slot-info">
         <div className="slot-time">

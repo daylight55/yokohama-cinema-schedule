@@ -1525,6 +1525,9 @@ main {
   min-width: 0;
   padding-top: 2px;
 }
+.movie-times { grid-column: 1 / -1; grid-row: 3; display: flex; gap: 8px; overflow-x: auto; min-width: 0; padding-block: 4px; }
+.movie-times a { color: var(--text); text-decoration: none; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 62px; padding-inline: 10px; border: 1px solid var(--line); border-radius: 8px; font-variant-numeric: tabular-nums; }
+.cinema-slot:focus { outline: 3px solid var(--accent); outline-offset: -3px; }
 
 .movie-list-copy > strong {
   display: block;
@@ -3902,6 +3905,12 @@ html[lang="en"] .brand-wordmark {
 .movie-introduction p { margin: 0; font-size: 1rem; line-height: 1.85; }
 .movie-synopsis { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
 .movie-synopsis h2 { margin: 0 0 10px; font-size: 1.125rem; }
+.account-withdrawal summary { cursor: pointer; min-height: 44px; padding-block: 12px; }
+.account-withdrawal p { line-height: 1.8; }
+.account-withdrawal form { display: grid; gap: 16px; }
+.account-withdrawal label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.account-withdrawal input { flex: 0 0 auto; }
+.account-withdrawal button { min-height: 44px; }
 .movie-credits { margin-top: 16px; }
 .movie-credits dl { display: grid; gap: 10px; margin: 0; font-size: 0.9375rem; line-height: 1.7; }
 .movie-credits dl > div { display: grid; grid-template-columns: minmax(0, 5.5em) minmax(0, 1fr); gap: 12px; }

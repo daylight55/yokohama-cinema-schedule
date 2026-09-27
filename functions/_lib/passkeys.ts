@@ -277,9 +277,10 @@ export async function authenticatePasskey(
          FROM webauthn_credentials c
          JOIN users u ON u.id = c.user_id
         WHERE c.id = ?
-          AND u.status = 'active'`,
+          AND ((u.status = 'active' AND u.withdrawn_at IS NULL) OR
+            (u.status='disabled' AND u.withdrawn_at IS NOT NULL AND u.delete_after>?))`,
     )
-    .bind(response.id)
+    .bind(response.id, new Date().toISOString())
     .first<CredentialRow>();
   if (!credential) throw new Error("passkey_not_found");
   const verification = await verifyAuthenticationResponse({

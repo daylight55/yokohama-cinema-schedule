@@ -1,5 +1,8 @@
+/// <reference path="../env.d.ts" />
 import { refreshMovieTitleResearch } from "./title-research";
 import { refreshMovieCredits } from "./movie-credits";
+import { purgeExpiredAccounts } from "../../shared/account-lifecycle";
+import { refreshSynopses, workersSynopsisModel } from "./synopsis-research";
 import { validBearer } from "./request-auth";
 import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
@@ -26,13 +29,11 @@ import { parseTjoySchedule } from "./parsers/tjoy";
 import { parseUnitedMovieImages, parseUnitedSchedule } from "./parsers/united";
 import { fetchTmdbReleaseDates } from "./tmdb";
 
-interface Env {
+interface Env extends Partial<Omit<ScheduleEnv, "SCHEDULE_DAYS">> {
   DB: D1Database;
-  AI?: Ai;
   SCHEDULE_DAYS?: string;
   TMDB_API_READ_TOKEN?: string;
   WORKER_TRIGGER_TOKEN?: string;
-  BROWSER?: BrowserRun;
 }
 
 interface Source {
@@ -87,6 +88,12 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
+    if (controller.cron === "37 * * * *") {
+      ctx.waitUntil(purgeExpiredAccounts(env.DB).then((deleted) => {
+        console.log(JSON.stringify({ event: "expired_accounts_deleted", deleted }));
+      }));
+      return;
+    }
     ctx.waitUntil(
       refreshBatch(env, sourceBatchForCron(controller.cron))
         .then(async (result) => {
@@ -98,6 +105,10 @@ export default {
             }
           }
           if (sourceBatchForCron(controller.cron) === 0) {
+            if (env.AI) {
+              try { await refreshSynopses(env.DB, workersSynopsisModel(env.AI)); }
+              catch { console.warn(JSON.stringify({ event: "synopsis_research_unavailable" })); }
+            }
             try {
               await refreshMovieCredits(env.DB);
             } catch {
@@ -126,11 +137,17 @@ export default {
         headers: { "cache-control": "no-store" },
       });
     }
-    if (request.method !== "POST" || url.pathname !== "/refresh") {
+    if (request.method !== "POST" || !["/refresh", "/research-synopses"].includes(url.pathname)) {
       return new Response("Not found", { status: 404 });
     }
     if (!(await validBearer(request, env.WORKER_TRIGGER_TOKEN))) {
       return new Response("Unauthorized", { status: 401 });
+    }
+
+    if (url.pathname === "/research-synopses") {
+      if (!env.AI) return Response.json({ error: "ai_unavailable" }, { status: 503 });
+      const result = await refreshSynopses(env.DB, workersSynopsisModel(env.AI));
+      return Response.json(result, { headers: { "cache-control": "no-store" } });
     }
 
     const batch = parseSourceBatch(url.searchParams.get("batch"));

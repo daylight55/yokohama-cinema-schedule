@@ -114,6 +114,7 @@ export interface AppHashState {
   date: string | null;
   movie: string | null;
   query: string;
+  showing?: string | null;
 }
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -129,6 +130,7 @@ export function appHashStateFromHash(hash: string): AppHashState {
     date: date && ISO_DATE_PATTERN.test(date) ? date : null,
     movie: movie ? movie.slice(0, 240) : null,
     query: normalizeSearchQuery(params.get("q")),
+    ...(params.get("showing") ? { showing: params.get("showing")!.slice(0, 1000) } : {}),
   };
 }
 
@@ -142,6 +144,7 @@ export function hashForAppView(
     date?: string | null;
     movie?: string | null;
     query?: string | null;
+    showing?: string | null;
   } = {},
 ): string {
   const params = new URLSearchParams();
@@ -152,6 +155,7 @@ export function hashForAppView(
     params.set("movie", state.movie.trim().slice(0, 240));
   }
   const searchQuery = normalizeSearchQuery(state.query);
+  if (view === "schedule" && state.showing) params.set("showing", state.showing.slice(0, 1000));
   if (searchQuery) {
     params.set("q", searchQuery);
   }
