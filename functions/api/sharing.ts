@@ -1,3 +1,4 @@
+import { avatarUrl, profileName } from "../../shared/member-profile";
 import type { AuthContextData, PagesEnv } from "../_lib/env";
 import type {
   SharingResponse,
@@ -38,9 +39,15 @@ export const onRequestGet: PagesFunction<
   // Whitelist fields: no home location, calendar tokens, private notes or credentials.
   const members = await db
     .prepare(
-      `SELECT u.id AS userId, COALESCE(u.display_email, u.email) AS name FROM users u WHERE ${registered} ORDER BY name, u.id`,
+      `SELECT u.id AS userId, u.email, p.display_name, p.bio, p.avatar_version FROM users u LEFT JOIN member_profiles p ON p.user_id=u.id WHERE ${registered} ORDER BY COALESCE(NULLIF(p.display_name, ''), u.email), u.id`,
     )
-    .all<SharedMember>();
+    .all<{
+      userId: string;
+      email: string;
+      display_name: string | null;
+      bio: string | null;
+      avatar_version: string | null;
+    }>();
   const plans = await db
     .prepare(
       `SELECT p.user_id AS userId, p.showing_id AS showingId, p.title, p.cinema_name AS cinemaName, p.starts_at AS startsAt, p.ends_at AS endsAt, (p.reserved_at IS NOT NULL) AS reserved
@@ -60,7 +67,12 @@ export const onRequestGet: PagesFunction<
     .all<{ japaneseTitle: string; englishTitle: string | null }>();
   const result: SharingResponse = {
     userId: ctx.data.userId,
-    members: members.results,
+    members: members.results.map((m): SharedMember => ({
+      userId: m.userId,
+      name: profileName(m.display_name, m.email),
+      bio: m.bio ?? "",
+      avatarUrl: avatarUrl(m.userId, m.avatar_version),
+    })),
     plans: plans.results.map((p) => ({ ...p, reserved: !!p.reserved })),
     movies: movies.results,
     titles: titles.results,

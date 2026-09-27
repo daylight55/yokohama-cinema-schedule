@@ -9,8 +9,10 @@ export function testDatabase() {
   const prepare = (sql: string) => {
     let values: SQLInputValue[] = [];
     const statement = {
-      bind: (...args: SQLInputValue[]) => {
-        values = args;
+      bind: (...args: (SQLInputValue | ArrayBuffer)[]) => {
+        values = args.map((value) =>
+          value instanceof ArrayBuffer ? new Uint8Array(value) : value,
+        );
         return statement;
       },
       first: async () => sqlite.prepare(sql).get(...values) ?? null,

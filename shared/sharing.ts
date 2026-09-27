@@ -3,6 +3,8 @@ import { moviePreferenceKey } from "./movie";
 export interface SharedMember {
   userId: string;
   name: string;
+  avatarUrl?: string | null;
+  bio?: string;
 }
 export interface SharedPlan {
   userId: string;
