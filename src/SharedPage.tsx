@@ -3,7 +3,6 @@ import { MemberAvatar } from "./MemberProfile";
 import { SharedWatchlist } from "./SharedWatchlist";
 import { useEffect, useState } from "react";
 import {
-  ArrowClockwiseIcon,
   CalendarDotsIcon,
   StarIcon,
   UsersThreeIcon,
@@ -108,6 +107,7 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           data && (
             <>
               <SharingControls
+                key={data.groupId ?? "none"}
                 data={data}
                 onSelect={(id) => {
                   setMember("");
@@ -139,17 +139,6 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
         eyebrow={t("みんなの映画")}
         title={t("共有")}
         titleId="shared-title"
-        meta={
-          <button
-            className="icon-button"
-            type="button"
-            disabled={loading}
-            aria-label={t("再読み込み")}
-            onClick={() => setRetry((v) => v + 1)}
-          >
-            <ArrowClockwiseIcon size={20} aria-hidden="true" />
-          </button>
-        }
       />
       {!loading && !error && data && (
         <div className="sharing-view-heading">

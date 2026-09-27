@@ -96,6 +96,7 @@ export function normalizeReturnHash(value: FormDataEntryValue | null): string {
     "#viewing-plans",
     "#shared",
     "#groups",
+    "#notifications",
     "#planner",
     "#profile",
     "#account",

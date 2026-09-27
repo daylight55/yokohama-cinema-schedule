@@ -116,6 +116,7 @@ import { AdminUsersPage } from "./AdminUsersPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
+import { NotificationBell, NotificationsPage } from "./Notifications";
 import { SharedPage } from "./SharedPage";
 import { ViewingPlansPage } from "./ViewingPlansPage";
 
@@ -2070,6 +2071,7 @@ export function App() {
                 ),
               )}
             </button>
+            <NotificationBell />
             <ProfileMenu />
           </div>
         </div>
@@ -2606,6 +2608,8 @@ export function App() {
                 ) : null
               }
             />
+          ) : view === "notifications" ? (
+            <NotificationsPage />
           ) : (view === "shared" || view === "groups") ? (
             <SharedPage manage={view === "groups"} />
           ) : view === "viewingPlans" ? (

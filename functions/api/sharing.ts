@@ -40,10 +40,10 @@ export const onRequestGet: PagesFunction<
   const groups = (
     await db
       .prepare(
-        `SELECT g.id,g.name FROM sharing_groups g JOIN sharing_group_members m ON m.group_id=g.id WHERE m.user_id=? ORDER BY g.created_at,g.id`,
+        `SELECT g.id,g.name,(pref.group_id IS NOT NULL) AS preferred FROM sharing_groups g JOIN sharing_group_members m ON m.group_id=g.id LEFT JOIN sharing_preferences pref ON pref.user_id=m.user_id AND pref.group_id=g.id WHERE m.user_id=? ORDER BY preferred DESC,g.created_at,g.id`,
       )
       .bind(ctx.data.userId)
-      .all<{ id: string; name: string }>()
+      .all<{ id: string; name: string; preferred: number }>()
   ).results;
   const requested = new URL(ctx.request.url).searchParams.get("group");
   const groupId = requested || groups[0]?.id || null;
@@ -121,14 +121,12 @@ export const onRequestGet: PagesFunction<
     userId: ctx.data.userId,
     groups,
     groupId,
-    members: members.results.map(
-      (m): SharedMember => ({
-        userId: m.userId,
-        name: profileName(m.display_name, m.email),
-        bio: m.bio ?? "",
-        avatarUrl: avatarUrl(m.userId, m.avatar_version),
-      }),
-    ),
+    members: members.results.map((m): SharedMember => ({
+      userId: m.userId,
+      name: profileName(m.display_name, m.email),
+      bio: m.bio ?? "",
+      avatarUrl: avatarUrl(m.userId, m.avatar_version),
+    })),
     plans: plans.results.map((p) => ({ ...p, reserved: !!p.reserved })),
     movies: currentMovies,
     titles: titles.results,
@@ -147,11 +145,22 @@ export const onRequestPatch: PagesFunction<
     ctx.request.headers.get("origin") !== new URL(ctx.request.url).origin
   )
     return Response.json({ error: "forbidden" }, { status: 403, headers });
-  let body: { groupId?: unknown; name?: unknown };
+  let body: { groupId?: unknown; name?: unknown; action?: unknown };
   try {
     body = await ctx.request.json();
   } catch {
     return Response.json({ error: "invalid_json" }, { status: 400, headers });
+  }
+  if (body?.action === "prefer" && typeof body.groupId === "string") {
+    const row = await ctx.env.DB.prepare(
+      `INSERT INTO sharing_preferences(user_id,group_id)
+      SELECT m.user_id,m.group_id FROM sharing_group_members m JOIN users u ON u.id=m.user_id
+      WHERE m.user_id=? AND m.group_id=? AND u.status='active' AND u.email IS NOT NULL
+      ON CONFLICT(user_id) DO UPDATE SET group_id=excluded.group_id RETURNING group_id`,
+    )
+      .bind(ctx.data.userId, body.groupId)
+      .first();
+    return Response.json({ ok: !!row }, { status: row ? 200 : 403, headers });
   }
   if (
     !body ||
@@ -173,4 +182,29 @@ export const onRequestPatch: PagesFunction<
     { ok: result.meta.changes === 1 },
     { status: result.meta.changes === 1 ? 200 : 403, headers },
   );
+};
+
+export const onRequestDelete: PagesFunction<
+  PagesEnv,
+  string,
+  AuthContextData
+> = async (ctx) => {
+  if (
+    ctx.env.PUBLIC_MODE === "true" ||
+    !ctx.data.userId ||
+    ctx.data.authUser?.status !== "active" ||
+    ctx.request.headers.get("origin") !== new URL(ctx.request.url).origin
+  )
+    return Response.json({ error: "forbidden" }, { status: 403, headers });
+  const groupId = new URL(ctx.request.url).searchParams.get("group");
+  if (!groupId)
+    return Response.json({ error: "invalid_group" }, { status: 400, headers });
+  // RETURNING counts the requested membership, independent of cascading preferences/events.
+  const row = await ctx.env.DB.prepare(
+    `DELETE FROM sharing_group_members WHERE group_id=? AND user_id=?
+    AND EXISTS(SELECT 1 FROM users WHERE id=? AND status='active' AND email IS NOT NULL) RETURNING group_id`,
+  )
+    .bind(groupId, ctx.data.userId, ctx.data.userId)
+    .first();
+  return Response.json({ ok: !!row }, { status: row ? 200 : 403, headers });
 };
