@@ -1,0 +1,733 @@
+{
+  "reviewedAt": "2026-09-27T01:22:07.852Z",
+  "films": [
+    {
+      "movieKey": "踊る大捜査線n.e.w.メトロポリスを駆け抜けろ!",
+      "showingTitles": [
+        "踊る大捜査線 N.E.W. メトロポリスを駆け抜けろ!"
+      ],
+      "sourceTitle": "踊る大捜査線 N.E.W. メトロポリスを駆け抜けろ！",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/139/13925.1786601225.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13925&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "シャドウワーク",
+      "showingTitles": [
+        "シャドウワーク"
+      ],
+      "sourceTitle": "シャドウワーク",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/139/13976.1786366806.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13976&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ハート・オブ・ビースト",
+      "showingTitles": [
+        "ハート・オブ・ビースト"
+      ],
+      "sourceTitle": "ハート・オブ・ビースト",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/140/14023.1788845109.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=14023&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "トイ・ストーリー5",
+      "showingTitles": [
+        "トイ・ストーリー5"
+      ],
+      "sourceTitle": "トイ・ストーリー５",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/135/13555.1780989213.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13555&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "映画ちいかわ人魚の島のひみつ",
+      "showingTitles": [
+        "映画ちいかわ 人魚の島のひみつ"
+      ],
+      "sourceTitle": "映画ちいかわ 人魚の島のひみつ",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/136/13667.1777547758.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13667&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "マッチングtruelove",
+      "showingTitles": [
+        "マッチング TRUE LOVE"
+      ],
+      "sourceTitle": "マッチング TRUE LOVE",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/135/13562.1786951281.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13562&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "オデュッセイア",
+      "showingTitles": [
+        "オデュッセイア"
+      ],
+      "sourceTitle": "オデュッセイア",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/138/13848.1781607266.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13848&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "しびれ",
+      "showingTitles": [
+        "しびれ"
+      ],
+      "sourceTitle": "しびれ",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMDgvMTRfNDJfMThfOTU0XzIxMjI0Ml9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/212242_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5648.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "超かぐや姫!",
+      "showingTitles": [
+        "超かぐや姫!"
+      ],
+      "sourceTitle": "超かぐや姫！",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMDEvMTVfMTFfNTRfNDcxXzIxNDE3OV9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/214179_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5621.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "アベンジャーズエンドゲーム:アンコール",
+      "showingTitles": [
+        "アベンジャーズ/エンドゲーム:アンコール",
+        "アベンジャーズ/エンドゲーム:アンコール(インフィニティビジョン・字幕版)",
+        "アベンジャーズ/エンドゲーム:アンコール【INFINITY VISION】"
+      ],
+      "sourceTitle": "アベンジャーズ／エンドゲーム：アンコール",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/140/14029.1788423551.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=14029&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "白鳥とコウモリ",
+      "showingTitles": [
+        "白鳥とコウモリ"
+      ],
+      "sourceTitle": "白鳥とコウモリ",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/138/13843.1786365611.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13843&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "映画名探偵プリキュア!不思議な庭と2人の秘密",
+      "showingTitles": [
+        "(赤ちゃん連れ限定)映画名探偵プリキュア!不思議な庭と2人の秘密",
+        "【デビューdeシネマ】映画名探偵プリキュア!不思議な庭と2人の秘密",
+        "映画名探偵プリキュア!不思議な庭と2人の秘密"
+      ],
+      "sourceTitle": "映画名探偵プリキュア！不思議な庭と2人の秘密",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/136/13692.1782991888.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13692&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "八つ墓村",
+      "showingTitles": [
+        "八つ墓村"
+      ],
+      "sourceTitle": "八つ墓村",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/139/13991.1786601476.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13991&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "藁にもすがる獣たち",
+      "showingTitles": [
+        "藁にもすがる獣たち"
+      ],
+      "sourceTitle": "藁にもすがる獣たち",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/137/13717.1777548144.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13717&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ファーストライド",
+      "showingTitles": [
+        "ファーストライド"
+      ],
+      "sourceTitle": "ファーストライド",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/140/14099.1789644277.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=14099&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "新劇場版銀魂-吉原大炎上-<超炎上版>",
+      "showingTitles": [
+        "新劇場版 銀魂 -吉原大炎上- <超炎上版>",
+        "新劇場版 銀魂 -吉原大炎上-<超炎上版>"
+      ],
+      "sourceTitle": "新劇場版 銀魂 -吉原大炎上-＜超炎上版＞",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDIvMDIvMTBfNDJfNTlfMjk5XzIwNjg0OF90aHVtYm5haWxzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/206848_thumbnails.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5108.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ミニオンズ&モンスターズ",
+      "showingTitles": [
+        "ミニオンズ&モンスターズ"
+      ],
+      "sourceTitle": "ミニオンズ＆モンスターズ",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/136/13660.1781155462.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13660&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "バトル・ロワイアル",
+      "showingTitles": [
+        "バトル・ロワイアル"
+      ],
+      "sourceTitle": "バトル・ロワイアル（2000）",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjUvMDMvMDUvMTRfMzlfMDNfNTkwXzIyNjgzX3NjcmVlblNob3RzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/22683_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4574.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "メイドインアビス烈日の黄金郷第7話~第12話",
+      "showingTitles": [
+        "メイドインアビス 烈日の黄金郷【後編】第7話~第12話"
+      ],
+      "sourceTitle": "メイドインアビス 烈日の黄金郷【後編】第7話～第12話",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1787560166zkcdzfekua.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5081",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "バックルームズ",
+      "showingTitles": [
+        "バックルームズ"
+      ],
+      "sourceTitle": "バックルームズ",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/139/13911.1784620419.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13911&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "銀河鉄道9994kリマスター版",
+      "showingTitles": [
+        "銀河鉄道999 4Kリマスター版"
+      ],
+      "sourceTitle": "銀河鉄道999 4Kリマスター版",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjQvMTEvMjkvMTFfMjFfMTdfNDQzXzE4NDIxMV9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/184211_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4393.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ルックバック",
+      "showingTitles": [
+        "ルックバック"
+      ],
+      "sourceTitle": "ルックバック",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/133/13371.1785319529.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13371&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "宝塚歌劇月組東急シアターオーブ公演『nine』ライブ中継",
+      "showingTitles": [
+        "宝塚歌劇 月組東急シアターオーブ公演『NINE』ライブ中継"
+      ],
+      "sourceTitle": "宝塚歌劇　月組東急シアターオーブ公演『NINE』ライブ中継",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMzEvMTdfMjBfNTJfNDI4X19uaW5lXzIwMjYuanBnIl0sWyJwIiwidGh1bWIiLCIyNDB4MTM1Il1d/%E3%80%90%E5%AE%9D%E5%A1%9A%E3%80%91nine-2026.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5700.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "最終楽章響け!ユーフォニアム後編",
+      "showingTitles": [
+        "最終楽章 響け!ユーフォニアム 後編"
+      ],
+      "sourceTitle": "最終楽章 響け！ユーフォニアム　後編",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMDEvMTVfMDRfMThfMzg5XzIyNjA5Nl9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/226096_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5617.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "我々は宇宙人",
+      "showingTitles": [
+        "我々は宇宙人"
+      ],
+      "sourceTitle": "我々は宇宙人",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMDgvMTRfNTJfMTVfNjIyX19fXzNfLmpwZWciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/%E2%98%85%E3%83%A1%E3%82%A4%E3%83%B3_%E6%88%91%E3%80%85%E3%81%AF%E5%AE%87%E5%AE%99%E4%BA%BA%20(3).jpeg",
+      "sourceUrl": "https://109cinemas.net/movies/5665.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ブルーロック",
+      "showingTitles": [
+        "ブルーロック"
+      ],
+      "sourceTitle": "ブルーロック",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMDcvMTZfNDlfMDRfNzI1XzIyMTE4Nl9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/221186_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5545.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "縁の手紙",
+      "showingTitles": [
+        "縁の手紙"
+      ],
+      "sourceTitle": "【吹替】縁の手紙(PG12)",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1784266519ishus5n6rb.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5019",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "アベンジャーズエンドゲーム:ア",
+      "showingTitles": [
+        "アベンジャーズ/エンドゲーム:ア"
+      ],
+      "sourceTitle": "【INFINITY VISION・SCREENX with DolbyAtmos・字幕】アベンジャーズ／エンドゲーム：ア",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/17889226756t2lncylm9.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5089",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "劇場版魔法少女まどか☆マギカ〈ワルプルギスの廻天〉",
+      "showingTitles": [
+        "劇場版 魔法少女まどか☆マギカ 〈ワルプルギスの廻天〉",
+        "劇場版 魔法少女まどか☆マギカ〈ワルプルギスの廻天〉"
+      ],
+      "sourceTitle": "劇場版 魔法少女まどか☆マギカ〈ワルプルギスの廻天〉",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDYvMDEvMTFfMDNfMDdfOTk0XzE2MTY5NF9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/161694_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5554.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "トワイライト・ウォリアーズ決戦!九龍城砦",
+      "showingTitles": [
+        "トワイライト・ウォリアーズ 決戦!九龍城砦"
+      ],
+      "sourceTitle": "トワイライト・ウォリアーズ　決戦！九龍城砦",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjQvMTEvMjkvMTZfMjRfMjFfNDc1XzE4MzU1OV9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/183559_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4413.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "キングダム魂の決戦",
+      "showingTitles": [
+        "キングダム 魂の決戦"
+      ],
+      "sourceTitle": "キングダム 魂の決戦",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/136/13666.1779865991.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13666&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "襲名",
+      "showingTitles": [
+        "襲名"
+      ],
+      "sourceTitle": "襲名",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMzEvMTRfMDJfMDVfMTA4XzIyNzI2MF9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/227260_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5672.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "rrr",
+      "showingTitles": [
+        "RRR"
+      ],
+      "sourceTitle": "ＲＲＲ",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjUvMDMvMjgvMTRfNThfMzVfOTc1XzEyOTIwNl9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/129206_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4606.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "劇場版『re:cycleofthepenguindrum[前編]君の列車は生存戦略』",
+      "showingTitles": [
+        "劇場版『RE:cycle of the PENGUINDRUM [前編]君の列車は生存戦略』"
+      ],
+      "sourceTitle": "劇場版『RE:cycle of the PENGUINDRUM ［前編］君の列車は生存戦略』",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1787903267wtsiz6vm4k.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5078",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ニュー・シネマ・パラダイス",
+      "showingTitles": [
+        "ニュー・シネマ・パラダイス"
+      ],
+      "sourceTitle": "ニュー・シネマ・パラダイス",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjQvMTEvMjEvMjBfMjdfNDBfNjc3XzI4OTU1X3N1YlNjcmVlblNob3RzMS5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/28955_subScreenShots1.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4387.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ゴジラvsモスラ4kデジタルリマスター版",
+      "showingTitles": [
+        "ゴジラVSモスラ 4Kデジタルリマスター版"
+      ],
+      "sourceTitle": "ゴジラＶＳモスラ ４Ｋデジタルリマスター版",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMDcvMTdfMzBfNTZfODc2XzI3MTk1X3RodW1ibmFpbHMuanBnIl0sWyJwIiwidGh1bWIiLCIyNDB4MTM1Il1d/27195_thumbnails.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5784.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "さとこはいつも",
+      "showingTitles": [
+        "さとこはいつも"
+      ],
+      "sourceTitle": "さとこはいつも",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDgvMjIvMTJfNTdfMzJfMTYxX180XzFfLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/%E3%83%A1%E3%82%A4%E3%83%B3%E2%91%A0%20(4)%20(1).jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5671.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "『最終楽章響け!ユーフォニアム』後編",
+      "showingTitles": [
+        "『最終楽章 響け!ユーフォニアム』後編"
+      ],
+      "sourceTitle": "『最終楽章 響け！ユーフォニアム』後編",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/138/13844.1788421887.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13844&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "5秒で完全犯罪を生成する方法",
+      "showingTitles": [
+        "5秒で完全犯罪を生成する方法"
+      ],
+      "sourceTitle": "5秒で完全犯罪を生成する方法",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/139/13910.1788327682.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13910&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "『劇場版少女☆歌劇レヴュースタァライト』リバイバル上映",
+      "showingTitles": [
+        "『劇場版 少女☆歌劇 レヴュースタァライト』リバイバル上映"
+      ],
+      "sourceTitle": "『劇場版 少女☆歌劇 レヴュースタァライト』リバイバル上映",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1787737578jnopka9yna.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5094",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "sekiro:nodefeat",
+      "showingTitles": [
+        "SEKIRO:NO DEFEAT"
+      ],
+      "sourceTitle": "SEKIRO: NO DEFEAT",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMDgvMTVfMThfMzJfMzA1XzIyNjg2N19zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/226867_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5615.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "赤い糸輪廻のひみつ",
+      "showingTitles": [
+        "赤い糸輪廻のひみつ"
+      ],
+      "sourceTitle": "赤い糸 輪廻のひみつ",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDYvMTgvMTFfMTFfMDhfOTA0XzE2MjY0MF9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/162640_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5589.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "鯨が消えた入り江",
+      "showingTitles": [
+        "鯨が消えた入り江"
+      ],
+      "sourceTitle": "鯨が消えた入り江",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjUvMDYvMjcvMTBfNTJfNDNfNjc4XzIwMzA1OF9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/203058_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4790.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "グレイテスト・ショーマン",
+      "showingTitles": [
+        "グレイテスト・ショーマン"
+      ],
+      "sourceTitle": "グレイテスト・ショーマン",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDgvMjUvMTRfMDNfNDNfOTEwX18uanBnIl0sWyJwIiwidGh1bWIiLCIyNDB4MTM1Il1d/%E3%82%B0%E3%83%AC%E3%82%A4%E3%83%86%E3%82%B9%E3%83%88%E3%83%BB%E3%82%B7%E3%83%A7%E3%83%BC%E3%83%9E%E3%83%B3.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4564.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "スパイダーマン:ブランド・ニュー・デイ",
+      "showingTitles": [
+        "スパイダーマン:ブランド・ニュー・デイ"
+      ],
+      "sourceTitle": "スパイダーマン：ブランド・ニュー・デイ",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/137/13723.1781068816.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13723&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "michaelマイケル",
+      "showingTitles": [
+        "Michael マイケル",
+        "Michael/マイケル",
+        "Michael/マイケル(MV付・字幕版)"
+      ],
+      "sourceTitle": "Michael／マイケル",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/133/13308.1781144759.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13308&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "メイドインアビス烈日の黄金郷第1話~第6話",
+      "showingTitles": [
+        "メイドインアビス 烈日の黄金郷【前編】第1話~第6話"
+      ],
+      "sourceTitle": "メイドインアビス 烈日の黄金郷【前編】第1話～第6話",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1787560056ci35wt1mgv.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5080",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "映画クレヨンしんちゃん奇々怪々!オラの妖怪バケ~ション",
+      "showingTitles": [
+        "映画クレヨンしんちゃん 奇々怪々!オラの妖怪バケ~ション"
+      ],
+      "sourceTitle": "映画クレヨンしんちゃん 奇々怪々！オラの妖怪バケ～ション",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/136/13669.1782284532.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13669&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "あの星が降る丘で、君とまた出会いたい。",
+      "showingTitles": [
+        "あの星が降る丘で、君とまた出会いたい。"
+      ],
+      "sourceTitle": "あの星が降る丘で、君とまた出会いたい。",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/137/13733.1782990488.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13733&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "e.t.",
+      "showingTitles": [
+        "E.T."
+      ],
+      "sourceTitle": "E.T.",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMDcvMTdfMTlfMjFfNzM0XzMxMjkyX3NjcmVlblNob3RzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/31292_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4448.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "オペラ座の怪人4kデジタルリマスター",
+      "showingTitles": [
+        "オペラ座の怪人 4Kデジタルリマスター"
+      ],
+      "sourceTitle": "オペラ座の怪人 4Kデジタルリマスター",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjQvMDYvMDMvMTNfMzhfMzRfNjEwXzE5NTMzX3NjcmVlblNob3RzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/19533_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4105.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ナタ魔童の大暴れ",
+      "showingTitles": [
+        "ナタ 魔童の大暴れ"
+      ],
+      "sourceTitle": "ナタ　魔童の大暴れ",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMDgvMTBfNDJfMzZfNDdfMTkyMzk0X3NjcmVlblNob3RzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/192394_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4604.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "カメラを止めるな!",
+      "showingTitles": [
+        "カメラを止めるな!"
+      ],
+      "sourceTitle": "カメラを止めるな！",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMDcvMTZfMjFfMTJfNjIzXzU4MjExX3NjcmVlblNob3RzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/58211_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5782.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ヨコハマメリー",
+      "showingTitles": [
+        "ヨコハマメリー"
+      ],
+      "sourceTitle": "ヨコハマメリー",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDgvMjYvMTNfMDBfNDFfMjY5X3lva29oYW1hbWFyeTAwMS5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/yokohamamary001.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5742.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "名探偵コナンハイウェイの堕天使",
+      "showingTitles": [
+        "名探偵コナン ハイウェイの堕天使"
+      ],
+      "sourceTitle": "名探偵コナン ハイウェイの堕天使",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDIvMTIvMTFfMDdfNDZfNTMyXzIwNzg3MF9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/207870_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5251.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "ディスクロージャー・デイ",
+      "showingTitles": [
+        "ディスクロージャー・デイ"
+      ],
+      "sourceTitle": "ディスクロージャー・デイ",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/136/13659.1784028842.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=13659&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "最終上映ザ・スーパーマリオギャラクシー・ムービー",
+      "showingTitles": [
+        "4DX最終上映 ザ・スーパーマリオギャラクシー・ムービー"
+      ],
+      "sourceTitle": "ザ・スーパーマリオギャラクシー・ムービー",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDIvMDUvMTFfMjlfMTZfNDEwXzIxNDc3Ml9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/214772_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5250.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "映画館デビュー)映画名探偵プリキュア!不思議な庭と2人の秘密",
+      "showingTitles": [
+        "映画館デビュー) 映画名探偵プリキュア!不思議な庭と2人の秘密"
+      ],
+      "sourceTitle": "映画名探偵プリキュア！不思議な庭と2人の秘密",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/17881654808q2k21o7ix.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C4865",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "immersivezero「ballistikboyzshootingstars」",
+      "showingTitles": [
+        "Immersive Zero「BALLISTIK BOYZ SHOOTING STARS」"
+      ],
+      "sourceTitle": "次世代シアター Immersive Zero「BALLISTIK BOYZ SHOOTING STARS」",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/141/14108.1789443612.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=14108&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "私はあなたを知らない、[舞台挨拶]",
+      "showingTitles": [
+        "私はあなたを知らない、[舞台挨拶]"
+      ],
+      "sourceTitle": "私はあなたを知らない、",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMTUvMTZfNTdfNDNfODUxXzIyMDQ2N19zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/220467_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5561.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "映画クレヨンしんちゃん奇々怪々!オラの妖怪...",
+      "showingTitles": [
+        "映画クレヨンしんちゃん 奇々怪々!オラの妖怪..."
+      ],
+      "sourceTitle": "映画クレヨンしんちゃん 奇々怪々！オラの妖怪バケ～ション",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1781258932tpgu97me3v.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C4806",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "michaelマイケル★「beatit」ショートフィルム付上映",
+      "showingTitles": [
+        "Michael/マイケル ★「Beat It(今夜はビート・イット)」ショートフィルム付上映"
+      ],
+      "sourceTitle": "Michael／マイケル",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDQvMDMvMTJfMTdfNDNfMTM2XzE4MjQ2Nl9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/182466_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5431.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "超かぐや姫!復活上映",
+      "showingTitles": [
+        "超かぐや姫!復活上映"
+      ],
+      "sourceTitle": "【SCREENX with DolbyAtmos】超かぐや姫！",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1784283125n23awsuupn.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5017",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "インフィニティビジョンアベンジャーズエンドゲーム:アンコール",
+      "showingTitles": [
+        "インフィニティビジョン アベンジャーズ/エンドゲーム:アンコール"
+      ],
+      "sourceTitle": "アベンジャーズ／エンドゲーム：アンコール",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDkvMTYvMTFfNDBfMDJfMTMxXzIzMjMyOF90aHVtYm5haWxzLmpwZyJdLFsicCIsInRodW1iIiwiMjQweDEzNSJdXQ/232328_thumbnails.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5625.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "私たちは、ちょうどいい",
+      "showingTitles": [
+        "私たちは、ちょうどいい"
+      ],
+      "sourceTitle": "私たちは、ちょうどいい。",
+      "imageUrl": "https://img.unitedcinemas.jp/img/movie/140/14005.1788329075.M.jpg",
+      "sourceUrl": "https://www.unitedcinemas.jp/minatomirai/film.php?movie=14005&from=film",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "映画館デビュー×こてつくんのちょっくらファミリー上映会『映画「宇宙なんちゃらこてつくん」うっかり出てきた宇宙人を探せ!』",
+      "showingTitles": [
+        "映画館デビュー×こてつくんのちょっくらファミリー上映会『映画「宇宙なんちゃら こてつくん」うっかり出てきた宇宙人を探せ!』"
+      ],
+      "sourceTitle": "映画「宇宙なんちゃら こてつくん」うっかり出てきた宇宙人を探せ！",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjYvMDcvMjMvMTRfMjFfMjFfNDA4XzIzMDE5N19zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/230197_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/5639.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "rrr[応援上映]",
+      "showingTitles": [
+        "RRR[応援上映]"
+      ],
+      "sourceTitle": "ＲＲＲ",
+      "imageUrl": "https://109cinemas.net/media/W1siZiIsIjIwMjUvMDMvMjgvMTRfNThfMzVfOTc1XzEyOTIwNl9zY3JlZW5TaG90cy5qcGciXSxbInAiLCJ0aHVtYiIsIjI0MHgxMzUiXV0/129206_screenShots.jpg",
+      "sourceUrl": "https://109cinemas.net/movies/4606.html",
+      "evidence": "Film title and image paired on the cinema film listing or film detail share metadata."
+    },
+    {
+      "movieKey": "平行と垂直",
+      "showingTitles": [
+        "平行と垂直"
+      ],
+      "sourceTitle": "平行と垂直",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1778719729d0bkygx89y.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C4908",
+      "evidence": "Cinema film detail share image for 平行と垂直."
+    },
+    {
+      "movieKey": "許されざる者",
+      "showingTitles": [
+        "許されざる者(1992年)"
+      ],
+      "sourceTitle": "許されざる者(1992年)",
+      "imageUrl": "https://media.eiga.com/asa10/2026/images/cinema/1520.jpg?1789443359",
+      "sourceUrl": "https://asa10.eiga.com/2026/cinema/1520/",
+      "evidence": "Festival listing explicitly identifies the 1992 film, not the 1960 film"
+    },
+    {
+      "movieKey": "劇場版bangdream!it'smygo!!!!!前編:春の陽だまり、迷い猫",
+      "showingTitles": [
+        "劇場版 BanG Dream! It's MyGO!!!!! 前編 : 春の陽だまり、迷い猫"
+      ],
+      "sourceTitle": "劇場版 BanG Dream! It's MyGO!!!!! 前編 : 春の陽だまり、迷い猫",
+      "imageUrl": "https://mygo-movie.bang-dream.com/wordpress/wp-content/themes/mygo_movie_v1/assets/webp/sp/index/img_kv.webp",
+      "sourceUrl": "https://mygo-movie.bang-dream.com/",
+      "evidence": "Official first-part key visual"
+    },
+    {
+      "movieKey": "劇場版bangdream!it'smygo!!!!!後編:うたう、僕らになれるうた&filmlive",
+      "showingTitles": [
+        "劇場版 BanG Dream! It's MyGO!!!!! 後編 : うたう、僕らになれるうた & FILM LIVE"
+      ],
+      "sourceTitle": "劇場版 BanG Dream! It's MyGO!!!!! 後編 : うたう、僕らになれるうた & FILM LIVE",
+      "imageUrl": "https://mygo-movie.bang-dream.com/wordpress/wp-content/themes/mygo_movie_v1/assets/webp/sp/index/img_kv-part2.webp",
+      "sourceUrl": "https://mygo-movie.bang-dream.com/",
+      "evidence": "Official second-part key visual"
+    },
+    {
+      "movieKey": "[完成披露舞台挨拶中継]vシネクスト「仮面ライダーカブト20th天を継ぐもの」",
+      "showingTitles": [
+        "[完成披露舞台挨拶中継]Vシネクスト「仮面ライダーカブト20th 天を継ぐもの」"
+      ],
+      "sourceTitle": "[完成披露舞台挨拶中継]Vシネクスト「仮面ライダーカブト20th 天を継ぐもの」",
+      "imageUrl": "https://cdn.tjoy.jp/images/_up/cinema/1784855710eo9f2s1ypn.jpg",
+      "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5025",
+      "evidence": "Cinema film detail share image; premiere event uses the same film artwork"
+    }
+  ]
+}
