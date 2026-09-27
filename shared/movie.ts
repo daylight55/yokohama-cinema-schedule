@@ -5,6 +5,7 @@ const SCREENING_FORMAT_TOKEN =
   String.raw`|(?:字幕(?:スーパー)?|吹替(?:え)?|吹き替え)(?:版)?` +
   String.raw`|(?:ULTRA\s*)?4DX|MX4D|IMAX(?:\s*レーザー)?|SCREENX` +
   String.raw`|Dolby\s*(?:Cinema|Atmos)|D-?BOX|FLEXOUND|BESTIA` +
+  String.raw`|INFINITY\s*VISION|インフィニティビジョン` +
   String.raw`|2D|3D|4K`;
 const RATING_TOKEN =
   String.raw`(?:G|PG\s*-?\s*12|R\s*-?\s*(?:15|18)\s*\+?)(?:指定)?`;
