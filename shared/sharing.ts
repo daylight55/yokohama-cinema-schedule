@@ -16,6 +16,9 @@ export interface SharedPlan {
   reserved: boolean;
 }
 export interface SharedMovie {
+  status?: "watched" | null;
+  comment?: string;
+  nextShowingAt?: string;
   userId: string;
   movieKey: string;
   title: string;
@@ -42,4 +45,23 @@ export function groupSharedMovies(movies: SharedMovie[], member = "") {
     groups.set(key, rows);
   }
   return groups;
+}
+
+/** Prioritize mutual, unwatched interest; keep fully watched films out of planning. */
+export function sharedWatchlistSections(movies: SharedMovie[], member = "") {
+  const entries = [...groupSharedMovies(movies, member)];
+  const interestCount = (rows: SharedMovie[]) =>
+    rows.filter((row) => row.status !== "watched").length;
+  entries.sort(
+    (a, b) =>
+      interestCount(b[1]) - interestCount(a[1]) ||
+      (a[1][0].nextShowingAt ?? "").localeCompare(
+        b[1][0].nextShowingAt ?? "",
+      ) ||
+      a[0].localeCompare(b[0]),
+  );
+  return {
+    planning: entries.filter(([, rows]) => interestCount(rows) > 0),
+    watched: entries.filter(([, rows]) => interestCount(rows) === 0),
+  };
 }

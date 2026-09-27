@@ -144,6 +144,7 @@ export interface RouteOrigin {
 }
 
 export interface MoviePreference {
+  comment?: string;
   movieKey: string;
   title: string;
   imageUrl: string | null;

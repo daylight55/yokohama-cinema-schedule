@@ -4031,3 +4031,25 @@ html[lang="en"] .brand-wordmark {
 .group-member-list h2 { font-size: 1rem; }
 .group-member-list ul { list-style: none; padding: 0; display: grid; gap: 16px; }
 .group-member-list li { display: flex; gap: 12px; align-items: center; overflow-wrap: anywhere; min-width: 0; }
+
+.watchlist-note { display: grid; gap: 12px; margin-top: 16px; min-width: 0; }
+.watchlist-note label { display: grid; gap: 8px; font-size: .875rem; }
+.watchlist-note textarea { width: 100%; min-width: 0; min-height: 88px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-raised); color: var(--text); font: inherit; resize: vertical; }
+.watchlist-note .secondary-button { justify-self: start; padding: 10px 16px; color: var(--text); }
+.watchlist-note p { margin: 0; }
+.shared-watchlist-content { min-width: 0; flex: 1; }
+.shared-mutual { display: block; color: var(--accent); font-size: .8125rem; margin-bottom: 8px; }
+.shared-interest-notes { list-style: none; padding: 0; margin: 16px 0 4px; display: grid; gap: 16px; }
+.shared-interest-person { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .875rem; min-width: 0; }
+.shared-interest-person > span { overflow-wrap: anywhere; min-width: 0; }
+.shared-interest-person .member-avatar { width: 26px; height: 26px; font-size: 12px; }
+.shared-interest-notes p { margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9375rem; }
+.shared-interest-notes .member-watched, .shared-movie-watched { color: var(--muted); }
+.shared-movie-watched .shared-film-title { color: var(--muted); }
+.watched-label { color: var(--muted); font-size: .75rem; }
+.shared-showtime-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); }
+.shared-note-editor summary, .shared-watched-section summary { display: list-item; padding: 12px 0; min-height: 44px; cursor: pointer; }
+.shared-watched-section { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 12px; }
+.shared-watchlist-art { flex: 0 0 auto; }
+.shared-watchlist-content > .secondary-button { min-height: 44px; padding: 8px 12px; color: var(--text); }
+.watchlist-note :is(textarea,button):focus-visible, .shared-note-editor summary:focus-visible, .shared-watched-section summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }

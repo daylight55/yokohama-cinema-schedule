@@ -7,6 +7,7 @@ interface PreferenceRow {
   starred: number;
   status: MoviePreference["status"];
   updated_at: string;
+  comment: string;
 }
 
 export async function listMoviePreferences(
@@ -15,7 +16,7 @@ export async function listMoviePreferences(
 ): Promise<MoviePreference[]> {
   const result = await db
     .prepare(
-      `SELECT movie_key, title, image_url, starred, status, updated_at
+      `SELECT movie_key, title, image_url, starred, status, comment, updated_at
        FROM movie_preferences
       WHERE user_id = ?
        ORDER BY updated_at DESC`,
@@ -29,5 +30,6 @@ export async function listMoviePreferences(
     starred: Boolean(row.starred),
     status: row.status,
     updatedAt: row.updated_at,
+    comment: row.comment,
   }));
 }

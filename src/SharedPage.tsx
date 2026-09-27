@@ -1,6 +1,6 @@
 import { SharingControls } from "./SharingControls";
 import { MemberAvatar } from "./MemberProfile";
-import { groupSharedMovies } from "../shared/sharing";
+import { SharedWatchlist } from "./SharedWatchlist";
 import { useEffect, useState } from "react";
 import {
   ArrowClockwiseIcon,
@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react";
 import type { SharedPlan, SharingResponse } from "../shared/sharing";
 import { formatJstDate } from "../shared/date";
-import { moviePreferenceKey, safeImageUrl } from "../shared/movie";
+import { moviePreferenceKey } from "../shared/movie";
 import { hashForAppView } from "./lib";
 import {
   localize as t,
@@ -26,6 +26,7 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
   const [error, setError] = useState(false);
   const [groupId, setGroupId] = useState("");
   const [retry, setRetry] = useState(0);
+  const [noteMovieKey, setNoteMovieKey] = useState("");
   const [member, setMember] = useState("");
   const [tab, setTab] = useState<"plans" | "movies">("plans");
   useEffect(() => {
@@ -66,7 +67,6 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
     const day = formatJstDate(new Date(rows[0].startsAt));
     days.set(day, [...(days.get(day) ?? []), rows]);
   }
-  const movies = groupSharedMovies(data?.movies ?? [], member);
   const date = localizedDate({
     month: "long",
     day: "numeric",
@@ -315,62 +315,15 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           ))}
         </>
       ) : (
-        <>
-          {!movies.size && (
-            <div className="shared-empty">
-              <StarIcon size={32} aria-hidden="true" />
-              <p>{t("気になる作品はまだありません。")}</p>
-              <a href={hashForAppView("movies")}>{t("上映作品")}</a>
-            </div>
-          )}
-          <ul className="shared-movies">
-            {[...movies].map(([key, rows]) => {
-              const movie = rows[0],
-                image = safeImageUrl(
-                  rows.find((m) => safeImageUrl(m.imageUrl))?.imageUrl,
-                );
-              return (
-                <li key={key}>
-                  <div>
-                    <a
-                      className="shared-film-title"
-                      href={hashForAppView("movie", { movie: key })}
-                    >
-                      {movieTitle(movie.title)}
-                    </a>
-                    <ul
-                      className="shared-people"
-                      aria-label={t("気になっているメンバー")}
-                    >
-                      {rows.map((m) => (
-                        <li key={m.userId}>
-                          <MemberAvatar
-                            name={members.get(m.userId)?.name ?? ""}
-                            url={members.get(m.userId)?.avatarUrl}
-                          />
-                          <span title={members.get(m.userId)?.bio}>
-                            {members.get(m.userId)?.name}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {image && (
-                    <img
-                      src={image}
-                      alt=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        e.currentTarget.hidden = true;
-                      }}
-                    />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </>
+        <SharedWatchlist
+          data={data!}
+          member={member}
+          autoEditKey={noteMovieKey}
+          onChanged={(key) => {
+            setNoteMovieKey(key);
+            setRetry((v) => v + 1);
+          }}
+        />
       )}
     </PageShell>
   );

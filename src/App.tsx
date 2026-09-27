@@ -1,3 +1,4 @@
+import { WatchlistNote } from "./WatchlistNote";
 import { activeMetrics } from "./performanceMetrics";
 import { ProfileMenu } from "./MemberProfile";
 import { UsersThreeIcon } from "@phosphor-icons/react";
@@ -305,6 +306,7 @@ export function App() {
   const [cinemaPreferenceError, setCinemaPreferenceError] = useState<
     string | null
   >(null);
+  const [movieNotes, setMovieNotes] = useState<Map<string,string>>(new Map());
   const [starredMovieKeys, setStarredMovieKeys] = useState<Set<string>>(
     () => new Set(),
   );
@@ -557,6 +559,7 @@ export function App() {
         setLoadedScheduleKey(scheduleRequestKey);
         registerTitleTranslations(data.movieTitles ?? []);
         setSchedule(data);
+        setMovieNotes(new Map(data.preferences.map(p => [p.movieKey,p.comment ?? ""])));
         setStarredMovieKeys(
           new Set(
             data.preferences
@@ -1748,6 +1751,9 @@ export function App() {
         }),
       });
       if (!response.ok) throw new Error();
+      const saved = await response.json() as {comment?:string};
+      setMovieNotes(current => new Map(current).set(movie.preferenceKey,saved.comment ?? ""));
+      if (nextStarred) openMoviePreferenceDialog(movie, null);
     } catch {
       rememberMovieScroll();
       setStarredMovieKeys((current) => {
@@ -2308,6 +2314,11 @@ export function App() {
                   {localize("興味なし")}
                 </button>
               </div>
+              {starredMovieKeys.has(activeMoviePreference.preferenceKey) && (
+                <WatchlistNote key={activeMoviePreference.preferenceKey} title={activeMoviePreference.title}
+                  initialValue={movieNotes.get(activeMoviePreference.preferenceKey) ?? ""}
+                  onSaved={comment => setMovieNotes(current => new Map(current).set(activeMoviePreference.preferenceKey,comment))} />
+              )}
               {localize(
                 preferenceError && (
                   <p className="inline-status error" role="status">

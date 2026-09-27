@@ -1,3 +1,5 @@
+import { moviePreferenceKey } from "../../shared/movie";
+import { addDays, todayInJst, jstDateBounds } from "../../shared/date";
 import { avatarUrl, profileName } from "../../shared/member-profile";
 import type { AuthContextData, PagesEnv } from "../_lib/env";
 import type {
@@ -83,11 +85,33 @@ export const onRequestGet: PagesFunction<
     .all<Omit<SharedPlan, "reserved"> & { reserved: number }>();
   const movies = await db
     .prepare(
-      `SELECT p.user_id AS userId, p.movie_key AS movieKey, p.title, p.image_url AS imageUrl
-    FROM movie_preferences p JOIN users u ON u.id = p.user_id WHERE ${scope} AND p.starred = 1 ORDER BY p.title, p.user_id`,
+      `SELECT p.user_id AS userId, p.movie_key AS movieKey, p.title, p.image_url AS imageUrl, p.status, p.comment
+    FROM movie_preferences p JOIN users u ON u.id = p.user_id WHERE ${scope} AND p.starred = 1 AND (p.status IS NULL OR p.status = 'watched') ORDER BY p.title, p.user_id`,
     )
     .bind(groupId)
     .all<SharedMovie>();
+  // Only future screenings in the same seven-day window as the movie detail page.
+  const [through] = jstDateBounds(addDays(todayInJst(), 7));
+  const upcoming = await db
+    .prepare(
+      `SELECT s.title, MIN(s.starts_at) AS nextShowingAt
+    FROM showings s JOIN cinemas c ON c.id=s.cinema_id
+    WHERE s.starts_at>=? AND s.starts_at<? AND datetime(s.starts_at)>datetime(?) AND c.approval!='disabled'
+    AND (c.active_until IS NULL OR c.active_until>=date(s.starts_at,'+9 hours')) GROUP BY s.title`,
+    )
+    .bind(new Date().toISOString(), through, new Date().toISOString())
+    .all<{ title: string; nextShowingAt: string }>();
+  const nextByMovie = new Map<string, string>();
+  for (const row of upcoming.results) {
+    const key = moviePreferenceKey(row.title),
+      previous = nextByMovie.get(key);
+    if (!previous || row.nextShowingAt < previous)
+      nextByMovie.set(key, row.nextShowingAt);
+  }
+  const currentMovies = movies.results.flatMap((movie) => {
+    const nextShowingAt = nextByMovie.get(moviePreferenceKey(movie.title));
+    return nextShowingAt ? [{ ...movie, nextShowingAt }] : [];
+  });
   const titles = await db
     .prepare(
       `SELECT japanese_title AS japaneseTitle, english_title AS englishTitle FROM movie_title_research WHERE status = 'verified'`,
@@ -106,7 +130,7 @@ export const onRequestGet: PagesFunction<
       }),
     ),
     plans: plans.results.map((p) => ({ ...p, reserved: !!p.reserved })),
-    movies: movies.results,
+    movies: currentMovies,
     titles: titles.results,
   };
   return Response.json(result, { headers });
