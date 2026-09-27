@@ -109,8 +109,8 @@ it("sends an English invitation with a matching signup language", async () => {
 });
 
 it.each([
-  ["ja", "Googleで登録する", "このメールを受け取ったアドレス", "マイページ", "24時間"],
-  ["en", "Sign up with Google", "email address that received this invitation", "My account", "24 hours"],
+  ["ja", "Googleで参加する", "このメールを受け取ったアドレス", "マイページ", "24時間"],
+  ["en", "Join with Google", "email address that received this invitation", "My account", "24 hours"],
 ])("includes signup and profile instructions in both %s email formats", async (language, signup, account, profile, expiry) => {
   const send = vi.fn().mockResolvedValue({ messageId: "test-message" });
   await mailer.fetch(new Request("https://mailer/send", {

@@ -1,6 +1,6 @@
 import type { Language } from "../../shared/language";
 import { accountCanLogin } from "../../shared/account-lifecycle";
-import { registerInvitedGoogleUser } from "./invitations";
+import { acceptExistingInvite, registerInvitedGoogleUser } from "./invitations";
 import type { AuthUser, ResolvedSession } from "./auth";
 import { findUserByEmail, LEGACY_USER_ID, normalizeEmail } from "./auth";
 import { prepareDepartureLocationTransfer } from "./user-profile";
@@ -141,6 +141,7 @@ export async function completeGoogleLogin(
         identityUser.id,
       )
       .run();
+    if (inviteToken) await acceptExistingInvite(db, inviteToken, identityUser.id, normalizedEmail);
     return { ...identityUser, displayEmail: identity.email };
   }
 
@@ -153,6 +154,7 @@ export async function completeGoogleLogin(
       identity.subject,
       normalizedEmail,
     );
+    if (inviteToken) await acceptExistingInvite(db, inviteToken, emailUser.id, normalizedEmail);
     return emailUser;
   }
 

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { Showing } from "../shared/types";
 import { formatJstDate } from "../shared/date";
 import { moviePreferenceKey } from "../shared/movie";
@@ -7,7 +8,7 @@ import type { Language } from "../shared/language";
 
 export function MovieTimes({ showings, language = "ja", title }: { showings: Showing[]; language?: Language; title?: string }) {
   const t = (text: string) => translate(text, language);
-  const time = new Intl.DateTimeFormat(language === "en" ? "en-GB" : "ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const time = useMemo(() => new Intl.DateTimeFormat(language === "en" ? "en-GB" : "ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }), [language]);
   return (
     <nav className="movie-times" data-horizontal-scroll={`movie:${showings[0] ? moviePreferenceKey(showings[0].title) : "empty"}`} aria-label={t("上映時刻")}>
       {[...showings].sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.cinemaName.localeCompare(b.cinemaName)).map((s) => (

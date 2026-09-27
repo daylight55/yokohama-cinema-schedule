@@ -1,3 +1,4 @@
+import { reusableDateFormatter } from "./dateFormatter";
 import { moviePreferenceKey } from "../shared/movie";
 import { useEffect, useSyncExternalStore } from "react";
 import {
@@ -92,13 +93,7 @@ export function localize<T>(value: T): T {
   return value;
 }
 export function localizedDate(options: Intl.DateTimeFormatOptions) {
-  return {
-    format: (value: Date | number) =>
-      new Intl.DateTimeFormat(localeCode(), {
-        timeZone: "Asia/Tokyo",
-        ...options,
-      }).format(value),
-  };
+  return reusableDateFormatter(options, localeCode);
 }
 
 export function englishText(value: string) {
