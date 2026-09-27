@@ -107,3 +107,29 @@ it("sends an English invitation with a matching signup language", async () => {
     }),
   );
 });
+
+it.each([
+  ["ja", "Googleで登録する", "このメールを受け取ったアドレス", "マイページ", "24時間"],
+  ["en", "Sign up with Google", "email address that received this invitation", "My account", "24 hours"],
+])("includes signup and profile instructions in both %s email formats", async (language, signup, account, profile, expiry) => {
+  const send = vi.fn().mockResolvedValue({ messageId: "test-message" });
+  await mailer.fetch(new Request("https://mailer/send", {
+    method: "POST",
+    body: JSON.stringify({ ...payload, language }),
+  }), {
+    EMAIL: { send }, INVITE_FROM_EMAIL: "noreply@notify.daylight55.dev", APP_ORIGIN: origin,
+  });
+  const message = send.mock.calls[0][0];
+  for (const format of [message.text, message.html]) {
+    for (const instruction of [signup, account, profile, expiry, "Safari", "Chrome"]) {
+      expect(format).toContain(instruction);
+    }
+  }
+  expect(message.html).toContain("<ol><li>");
+  expect(message.text).toContain("1. ");
+  expect(message.text).toContain("4. ");
+  // Language choice must survive even if the caller omitted it from the URL.
+  const expectedLink = payload.url + (language === "en" ? "&lang=en" : "");
+  expect(message.text).toContain(expectedLink);
+  expect(message.html).toContain(`href="${expectedLink.replaceAll("&", "&amp;")}"`);
+});
