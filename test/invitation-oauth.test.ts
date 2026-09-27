@@ -2,6 +2,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { load } from "cheerio";
 import { onRequestGet as callback } from "../functions/auth/google/login/callback";
 import { onRequestGet as start } from "../functions/auth/google/login/start";
+import { onRequestGet as invitePage } from "../functions/auth/invite";
 import { createInvite, findValidInvite } from "../functions/_lib/invitations";
 import type { PagesEnv } from "../functions/_lib/env";
 import { testDatabase } from "./helpers/sqlite-d1";
@@ -35,6 +36,30 @@ function setup() {
   };
   return { db, sqlite, env };
 }
+it.each(["ja", "en"])("allows the signup form's Google redirect under CSP (%s)", async (language) => {
+  const { db, sqlite, env } = setup();
+  try {
+    const invite = await createInvite(db, "member@example.com", "admin");
+    const page = await invitePage(context(env, `/auth/invite?token=${invite.token}&lang=${language}`));
+    const $ = load(await page.text());
+    const query = new URLSearchParams({
+      invite: $("input[name=invite]").val() as string,
+      lang: language,
+    });
+    const redirect = await start(context(env, `${$("form").attr("action")}?${query}`));
+    expect(redirect.status).toBe(302);
+    const googleOrigin = new URL(redirect.headers.get("location")!).origin;
+    const formPolicy = page.headers.get("content-security-policy")!
+      .split(";").map((value) => value.trim()).find((value) => value.startsWith("form-action "));
+    expect(googleOrigin).toBe("https://accounts.google.com");
+    expect(formPolicy).toBe(`form-action 'self' ${googleOrigin}`);
+    expect(page.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(page.headers.get("cache-control")).toBe("no-store");
+    expect(await findValidInvite(db, invite.token)).not.toBeNull();
+  } finally {
+    sqlite.close();
+  }
+});
 it("can retry a wrong Google account from the error page and consume the original invite", async () => {
   const { db, sqlite, env } = setup();
   try {

@@ -124,12 +124,20 @@ export const onRequestPost: PagesFunction<
           }),
         },
       );
-      if (!delivered.ok) throw new Error("email_delivery_failed");
-      emailStatus = "sent";
+      if (!delivered.ok) {
+        console.error(JSON.stringify({
+          event: "invitation_mailer_rejected",
+          status: delivered.status,
+        }));
+        emailStatus = "failed";
+      } else {
+        emailStatus = "sent";
+      }
     } catch {
       // Preserve the usable link and report failure accurately, without logging
       // recipient addresses or bearer tokens.
       emailStatus = "failed";
+      console.error(JSON.stringify({ event: "invitation_mailer_unavailable" }));
     }
   }
   return Response.json(

@@ -107,7 +107,9 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
         "x-frame-options": "DENY",
         "x-content-type-options": "nosniff",
         "content-security-policy":
-          "default-src 'none'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+          // Chromium checks the redirect destination of a form submission too.
+          // The local OAuth start endpoint redirects to this Google origin.
+          "default-src 'none'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'",
       },
     },
   );

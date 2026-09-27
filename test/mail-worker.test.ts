@@ -1,6 +1,7 @@
-import { expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import mailer from "../mail-worker/index";
 const origin = "https://hama-movie.daylight55.dev";
+afterEach(() => vi.restoreAllMocks());
 const payload = {
   to: "member@example.com",
   url: `${origin}/auth/invite?token=${"a".repeat(64)}`,
@@ -52,6 +53,33 @@ it("reports service failure instead of claiming delivery", async () => {
     APP_ORIGIN: origin,
   });
   expect(response.status).toBe(502);
+});
+it("records the provider error code without logging recipient or invitation credentials", async () => {
+  const log = vi.spyOn(console, "error").mockImplementation(() => {});
+  const error = Object.assign(new Error(`Rejected ${payload.to} ${payload.url}`), {
+    code: "E_RECIPIENT_SUPPRESSED",
+  });
+  const send = vi.fn().mockRejectedValue(error);
+  const response = await mailer.fetch(request(payload), {
+    EMAIL: { send },
+    INVITE_FROM_EMAIL: "noreply@notify.daylight55.dev",
+    APP_ORIGIN: origin,
+  });
+  expect(response.status).toBe(502);
+  expect(send).toHaveBeenCalledTimes(1);
+  expect(log).toHaveBeenCalledExactlyOnceWith(JSON.stringify({
+    event: "invitation_email_failed", reason: "E_RECIPIENT_SUPPRESSED",
+  }));
+});
+it("does not log unrecognized provider codes or raw error messages", async () => {
+  const log = vi.spyOn(console, "error").mockImplementation(() => {});
+  const send = vi.fn().mockRejectedValue(Object.assign(new Error(payload.url), { code: payload.to }));
+  await mailer.fetch(request(payload), {
+    EMAIL: { send }, INVITE_FROM_EMAIL: "noreply@notify.daylight55.dev", APP_ORIGIN: origin,
+  });
+  expect(log).toHaveBeenCalledExactlyOnceWith(JSON.stringify({
+    event: "invitation_email_failed", reason: "unknown",
+  }));
 });
 it("sends an English invitation with a matching signup language", async () => {
   const send = vi.fn(async () => ({ messageId: "test-message" }));
