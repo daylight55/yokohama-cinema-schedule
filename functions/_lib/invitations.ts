@@ -2,6 +2,9 @@ import type { Language } from "../../shared/language";
 import { normalizeEmail, type AuthUser } from "./auth";
 import type { GoogleIdentity } from "./accounts";
 
+// Recheck the inviter and membership at acceptance, not just issuance.
+const inviteScopeGate = `EXISTS (SELECT 1 FROM users inviter WHERE inviter.id=signup_invites.invited_by AND inviter.status='active')
+AND (group_id IS NULL OR EXISTS (SELECT 1 FROM sharing_group_members m WHERE m.group_id=signup_invites.group_id AND m.user_id=signup_invites.invited_by))`;
 export const INVITE_TTL_MS = 24 * 60 * 60 * 1000;
 export interface SignupInvite {
   id: string;
@@ -24,6 +27,7 @@ export async function createInvite(
   db: D1Database,
   emailValue: string,
   invitedBy: string,
+  groupId: string | null = null,
 ) {
   const email = emailValue.trim() ? normalizeEmail(emailValue) : null;
   if (emailValue.trim() && !email) throw new RangeError("invalid_email");
@@ -37,7 +41,7 @@ export async function createInvite(
   ).toISOString();
   await db
     .prepare(
-      `INSERT INTO signup_invites (id, token_hash, email, invited_by, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO signup_invites (id, token_hash, email, invited_by, created_at, expires_at, group_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
@@ -46,6 +50,7 @@ export async function createInvite(
       invitedBy,
       createdAt,
       expiresAt,
+      groupId,
     )
     .run();
   return { id, token, email, createdAt, expiresAt };
@@ -58,7 +63,7 @@ export async function findValidInvite(
   return db
     .prepare(
       `SELECT id, email, created_at, expires_at, accepted_at, revoked_at FROM signup_invites
-    WHERE token_hash = ? AND expires_at > ? AND accepted_at IS NULL AND revoked_at IS NULL`,
+    WHERE token_hash = ? AND expires_at > ? AND accepted_at IS NULL AND revoked_at IS NULL AND ${inviteScopeGate}`,
     )
     .bind(await hashInviteToken(token), new Date().toISOString())
     .first<SignupInvite>();
@@ -88,7 +93,7 @@ export async function registerInvitedGoogleUser(
       .prepare(
         `INSERT INTO users (id, email, display_email, role, status, created_at, updated_at, last_login_at, language)
       SELECT ?, ?, ?, 'member', 'active', ?, ?, ?, ? FROM signup_invites
-      WHERE token_hash = ? AND expires_at > ? AND accepted_at IS NULL AND revoked_at IS NULL AND (email IS NULL OR email = ?)`,
+      WHERE token_hash = ? AND expires_at > ? AND accepted_at IS NULL AND revoked_at IS NULL AND (email IS NULL OR email = ?) AND ${inviteScopeGate}`,
       )
       .bind(
         id,
@@ -123,4 +128,32 @@ export async function registerInvitedGoogleUser(
     role: "member",
     status: "active",
   };
+}
+
+/** Existing users accept with the same verified Google identity as signup. */
+export async function acceptExistingInvite(
+  db: D1Database,
+  token: string,
+  userId: string,
+  email: string,
+) {
+  if (!/^[a-f0-9]{64}$/.test(token)) throw new Error("invite_required");
+  const result = await db
+    .prepare(
+      `UPDATE signup_invites SET accepted_at=?, accepted_by=?
+    WHERE token_hash=? AND expires_at>? AND accepted_at IS NULL AND revoked_at IS NULL
+    AND invited_by<>? AND (email IS NULL OR email=?) AND ${inviteScopeGate}
+    AND EXISTS (SELECT 1 FROM users WHERE id=? AND status='active')`,
+    )
+    .bind(
+      new Date().toISOString(),
+      userId,
+      await hashInviteToken(token),
+      new Date().toISOString(),
+      userId,
+      normalizeEmail(email),
+      userId,
+    )
+    .run();
+  if (result.meta.changes !== 1) throw new Error("invite_required");
 }

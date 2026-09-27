@@ -31,15 +31,15 @@ export default {
     const steps = english
       ? [
           "Open the invitation link below within 24 hours.",
-          'Choose your display language, then select “Sign up with Google”.',
+          'Choose your display language, then select “Join with Google”.',
           "Choose the Google account for the email address that received this invitation and follow the Google prompts.",
-          "When the schedule appears, you’re all set! Open the profile icon at the top right → My account to set your name and photo.",
+          "When the shared page appears, you’re all set! Your plans and watchlist are shared in the group. Open the profile icon at the top right → My account to set your name and photo.",
         ]
       : [
           "24時間以内に、下の招待リンクを開いてね！",
-          "表示言語を選んで「Googleで登録する」を押してね。",
+          "表示言語を選んで「Googleで参加する」を押してね。",
           "このメールを受け取ったアドレスのGoogleアカウントを選び、画面の案内に沿って進めてね。",
-          "上映スケジュールが表示されたら登録完了だよ！右上のアイコン → マイページで、名前や写真を設定してね。",
+          "共有画面が表示されたら参加完了だよ！予定と気になる作品をグループで共有するよ。右上のアイコン → マイページで、名前や写真を設定してね。",
         ];
     const fallback = english
       ? "If signup won’t open inside LINE or another app, open the invitation link in Safari or Chrome."

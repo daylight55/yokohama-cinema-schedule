@@ -16,7 +16,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
   );
   const title = t(invite ? "はまむび！への招待" : "この招待は利用できません");
   const text = invite
-    ? t("Googleアカウントで登録できます。") +
+    ? t("Googleで登録・ログインして参加できます。予定と気になる作品をグループ内で共有します。") +
       t(
         invite.email
           ? "招待メールを受け取ったアドレスのアカウントを選んでください。"
@@ -75,7 +75,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
                       h("option", { value: "ja" }, "日本語"),
                       h("option", { value: "en" }, "English"),
                     ),
-                    h("button", { type: "submit" }, t("Googleで登録する")),
+                    h("button", { type: "submit" }, t("Googleで参加する")),
                   )
                 : h(
                     "p",

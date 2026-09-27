@@ -1,3 +1,4 @@
+import { activeMetrics } from "./performanceMetrics";
 import { ProfileMenu } from "./MemberProfile";
 import { UsersThreeIcon } from "@phosphor-icons/react";
 import { movieTitle, screeningInfo } from "./i18n";
@@ -198,6 +199,7 @@ export function App() {
     }
   }
 
+  useEffect(() => { activeMetrics?.commit(); });
   const [now, setNow] = useState(() => new Date());
   const [theme, setTheme] = useState<ColorTheme>(() => {
     const bootstrappedTheme = parseColorTheme(
@@ -460,7 +462,7 @@ export function App() {
   }, [routes]);
 
   useEffect(() => {
-    const updateClock = () => setNow(new Date());
+    const updateClock = () => { if (document.visibilityState === "visible") setNow(new Date()); };
     const interval = window.setInterval(updateClock, 30_000);
     document.addEventListener("visibilitychange", updateClock);
     return () => {
@@ -2133,8 +2135,8 @@ export function App() {
             </a>
             <a
               href={hashForAppView("shared")}
-              className={view === "shared" ? "active" : ""}
-              aria-current={view === "shared" ? "page" : undefined}
+              className={(view === "shared" || view === "groups") ? "active" : ""}
+              aria-current={(view === "shared" || view === "groups") ? "page" : undefined}
               onClick={closeNavigation}
             >
               <UsersThreeIcon size={20} aria-hidden="true" />
@@ -2593,8 +2595,8 @@ export function App() {
                 ) : null
               }
             />
-          ) : view === "shared" ? (
-            <SharedPage />
+          ) : (view === "shared" || view === "groups") ? (
+            <SharedPage manage={view === "groups"} />
           ) : view === "viewingPlans" ? (
             <ViewingPlansPage
               plans={viewingPlans}

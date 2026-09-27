@@ -4004,3 +4004,30 @@ html[lang="en"] .brand-wordmark {
 .movie-times {
   overscroll-behavior-x: contain;
 }
+
+.sharing-group-controls { min-width: 0; margin-bottom: 24px; }
+.sharing-group-controls h2 { font-size: 1.2rem; overflow-wrap: anywhere; }
+.sharing-group-controls label { display: grid; gap: 8px; min-width: 0; }
+.sharing-group-controls input:not([type="checkbox"]), .sharing-group-controls select { width: 100%; min-width: 0; min-height: 44px; }
+.sharing-group-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.sharing-group-controls button { min-height: 44px; padding: 8px 12px; }
+.sharing-group-form { display: grid; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px; }
+.sharing-group-form h3, .sharing-group-form p { margin: 0; }
+.sharing-group-form .sharing-email-choice { display: flex; align-items: center; min-height: 44px; }
+.performance-panel { position: fixed; bottom: 8px; right: 8px; z-index: 100; max-width: calc(100% - 16px); background: var(--surface); border: 1px solid var(--line); padding: 8px; }
+.performance-panel button { min-height: 44px; }
+.performance-panel pre { max-height: 45vh; overflow: auto; font-size: 12px; }
+
+.sharing-group-controls input:not([type="checkbox"]), .sharing-group-controls select { border: 1px solid var(--line); border-radius: 10px; background: var(--surface-raised); color: var(--text); padding: 10px 12px; font: inherit; }
+.sharing-group-controls .secondary-button { color: var(--text); font-size: .875rem; font-weight: 600; }
+.sharing-group-actions > button:first-child { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.sharing-group-controls :is(input,select,button):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sharing-view-heading { display: grid; gap: 10px; margin-bottom: 20px; min-width: 0; }
+.sharing-view-heading label { display: grid; gap: 8px; }
+.sharing-view-heading select { min-width: 0; width: 100%; min-height: 44px; padding: 10px 12px; background: var(--surface-raised); color: var(--text); border: 1px solid var(--line); border-radius: 10px; font: inherit; }
+.sharing-view-heading h2 { margin: 0; font-size: 1.15rem; overflow-wrap: anywhere; }
+.shared-back-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); margin-bottom: 12px; }
+.group-member-list { border-top: 1px solid var(--line); padding-top: 20px; }
+.group-member-list h2 { font-size: 1rem; }
+.group-member-list ul { list-style: none; padding: 0; display: grid; gap: 16px; }
+.group-member-list li { display: flex; gap: 12px; align-items: center; overflow-wrap: anywhere; min-width: 0; }

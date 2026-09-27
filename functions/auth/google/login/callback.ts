@@ -126,7 +126,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     );
     const session = await createUserSession(context.env, user.id);
     const headers = new Headers({
-      location: new URL("/#schedule", requestUrl.origin).toString(),
+      location: new URL(inviteToken ? "/#shared" : "/#schedule", requestUrl.origin).toString(),
       "cache-control": "no-store",
       "referrer-policy": "no-referrer",
     });
