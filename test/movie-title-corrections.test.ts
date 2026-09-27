@@ -64,12 +64,23 @@ describe("reviewed movie identity", () => {
       sqlite.prepare("INSERT INTO movie_preferences(user_id,movie_key,title,starred,status,updated_at) VALUES ('legacy-local',?,?,1,'watched','2026-09-27')").run(oldKey,short);
       sqlite.prepare("INSERT INTO movie_preferences(user_id,movie_key,title,starred,status,updated_at) VALUES ('legacy-local',?,?,0,NULL,'2026-09-26')").run(key,full);
       const rows = [{id:oldId,source_id:source,cinema_id:source,title:short,movie_key:oldKey,starts_at:start,screen:"12",format:"SCREENX / 字幕",cinema_name:"横浜ブルク13",cinema_short_name:"ブルク13"}];
+      sqlite.exec("PRAGMA foreign_keys=ON");
+      for (const [k,t] of [[oldKey,short],[key,full]]) {
+        sqlite.prepare("INSERT INTO movie_title_research(title_key,japanese_title,next_attempt_at,updated_at) VALUES (?,?, 'now','now')").run(k,t);
+        sqlite.prepare("INSERT INTO movie_introductions VALUES (?,'紹介','Introduction','evidence','https://example.org','now')").run(k);
+        sqlite.prepare("INSERT INTO movie_credits(title_key,next_attempt_at,updated_at) VALUES (?,'now','now')").run(k);
+      }
+      sqlite.prepare("INSERT INTO movie_synopses(title_key,synopsis_ja,evidence,source_url,reviewed_at) VALUES (?,'あらすじ','evidence','https://example.org','now')").run(oldKey);
+      sqlite.prepare("INSERT INTO synopsis_research(title_key,next_attempt_at) VALUES (?,'now')").run(oldKey);
       const sql = movieTitleRepairSql(rows);
       sqlite.exec(sql);
       expect(sqlite.prepare("SELECT id,title,movie_key,booking_url,image_url,format FROM showings").get()).toMatchObject({id:newId,title:full,movie_key:key,booking_url:"https://tjoy.jp/reservation/test",image_url:"https://example.org/film.jpg",format:"SCREENX / 字幕 / INFINITY VISION"});
       expect(sqlite.prepare("SELECT showing_id,reserved_at FROM viewing_plans").get()).toMatchObject({showing_id:newId,reserved_at:"reserved"});
       expect(sqlite.prepare("SELECT movie_key,starred,status FROM movie_preferences").all()).toEqual([{movie_key:key,starred:1,status:"watched"}]);
       expect(sqlite.prepare("SELECT showing_id FROM showing_search WHERE showing_search MATCH ?").get(searchMatchExpression("アンコール"))?.showing_id).toBe(newId);
+      for (const table of ["movie_title_research","movie_introductions","movie_credits","movie_synopses","synopsis_research"]) {
+        expect(sqlite.prepare(`SELECT title_key FROM ${table}`).all()).toEqual([{title_key:key}]);
+      }
       sqlite.exec(sql); // Replaying the reviewed repair is safe.
       expect(sqlite.prepare("SELECT count(*) n FROM showings").get()?.n).toBe(1);
     } finally { sqlite.close(); }

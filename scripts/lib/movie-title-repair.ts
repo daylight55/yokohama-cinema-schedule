@@ -47,6 +47,12 @@ WHERE excluded.updated_at > movie_preferences.updated_at;`);
       statements.push(`UPDATE ${table} SET title=${sql(title)},movie_key=${sql(key)},showing_id=replace(showing_id,${sql(`|${alias}|`)},${sql(`|${key}|`)}) WHERE movie_key=${sql(alias)};`);
     }
     statements.push(`DELETE FROM reviewed_movie_images WHERE movie_key=${sql(alias)};`);
+    // Preserve metadata if the canonical film has none, then remove FK dependants
+    // before removing the alias research row. Existing canonical evidence wins.
+    for (const table of ["movie_introductions", "movie_credits", "movie_synopses", "synopsis_research"]) {
+      statements.push(`UPDATE ${table} SET title_key=${sql(key)} WHERE title_key=${sql(alias)} AND NOT EXISTS (SELECT 1 FROM ${table} WHERE title_key=${sql(key)});`);
+      statements.push(`DELETE FROM ${table} WHERE title_key=${sql(alias)};`);
+    }
     statements.push(`DELETE FROM movie_title_research WHERE title_key=${sql(alias)};`);
     statements.push(`DELETE FROM movie_release_dates WHERE title_key=${sql(alias)};`);
   }
