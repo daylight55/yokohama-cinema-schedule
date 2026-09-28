@@ -8,7 +8,8 @@ const base=process.env.GUIDE_URL || 'http://127.0.0.1:5194';
 const root=path.dirname(fileURLToPath(import.meta.url));
 const output=path.join(root,'captures'); await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true});
-const manifest={viewport:{width:390,height:700},sourceRevision:process.env.GUIDE_SOURCE_REVISION||'unknown',sourceWorkingTreeNote:process.env.GUIDE_SOURCE_NOTE||'Record any local changes in the source checkout here.',data:'Demonstration data in the real app; no personal accounts or external writes',languages:{}};
+const scheduleOnly=process.argv.includes('--schedule-only');
+const manifest=scheduleOnly ? JSON.parse(await fs.readFile(path.join(output,'manifest.json'),'utf8')) : {viewport:{width:390,height:700},sourceRevision:process.env.GUIDE_SOURCE_REVISION||'unknown',sourceWorkingTreeNote:process.env.GUIDE_SOURCE_NOTE||'Record any local changes in the source checkout here.',data:'Demonstration data in the real app; no personal accounts or external writes',languages:{}};
 try {
 for(const lang of ['ja','en']){
  const context=await browser.newContext({viewport:manifest.viewport,deviceScaleFactor:2,locale:lang==='ja'?'ja-JP':'en-GB',colorScheme:'light'});
@@ -16,7 +17,7 @@ for(const lang of ['ja','en']){
  page.on('pageerror',e=>errors.push(e.message));
  await installFixture(page,lang);
  const tr=(ja,en)=>lang==='ja'?ja:en;
- await page.goto(base+`/#schedule?date=${DATE}`); await page.locator('.schedule-search').waitFor(); await page.waitForTimeout(500);
+ await page.goto(base+`/#movies?date=${DATE}`); await page.locator('.schedule-search').waitFor(); await page.waitForTimeout(500);
  await page.evaluate(()=>document.fonts.ready);
  if(process.argv.includes('--inspect')) {
  await page.screenshot({path:path.join(output,`${lang}-inspect.png`)});
@@ -51,14 +52,26 @@ for(const lang of ['ja','en']){
    await settle();
  };
  // 0. The greeting is a dedicated mascot scene, with no app capture underneath.
- scenes.push({name:'intro',kind:'mascot',duration:7});
+ scenes.push({name:'intro',kind:'mascot',duration:10});
  // The main feature comes first: compare cinemas in the same schedule.
- begin('schedule');
+ begin('schedule',10);
+ current.sourceRevision=process.env.GUIDE_SOURCE_REVISION||'unknown';
+ current.sourceWorkingTreeNote=process.env.GUIDE_SOURCE_NOTE||'No local app changes';
+ await save('entry',menu(),0,1.05);
+ await menu().click();
+ const scheduleLink=page.locator(`#primary-navigation a[href="#schedule?date=${DATE}"]`);
+ await save('sidebar',scheduleLink,1,1.25);
+ await scheduleLink.click(); await settle();
  await page.locator('.cinema-strip').first().scrollIntoViewIfNeeded(); await settle();
- await save('overview',page.locator('.timeline-hour').first(),0,1.05);
- await save('cinemas',page.locator('.cinema-strip').first(),2.8,1.35);
+ await save('overview',page.locator('.timeline-hour').first(),2.8,1.05);
+ await save('cinemas',page.locator('.cinema-strip').first(),5,1.35);
  await page.locator('.cinema-strip').first().evaluate(el=>el.scrollLeft=el.scrollWidth);
- await save('more-cinemas',page.locator('.cinema-strip').first(),5.2,1.35); end();
+ await save('more-cinemas',page.locator('.cinema-strip').first(),7.4,1.35); end();
+ if(scheduleOnly){
+   if(errors.length)throw Error(errors.join('\n'));
+   manifest.languages[lang][1]=scenes[1];
+   await context.close(); continue;
+ }
  // Personalize the schedule in My page, then show the actual filtered result.
  await menu().click();
  begin('cinema-settings'); await save('menu',page.locator('#primary-navigation a[href="#account"]'),0,1.3);
@@ -125,7 +138,7 @@ for(const lang of ['ja','en']){
  await save('translated',page.locator('main'),2.7,1.2);
  await toggle.click(); await settle(); await save('return',toggle,4,1.5); end();
  // 8. A separate goodbye gives the mascot time to hop, land and hold its wink.
- scenes.push({name:'outro',kind:'mascot',duration:5});
+ scenes.push({name:'outro',kind:'mascot',duration:8});
  for(const [width,height] of [[320,700],[390,844]]) {
    await page.setViewportSize({width,height}); await settle();
    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error(`Overflow at ${width}`);

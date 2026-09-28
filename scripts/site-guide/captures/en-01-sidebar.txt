@@ -1,0 +1,88 @@
+- link "Skip to showtimes":
+  - /url: "#main"
+- banner:
+  - button "Open menu" [expanded]
+  - link "Go to current showtimes":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "Display in English" [checked]: JP EN
+  - button "Switch to dark mode"
+- dialog "Menu":
+  - strong: Menu
+  - button "Close menu"
+  - navigation "Main navigation":
+    - link "Showtimes":
+      - /url: "#schedule?date=2026-09-28"
+    - link "Films":
+      - /url: "#movies?date=2026-09-28"
+    - link "Cinemas":
+      - /url: "#cinemas"
+    - link "My screenings":
+      - /url: "#viewing-plans"
+    - link "Shared":
+      - /url: "#shared"
+    - link "Movie marathon":
+      - /url: "#planner?date=2026-09-28"
+    - link "My account":
+      - /url: "#account"
+    - link "About":
+      - /url: "#about"
+    - button "Sign out"
+- main:
+  - navigation "Screening dates":
+    - link "All 7 days":
+      - /url: "#movies"
+    - link "Today Mon":
+      - /url: "#movies?date=2026-09-28"
+    - link "29 Sept Tue":
+      - /url: "#movies?date=2026-09-29"
+    - link "30 Sept Wed":
+      - /url: "#movies?date=2026-09-30"
+    - link "1 Oct Thu":
+      - /url: "#movies?date=2026-10-01"
+    - link "2 Oct Fri":
+      - /url: "#movies?date=2026-10-02"
+    - link "3 Oct Sat":
+      - /url: "#movies?date=2026-10-03"
+    - link "4 Oct Sun":
+      - /url: "#movies?date=2026-10-04"
+  - search:
+    - text: Film or cinema
+    - searchbox "Film or cinema"
+    - button "Search"
+  - region "Filter screenings":
+    - group "Area":
+      - button "All" [pressed]
+      - button "Yokohama Station"
+      - button "Sakuragicho / Minato Mirai"
+      - button "Kannai / Isezakicho"
+      - button "Tobe"
+      - button "Kamiooka"
+  - paragraph: Today
+  - heading "Now showing" [level=1]
+  - text: 2 films
+  - paragraph: "Updated: 28/09, 08:00"
+  - list:
+    - listitem:
+      - strong:
+        - link "Summer Wars":
+          - /url: "#movie?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA"
+      - link "Eiga.com":
+        - /url: https://eiga.com/search/?t=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA
+      - link "Filmarks":
+        - /url: https://filmarks.com/search/movies?q=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA
+      - 'button "Add to watchlist: Summer Wars"'
+      - group "Viewing status of Summer Wars":
+        - button "Watched"
+        - button "Not interested"
+    - listitem:
+      - strong:
+        - link "Your Name.":
+          - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
+      - link "Eiga.com":
+        - /url: https://eiga.com/search/?t=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
+      - link "Filmarks":
+        - /url: https://filmarks.com/search/movies?q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
+      - 'button "Add to watchlist: Your Name."'
+      - group "Viewing status of Your Name.":
+        - button "Watched"
+        - button "Not interested"
