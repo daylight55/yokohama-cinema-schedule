@@ -1,4 +1,5 @@
 /// <reference path="../env.d.ts" />
+import { refreshMovieTitleTranslations } from "./title-translation";
 import { refreshMovieTitleResearch } from "./title-research";
 import { refreshMovieCredits } from "./movie-credits";
 import { purgeExpiredAccounts } from "../../shared/account-lifecycle";
@@ -91,6 +92,9 @@ export default {
     ctx: ExecutionContext,
   ): Promise<void> {
     if (controller.cron === "37 * * * *") {
+      if (env.AI) ctx.waitUntil(refreshMovieTitleTranslations(env.DB, env.AI).catch(() => {
+        console.warn(JSON.stringify({event: "movie_title_translation_unavailable"}));
+      }));
       ctx.waitUntil(env.DB.prepare("DELETE FROM group_activity WHERE created_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-90 days')").run().catch(error => {
         console.error(JSON.stringify({event:"activity_cleanup_failed",error:String(error)}));
       }));
@@ -108,6 +112,8 @@ export default {
             } catch {
               console.warn("Movie title research unavailable");
             }
+            try { await refreshMovieTitleTranslations(env.DB, env.AI); }
+            catch { console.warn(JSON.stringify({event: "movie_title_translation_unavailable"})); }
           }
           if (sourceBatchForCron(controller.cron) === 0) {
             if (env.AI) {
