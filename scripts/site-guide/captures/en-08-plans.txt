@@ -6,11 +6,14 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "Display in English" [checked]: JP EN
   - button "Switch to dark mode"
+  - group
 - main:
   - region "Shared":
-    - paragraph: Movies together
+    - paragraph: Members’ movies
     - heading "Shared" [level=1]
-    - button "Reload"
+    - heading "Movie friends" [level=2]
+    - link "Manage groups":
+      - /url: "#groups"
     - group "Shared information":
       - button "Screenings" [pressed]
       - button "Watchlist"
@@ -29,4 +32,7 @@
           - /url: "#movie?movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
         - paragraph: Yokohama Burg 13
         - list "Who is going":
-          - listitem: Hama
+          - listitem:
+            - link "Hama · My account":
+              - /url: "#member?user=guide"
+              - text: Hama

@@ -6,6 +6,7 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "Display in English" [checked]: JP EN
   - button "Switch to dark mode"
+  - group
 - main:
   - region "Your Name.":
     - link "Back to films":

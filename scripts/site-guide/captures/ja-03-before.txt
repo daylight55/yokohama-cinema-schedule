@@ -6,6 +6,7 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "英語で表示": JP EN
   - button "ダークモードに切り替える"
+  - group
 - main:
   - navigation "上映日":
     - link "すべて 1週間":
@@ -39,9 +40,12 @@
   - paragraph: 今日
   - heading "上映中の作品" [level=1]
   - text: 2作品
-  - paragraph: 更新：9/28 08:00
+  - link "更新状況を見る":
+    - /url: "#collection-status?date=2026-09-28"
   - list:
     - listitem:
+      - link "サマーウォーズ":
+        - /url: "#movie?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA"
       - strong:
         - link "サマーウォーズ":
           - /url: "#movie?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA"
@@ -49,11 +53,23 @@
         - /url: https://eiga.com/search/?t=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA
       - link "Filmarks":
         - /url: https://filmarks.com/search/movies?q=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA
+      - navigation "上映時刻":
+        - link "15:00 · TOHOシネマズ 上大岡 · サマーウォーズ":
+          - /url: "#schedule?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA&showing=guide-0-4"
+          - time: 15:00
+        - link "15:00 · イオンシネマみなとみらい · サマーウォーズ":
+          - /url: "#schedule?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA&showing=guide-0-5"
+          - time: 15:00
+        - link "15:00 · 横浜ブルク13 · サマーウォーズ":
+          - /url: "#schedule?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA&showing=guide-0-3"
+          - time: 15:00
       - button "サマーウォーズをスターする"
       - group "サマーウォーズの鑑賞状態":
         - button "鑑賞済み"
         - button "興味なし"
     - listitem:
+      - link "君の名は。":
+        - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
       - strong:
         - link "君の名は。":
           - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
@@ -61,6 +77,16 @@
         - /url: https://eiga.com/search/?t=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
       - link "Filmarks":
         - /url: https://filmarks.com/search/movies?q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
+      - navigation "上映時刻":
+        - link "12:00 · TOHOシネマズ 上大岡 · 君の名は。":
+          - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-1"
+          - time: 12:00
+        - link "12:00 · イオンシネマみなとみらい · 君の名は。":
+          - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-2"
+          - time: 12:00
+        - link "12:00 · 横浜ブルク13 · 君の名は。":
+          - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-0"
+          - time: 12:00
       - button "君の名は。をスターする"
       - group "君の名は。の鑑賞状態":
         - button "鑑賞済み"

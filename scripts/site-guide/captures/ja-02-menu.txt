@@ -1,32 +1,19 @@
 - link "上映スケジュールへ移動":
   - /url: "#main"
 - banner:
-  - button "メニューを開く" [expanded]
+  - button "メニューを開く"
   - link "今日の現在時刻の上映へ戻る":
     - /url: "#schedule?date=2026-09-28"
   - switch "英語で表示": JP EN
   - button "ダークモードに切り替える"
-- dialog "メニュー":
-  - strong: メニュー
-  - button "メニューを閉じる"
-  - navigation "メイン":
-    - link "上映スケジュール":
-      - /url: "#schedule?date=2026-09-28"
-    - link "上映作品":
-      - /url: "#movies?date=2026-09-28"
-    - link "映画館一覧":
-      - /url: "#cinemas"
-    - link "鑑賞予定":
-      - /url: "#viewing-plans"
-    - link "共有":
-      - /url: "#shared"
-    - link "映画はしごガチャ":
-      - /url: "#planner?date=2026-09-28"
-    - link "マイページ":
-      - /url: "#account"
-    - link "このサイトについて":
-      - /url: "#about"
-    - button "ログアウト"
+  - group:
+    - navigation "アカウント":
+      - strong: はまむび
+      - link "マイページ":
+        - /url: "#account"
+      - link "新着情報":
+        - /url: "#notifications"
+      - button "ログアウト"
 - main:
   - navigation "上映日":
     - link "今日 月":
@@ -63,7 +50,8 @@
   - paragraph: 今日
   - heading "上映スケジュール" [level=1]
   - text: 2作品6上映
-  - paragraph: 更新：9/28 08:00
+  - link "更新状況を見る":
+    - /url: "#collection-status?date=2026-09-28"
   - time: 現在10:00
   - region "12:00":
     - time: 12:00

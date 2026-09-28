@@ -6,6 +6,7 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "英語で表示": JP EN
   - button "ダークモードに切り替える"
+  - group
 - main:
   - navigation "上映日":
     - link "今日 月":
@@ -42,7 +43,8 @@
   - paragraph: 今日
   - heading "上映スケジュール" [level=1]
   - text: 2作品4上映
-  - paragraph: 更新：9/28 08:00
+  - link "更新状況を見る":
+    - /url: "#collection-status?date=2026-09-28"
   - time: 現在10:00
   - region "12:00":
     - time: 12:00

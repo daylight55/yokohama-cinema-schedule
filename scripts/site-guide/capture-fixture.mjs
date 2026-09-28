@@ -29,6 +29,7 @@ export async function installFixture(page, language = 'ja', options = {}) {
     if(path==='/api/account/language') {if(body?.language)lang=body.language; result={language:lang,userRole:'member'};}
     else if(path==='/api/account')result={user:{id:'guide',email:null,displayEmail:'demo@example.com',role:'member',legacy:false},methods:{google:true,password:false,passkeySupported:false},passkeys:[],users:[],pendingInvites:[],googleConfigured:true};
     else if(path==='/api/account/profile')result={userId:'guide',displayName:lang==='ja'?'はまむび':'Hama',avatarUrl:null,bio:''};
+    else if(path==='/api/member-page')result={profile:{userId:'guide',displayName:lang==='ja'?'はまむび':'Hama',avatarUrl:null,bio:''},isSelf:true,movies:preferences,plans:plans.map(p=>({...p,userId:'guide',reserved:!!p.reservedAt})),titles};
     else if(path==='/api/notifications')result={userId:'guide',items:[],unread:0,lastReadId:0,latestId:0,nextBefore:null,titles};
     else if(path==='/api/showings'){
       const date=url.searchParams.get('date')||DATE, through=url.searchParams.get('through')||date;

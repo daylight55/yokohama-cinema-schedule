@@ -10,7 +10,7 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ci:pr": "npm run typecheck && npm run test && npm run test:worker-runtime && npm run build",
+    "ci:pr": "npm run guide:check && npm run typecheck && npm run test && npm run test:worker-runtime && npm run build",
     "pages:dev": "npm run build && wrangler pages dev dist --persist-to .wrangler/state",
     "pages:deploy": "npm run build && wrangler pages deploy dist",
     "worker:dev": "wrangler dev --config worker/wrangler.jsonc --persist-to .wrangler/state",
@@ -20,7 +20,9 @@
     "ci:pr:clean": "bash scripts/ci-pr-clean.sh",
     "test:worker-runtime": "node scripts/worker-runtime-smoke.mjs",
     "perf:benchmark": "node --experimental-strip-types scripts/frontend-performance.mjs",
-    "test:performance": "vitest run test/frontend-performance.test.ts test/history-scroll.test.mjs"
+    "test:performance": "vitest run test/frontend-performance.test.ts test/history-scroll.test.mjs",
+    "guide:check": "node scripts/site-guide/freshness.mjs check",
+    "guide:review": "node scripts/site-guide/freshness.mjs review"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

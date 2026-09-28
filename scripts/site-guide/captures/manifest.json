@@ -3,8 +3,8 @@
     "width": 390,
     "height": 700
   },
-  "sourceRevision": "6d8e3ba",
-  "sourceWorkingTreeNote": "Video branch with local My page cinema visibility settings and schedule-first storyboard changes.",
+  "sourceRevision": "b910c8c030034037fee73b922219e74b366a94d8",
+  "sourceWorkingTreeNote": "Production UI after member pages and profile notifications; capture flow updated for bottom cinema settings and star dialog.",
   "data": "Demonstration data in the real app; no personal accounts or external writes",
   "languages": {
     "ja": [
@@ -45,9 +45,9 @@
             "image": "ja-01-overview.png",
             "focus": {
               "x": 14,
-              "y": 407.75,
+              "y": 158.75,
               "width": 362,
-              "height": 264.4375
+              "height": 559.3125
             },
             "zoom": 1.05
           },
@@ -56,9 +56,9 @@
             "image": "ja-01-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 491.75,
+              "y": 242.75,
               "width": 288,
-              "height": 162.4375
+              "height": 457.3125
             },
             "zoom": 1.35
           },
@@ -67,15 +67,15 @@
             "image": "ja-01-more-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 491.75,
+              "y": 242.75,
               "width": 288,
-              "height": 162.4375
+              "height": 457.3125
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "dfdb99924d4d3aaceff37f538a6adc392b3bdd56",
-        "sourceWorkingTreeNote": "Current main app; local changes only to guide script, narration, and render assets."
+        "sourceRevision": "b910c8c030034037fee73b922219e74b366a94d8",
+        "sourceWorkingTreeNote": "Production UI after member pages and profile notifications; capture flow updated for bottom cinema settings and star dialog."
       },
       {
         "name": "cinema-settings",
@@ -84,45 +84,67 @@
         "frames": [
           {
             "at": 0,
+            "image": "ja-02-profile.png",
+            "focus": {
+              "x": 332,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 0.8,
             "image": "ja-02-menu.png",
             "focus": {
-              "x": 14,
-              "y": 401,
-              "width": 290.796875,
+              "x": 129,
+              "y": 118.5,
+              "width": 238,
               "height": 48
             },
             "zoom": 1.3
           },
           {
-            "at": 1.6,
+            "at": 1.8,
+            "image": "ja-02-account-top.png",
+            "focus": {
+              "x": 14,
+              "y": 100,
+              "width": 362,
+              "height": 32.75
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 2.8,
             "image": "ja-02-settings.png",
             "focus": {
               "x": 14,
-              "y": 187.5,
+              "y": 319.6875,
               "width": 362,
               "height": 332.1875
             },
             "zoom": 1.12
           },
           {
-            "at": 3.5,
+            "at": 4.2,
             "image": "ja-02-selected.png",
             "focus": {
               "x": 14,
-              "y": 187.5,
+              "y": 319.6875,
               "width": 362,
               "height": 332.1875
             },
             "zoom": 1.12
           },
           {
-            "at": 5.4,
+            "at": 5.7,
             "image": "ja-02-result.png",
             "focus": {
               "x": 87,
-              "y": 491.75,
+              "y": 390.75,
               "width": 288,
-              "height": 162.4375
+              "height": 308.875
             },
             "zoom": 1.25
           }
@@ -160,9 +182,9 @@
             "image": "ja-03-result.png",
             "focus": {
               "x": 14,
-              "y": 404.75,
+              "y": 442.75,
               "width": 362,
-              "height": 115.140625
+              "height": 179.140625
             },
             "zoom": 1.35
           }
@@ -178,7 +200,7 @@
             "image": "ja-04-title.png",
             "focus": {
               "x": 139,
-              "y": 415.75,
+              "y": 453.75,
               "width": 172,
               "height": 20.140625
             },
@@ -248,7 +270,7 @@
             "image": "ja-06-star.png",
             "focus": {
               "x": 323,
-              "y": 413.75,
+              "y": 451.75,
               "width": 44,
               "height": 44
             },
@@ -258,19 +280,19 @@
             "at": 2.3,
             "image": "ja-06-saved.png",
             "focus": {
-              "x": 323,
-              "y": 413.75,
-              "width": 44,
-              "height": 44
+              "x": 29,
+              "y": 318,
+              "width": 332,
+              "height": 48
             },
-            "zoom": 1.5
+            "zoom": 1.3
           },
           {
             "at": 5,
             "image": "ja-06-selected.png",
             "focus": {
               "x": 323,
-              "y": 413.75,
+              "y": 451.75,
               "width": 44,
               "height": 44
             },
@@ -287,10 +309,10 @@
             "at": 0,
             "image": "ja-07-add.png",
             "focus": {
-              "x": 205.03125,
-              "y": 568.1875,
-              "width": 92,
-              "height": 46
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
             },
             "zoom": 1.8
           },
@@ -298,9 +320,9 @@
             "at": 2,
             "image": "ja-07-added.png",
             "focus": {
-              "x": 205.03125,
-              "y": 570.1875,
-              "width": 92,
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
               "height": 44
             },
             "zoom": 1.8
@@ -339,7 +361,7 @@
             "image": "ja-08-plans.png",
             "focus": {
               "x": 14,
-              "y": 212.75,
+              "y": 249.75,
               "width": 362,
               "height": 49
             },
@@ -350,9 +372,9 @@
             "image": "ja-08-watchlist.png",
             "focus": {
               "x": 14,
-              "y": 353.75,
+              "y": 390.75,
               "width": 362,
-              "height": 121
+              "height": 391
             },
             "zoom": 1.3
           }
@@ -367,7 +389,7 @@
             "at": 0,
             "image": "ja-09-before.png",
             "focus": {
-              "x": 239,
+              "x": 190,
               "y": 2.5,
               "width": 90,
               "height": 48
@@ -381,7 +403,7 @@
               "x": 0,
               "y": 54,
               "width": 390,
-              "height": 490
+              "height": 764.75
             },
             "zoom": 1.2
           },
@@ -389,7 +411,7 @@
             "at": 4,
             "image": "ja-09-return.png",
             "focus": {
-              "x": 239,
+              "x": 190,
               "y": 2.5,
               "width": 90,
               "height": 48
@@ -442,9 +464,9 @@
             "image": "en-01-overview.png",
             "focus": {
               "x": 14,
-              "y": 404.75,
+              "y": 158.75,
               "width": 362,
-              "height": 262.4375
+              "height": 559.3125
             },
             "zoom": 1.05
           },
@@ -453,9 +475,9 @@
             "image": "en-01-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 488.75,
+              "y": 242.75,
               "width": 288,
-              "height": 160.4375
+              "height": 457.3125
             },
             "zoom": 1.35
           },
@@ -464,15 +486,15 @@
             "image": "en-01-more-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 488.75,
+              "y": 242.75,
               "width": 288,
-              "height": 160.4375
+              "height": 457.3125
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "dfdb99924d4d3aaceff37f538a6adc392b3bdd56",
-        "sourceWorkingTreeNote": "Current main app; local changes only to guide script, narration, and render assets."
+        "sourceRevision": "b910c8c030034037fee73b922219e74b366a94d8",
+        "sourceWorkingTreeNote": "Production UI after member pages and profile notifications; capture flow updated for bottom cinema settings and star dialog."
       },
       {
         "name": "cinema-settings",
@@ -481,45 +503,67 @@
         "frames": [
           {
             "at": 0,
+            "image": "en-02-profile.png",
+            "focus": {
+              "x": 332,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 0.8,
             "image": "en-02-menu.png",
             "focus": {
-              "x": 14,
-              "y": 401,
-              "width": 290.796875,
+              "x": 129,
+              "y": 112.5,
+              "width": 238,
               "height": 48
             },
             "zoom": 1.3
           },
           {
-            "at": 1.6,
+            "at": 1.8,
+            "image": "en-02-account-top.png",
+            "focus": {
+              "x": 14,
+              "y": 97,
+              "width": 362,
+              "height": 32.75
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 2.8,
             "image": "en-02-settings.png",
             "focus": {
               "x": 14,
-              "y": 184.5,
+              "y": 325.6875,
               "width": 362,
               "height": 326.1875
             },
             "zoom": 1.12
           },
           {
-            "at": 3.5,
+            "at": 4.2,
             "image": "en-02-selected.png",
             "focus": {
               "x": 14,
-              "y": 184.5,
+              "y": 325.6875,
               "width": 362,
               "height": 326.1875
             },
             "zoom": 1.12
           },
           {
-            "at": 5.4,
+            "at": 5.7,
             "image": "en-02-result.png",
             "focus": {
               "x": 87,
-              "y": 488.75,
+              "y": 390.75,
               "width": 288,
-              "height": 160.4375
+              "height": 308.875
             },
             "zoom": 1.25
           }
@@ -557,9 +601,9 @@
             "image": "en-03-result.png",
             "focus": {
               "x": 14,
-              "y": 397.75,
+              "y": 435.75,
               "width": 362,
-              "height": 115.140625
+              "height": 179.140625
             },
             "zoom": 1.35
           }
@@ -575,7 +619,7 @@
             "image": "en-04-title.png",
             "focus": {
               "x": 139,
-              "y": 408.75,
+              "y": 446.75,
               "width": 172,
               "height": 20.140625
             },
@@ -645,7 +689,7 @@
             "image": "en-06-star.png",
             "focus": {
               "x": 323,
-              "y": 406.75,
+              "y": 444.75,
               "width": 44,
               "height": 44
             },
@@ -655,19 +699,19 @@
             "at": 2.3,
             "image": "en-06-saved.png",
             "focus": {
-              "x": 323,
-              "y": 406.75,
-              "width": 44,
-              "height": 44
+              "x": 29,
+              "y": 322,
+              "width": 332,
+              "height": 48
             },
-            "zoom": 1.5
+            "zoom": 1.3
           },
           {
             "at": 5,
             "image": "en-06-selected.png",
             "focus": {
               "x": 323,
-              "y": 406.75,
+              "y": 444.75,
               "width": 44,
               "height": 44
             },
@@ -684,9 +728,9 @@
             "at": 0,
             "image": "en-07-add.png",
             "focus": {
-              "x": 205.03125,
-              "y": 570.1875,
-              "width": 92,
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
               "height": 44
             },
             "zoom": 1.8
@@ -695,9 +739,9 @@
             "at": 2,
             "image": "en-07-added.png",
             "focus": {
-              "x": 205.03125,
-              "y": 570.1875,
-              "width": 92,
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
               "height": 44
             },
             "zoom": 1.8
@@ -736,7 +780,7 @@
             "image": "en-08-plans.png",
             "focus": {
               "x": 14,
-              "y": 209.75,
+              "y": 241.75,
               "width": 362,
               "height": 49
             },
@@ -747,9 +791,9 @@
             "image": "en-08-watchlist.png",
             "focus": {
               "x": 14,
-              "y": 350.75,
+              "y": 382.75,
               "width": 362,
-              "height": 117
+              "height": 373
             },
             "zoom": 1.3
           }
@@ -764,7 +808,7 @@
             "at": 0,
             "image": "en-09-before.png",
             "focus": {
-              "x": 239,
+              "x": 190,
               "y": 2.5,
               "width": 90,
               "height": 48
@@ -778,7 +822,7 @@
               "x": 0,
               "y": 54,
               "width": 390,
-              "height": 490
+              "height": 760.75
             },
             "zoom": 1.2
           },
@@ -786,7 +830,7 @@
             "at": 4,
             "image": "en-09-return.png",
             "focus": {
-              "x": 239,
+              "x": 190,
               "y": 2.5,
               "width": 90,
               "height": 48

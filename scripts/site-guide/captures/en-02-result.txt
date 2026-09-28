@@ -6,6 +6,7 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "Display in English" [checked]: JP EN
   - button "Switch to dark mode"
+  - group
 - main:
   - navigation "Screening dates":
     - link "Today Mon":
@@ -42,7 +43,8 @@
   - paragraph: Today
   - heading "Showtimes" [level=1]
   - text: 2 films4 screenings
-  - paragraph: "Updated: 28/09, 08:00"
+  - link "Check schedule updates":
+    - /url: "#collection-status?date=2026-09-28"
   - time: Now 10:00
   - region "12:00":
     - time: 12:00
