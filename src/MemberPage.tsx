@@ -191,9 +191,6 @@ export function MemberPage({ userId }: { userId: string }) {
         </div>
       )}
       <MemberActivity key={userId} userId={userId} onLoaded={setData} />
-      <a className="member-back-link" href="#shared">
-        {t("共有に戻る")}
-      </a>
     </PageShell>
   );
 }

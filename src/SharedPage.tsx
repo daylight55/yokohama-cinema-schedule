@@ -88,9 +88,6 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           title={t("グループ管理")}
           titleId="groups-title"
         />
-        <a className="shared-back-link" href={hashForAppView("shared")}>
-          {t("共有に戻る")}
-        </a>
         {loading ? (
           <p role="status">{t("読み込み中…")}</p>
         ) : error ? (
@@ -163,7 +160,7 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           ) : (
             <p>{t("まずは一緒に映画を楽しむ相手を招待してね！")}</p>
           )}
-          <a className="shared-back-link" href={hashForAppView("groups")}>
+          <a className="shared-manage-link" href={hashForAppView("groups")}>
             {t("グループ管理")}
           </a>
         </div>

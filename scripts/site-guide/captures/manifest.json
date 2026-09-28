@@ -3,8 +3,8 @@
     "width": 390,
     "height": 700
   },
-  "sourceRevision": "b910c8c030034037fee73b922219e74b366a94d8",
-  "sourceWorkingTreeNote": "Production UI after member pages and profile notifications; capture flow updated for bottom cinema settings and star dialog.",
+  "sourceRevision": "e1fb09ddec7d3d666477c83c8a70fab0198cf5bc",
+  "sourceWorkingTreeNote": "Remove redundant back links from film, group management, and member pages; rename group management link CSS class without visual change.",
   "data": "Demonstration data in the real app; no personal accounts or external writes",
   "languages": {
     "ja": [
@@ -74,8 +74,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "b910c8c030034037fee73b922219e74b366a94d8",
-        "sourceWorkingTreeNote": "Production UI after member pages and profile notifications; capture flow updated for bottom cinema settings and star dialog."
+        "sourceRevision": "e1fb09ddec7d3d666477c83c8a70fab0198cf5bc",
+        "sourceWorkingTreeNote": "Remove redundant back links from film, group management, and member pages; rename group management link CSS class without visual change."
       },
       {
         "name": "cinema-settings",
@@ -211,7 +211,7 @@
             "image": "ja-04-detail.png",
             "focus": {
               "x": 14,
-              "y": 296.21875,
+              "y": 252.21875,
               "width": 362,
               "height": 369.5625
             },
@@ -493,8 +493,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "b910c8c030034037fee73b922219e74b366a94d8",
-        "sourceWorkingTreeNote": "Production UI after member pages and profile notifications; capture flow updated for bottom cinema settings and star dialog."
+        "sourceRevision": "e1fb09ddec7d3d666477c83c8a70fab0198cf5bc",
+        "sourceWorkingTreeNote": "Remove redundant back links from film, group management, and member pages; rename group management link CSS class without visual change."
       },
       {
         "name": "cinema-settings",
@@ -630,7 +630,7 @@
             "image": "en-04-detail.png",
             "focus": {
               "x": 14,
-              "y": 345.71875,
+              "y": 301.71875,
               "width": 362,
               "height": 363.5625
             },

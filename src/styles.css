@@ -3740,19 +3740,6 @@ html[lang="en"] .brand-wordmark {
   color: var(--muted);
   font-size: 11px;
 }
-.admin-users-page .page-back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  margin-bottom: 16px;
-  color: var(--muted);
-  font-size: 12px;
-  text-decoration: none;
-}
-.admin-users-page .page-back-link:hover {
-  color: var(--text);
-}
 .admin-tabs {
   display: flex;
   gap: 20px;
@@ -3903,7 +3890,6 @@ html[lang="en"] .brand-wordmark {
 .shared-movies img { width: 72px; height: 100px; object-fit: contain; flex: 0 0 auto; border-radius: 6px; }
 .shared-empty { padding-block: 30px; color: var(--muted); line-height: 1.7; }
 .shared-empty a { display: inline-flex; align-items: center; min-height: 44px; }
-.movie-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 0.875rem; }
 .movie-overview { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 16px; padding-block: 20px 28px; }
 .movie-overview-copy { min-width: 0; }
 .movie-overview .page-header { margin: 0; }
@@ -4026,7 +4012,7 @@ html[lang="en"] .brand-wordmark {
 .sharing-view-heading label { display: grid; gap: 8px; }
 .sharing-view-heading select { min-width: 0; width: 100%; min-height: 44px; padding: 10px 12px; background: var(--surface-raised); color: var(--text); border: 1px solid var(--line); border-radius: 10px; font: inherit; }
 .sharing-view-heading h2 { margin: 0; font-size: 1.15rem; overflow-wrap: anywhere; }
-.shared-back-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); margin-bottom: 12px; }
+.shared-manage-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); margin-bottom: 12px; }
 .group-member-list { border-top: 1px solid var(--line); padding-top: 20px; }
 .group-member-list h2 { font-size: 1rem; }
 .group-member-list ul { list-style: none; padding: 0; display: grid; gap: 16px; }
@@ -4156,7 +4142,7 @@ html[lang="en"] .brand-wordmark {
 .member-page-profile { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
 .member-page-profile > div { min-width: 0; }
 .member-page-profile p { white-space: pre-wrap; overflow-wrap: anywhere; }
-.member-page-profile a, .member-back-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); }
+.member-page-profile a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); }
 .member-activity { min-width: 0; margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
 .member-activity h2 { font-size: 18px; margin: 0 0 16px; }
 .member-activity-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
