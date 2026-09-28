@@ -55,7 +55,7 @@ export interface Showing {
 export interface MovieTitleRecord {
   titleKey: string;
   japaneseTitle: string;
-  sourceKind: "reference" | "official";
+  sourceKind: "reference" | "official" | "machine_translation";
   originalTitle: string | null;
   englishTitle: string | null;
   sourceUrl: string | null;
