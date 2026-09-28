@@ -560,3 +560,31 @@ it("prevents an old collector from replacing stored data after the DB identity p
     sqlite.close();
   }
 });
+
+it.each(['C4739100', '【字幕】Michael／マイケル'])(
+  'accepts a stable movie when historical rows store source keys: %s', async legacyKey => {
+    const {db, sqlite} = testDatabase();
+    try {
+      sqlite.exec("INSERT INTO cinemas(id,name,short_name,area,area_label,address,latitude,longitude,source_url,updated_at) VALUES ('yokohama-burg13','ブルク','ブルク','yokohama','横浜','test',0,0,'https://tjoy.jp','now')");
+      sqlite.prepare("INSERT INTO showings(id,source_id,cinema_id,movie_key,title,starts_at,booking_url,fetched_at) VALUES ('legacy','yokohama-burg13','yokohama-burg13',?,'Michael／マイケル','2026-09-27T04:00:00Z','https://tjoy.jp','before')").run(legacyKey);
+      const result = await validateSourceMovieTitles(db, source, [row('C4739','Michael/マイケル')],new MovieIdentityBudget(),async ()=>'Michael/マイケル');
+      expect(result.dateErrors.size).toBe(0);
+      expect(result.showings).toHaveLength(1);
+      expect(sqlite.prepare("SELECT movie_key FROM showings WHERE id='legacy'").get()?.movie_key).toBe(legacyKey);
+    } finally {sqlite.close();}
+  }
+);
+
+it('reuses all verified variants for a targeted date without shrinking or renewing evidence', async () => {
+  const {db,sqlite}=testDatabase();
+  try {
+    const resolve=vi.fn(async ()=>'新しい映画');
+    const variants=[row('C9000','新しい映画'),row('C9000','【応援上映】新しい映画','28')];
+    await validateSourceMovieTitles(db,source,variants,new MovieIdentityBudget(),resolve);
+    const before=sqlite.prepare('SELECT observed_title,verified_at FROM source_movie_identity').get();
+    await validateSourceMovieTitles(db,source,[variants[0]],new MovieIdentityBudget(),resolve);
+    await validateSourceMovieTitles(db,source,[variants[1]],new MovieIdentityBudget(),resolve);
+    expect(resolve).toHaveBeenCalledTimes(1);
+    expect(sqlite.prepare('SELECT observed_title,verified_at FROM source_movie_identity').get()).toEqual(before);
+  } finally {sqlite.close();}
+});

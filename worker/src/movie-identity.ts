@@ -138,6 +138,11 @@ const comparable = (title: string) => {
   return (identity || clean).replace(/[\s/]/g, "").toLowerCase();
 };
 
+const containsObservedTitles = (cached: string, observed: string) => {
+  const known = new Set(cached.split("\n"));
+  return observed.split("\n").every(title => known.has(title));
+};
+
 /** Reject an affected day as a whole; partial replacements would erase good rows. */
 export async function validateSourceMovieTitles(
   db: D1Database,
@@ -245,7 +250,7 @@ export async function validateSourceMovieTitles(
       if (!evidence) problem = "missing_stable_movie_id";
       else if (
         cached?.verification === "official" &&
-        cached.observed_title === observed &&
+        containsObservedTitles(cached.observed_title, observed) &&
         Date.parse(now) - Date.parse(cached.verified_at) < CACHE_MS
       ) {
         title = cached.canonical_title;
@@ -303,8 +308,11 @@ export async function validateSourceMovieTitles(
   }
   // Detect key generation that would collapse meaningful qualifiers (part/year)
   // into an existing different title. Do not guess or rewrite that identity.
+  const firstDate = rows.map(row => todayInJst(new Date(row.startsAt))).sort()[0];
+  const comparisonStart = firstDate ? new Date(`${firstDate}T00:00:00+09:00`).toISOString() : now;
   const existing = await db
-    .prepare("SELECT DISTINCT source_id,movie_key,title FROM showings")
+    .prepare("SELECT DISTINCT source_id,movie_key,title FROM showings WHERE starts_at >= ?")
+    .bind(comparisonStart)
     .all<{ source_id: string; movie_key: string; title: string }>();
   const verified = await db
     .prepare(
@@ -335,14 +343,17 @@ export async function validateSourceMovieTitles(
   }
   const titlesByKey = new Map<string, Set<string>>();
   for (const row of existing.results) {
-    const titles = titlesByKey.get(row.movie_key) ?? new Set<string>();
+    // Historical rows may still store a cinema ID or format-specific key.
+    // User-facing movie identity is derived from the displayed title.
+    const existingKey = canonicalMovieKey(moviePreferenceKey(row.title));
+    const titles = titlesByKey.get(existingKey) ?? new Set<string>();
     titles.add(
       comparable(
         aliases.get(JSON.stringify([row.source_id, comparable(row.title)])) ??
           row.title,
       ),
     );
-    titlesByKey.set(row.movie_key, titles);
+    titlesByKey.set(existingKey, titles);
   }
   for (const candidate of candidates) {
     const key = moviePreferenceKey(candidate.title);
@@ -360,7 +371,7 @@ export async function validateSourceMovieTitles(
         (row) =>
           row.source_id === sourceId &&
           observedVariants.has(comparable(row.title)) &&
-          canonicalMovieKey(row.movie_key) !== newKey,
+          canonicalMovieKey(moviePreferenceKey(row.title)) !== newKey,
       )
     ) {
       // Already-published identities may have user preferences/bookings. A new
@@ -375,7 +386,7 @@ export async function validateSourceMovieTitles(
     const cached = identities.get(id);
     // A cache hit must not extend its own expiry forever.
     const verifiedAt =
-      cached?.observed_title === observed &&
+      cached && containsObservedTitles(cached.observed_title, observed) &&
       cached.verification === verification &&
       Date.parse(now) - Date.parse(cached.verified_at) < CACHE_MS
         ? cached.verified_at
@@ -392,7 +403,7 @@ export async function validateSourceMovieTitles(
         .bind(
           sourceId,
           id,
-          observed,
+          verifiedAt === cached?.verified_at ? cached.observed_title : observed,
           officialTitle,
           verification,
           evidence,
