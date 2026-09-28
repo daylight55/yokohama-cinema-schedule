@@ -31,7 +31,7 @@ export function parseEigalandSchedule(
   cinemaId: string,
   fallbackBookingUrl: string,
 ): NormalizedShowing[] {
-  if (!Array.isArray(input)) return [];
+  if (!Array.isArray(input)) throw new Error("Eigaland schedule response is invalid");
   const result: NormalizedShowing[] = [];
 
   for (const entry of input as EigalandMovie[]) {

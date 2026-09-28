@@ -1,3 +1,4 @@
+import { isEnglishMovieTitle } from "../../shared/movie-title-language";
 import { load } from "cheerio";
 import { movieDisplayTitle, moviePreferenceKey } from "../../shared/movie";
 
@@ -75,11 +76,7 @@ export function verifiedCandidate(
   )
     return null;
   const englishTitle = string(object(labels.en).value);
-  if (
-    !/[A-Za-z]/.test(englishTitle) ||
-    /[\u3040-\u30ff\u3400-\u9fff]/.test(englishTitle)
-  )
-    return null;
+  if (!isEnglishMovieTitle(englishTitle)) return null;
   const enwiki = string(object(sites.enwiki).title);
   if (
     !enwiki ||
@@ -348,10 +345,11 @@ export async function refreshMovieTitleResearch(
   }
   const pending = await db
     .prepare(
-      "SELECT title_key, japanese_title FROM movie_title_research WHERE status != 'verified' AND attempts < 5 AND next_attempt_at <= ? ORDER BY next_attempt_at, title_key LIMIT 5",
+      "SELECT title_key, japanese_title FROM movie_title_research WHERE status != 'verified' AND attempts < 5 AND next_attempt_at <= ? ORDER BY next_attempt_at, title_key",
     )
     .bind(now)
     .all<{ title_key: string; japanese_title: string }>();
+  const activeKeys = new Set(rows.results.map(row => moviePreferenceKey(row.title)));
   const model: ResearchModel = {
     decide: async (messages) => {
       const response = await ai.run(TITLE_RESEARCH_MODEL, {
@@ -359,11 +357,11 @@ export async function refreshMovieTitleResearch(
         temperature: 0,
         max_tokens: 300,
         response_format: { type: "json_object" },
-      });
+      }, { signal: AbortSignal.timeout(30_000) });
       return modelActionText(response);
     },
   };
-  for (const row of pending.results) {
+  for (const row of pending.results.filter(row => activeKeys.has(row.title_key)).slice(0, 5)) {
     // Atomic lease survives concurrent cron delivery; a crash still spends an attempt.
     const claimed = await db
       .prepare(

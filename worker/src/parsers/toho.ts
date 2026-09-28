@@ -48,7 +48,7 @@ export function parseTohoSchedule(
   bookingUrl: string,
 ): NormalizedShowing[] {
   const response = input as TohoScheduleResponse;
-  if (response.status !== "0" || !Array.isArray(response.data)) return [];
+  if (!response || response.status !== "0" || !Array.isArray(response.data)) throw new Error("TOHO schedule response is invalid");
 
   const result: NormalizedShowing[] = [];
   for (const day of response.data) {

@@ -1,3 +1,4 @@
+import { CollectionStatusPage } from "./CollectionStatusPage";
 import { WatchlistNote } from "./WatchlistNote";
 import { activeMetrics } from "./performanceMetrics";
 import { ProfileMenu } from "./MemberProfile";
@@ -347,7 +348,7 @@ export function App() {
   const selectedMovieListDate =
     view === "movies" && showAllMovieDates ? null : selectedDate;
   const historyScroll = useHistoryScroll(
-    hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie"].includes(view) ? selectedDate : null,
+    hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie", "collectionStatus"].includes(view) ? selectedDate : null,
       movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
     !loading && loadedScheduleKey === scheduleRequestKey && interactiveSearchQuery === normalizedSearchQuery,
   );
@@ -484,7 +485,8 @@ export function App() {
       const usesWeeklyDate =
         nextView === "schedule" ||
         nextView === "movies" ||
-        nextView === "movie";
+        nextView === "movie" ||
+        nextView === "collectionStatus";
       const nextShowAllMovieDates =
         nextView === "movies" && hashState.date === null;
       const nextScheduleDate =
@@ -2129,6 +2131,13 @@ export function App() {
               <PathIcon size={20} aria-hidden="true" />
               {localize("映画はしごガチャ")}
             </a>
+            <a href={hashForAppView("collectionStatus", { date: selectedDate })}
+              className={view === "collectionStatus" ? "active" : ""}
+              aria-current={view === "collectionStatus" ? "page" : undefined}
+              onClick={closeNavigation}>
+              <ClockIcon size={20} aria-hidden="true" />
+              {language === "en" ? "Schedule updates" : "更新状況"}
+            </a>
             <a
               href={hashForAppView("about")}
               className={view === "about" ? "active" : ""}
@@ -2568,6 +2577,8 @@ export function App() {
                 ) : null
               }
             />
+          ) : view === "collectionStatus" ? (
+            <CollectionStatusPage date={selectedDate} language={language} />
           ) : view === "notifications" ? (
             <NotificationsPage />
           ) : (view === "shared" || view === "groups") ? (
@@ -2627,20 +2638,11 @@ export function App() {
                 }
               />
 
-              {localize(
-                schedule?.lastUpdatedAt && !loading && (
-                  <p className="update-status">
-                    {localize(
-                      `更新：${updatedFormatter.format(new Date(schedule.lastUpdatedAt))}`,
-                    )}
-                    {localize(
-                      schedule.sourceHealth.total > 0 &&
-                        schedule.sourceHealth.healthy <
-                          schedule.sourceHealth.total &&
-                        ` / ${schedule.sourceHealth.total - schedule.sourceHealth.healthy}館は更新確認できず`,
-                    )}
-                  </p>
-                ),
+              {!loading && (view === "schedule" || view === "movies") && (
+                <a className="collection-status-link" href={hashForAppView("collectionStatus", { date: selectedDate })}>
+                  <ClockIcon size={18} aria-hidden="true" />
+                  {language === "en" ? "Check schedule updates" : "更新状況を見る"}
+                </a>
               )}
 
               {localize(loading && view === "schedule" && <LoadingTimeline />)}

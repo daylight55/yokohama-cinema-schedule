@@ -89,6 +89,7 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
 export function normalizeReturnHash(value: FormDataEntryValue | null): string {
   if (typeof value !== "string") return "";
   const normalized = value.toLowerCase();
+  if (/^#collection-status(?:\?date=\d{4}-\d{2}-\d{2})?$/.test(normalized)) return normalized;
   return [
     "#schedule",
     "#movies",

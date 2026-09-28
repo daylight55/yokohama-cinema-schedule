@@ -1,3 +1,4 @@
+import { listMovieTitles } from "../_lib/movie-titles";
 import type { AuthContextData, PagesEnv } from "../_lib/env";
 import { avatarUrl, profileName } from "../../shared/member-profile";
 import type {
@@ -63,13 +64,7 @@ export const onRequestGet: PagesFunction<
         avatar_version: string | null;
       }
     >();
-  const titles = summary
-    ? { results: [] }
-    : await db
-        .prepare(
-          "SELECT japanese_title japaneseTitle,english_title englishTitle FROM movie_title_research WHERE status='verified'",
-        )
-        .all<{ japaneseTitle: string; englishTitle: string | null }>();
+  const titles = summary ? [] : await listMovieTitles(db);
   const result: NotificationsResponse = {
     userId,
     unread: count?.unread ?? 0,
@@ -91,7 +86,7 @@ export const onRequestGet: PagesFunction<
         name: profileName(row.display_name, row.email),
         avatarUrl: avatarUrl(row.actorId, row.avatar_version),
       })),
-    titles: titles.results,
+    titles: titles.map(({japaneseTitle, englishTitle}) => ({japaneseTitle, englishTitle})),
   };
   return Response.json(result, { headers });
 };
