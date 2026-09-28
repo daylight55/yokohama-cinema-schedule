@@ -287,6 +287,8 @@ export interface MovieMarathonPlannerResponse {
 }
 
 export interface NormalizedShowing {
+  sourceMovieId?: string;
+  sourceTitle?: string;
   sourceId: string;
   cinemaId: string;
   movieKey: string;

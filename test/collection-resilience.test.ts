@@ -215,7 +215,7 @@ it("keeps budgets separate between collections", async () => {
   expect(quickAction).toHaveBeenCalledTimes(2);
 });
 
-const film = `<section class="section-container"><h2 class="js-title-film">テスト映画</h2><div class="schedule-box"><p class="schedule-time">18:10 ～ 20:20</p></div></section>`;
+const film = `<section class="section-container"><a href="/t-joy_yokohama/film_detail/C9999">detail</a><h2 class="js-title-film">テスト映画</h2><div class="schedule-box"><p class="schedule-time">18:10 ～ 20:20</p></div></section>`;
 const parse = (html: string) =>
   parseTjoySchedule(
     html,
@@ -270,6 +270,7 @@ it("preserves stored showings and search rows for a malformed date while refresh
       SCHEDULE_DAYS: "2",
       BROWSER: { quickAction } as unknown as BrowserRun,
     };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response('<body id="film-detail"><h1 class="carosuel-header">テスト映画</h1><button data-code="C9999"></button></body>')));
     const sources = new Set(["tjoy-yokohama"]);
     expect((await refreshBatch(env, 0, sources)).succeeded).toBe(1);
     const saved = sqlite
