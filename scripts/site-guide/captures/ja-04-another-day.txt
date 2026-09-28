@@ -1,0 +1,113 @@
+- link "上映スケジュールへ移動":
+  - /url: "#main"
+- banner:
+  - button "メニューを開く"
+  - link "今日の現在時刻の上映へ戻る":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "英語で表示": JP EN
+  - button "ダークモードに切り替える"
+- main:
+  - region "君の名は。":
+    - link "作品一覧に戻る":
+      - /url: "#movies"
+    - paragraph: 今後7日間の上映
+    - heading "君の名は。" [level=1]
+    - navigation "上映日へ移動":
+      - button "9月28日(月)"
+      - button "9月29日(火)"
+      - button "9月30日(水)"
+      - button "10月1日(木)"
+      - button "10月2日(金)"
+      - button "10月3日(土)"
+      - button "10月4日(日)"
+    - region "9月28日(月)":
+      - heading "9月28日(月)" [level=2]:
+        - time: 9月28日(月)
+      - list:
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 TOHOシネマズ 上大岡 公式サイト":
+            - /url: https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do
+            - heading "TOHOシネマズ 上大岡" [level=3]
+            - paragraph: シアター2 · 2D
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 イオンシネマみなとみらい 公式サイト":
+            - /url: https://www.aeoncinema.com/cinema/minatomirai/
+            - heading "イオンシネマみなとみらい" [level=3]
+            - paragraph: シアター3 · 2D
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 横浜ブルク13 公式サイト":
+            - /url: https://tjoy.jp/yokohama_burg13
+            - heading "横浜ブルク13" [level=3]
+            - paragraph: シアター1 · 2D
+    - region "9月29日(火)":
+      - heading "9月29日(火)" [level=2]:
+        - time: 9月29日(火)
+      - list:
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 TOHOシネマズ 上大岡 公式サイト":
+            - /url: https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do
+            - heading "TOHOシネマズ 上大岡" [level=3]
+            - paragraph: シアター2 · 2D
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 イオンシネマみなとみらい 公式サイト":
+            - /url: https://www.aeoncinema.com/cinema/minatomirai/
+            - heading "イオンシネマみなとみらい" [level=3]
+            - paragraph: シアター3 · 2D
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 横浜ブルク13 公式サイト":
+            - /url: https://tjoy.jp/yokohama_burg13
+            - heading "横浜ブルク13" [level=3]
+            - paragraph: シアター1 · 2D
+    - region "9月30日(水)":
+      - heading "9月30日(水)" [level=2]:
+        - time: 9月30日(水)
+      - list:
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 TOHOシネマズ 上大岡 公式サイト":
+            - /url: https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do
+            - heading "TOHOシネマズ 上大岡" [level=3]
+            - paragraph: シアター2 · 2D
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 イオンシネマみなとみらい 公式サイト":
+            - /url: https://www.aeoncinema.com/cinema/minatomirai/
+            - heading "イオンシネマみなとみらい" [level=3]
+            - paragraph: シアター3 · 2D
+        - listitem:
+          - time: 12:00
+          - text: 13:50
+          - link "12:00 横浜ブルク13 公式サイト":
+            - /url: https://tjoy.jp/yokohama_burg13
+            - heading "横浜ブルク13" [level=3]
+            - paragraph: シアター1 · 2D
+    - region "10月1日(木)":
+      - heading "10月1日(木)" [level=2]:
+        - time: 10月1日(木)
+      - paragraph: 上映予定なし
+    - region "10月2日(金)":
+      - heading "10月2日(金)" [level=2]:
+        - time: 10月2日(金)
+      - paragraph: 上映予定なし
+    - region "10月3日(土)":
+      - heading "10月3日(土)" [level=2]:
+        - time: 10月3日(土)
+      - paragraph: 上映予定なし
+    - region "10月4日(日)":
+      - heading "10月4日(日)" [level=2]:
+        - time: 10月4日(日)
+      - paragraph: 上映予定なし

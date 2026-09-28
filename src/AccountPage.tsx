@@ -11,8 +11,10 @@ import { PageHeader, PageShell } from "./PageLayout";
 
 export function AccountPage({
   profileSettings,
+  scheduleSettings,
 }: {
   profileSettings?: ReactNode;
+  scheduleSettings?: ReactNode;
 }) {
   const [account, setAccount] = useState<AccountResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -150,6 +152,7 @@ export function AccountPage({
       <PageShell className="account-page" label={localize("マイページ")}>
         <PageHeader eyebrow={localize("設定")} title={localize("マイページ")} />
 
+        {localize(scheduleSettings)}
         {localize(profileSettings)}
         <p className={error ? "account-message error" : "account-muted"}>
           {localize(error ?? "アカウント情報を読み込んでいます…")}
@@ -167,6 +170,7 @@ export function AccountPage({
         lead={localize(email ?? "管理者用セッション")}
       />
 
+      {localize(scheduleSettings)}
       {localize(profileSettings)}
 
       {localize(

@@ -1,0 +1,28 @@
+- link "Skip to showtimes":
+  - /url: "#main"
+- banner:
+  - button "Open menu"
+  - link "Go to current showtimes":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "Display in English" [checked]: JP EN
+  - button "Switch to dark mode"
+- main:
+  - region "Shared":
+    - paragraph: Movies together
+    - heading "Shared" [level=1]
+    - button "Reload"
+    - group "Shared information":
+      - button "Screenings"
+      - button "Watchlist" [pressed]
+    - text: Member
+    - combobox "Member":
+      - option "Everyone" [selected]
+      - option "はまむび (you)"
+      - option "そら"
+    - list:
+      - listitem:
+        - link "Your Name.":
+          - /url: "#movie?movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
+        - list "Who is interested":
+          - listitem: はまむび
+          - listitem: そら

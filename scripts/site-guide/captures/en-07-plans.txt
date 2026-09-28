@@ -1,0 +1,30 @@
+- link "Skip to showtimes":
+  - /url: "#main"
+- banner:
+  - button "Open menu"
+  - link "Go to current showtimes":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "Display in English" [checked]: JP EN
+  - button "Switch to dark mode"
+- main:
+  - region "My screenings":
+    - paragraph: Your cinema plans
+    - heading "My screenings" [level=1]
+    - text: 1 films
+    - heading "Mon 28 September" [level=2]
+    - list:
+      - listitem:
+        - article:
+          - time: 12:00
+          - text: 〜
+          - time: 13:50
+          - heading "Watchlisted film Your Name." [level=3]:
+            - img "Watchlisted film"
+            - text: Your Name.
+          - paragraph: Yokohama Burg 13
+          - paragraph: Screen 1 / 2D
+          - checkbox "Reserved"
+          - text: Reserved
+          - link "Official website":
+            - /url: https://tjoy.jp/yokohama_burg13
+          - button "Remove Your Name. from your plans": Remove from plans

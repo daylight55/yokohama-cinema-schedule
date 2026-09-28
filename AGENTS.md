@@ -20,3 +20,7 @@
 - UI変更後は `npm run ci:pr` を実行する。
 - ブラウザで少なくとも 320x700 と 390x844 を確認し、横方向オーバーフロー、見出しの折り返し、主要操作を検証する。
 - マージ後は Cloudflare Pages の本番URLで対象ハッシュを直接開き、表示とナビゲーションを確認する。
+
+## 説明動画
+
+- Aboutの説明動画の制作・更新には、リポジトリ内の [hamamubi-guide-video](.agents/skills/hamamubi-guide-video/SKILL.md) を使う。実画面の撮影、日英の音声分離、演出、合成、費用と品質の検証手順をまとめている。

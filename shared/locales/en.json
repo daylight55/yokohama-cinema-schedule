@@ -476,5 +476,9 @@
   "予約": "Book",
   "予約サイトへ": "Book on cinema website",
   "作品の上映スケジュール": "View film showtimes",
-  "「観に行く」を押すと、映画館と開始時刻を鑑賞予定としてまとめて確認できます。": "Tap Add to plans to save a screening’s cinema and start time to My screenings."
+  "「観に行く」を押すと、映画館と開始時刻を鑑賞予定としてまとめて確認できます。": "Tap Add to plans to save a screening’s cinema and start time to My screenings.",
+  "スケジュールに表示する映画館": "Cinemas in your showtimes",
+  "選んだ映画館の上映予定をまとめて表示します。変更は自動で保存されます。": "See showtimes from your selected cinemas together. Changes are saved automatically.",
+  "映画館の表示設定を変更するにはログインしてください。": "Sign in to choose which cinemas appear.",
+  "上映スケジュールを見る": "View showtimes"
 }

@@ -11,6 +11,16 @@
         "short": "使い方ガイド"
       },
       {
+        "title": "全映画館を、ひと目で！",
+        "caption": "上映スケジュールなら、\n全映画館の予定をまとめて見られるよ！",
+        "short": "上映スケジュール"
+      },
+      {
+        "title": "いつもの映画館に！",
+        "caption": "マイページで映画館を選んでね！\nスケジュールの表示を変えられるよ！",
+        "short": "表示する映画館"
+      },
+      {
         "title": "観たい！を探そう",
         "caption": "観たい映画の名前を入れてね！\n「検索」で見つかるよ！",
         "short": "上映を探す"
@@ -22,7 +32,7 @@
       },
       {
         "title": "チケットへGO！",
-        "caption": "「予約」で映画館のサイトへ！\nチケットはそこで買ってね！",
+        "caption": "上映を押すと映画館のサイトへ！\nチケットはそこで買ってね！",
         "short": "チケットの予約"
       },
       {
@@ -37,13 +47,18 @@
       },
       {
         "title": "みんな、何観る？",
-        "caption": "予定も「気になる」も、\nメンバーみんなに自動で伝わるよ！",
+        "caption": "予定も気になる映画も、\nグループで一緒にチェックできるよ！",
         "short": "メンバーと共有"
       },
       {
-        "title": "さあ、映画へ！",
-        "caption": "JP / ENで言葉を切り替えてね！\nさあ、映画を楽しもうよ！",
+        "title": "言葉を切り替えよう",
+        "caption": "JP / ENで言葉を切り替えてね！",
         "short": "日本語 / English"
+      },
+      {
+        "title": "さあ、映画へ！",
+        "caption": "さあ、映画を楽しもうよ！",
+        "short": "映画を楽しもう！"
       }
     ]
   },
@@ -55,8 +70,18 @@
     "scenes": [
       {
         "title": "Movie time!",
-        "caption": "I’m your Hama Movie! buddy.\nLet’s find a film together!",
+        "caption": "Hi! I’m your Hama Movie buddy.\nLet’s find a movie together!",
         "short": "A quick guide"
+      },
+      {
+        "title": "All cinemas.\nOne schedule!",
+        "caption": "See showtimes from all cinemas\ntogether in one schedule!",
+        "short": "Showtimes at a glance"
+      },
+      {
+        "title": "Pick your cinemas!",
+        "caption": "Choose your cinemas in My account\nto customize your showtimes!",
+        "short": "Your cinema settings"
       },
       {
         "title": "Find it. Fancy it.",
@@ -70,7 +95,7 @@
       },
       {
         "title": "Tickets? Let’s go!",
-        "caption": "Tap Book to visit the cinema’s site.\nGet your tickets there!",
+        "caption": "Tap a screening to visit the cinema’s site.\nGet your tickets there!",
         "short": "Book tickets"
       },
       {
@@ -85,13 +110,18 @@
       },
       {
         "title": "Who’s watching\nwhat?",
-        "caption": "Your plans and watchlist are shared\nwith all members automatically!",
+        "caption": "Check your group’s plans and watchlist,\nall in one place!",
         "short": "Shared with members"
       },
       {
-        "title": "Your language.\nYour movie!",
-        "caption": "Tap JP / EN to switch languages.\nLet’s go enjoy a movie!",
+        "title": "Your language!",
+        "caption": "Tap JP / EN to switch languages.",
         "short": "Japanese / English"
+      },
+      {
+        "title": "Let’s go to the movies!",
+        "caption": "Let’s go enjoy a movie!",
+        "short": "Enjoy the movie!"
       }
     ]
   }
