@@ -208,18 +208,13 @@ export type DateSwipeDirection = "previous" | "next";
 export function isDateSwipeBlockedByHorizontalScroll(
   target: EventTarget | null,
 ): boolean {
-  const closest = (
-    target as {
-      closest?: (
-        selector: string,
-      ) => { clientWidth: number; scrollWidth: number } | null;
-    } | null
-  )?.closest;
-  if (typeof closest !== "function") return false;
-
-  // A swipe on a cinema/time/date strip always belongs to that strip, even
-  // when it fits or has reached an edge. Never turn it into a full date reload.
-  return Boolean(closest.call(target, "[data-horizontal-scroll]"));
+  const element = target as { closest?: (selector: string) => { contains: (other: unknown) => boolean } | null } | null;
+  if (typeof element?.closest !== "function") return false;
+  const strip = element.closest("[data-horizontal-scroll]");
+  const card = element.closest("[data-date-swipe-card]");
+  // Cards can sit inside a cinema strip. Nested time/date/filter strips keep
+  // their own scrolling, even when they fit or have reached the edge.
+  return !!strip && !(card && strip.contains(card));
 }
 
 export function getDateSwipeDirection(
