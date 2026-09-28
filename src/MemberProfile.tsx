@@ -7,14 +7,16 @@ import {
   type ReactNode,
   type FormEvent,
 } from "react";
-import { CameraIcon, SignOutIcon, UserCircleIcon } from "@phosphor-icons/react";
+import { BellIcon, CameraIcon, SignOutIcon, UserCircleIcon } from "@phosphor-icons/react";
 import type { MemberProfile } from "../shared/member-profile";
 import {
-  AVATAR_MAX_BYTES,
   PROFILE_NAME_LIMIT,
   PROFILE_BIO_LIMIT,
 } from "../shared/member-profile";
 import { localize as t } from "./i18n";
+import { AvatarCropper } from "./AvatarCropper";
+import { useUnreadNotifications } from "./NotificationContext";
+import { hashForAppView } from "./lib";
 
 const ProfileContext = createContext<{
   profile: MemberProfile | null;
@@ -82,6 +84,7 @@ export function MemberAvatar({
   );
 }
 export function ProfileMenu() {
+  const unread = useUnreadNotifications();
   const { profile } = useContext(ProfileContext);
   const details = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -112,13 +115,14 @@ export function ProfileMenu() {
   return (
     <details className="profile-menu" ref={details}>
       <summary
-        aria-label={t("プロフィールメニュー")}
+        aria-label={`${t("プロフィールメニュー")}${unread ? ` · ${t("未読")} ${unread}` : ""}`}
         title={t("プロフィールメニュー")}
       >
         <MemberAvatar
           name={profile?.displayName ?? ""}
           url={profile?.avatarUrl}
         />
+        {unread > 0 && <span className="profile-unread-badge" aria-hidden="true">{unread}</span>}
       </summary>
       <nav className="profile-menu-panel" aria-label={t("アカウント")}>
         {profile && (
@@ -127,6 +131,11 @@ export function ProfileMenu() {
         <a href="#account" onClick={close}>
           <UserCircleIcon size={20} aria-hidden="true" />
           {t("マイページ")}
+        </a>
+        <a href="#notifications" onClick={close}>
+          <BellIcon size={20} aria-hidden="true" />
+          {t("新着情報")}
+          {unread > 0 && <span className="menu-unread-badge" aria-label={`${t("未読")} ${unread}`}>{unread}</span>}
         </a>
         <form method="post" action="/auth/logout">
           <button type="submit">
@@ -139,53 +148,6 @@ export function ProfileMenu() {
   );
 }
 
-/** Normalize locally to a small square JPEG, stripping source photo metadata. */
-async function resizeAvatar(file: File): Promise<string> {
-  if (
-    !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-    file.size > 5 * 1024 * 1024
-  )
-    throw new Error(t("5MB以下のJPEG・PNG・WebP画像を選んでください。"));
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    if (
-      !img.naturalWidth ||
-      !img.naturalHeight ||
-      img.naturalWidth * img.naturalHeight > 40_000_000
-    )
-      throw new Error();
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = 256;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error();
-    const side = Math.min(img.naturalWidth, img.naturalHeight);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, 256, 256);
-    ctx.drawImage(
-      img,
-      (img.naturalWidth - side) / 2,
-      (img.naturalHeight - side) / 2,
-      side,
-      side,
-      0,
-      0,
-      256,
-      256,
-    );
-    const data = canvas.toDataURL("image/jpeg", 0.85);
-    if (data.length * 0.75 > AVATAR_MAX_BYTES) throw new Error();
-    return data;
-  } catch {
-    throw new Error(
-      t("画像を読み込めませんでした。別の画像を選んでください。"),
-    );
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
 export function ProfileEditor() {
   const { profile, setProfile, loadError, reload } = useContext(ProfileContext);
   if (loadError)
@@ -214,38 +176,22 @@ function ProfileForm({
   const [bio, setBio] = useState(profile.bio);
   const [avatar, setAvatar] = useState<string | null | undefined>(undefined);
   const [busy, setBusy] = useState(false);
-  const [processing, setProcessing] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const processing = cropFile !== null;
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const generation = useRef(0);
-  useEffect(
-    () => () => {
-      generation.current++;
-    },
-    [],
-  );
   const modified =
     avatar !== undefined || name !== profile.displayName || bio !== profile.bio;
-  async function choose(file?: File) {
+  function choose(file?: File) {
     if (!file) return;
-    const task = ++generation.current;
-    setProcessing(true);
     setError("");
     setSaved(false);
-    try {
-      const result = await resizeAvatar(file);
-      if (task === generation.current) setAvatar(result);
-    } catch (e) {
-      if (task === generation.current)
-        setError(
-          e instanceof Error
-            ? e.message
-            : t("画像を読み込めませんでした。別の画像を選んでください。"),
-        );
-    } finally {
-      if (task === generation.current) setProcessing(false);
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setError(t("5MB以下のJPEG・PNG・WebP画像を選んでください。"));
+      return;
     }
+    setCropFile(file);
   }
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -278,6 +224,7 @@ function ProfileForm({
       className="member-profile-section"
       aria-labelledby="member-profile-title"
     >
+      {cropFile && <AvatarCropper file={cropFile} onCancel={() => setCropFile(null)} onApply={(data) => { setAvatar(data); setCropFile(null); setSaved(false); }} />}
       <h2 id="member-profile-title">{t("プロフィール")}</h2>
       <form
         className="member-profile-form"
@@ -374,4 +321,10 @@ function ProfileForm({
       </form>
     </section>
   );
+}
+
+export function MemberProfileLink({ userId, name, url }: { userId: string; name: string; url?: string | null }) {
+  return <a className="member-profile-link" href={hashForAppView("member", { user: userId })} aria-label={`${name} · ${t("マイページ")}`}>
+    <MemberAvatar name={name} url={url} /><span>{name}</span>
+  </a>;
 }

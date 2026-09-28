@@ -1,12 +1,11 @@
 import {
-  createContext,
   useContext,
   useEffect,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import { BellIcon } from "@phosphor-icons/react";
+import { NotificationContext } from "./NotificationContext";
 import type {
   NotificationsResponse,
   GroupActivity,
@@ -23,11 +22,6 @@ import { hashForAppView } from "./lib";
 import { notificationPollDelay } from "../shared/notifications";
 import { supportsBrowserNotifications } from "./notification-support";
 
-const NotificationContext = createContext<{
-  data: NotificationsResponse | null;
-  error: boolean;
-  refresh: () => void;
-}>({ data: null, error: false, refresh: () => {} });
 const enabledKey = (id: string) => `hama-notifications:${id}`;
 function stored(key: string) {
   try {
@@ -164,22 +158,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </NotificationContext>
-  );
-}
-export function NotificationBell() {
-  const { data } = useContext(NotificationContext);
-  if (!data) return null;
-  return (
-    <a
-      className="icon-button notification-bell"
-      href={hashForAppView("notifications")}
-      aria-label={`${t("新着情報")}${data.unread ? ` · ${t("未読")} ${data.unread}` : ""}`}
-    >
-      <BellIcon size={20} aria-hidden="true" />
-      {data.unread > 0 && (
-        <span className="notification-dot" aria-hidden="true" />
-      )}
-    </a>
   );
 }
 function BrowserNotificationSetting({ userId }: { userId: string }) {
