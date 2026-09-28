@@ -27,6 +27,15 @@ STYLE = (
     'Light, clear, higher feminine register, sparkling excitement and cute gently bouncy endings. '
     'Affectionate and innocent, enthusiastic but easy to listen to.'
 )
+NAME_PRONUNCIATION = (
+    '\n日本語の発音指示：「ハマムビ」は、このマスコットだけの固有名詞です。'
+    '読みは「は・ま・む・び」の4モーラ。'
+    '名前全体を一語として自然につなげ、「はま」と「むび」に分割したり、「びくん」を一語のように読んだりしないでください。'
+    '「くん」は名前に続く敬称です。'
+    '「ぼく」のあとだけ短く区切り、「ハマムビくん」は途中に間を置かずに自己紹介してください。'
+    'かわいい声の雰囲気は保ち、名前の部分を歌ったり、大げさな抑揚にしたりしないでください。'
+    '東京式アクセントの平板型を目安に、「は」は少し低く、「ま・む・び・く・ん」はほぼ同じ高さでなめらかに続けます。'
+)
 MAX_RETRIES = 2
 MAX_RETRY_WAIT = 120
 
@@ -41,6 +50,14 @@ def request_body(text, voice, style):
         'response_format': {'type': 'audio', 'mime_type': 'audio/wav'},
         'generation_config': {'speech_config': [{'voice': voice}]},
     }
+
+
+def scene_request(scene, language, voice, style):
+    text = scene['caption'].replace('\n', ' ')
+    if language == 'ja' and 'はまむび' in text:
+        text = text.replace('はまむび', 'ハマムビ')
+        style += NAME_PRONUNCIATION
+    return request_body(text, voice, style)
 
 
 def wav_duration(data):
@@ -141,7 +158,7 @@ def main():
     copies = json.loads((ROOT / 'shared/site-guide.json').read_text())
     for lang in (copies if args.lang == 'all' else [args.lang]):
         for index, scene in enumerate(copies[lang]['scenes']):
-            body = request_body(scene['caption'].replace('\n', ' '), args.voice, args.style)
+            body = scene_request(scene, lang, args.voice, args.style)
             fingerprint = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
             target = args.output_dir / f'{lang}-{index:02d}.wav'
             metadata = target.with_suffix('.json')
