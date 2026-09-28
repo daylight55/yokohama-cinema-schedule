@@ -2560,6 +2560,82 @@ export function App() {
             <AdminUsersPage />
           ) : view === "account" ? (
             <AccountPage
+              scheduleSettings={
+                <section
+                  className="account-section account-cinema-settings"
+                  aria-labelledby="schedule-cinemas-heading"
+                >
+                  <h2 id="schedule-cinemas-heading">
+                    {localize("スケジュールに表示する映画館")}
+                  </h2>
+                  <p className="account-muted">
+                    {localize(
+                      "選んだ映画館の上映予定をまとめて表示します。変更は自動で保存されます。",
+                    )}
+                  </p>
+                  {loading ? (
+                    <p role="status">{localize("読み込み中…")}</p>
+                  ) : error ? (
+                    <p role="alert" className="account-message error">
+                      {localize(error)}
+                    </p>
+                  ) : (
+                    <>
+                      {!schedule?.cinemaTravelPreferencesEnabled && (
+                        <p>
+                          {localize(
+                            "映画館の表示設定を変更するにはログインしてください。",
+                          )}
+                        </p>
+                      )}
+                      <div className="account-cinema-list">
+                        {(schedule?.cinemas ?? []).map((cinema) => (
+                          <label
+                            key={cinema.id}
+                            className="cinema-schedule-toggle"
+                          >
+                            <span>
+                              <strong>{localize(cinema.name)}</strong>
+                            </span>
+                            <input
+                              type="checkbox"
+                              role="switch"
+                              checked={
+                                cinemaScheduleVisibility.get(cinema.id) ?? true
+                              }
+                              disabled={
+                                savingCinemaIds.has(cinema.id) ||
+                                !schedule?.cinemaTravelPreferencesEnabled
+                              }
+                              onChange={(event) =>
+                                void saveCinemaScheduleVisibility(
+                                  cinema.id,
+                                  event.currentTarget.checked,
+                                )
+                              }
+                            />
+                          </label>
+                        ))}
+                      </div>
+                      <p role="status" className="account-muted">
+                        {savingCinemaIds.size > 0 ? localize("保存中…") : ""}
+                      </p>
+                      {cinemaPreferenceError && (
+                        <p role="alert" className="account-message error">
+                          {localize(cinemaPreferenceError)}
+                        </p>
+                      )}
+                      <a
+                        href={hashForAppView("schedule", {
+                          date: selectedDate,
+                        })}
+                      >
+                        {localize("上映スケジュールを見る")}
+                      </a>
+                    </>
+                  )}
+                </section>
+              }
               profileSettings={
                 !loading && !error ? (
                   <ProfilePanel

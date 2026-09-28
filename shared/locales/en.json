@@ -564,5 +564,9 @@
   "ひとことを更新したよ": "updated their note",
   "気になっているよ": "wants to see",
   "以前の新着を見る": "Older updates",
-  "予約済みにする": "Mark as booked"
+  "予約済みにする": "Mark as booked",
+  "スケジュールに表示する映画館": "Cinemas in your showtimes",
+  "選んだ映画館の上映予定をまとめて表示します。変更は自動で保存されます。": "See showtimes from your selected cinemas together. Changes are saved automatically.",
+  "映画館の表示設定を変更するにはログインしてください。": "Sign in to choose which cinemas appear.",
+  "上映スケジュールを見る": "View showtimes"
 }

@@ -4125,3 +4125,24 @@ html[lang="en"] .brand-wordmark {
 .collection-page a, .collection-status-link { color: var(--text); text-underline-offset: 4px; }
 .collection-page .collection-dates a[aria-current] { color: var(--accent-ink); }
 .collection-cinema.is-error .collection-cinema-heading > svg { color: var(--danger); }
+
+.account-cinema-settings {
+  min-width: 0;
+}
+.account-cinema-settings h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.account-cinema-settings > p {
+  margin-block: 10px;
+}
+.account-cinema-list .cinema-schedule-toggle + .cinema-schedule-toggle {
+  border-top: 1px solid var(--line);
+}
+.account-cinema-settings > a {
+  color: var(--text);
+  font-weight: 700;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
