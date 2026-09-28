@@ -22,7 +22,7 @@
       },
       {
         "title": "チケットへGO！",
-        "caption": "「予約」で映画館のサイトへ！\nチケットはそこで買ってね！",
+        "caption": "上映を押すと映画館のサイトへ！\nチケットはそこで買ってね！",
         "short": "チケットの予約"
       },
       {
@@ -37,7 +37,7 @@
       },
       {
         "title": "みんな、何観る？",
-        "caption": "予定も「気になる」も、\nメンバーみんなに自動で伝わるよ！",
+        "caption": "予定も気になる映画も、\nグループで一緒にチェックできるよ！",
         "short": "メンバーと共有"
       },
       {
@@ -70,7 +70,7 @@
       },
       {
         "title": "Tickets? Let’s go!",
-        "caption": "Tap Book to visit the cinema’s site.\nGet your tickets there!",
+        "caption": "Tap a screening to visit the cinema’s site.\nGet your tickets there!",
         "short": "Book tickets"
       },
       {
@@ -85,7 +85,7 @@
       },
       {
         "title": "Who’s watching\nwhat?",
-        "caption": "Your plans and watchlist are shared\nwith all members automatically!",
+        "caption": "Check your group’s plans and watchlist,\nall in one place!",
         "short": "Shared with members"
       },
       {

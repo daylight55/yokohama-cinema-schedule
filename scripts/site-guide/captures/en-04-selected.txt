@@ -1,0 +1,64 @@
+- link "Skip to showtimes":
+  - /url: "#main"
+- banner:
+  - button "Open menu"
+  - link "Go to current showtimes":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "Display in English" [checked]: JP EN
+  - button "Switch to dark mode"
+  - link "Updates":
+    - /url: "#notifications"
+  - group
+- main:
+  - navigation "Screening dates":
+    - link "All 7 days":
+      - /url: "#movies?q=Your+Name."
+    - link "Today Mon":
+      - /url: "#movies?date=2026-09-28&q=Your+Name."
+    - link "29 Sept Tue":
+      - /url: "#movies?date=2026-09-29&q=Your+Name."
+    - link "30 Sept Wed":
+      - /url: "#movies?date=2026-09-30&q=Your+Name."
+    - link "1 Oct Thu":
+      - /url: "#movies?date=2026-10-01&q=Your+Name."
+    - link "2 Oct Fri":
+      - /url: "#movies?date=2026-10-02&q=Your+Name."
+    - link "3 Oct Sat":
+      - /url: "#movies?date=2026-10-03&q=Your+Name."
+    - link "4 Oct Sun":
+      - /url: "#movies?date=2026-10-04&q=Your+Name."
+  - search:
+    - text: Film or cinema
+    - searchbox "Film or cinema": Your Name.
+    - button "Clear search"
+    - button "Search"
+    - status: “Your Name.”
+  - region "Filter screenings":
+    - group "Area":
+      - button "All" [pressed]
+      - button "Yokohama Station"
+      - button "Sakuragicho / Minato Mirai"
+      - button "Kannai / Isezakicho"
+      - button "Tobe"
+      - button "Kamiooka"
+  - paragraph: Next 7 days
+  - heading "Now showing" [level=1]
+  - text: 1 film
+  - link "Check schedule updates":
+    - /url: "#collection-status?date=2026-09-28"
+  - list:
+    - listitem:
+      - link "Your Name.":
+        - /url: "#movie?movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&q=Your+Name."
+      - strong:
+        - link "Your Name.":
+          - /url: "#movie?movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&q=Your+Name."
+      - link "Eiga.com":
+        - /url: https://eiga.com/search/?t=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
+      - link "Filmarks":
+        - /url: https://filmarks.com/search/movies?q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
+      - paragraph: 今日・Tue 29/09・Wed 30/09
+      - 'button "Remove from watchlist: Your Name." [pressed]'
+      - group "Viewing status of Your Name.":
+        - button "Watched"
+        - button "Not interested"

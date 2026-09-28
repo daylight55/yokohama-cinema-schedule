@@ -1,0 +1,608 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 700
+  },
+  "sourceRevision": "518c606",
+  "data": "Demonstration data in the real app; no personal accounts or external writes",
+  "languages": {
+    "ja": [
+      {
+        "name": "intro",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-00-overview.png",
+            "focus": null,
+            "zoom": 1
+          },
+          {
+            "at": 2,
+            "image": "ja-00-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 141,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.5
+          },
+          {
+            "at": 4.5,
+            "image": "ja-00-films.png",
+            "focus": {
+              "x": 0,
+              "y": 126,
+              "width": 390,
+              "height": 63
+            },
+            "zoom": 1.4
+          }
+        ]
+      },
+      {
+        "name": "search",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-01-before.png",
+            "focus": {
+              "x": 0,
+              "y": 126,
+              "width": 390,
+              "height": 63
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 1.8,
+            "image": "ja-01-typed.png",
+            "focus": {
+              "x": 308,
+              "y": 134,
+              "width": 68,
+              "height": 46
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 3.8,
+            "image": "ja-01-result.png",
+            "focus": {
+              "x": 14,
+              "y": 442.75,
+              "width": 362,
+              "height": 135.140625
+            },
+            "zoom": 1.35
+          }
+        ]
+      },
+      {
+        "name": "film",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-02-title.png",
+            "focus": {
+              "x": 139,
+              "y": 453.75,
+              "width": 172,
+              "height": 20.140625
+            },
+            "zoom": 1.7
+          },
+          {
+            "at": 2.6,
+            "image": "ja-02-detail.png",
+            "focus": {
+              "x": 14,
+              "y": 296.21875,
+              "width": 362,
+              "height": 369.5625
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 5,
+            "image": "ja-02-another-day.png",
+            "focus": {
+              "x": 14,
+              "y": 247.78125,
+              "width": 362,
+              "height": 369.5625
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "booking",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-03-link.png",
+            "focus": {
+              "x": 92,
+              "y": 319.78125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.6
+          },
+          {
+            "at": 2.3,
+            "image": "ja-03-focused.png",
+            "focus": {
+              "x": 92,
+              "y": 319.78125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.7
+          }
+        ],
+        "externalDestination": "https://tjoy.jp/yokohama_burg13"
+      },
+      {
+        "name": "watchlist",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-04-star.png",
+            "focus": {
+              "x": 323,
+              "y": 451.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2.3,
+            "image": "ja-04-saved.png",
+            "focus": {
+              "x": 29,
+              "y": 318,
+              "width": 332,
+              "height": 160
+            },
+            "zoom": 1.5
+          },
+          {
+            "at": 5,
+            "image": "ja-04-selected.png",
+            "focus": {
+              "x": 323,
+              "y": 451.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          }
+        ]
+      },
+      {
+        "name": "plan",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-05-add.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2,
+            "image": "ja-05-added.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 4,
+            "image": "ja-05-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 245,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 5.4,
+            "image": "ja-05-plans.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 490
+            },
+            "zoom": 1.1
+          }
+        ]
+      },
+      {
+        "name": "sharing",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-06-plans.png",
+            "focus": {
+              "x": 14,
+              "y": 249.75,
+              "width": 362,
+              "height": 49
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 2.4,
+            "image": "ja-06-watchlist.png",
+            "focus": {
+              "x": 14,
+              "y": 390.75,
+              "width": 362,
+              "height": 355
+            },
+            "zoom": 1.3
+          }
+        ]
+      },
+      {
+        "name": "language",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-07-before.png",
+            "focus": {
+              "x": 142,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.9
+          },
+          {
+            "at": 2.7,
+            "image": "ja-07-translated.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 728.75
+            },
+            "zoom": 1.2
+          },
+          {
+            "at": 5,
+            "image": "ja-07-return.png",
+            "focus": {
+              "x": 142,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.5
+          }
+        ]
+      }
+    ],
+    "en": [
+      {
+        "name": "intro",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-00-overview.png",
+            "focus": null,
+            "zoom": 1
+          },
+          {
+            "at": 2,
+            "image": "en-00-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 141,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.5
+          },
+          {
+            "at": 4.5,
+            "image": "en-00-films.png",
+            "focus": {
+              "x": 0,
+              "y": 126,
+              "width": 390,
+              "height": 63
+            },
+            "zoom": 1.4
+          }
+        ]
+      },
+      {
+        "name": "search",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-01-before.png",
+            "focus": {
+              "x": 0,
+              "y": 126,
+              "width": 390,
+              "height": 63
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 1.8,
+            "image": "en-01-typed.png",
+            "focus": {
+              "x": 284.5,
+              "y": 134,
+              "width": 91.5,
+              "height": 46
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 3.8,
+            "image": "en-01-result.png",
+            "focus": {
+              "x": 14,
+              "y": 435.75,
+              "width": 362,
+              "height": 135.140625
+            },
+            "zoom": 1.35
+          }
+        ]
+      },
+      {
+        "name": "film",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-02-title.png",
+            "focus": {
+              "x": 139,
+              "y": 446.75,
+              "width": 172,
+              "height": 20.140625
+            },
+            "zoom": 1.7
+          },
+          {
+            "at": 2.6,
+            "image": "en-02-detail.png",
+            "focus": {
+              "x": 14,
+              "y": 345.71875,
+              "width": 362,
+              "height": 363.5625
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 5,
+            "image": "en-02-another-day.png",
+            "focus": {
+              "x": 14,
+              "y": 248.28125,
+              "width": 362,
+              "height": 363.5625
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "booking",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-03-link.png",
+            "focus": {
+              "x": 92,
+              "y": 314.28125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.6
+          },
+          {
+            "at": 2.3,
+            "image": "en-03-focused.png",
+            "focus": {
+              "x": 92,
+              "y": 314.28125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.7
+          }
+        ],
+        "externalDestination": "https://tjoy.jp/yokohama_burg13"
+      },
+      {
+        "name": "watchlist",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-04-star.png",
+            "focus": {
+              "x": 323,
+              "y": 444.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2.3,
+            "image": "en-04-saved.png",
+            "focus": {
+              "x": 29,
+              "y": 322,
+              "width": 332,
+              "height": 160
+            },
+            "zoom": 1.5
+          },
+          {
+            "at": 5,
+            "image": "en-04-selected.png",
+            "focus": {
+              "x": 323,
+              "y": 444.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          }
+        ]
+      },
+      {
+        "name": "plan",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-05-add.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2,
+            "image": "en-05-added.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 4,
+            "image": "en-05-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 245,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 5.4,
+            "image": "en-05-plans.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 490
+            },
+            "zoom": 1.1
+          }
+        ]
+      },
+      {
+        "name": "sharing",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-06-plans.png",
+            "focus": {
+              "x": 14,
+              "y": 241.75,
+              "width": 362,
+              "height": 49
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 2.4,
+            "image": "en-06-watchlist.png",
+            "focus": {
+              "x": 14,
+              "y": 382.75,
+              "width": 362,
+              "height": 337
+            },
+            "zoom": 1.3
+          }
+        ]
+      },
+      {
+        "name": "language",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-07-before.png",
+            "focus": {
+              "x": 142,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.9
+          },
+          {
+            "at": 2.7,
+            "image": "en-07-translated.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 724.75
+            },
+            "zoom": 1.2
+          },
+          {
+            "at": 5,
+            "image": "en-07-return.png",
+            "focus": {
+              "x": 142,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.5
+          }
+        ]
+      }
+    ]
+  }
+}
