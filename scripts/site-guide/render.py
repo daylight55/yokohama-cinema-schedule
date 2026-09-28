@@ -265,12 +265,14 @@ def scene(lang, index, t, manifest):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--lang',choices=['ja','en','all'],default='all')
     parser.add_argument('--stills',action='store_true')
     parser.add_argument('--narration-dir',type=Path)
     parser.add_argument('--output-dir',type=Path,default=OUT)
     args=parser.parse_args()
+    copies=COPY if args.lang=='all' else {args.lang:COPY[args.lang]}
     manifest=json.loads((CAPTURES/'manifest.json').read_text())
-    for lang,copy in COPY.items():
+    for lang,copy in copies.items():
         if len(copy['scenes']) != len(manifest['languages'][lang]):
             raise ValueError(f'Copy/capture scene count mismatch: {lang}')
         for i,spec in enumerate(manifest['languages'][lang]):
@@ -287,7 +289,7 @@ def main():
         raise ValueError('Language timelines must have the same duration.')
     music=staging/'original-pop.wav'
     if not args.stills: compose(music,duration)
-    for lang,copy in COPY.items():
+    for lang,copy in copies.items():
         scene(lang,0,2.05,manifest).save(args.output_dir/f'how-to-{lang}.webp',quality=88)
         if args.stills:
             for i in range(len(copy['scenes'])):

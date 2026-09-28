@@ -1,0 +1,4 @@
+interface:
+  display_name: "はまむび！説明動画"
+  short_description: "実画面の撮影から日英ナレーション・動画合成・費用確認まで"
+  default_prompt: "$hamamubi-guide-video を使って、実際の画面操作と自然なマスコット演出による日英の説明動画を作成・更新してください。"

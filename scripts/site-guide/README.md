@@ -1,5 +1,8 @@
 # About の使い方動画
 
+制作・更新の判断と一連の手順は、リポジトリskill
+[`hamamubi-guide-video`](../../.agents/skills/hamamubi-guide-video/SKILL.md) にまとめています。
+
 現行アプリをPlaywrightで操作して撮影した実画面に、ズーム、緑のフォーカス枠、タップの波紋、
 短いテキスト、Gemini TTSの声とオリジナルBGMを重ねる日英の操作ガイドです。
 UIを図形で描き直しません。操作前後の実際の表示を使い、検索・作品詳細・公式サイトへのリンク・
@@ -59,6 +62,10 @@ GUIDE_URL=http://127.0.0.1:5194 GUIDE_SOURCE_REVISION=518c606 node scripts/site-
 `POST https://generativelanguage.googleapis.com/v1beta/interactions` を呼びます。
 モデルは `gemini-3.8-flash-tts`、認証は `x-goog-api-key` ヘッダーです。
 本文と `speech_metadata.style` を分離し、返されたWAVをヘッダーを追加せず保存します。
+`generation_config.speech_config[].language` は日本語 `ja-JP`、英語 `en-US` を明示します。
+話し方も言語ごとに分け、英語には `boku` や日本語のアクセント指示を入れません。
+英語の本文・styleに日本語文字が混ざるリクエストは送信前にエラーにします。
+英語の冒頭は `Hi! I’m your Hama Movie buddy.` とし、ブランド名の途中で切らず自然な英語の抑揚にします。
 呼び出しスクリプトはPython標準ライブラリだけで動作します。
 日本語の「はまむび」は音声入力だけ「ハマムビ」に置き換え、一つの固有名詞・平板型の
 発音指示を追加します。動画の字幕と画面上のひらがな表記は維持します。
@@ -69,7 +76,7 @@ APIキーはローカル環境変数 `GEMINI_API_KEY` に設定します。コ�
 
 ```sh
 python3 scripts/site-guide/narration.py --lang all --dry-run
-python3 scripts/site-guide/narration.py --lang all --voice Leda
+python3 scripts/site-guide/narration.py --lang en --scene 0 --output-dir .wrangler/site-guide-narration-en-review
 ```
 
 既定では7秒間隔です。HTTP 429では `Retry-After`（秒数・HTTP日時）と
@@ -77,27 +84,31 @@ python3 scripts/site-guide/narration.py --lang all --voice Leda
 指定がなければ10秒・20秒に最大1秒のゆらぎを加えます。1場面あたり最大2回まで再試行し、
 120秒を超える待機指定では早く再試行せず停止します。エラー本文や認証ヘッダーは記録しません。
 
-`--request-interval`（0〜60秒）、`--lang`（ja/en/all）、`--voice`、`--style`、`--output-dir` を指定できます。
-本文・声・話し方が同じ完了済み音声は再利用します。既定保存先 `.wrangler/` はGit管理外です。
+`--request-interval`（0〜60秒）、`--lang`（ja/en/all）、`--scene`（0始まり、複数指定可）、`--voice`、`--style`、`--output-dir` を指定できます。
+本文・声・言語・話し方が同じ完了済み音声は再利用します。既定保存先 `.wrangler/` はGit管理外です。
+新規生成時はリクエスト本文を `.request.json`、音声の秒数と言語・APIのusageを `.usage.json` に保存します。
+費用は生成したリクエストのusageと当日の公式単価から概算し、キャッシュ分を二重計上しません。
 今回の動画では既存音声を再利用し、予約・共有の台本を実画面に合わせて再生成しました。
 操作説明は1場面8秒で、以前の短い動画用の倍速処理を外し、元の自然な読み上げに戻しています。
 マスコットの専用シーン追加時にはAPIを呼ばず、既存の言語切り替え・締めのWAVを文間の無音で分割しました。
 日本語は3.10秒、英語は4.15秒で分割し、`.wrangler/site-guide-narration-mascot/` に保存しています。
-冒頭を含め、声そのものの高さ・速さ・発音は変更していません。
+日本語の選択済み音声は維持しています。英語版はAPI言語分離の修正後、全9場面を英語専用の
+styleで再生成し、日本語WAVと合わせて `.wrangler/site-guide-narration-localized/` に保存しています。
+これらのローカル音声はGit管理外です。新しいcheckoutでは元の音声を引き継ぐか、必要な範囲だけ再生成してください。
 
 ## 動画の再生成
 
 Python 3、Pillow、NumPy、ffmpeg（libx264 / AAC）を用意します。
 
 ```sh
-python3 scripts/site-guide/render.py --narration-dir .wrangler/site-guide-narration-mascot
+python3 scripts/site-guide/render.py --narration-dir .wrangler/site-guide-narration-localized
 ```
 
 macOSのヒラギノ角ゴシックを使用します。他の環境では `GUIDE_FONT` と `GUIDE_FONT_BOLD` に
 日本語フォントを指定してください。マスコットのPNGは同梱済みです。
 ブランドSVGを更新した場合は `npm ci` 後に `node scripts/site-guide/rasterize-mascot.mjs` で再生成します
 （npmの依存に含まれるsharpを使用）。元のアイコンの形・背景・色はそのまま保持します。`--stills` では確認用PNGとポスターだけを生成します。
-`--output-dir` で公開先以外に出力できます。`--narration-dir` なしではBGMのみです。
+`--output-dir` で公開先以外に出力できます。`--lang en` / `--lang ja` で指定言語だけを書き出せます。`--narration-dir` なしではBGMのみです。
 
 出力は900×1200、24fps、64秒、H.264/yuv420p、48kHzステレオAAC、faststart付きです。
 場面の種類と長さは `captures/manifest.json` が管理します。ナレーション開始は各場面の0.4秒後です。
