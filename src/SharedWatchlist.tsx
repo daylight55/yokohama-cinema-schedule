@@ -7,7 +7,7 @@ import {
 import { moviePreferenceKey, safeImageUrl } from "../shared/movie";
 import { hashForAppView } from "./lib";
 import { localize as t, movieTitle } from "./i18n";
-import { MemberAvatar } from "./MemberProfile";
+import { MemberProfileLink } from "./MemberProfile";
 import { WatchlistNote } from "./WatchlistNote";
 
 export function SharedWatchlist({
@@ -77,11 +77,10 @@ export function SharedWatchlist({
                 className={m.status === "watched" ? "member-watched" : ""}
               >
                 <div className="shared-interest-person">
-                  <MemberAvatar
+                  <MemberProfileLink userId={m.userId}
                     name={members.get(m.userId)?.name ?? ""}
                     url={members.get(m.userId)?.avatarUrl}
                   />
-                  <span>{members.get(m.userId)?.name}</span>
                   {m.status === "watched" && (
                     <span className="watched-label">{t("鑑賞済み")}</span>
                   )}

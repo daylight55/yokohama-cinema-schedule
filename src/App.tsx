@@ -1,6 +1,7 @@
 import { CollectionStatusPage } from "./CollectionStatusPage";
 import { WatchlistNote } from "./WatchlistNote";
 import { activeMetrics } from "./performanceMetrics";
+import { MemberPage } from "./MemberPage";
 import { ProfileMenu } from "./MemberProfile";
 import { UsersThreeIcon } from "@phosphor-icons/react";
 import { movieTitle, screeningInfo } from "./i18n";
@@ -115,7 +116,7 @@ import { AdminUsersPage } from "./AdminUsersPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
-import { NotificationBell, NotificationsPage } from "./Notifications";
+import { NotificationsPage } from "./Notifications";
 import { SharedPage } from "./SharedPage";
 import { ViewingPlansPage } from "./ViewingPlansPage";
 
@@ -268,6 +269,7 @@ export function App() {
       : null,
   );
   const [selectedArea, setSelectedArea] = useState<CinemaArea | "all">("all");
+  const [selectedMemberId, setSelectedMemberId] = useState(initialHashState.user ?? "");
   const [selectedShowingId, setSelectedShowingId] = useState(initialHashState.showing ?? null);
   const lastShowingFocusRef = useRef<string | null>(null);
   const [loadedScheduleKey, setLoadedScheduleKey] = useState("");
@@ -349,7 +351,7 @@ export function App() {
     view === "movies" && showAllMovieDates ? null : selectedDate;
   const historyScroll = useHistoryScroll(
     hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie", "collectionStatus"].includes(view) ? selectedDate : null,
-      movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
+      user: selectedMemberId, movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
     !loading && loadedScheduleKey === scheduleRequestKey && interactiveSearchQuery === normalizedSearchQuery,
   );
 
@@ -512,11 +514,13 @@ export function App() {
         movie: nextMovieKey,
         query: usesWeeklyDate ? hashState.query : null,
         showing: nextView === "schedule" ? hashState.showing : null,
+        user: nextView === "member" ? hashState.user : null,
       });
       if (window.location.hash !== canonicalHash) {
         window.history.replaceState(window.history.state, "", canonicalHash);
       }
       setView(nextView);
+      setSelectedMemberId(nextView === "member" ? hashState.user ?? "" : "");
       setSelectedDate(nextScheduleDate);
       setShowAllMovieDates(nextShowAllMovieDates);
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
@@ -2041,7 +2045,6 @@ export function App() {
                 ),
               )}
             </button>
-            <NotificationBell />
             <ProfileMenu />
           </div>
         </div>
@@ -2558,6 +2561,8 @@ export function App() {
             <MoviePage movieKey={selectedMovieKey} today={today} />
           ) : view === "adminUsers" ? (
             <AdminUsersPage />
+          ) : view === "member" ? (
+            <MemberPage key={selectedMemberId} userId={selectedMemberId} />
           ) : view === "account" ? (
             <AccountPage
               scheduleSettings={
