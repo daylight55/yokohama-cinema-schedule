@@ -3,21 +3,23 @@ export const DATE = '2026-09-28';
 export const TITLE = '君の名は。';
 export const TITLE_EN = 'Your Name.';
 export const key = TITLE;
-export async function installFixture(page, language = 'ja') {
+export async function installFixture(page, language = 'ja', options = {}) {
   let lang = language;
   let preferences = [];
   let plans = [];
+  let cinemaPreferences = [];
   const cinemas = [
     {id:'burg',name:'横浜ブルク13',shortName:'ブルク13',area:'minatomirai',areaLabel:'桜木町・みなとみらい',sourceUrl:'https://tjoy.jp/yokohama_burg13'},
-    {id:'toho',name:'TOHOシネマズ ららぽーと横浜',shortName:'TOHO横浜',area:'yokohama',areaLabel:'横浜駅',sourceUrl:'https://hlo.tohotheater.jp/net/schedule/036/TNPI2000J01.do'},
+    {id:'toho',name:'TOHOシネマズ 上大岡',shortName:'TOHO上大岡',area:'kamiooka',areaLabel:'上大岡',sourceUrl:'https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do'},
+    {id:'aeon',name:'イオンシネマみなとみらい',shortName:'イオンシネマ',area:'minatomirai',areaLabel:'桜木町・みなとみらい',sourceUrl:'https://www.aeoncinema.com/cinema/minatomirai/'},
   ].map(c=>({...c,address:'横浜市',latitude:35.45,longitude:139.63,activeUntil:null,approval:'private_only'}));
   const titles = [{titleKey:key,japaneseTitle:TITLE,englishTitle:TITLE_EN,originalTitle:TITLE,sourceKind:'reference',sourceUrl:null},
     {titleKey:'サマーウォーズ',japaneseTitle:'サマーウォーズ',englishTitle:'Summer Wars',originalTitle:'サマーウォーズ',sourceKind:'reference',sourceUrl:null}];
   const showings = [];
-  for(let day=0;day<3;day++) for(let i=0;i<4;i++){
-    const cinema=cinemas[i%2]; const date=`2026-09-${28+day}`; const title=i===3?'サマーウォーズ':TITLE;
+  for(let day=0;day<3;day++) for(let i=0;i<6;i++){
+    const cinema=cinemas[i%3]; const date=`2026-09-${28+day}`; const title=i>=3?'サマーウォーズ':TITLE;
     showings.push({id:`guide-${day}-${i}`,sourceId:'guide',cinemaId:cinema.id,cinemaName:cinema.name,cinemaShortName:cinema.shortName,area:cinema.area,movieKey:title,title,imageUrl:null,
-      startsAt:`${date}T${12+i*2}:00:00+09:00`,endsAt:`${date}T${13+i*2}:50:00+09:00`,screen:`シアター${i+1}`,format:'2D',bookingUrl:cinema.sourceUrl,purchasable:true,fetchedAt:`${DATE}T08:00:00+09:00`});
+      startsAt:`${date}T${12+Math.floor(i/3)*3}:00:00+09:00`,endsAt:`${date}T${13+Math.floor(i/3)*3}:50:00+09:00`,screen:`シアター${i+1}`,format:'2D',bookingUrl:cinema.sourceUrl,purchasable:true,fetchedAt:`${DATE}T08:00:00+09:00`});
   }
   await page.clock.setFixedTime(new Date(`${DATE}T10:00:00+09:00`));
   await page.addInitScript(lang=>{document.cookie=`hamamubi_language=${lang}; Path=/`; localStorage.setItem('hamamubi-color-theme','light');},lang);
@@ -25,11 +27,19 @@ export async function installFixture(page, language = 'ja') {
     const request=route.request(); const url=new URL(request.url()); const path=url.pathname;
     const body=request.postDataJSON(); let result;
     if(path==='/api/account/language') {if(body?.language)lang=body.language; result={language:lang,userRole:'member'};}
+    else if(path==='/api/account')result={user:{id:'guide',email:null,displayEmail:'demo@example.com',role:'member',legacy:false},methods:{google:true,password:false,passkeySupported:false},passkeys:[],users:[],pendingInvites:[],googleConfigured:true};
     else if(path==='/api/account/profile')result={userId:'guide',displayName:lang==='ja'?'はまむび':'Hama',avatarUrl:null,bio:''};
     else if(path==='/api/notifications')result={userId:'guide',items:[],unread:0,lastReadId:0,latestId:0,nextBefore:null,titles};
     else if(path==='/api/showings'){
       const date=url.searchParams.get('date')||DATE, through=url.searchParams.get('through')||date;
-      result={date,generatedAt:`${DATE}T10:00:00+09:00`,lastUpdatedAt:`${DATE}T08:00:00+09:00`,cinemas,showings:showings.filter(s=>s.startsAt.slice(0,10)>=date&&s.startsAt.slice(0,10)<=through),movieTitles:titles,preferences,preferencesEnabled:true,cinemaTravelPreferences:[],cinemaTravelPreferencesEnabled:true,userProfile:{departureRegistered:false,departureUpdatedAt:null,scheduleCollapseMinutes:0},userProfileEnabled:true,sourceHealth:{healthy:2,total:2}};
+      result={date,generatedAt:`${DATE}T10:00:00+09:00`,lastUpdatedAt:`${DATE}T08:00:00+09:00`,cinemas,showings:showings.filter(s=>s.startsAt.slice(0,10)>=date&&s.startsAt.slice(0,10)<=through),movieTitles:titles,preferences,preferencesEnabled:true,cinemaTravelPreferences:cinemaPreferences,cinemaTravelPreferencesEnabled:options.preferencesEnabled!==false,userProfile:{departureRegistered:false,departureUpdatedAt:null,scheduleCollapseMinutes:0},userProfileEnabled:true,sourceHealth:{healthy:2,total:2}};
+    }else if(path==='/api/cinema-preferences'){
+      if(request.method()==='POST'){
+        if(options.saveDelay)await new Promise(resolve=>setTimeout(resolve,options.saveDelay));
+        if(options.failSave){await route.fulfill({status:500,json:{error:'demo_failure'}});return;}
+        result={cinemaId:body.cinemaId,travelMode:'transit',customDurationMinutes:null,note:'',...cinemaPreferences.find(p=>p.cinemaId===body.cinemaId),...body};
+        cinemaPreferences=[...cinemaPreferences.filter(p=>p.cinemaId!==body.cinemaId),result];
+      }else result={preferences:cinemaPreferences};
     }else if(path==='/api/preferences'){
       const pref={movieKey:body.title,title:body.title,imageUrl:null,starred:body.starred,status:body.status??null,comment:body.comment??'',updatedAt:`${DATE}T10:00:00+09:00`};
       preferences=[...preferences.filter(p=>p.movieKey!==pref.movieKey),pref]; result=pref;

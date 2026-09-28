@@ -3,7 +3,8 @@
     "width": 390,
     "height": 700
   },
-  "sourceRevision": "518c606",
+  "sourceRevision": "6d8e3ba",
+  "sourceWorkingTreeNote": "Video branch with local My page cinema visibility settings and schedule-first storyboard changes.",
   "data": "Demonstration data in the real app; no personal accounts or external writes",
   "languages": {
     "ja": [
@@ -13,12 +14,104 @@
         "duration": 6
       },
       {
-        "name": "search",
+        "name": "schedule",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "ja-01-before.png",
+            "image": "ja-01-overview.png",
+            "focus": {
+              "x": 14,
+              "y": 407.75,
+              "width": 362,
+              "height": 264.4375
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 2.8,
+            "image": "ja-01-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 491.75,
+              "width": 288,
+              "height": 162.4375
+            },
+            "zoom": 1.35
+          },
+          {
+            "at": 5.2,
+            "image": "ja-01-more-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 491.75,
+              "width": 288,
+              "height": 162.4375
+            },
+            "zoom": 1.35
+          }
+        ]
+      },
+      {
+        "name": "cinema-settings",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-02-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 401,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 1.6,
+            "image": "ja-02-settings.png",
+            "focus": {
+              "x": 14,
+              "y": 187.5,
+              "width": 362,
+              "height": 332.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 3.5,
+            "image": "ja-02-selected.png",
+            "focus": {
+              "x": 14,
+              "y": 187.5,
+              "width": 362,
+              "height": 332.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 5.4,
+            "image": "ja-02-result.png",
+            "focus": {
+              "x": 87,
+              "y": 491.75,
+              "width": 288,
+              "height": 162.4375
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "search",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-03-before.png",
             "focus": {
               "x": 0,
               "y": 126,
@@ -29,7 +122,7 @@
           },
           {
             "at": 1.8,
-            "image": "ja-01-typed.png",
+            "image": "ja-03-typed.png",
             "focus": {
               "x": 308,
               "y": 134,
@@ -40,28 +133,28 @@
           },
           {
             "at": 3.8,
-            "image": "ja-01-result.png",
+            "image": "ja-03-result.png",
             "focus": {
               "x": 14,
-              "y": 442.75,
+              "y": 404.75,
               "width": 362,
-              "height": 135.140625
+              "height": 115.140625
             },
             "zoom": 1.35
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "film",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "ja-02-title.png",
+            "image": "ja-04-title.png",
             "focus": {
               "x": 139,
-              "y": 453.75,
+              "y": 415.75,
               "width": 172,
               "height": 20.140625
             },
@@ -69,7 +162,7 @@
           },
           {
             "at": 2.6,
-            "image": "ja-02-detail.png",
+            "image": "ja-04-detail.png",
             "focus": {
               "x": 14,
               "y": 296.21875,
@@ -80,7 +173,7 @@
           },
           {
             "at": 5,
-            "image": "ja-02-another-day.png",
+            "image": "ja-04-another-day.png",
             "focus": {
               "x": 14,
               "y": 247.78125,
@@ -89,16 +182,16 @@
             },
             "zoom": 1.25
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "booking",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "ja-03-link.png",
+            "image": "ja-05-link.png",
             "focus": {
               "x": 92,
               "y": 319.78125,
@@ -109,7 +202,7 @@
           },
           {
             "at": 2.3,
-            "image": "ja-03-focused.png",
+            "image": "ja-05-focused.png",
             "focus": {
               "x": 92,
               "y": 319.78125,
@@ -119,19 +212,19 @@
             "zoom": 1.7
           }
         ],
-        "externalDestination": "https://tjoy.jp/yokohama_burg13",
-        "kind": "screen"
+        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do"
       },
       {
         "name": "watchlist",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "ja-04-star.png",
+            "image": "ja-06-star.png",
             "focus": {
               "x": 323,
-              "y": 451.75,
+              "y": 413.75,
               "width": 44,
               "height": 44
             },
@@ -139,58 +232,58 @@
           },
           {
             "at": 2.3,
-            "image": "ja-04-saved.png",
+            "image": "ja-06-saved.png",
             "focus": {
-              "x": 29,
-              "y": 318,
-              "width": 332,
-              "height": 160
+              "x": 323,
+              "y": 413.75,
+              "width": 44,
+              "height": 44
             },
             "zoom": 1.5
           },
           {
             "at": 5,
-            "image": "ja-04-selected.png",
+            "image": "ja-06-selected.png",
             "focus": {
               "x": 323,
-              "y": 451.75,
+              "y": 413.75,
               "width": 44,
               "height": 44
             },
             "zoom": 1.8
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "plan",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "ja-05-add.png",
+            "image": "ja-07-add.png",
             "focus": {
-              "x": 238.5,
-              "y": 426.1875,
-              "width": 117.5,
-              "height": 44
+              "x": 205.03125,
+              "y": 568.1875,
+              "width": 92,
+              "height": 46
             },
             "zoom": 1.8
           },
           {
             "at": 2,
-            "image": "ja-05-added.png",
+            "image": "ja-07-added.png",
             "focus": {
-              "x": 238.5,
-              "y": 426.1875,
-              "width": 117.5,
+              "x": 205.03125,
+              "y": 570.1875,
+              "width": 92,
               "height": 44
             },
             "zoom": 1.8
           },
           {
             "at": 4,
-            "image": "ja-05-menu.png",
+            "image": "ja-07-menu.png",
             "focus": {
               "x": 14,
               "y": 245,
@@ -201,7 +294,7 @@
           },
           {
             "at": 5.4,
-            "image": "ja-05-plans.png",
+            "image": "ja-07-plans.png",
             "focus": {
               "x": 0,
               "y": 54,
@@ -210,19 +303,19 @@
             },
             "zoom": 1.1
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "sharing",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "ja-06-plans.png",
+            "image": "ja-08-plans.png",
             "focus": {
               "x": 14,
-              "y": 249.75,
+              "y": 212.75,
               "width": 362,
               "height": 49
             },
@@ -230,27 +323,27 @@
           },
           {
             "at": 2.4,
-            "image": "ja-06-watchlist.png",
+            "image": "ja-08-watchlist.png",
             "focus": {
               "x": 14,
-              "y": 390.75,
+              "y": 353.75,
               "width": 362,
-              "height": 355
+              "height": 121
             },
             "zoom": 1.3
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "language",
+        "kind": "screen",
         "duration": 5,
         "frames": [
           {
             "at": 0,
-            "image": "ja-07-before.png",
+            "image": "ja-09-before.png",
             "focus": {
-              "x": 142,
+              "x": 239,
               "y": 2.5,
               "width": 90,
               "height": 48
@@ -259,28 +352,27 @@
           },
           {
             "at": 2.7,
-            "image": "ja-07-translated.png",
+            "image": "ja-09-translated.png",
             "focus": {
               "x": 0,
               "y": 54,
               "width": 390,
-              "height": 728.75
+              "height": 490
             },
             "zoom": 1.2
           },
           {
             "at": 4,
-            "image": "ja-07-return.png",
+            "image": "ja-09-return.png",
             "focus": {
-              "x": 142,
+              "x": 239,
               "y": 2.5,
               "width": 90,
               "height": 48
             },
             "zoom": 1.5
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "outro",
@@ -295,12 +387,104 @@
         "duration": 6
       },
       {
-        "name": "search",
+        "name": "schedule",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "en-01-before.png",
+            "image": "en-01-overview.png",
+            "focus": {
+              "x": 14,
+              "y": 404.75,
+              "width": 362,
+              "height": 262.4375
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 2.8,
+            "image": "en-01-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 488.75,
+              "width": 288,
+              "height": 160.4375
+            },
+            "zoom": 1.35
+          },
+          {
+            "at": 5.2,
+            "image": "en-01-more-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 488.75,
+              "width": 288,
+              "height": 160.4375
+            },
+            "zoom": 1.35
+          }
+        ]
+      },
+      {
+        "name": "cinema-settings",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-02-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 401,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 1.6,
+            "image": "en-02-settings.png",
+            "focus": {
+              "x": 14,
+              "y": 184.5,
+              "width": 362,
+              "height": 326.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 3.5,
+            "image": "en-02-selected.png",
+            "focus": {
+              "x": 14,
+              "y": 184.5,
+              "width": 362,
+              "height": 326.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 5.4,
+            "image": "en-02-result.png",
+            "focus": {
+              "x": 87,
+              "y": 488.75,
+              "width": 288,
+              "height": 160.4375
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "search",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-03-before.png",
             "focus": {
               "x": 0,
               "y": 126,
@@ -311,7 +495,7 @@
           },
           {
             "at": 1.8,
-            "image": "en-01-typed.png",
+            "image": "en-03-typed.png",
             "focus": {
               "x": 284.5,
               "y": 134,
@@ -322,28 +506,28 @@
           },
           {
             "at": 3.8,
-            "image": "en-01-result.png",
+            "image": "en-03-result.png",
             "focus": {
               "x": 14,
-              "y": 435.75,
+              "y": 397.75,
               "width": 362,
-              "height": 135.140625
+              "height": 115.140625
             },
             "zoom": 1.35
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "film",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "en-02-title.png",
+            "image": "en-04-title.png",
             "focus": {
               "x": 139,
-              "y": 446.75,
+              "y": 408.75,
               "width": 172,
               "height": 20.140625
             },
@@ -351,7 +535,7 @@
           },
           {
             "at": 2.6,
-            "image": "en-02-detail.png",
+            "image": "en-04-detail.png",
             "focus": {
               "x": 14,
               "y": 345.71875,
@@ -362,7 +546,7 @@
           },
           {
             "at": 5,
-            "image": "en-02-another-day.png",
+            "image": "en-04-another-day.png",
             "focus": {
               "x": 14,
               "y": 248.28125,
@@ -371,16 +555,16 @@
             },
             "zoom": 1.25
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "booking",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "en-03-link.png",
+            "image": "en-05-link.png",
             "focus": {
               "x": 92,
               "y": 314.28125,
@@ -391,7 +575,7 @@
           },
           {
             "at": 2.3,
-            "image": "en-03-focused.png",
+            "image": "en-05-focused.png",
             "focus": {
               "x": 92,
               "y": 314.28125,
@@ -401,19 +585,19 @@
             "zoom": 1.7
           }
         ],
-        "externalDestination": "https://tjoy.jp/yokohama_burg13",
-        "kind": "screen"
+        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do"
       },
       {
         "name": "watchlist",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "en-04-star.png",
+            "image": "en-06-star.png",
             "focus": {
               "x": 323,
-              "y": 444.75,
+              "y": 406.75,
               "width": 44,
               "height": 44
             },
@@ -421,58 +605,58 @@
           },
           {
             "at": 2.3,
-            "image": "en-04-saved.png",
+            "image": "en-06-saved.png",
             "focus": {
-              "x": 29,
-              "y": 322,
-              "width": 332,
-              "height": 160
+              "x": 323,
+              "y": 406.75,
+              "width": 44,
+              "height": 44
             },
             "zoom": 1.5
           },
           {
             "at": 5,
-            "image": "en-04-selected.png",
+            "image": "en-06-selected.png",
             "focus": {
               "x": 323,
-              "y": 444.75,
+              "y": 406.75,
               "width": 44,
               "height": 44
             },
             "zoom": 1.8
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "plan",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "en-05-add.png",
+            "image": "en-07-add.png",
             "focus": {
-              "x": 238.5,
-              "y": 426.1875,
-              "width": 117.5,
+              "x": 205.03125,
+              "y": 570.1875,
+              "width": 92,
               "height": 44
             },
             "zoom": 1.8
           },
           {
             "at": 2,
-            "image": "en-05-added.png",
+            "image": "en-07-added.png",
             "focus": {
-              "x": 238.5,
-              "y": 426.1875,
-              "width": 117.5,
+              "x": 205.03125,
+              "y": 570.1875,
+              "width": 92,
               "height": 44
             },
             "zoom": 1.8
           },
           {
             "at": 4,
-            "image": "en-05-menu.png",
+            "image": "en-07-menu.png",
             "focus": {
               "x": 14,
               "y": 245,
@@ -483,7 +667,7 @@
           },
           {
             "at": 5.4,
-            "image": "en-05-plans.png",
+            "image": "en-07-plans.png",
             "focus": {
               "x": 0,
               "y": 54,
@@ -492,19 +676,19 @@
             },
             "zoom": 1.1
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "sharing",
+        "kind": "screen",
         "duration": 8,
         "frames": [
           {
             "at": 0,
-            "image": "en-06-plans.png",
+            "image": "en-08-plans.png",
             "focus": {
               "x": 14,
-              "y": 241.75,
+              "y": 209.75,
               "width": 362,
               "height": 49
             },
@@ -512,27 +696,27 @@
           },
           {
             "at": 2.4,
-            "image": "en-06-watchlist.png",
+            "image": "en-08-watchlist.png",
             "focus": {
               "x": 14,
-              "y": 382.75,
+              "y": 350.75,
               "width": 362,
-              "height": 337
+              "height": 117
             },
             "zoom": 1.3
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "language",
+        "kind": "screen",
         "duration": 5,
         "frames": [
           {
             "at": 0,
-            "image": "en-07-before.png",
+            "image": "en-09-before.png",
             "focus": {
-              "x": 142,
+              "x": 239,
               "y": 2.5,
               "width": 90,
               "height": 48
@@ -541,28 +725,27 @@
           },
           {
             "at": 2.7,
-            "image": "en-07-translated.png",
+            "image": "en-09-translated.png",
             "focus": {
               "x": 0,
               "y": 54,
               "width": 390,
-              "height": 724.75
+              "height": 490
             },
             "zoom": 1.2
           },
           {
             "at": 4,
-            "image": "en-07-return.png",
+            "image": "en-09-return.png",
             "focus": {
-              "x": 142,
+              "x": 239,
               "y": 2.5,
               "width": 90,
               "height": 48
             },
             "zoom": 1.5
           }
-        ],
-        "kind": "screen"
+        ]
       },
       {
         "name": "outro",
@@ -570,6 +753,5 @@
         "duration": 5
       }
     ]
-  },
-  "sourceWorkingTreeNote": "Base revision 518c606 with local title-language work present during the capture session. The committed captures are the authoritative input for this export."
+  }
 }

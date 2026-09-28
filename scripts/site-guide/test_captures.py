@@ -16,8 +16,9 @@ class CaptureAssetsTests(unittest.TestCase):
         for lang, guide in copy.items():
             scenes = manifest['languages'][lang]
             self.assertEqual(len(scenes), len(guide['scenes']))
-            self.assertEqual(sum(scene['duration'] for scene in scenes), 64)
+            self.assertEqual(sum(scene['duration'] for scene in scenes), 80)
             self.assertEqual([scene['name'] for scene in scenes if scene['kind'] == 'mascot'], ['intro', 'outro'])
+            self.assertEqual([scene['name'] for scene in scenes[:3]], ['intro', 'schedule', 'cinema-settings'])
             self.assertEqual(scenes[0]['kind'], 'mascot')
             self.assertEqual(scenes[-1]['kind'], 'mascot')
             for scene in scenes:

@@ -1,0 +1,30 @@
+- link "上映スケジュールへ移動":
+  - /url: "#main"
+- banner:
+  - button "メニューを開く"
+  - link "今日の現在時刻の上映へ戻る":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "英語で表示": JP EN
+  - button "ダークモードに切り替える"
+- main:
+  - region "鑑賞予定":
+    - paragraph: 映画を観に行く予定
+    - heading "鑑賞予定" [level=1]
+    - text: 1本
+    - heading "9月28日(月)" [level=2]
+    - list:
+      - listitem:
+        - article:
+          - time: 12:00
+          - text: 〜
+          - time: 13:50
+          - heading "気になる作品 君の名は。" [level=3]:
+            - img "気になる作品"
+            - text: 君の名は。
+          - paragraph: 横浜ブルク13
+          - paragraph: シアター1 / 2D
+          - checkbox "予約済み"
+          - text: 予約済み
+          - link "公式サイト":
+            - /url: https://tjoy.jp/yokohama_burg13
+          - button "君の名は。を鑑賞予定から外す": 予定から外す

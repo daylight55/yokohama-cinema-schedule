@@ -16,7 +16,7 @@ for(const lang of ['ja','en']){
  page.on('pageerror',e=>errors.push(e.message));
  await installFixture(page,lang);
  const tr=(ja,en)=>lang==='ja'?ja:en;
- await page.goto(base+'/#movies'); await page.locator('.schedule-search').waitFor(); await page.waitForTimeout(500);
+ await page.goto(base+`/#schedule?date=${DATE}`); await page.locator('.schedule-search').waitFor(); await page.waitForTimeout(500);
  await page.evaluate(()=>document.fonts.ready);
  if(process.argv.includes('--inspect')) {
  await page.screenshot({path:path.join(output,`${lang}-inspect.png`)});
@@ -52,6 +52,25 @@ for(const lang of ['ja','en']){
  };
  // 0. The greeting is a dedicated mascot scene, with no app capture underneath.
  scenes.push({name:'intro',kind:'mascot',duration:6});
+ // The main feature comes first: compare cinemas in the same schedule.
+ begin('schedule');
+ await page.locator('.cinema-strip').first().scrollIntoViewIfNeeded(); await settle();
+ await save('overview',page.locator('.timeline-hour').first(),0,1.05);
+ await save('cinemas',page.locator('.cinema-strip').first(),2.8,1.35);
+ await page.locator('.cinema-strip').first().evaluate(el=>el.scrollLeft=el.scrollWidth);
+ await save('more-cinemas',page.locator('.cinema-strip').first(),5.2,1.35); end();
+ // Personalize the schedule in My page, then show the actual filtered result.
+ await menu().click();
+ begin('cinema-settings'); await save('menu',page.locator('#primary-navigation a[href="#account"]'),0,1.3);
+ await page.locator('#primary-navigation a[href="#account"]').click(); await settle();
+ const settings=page.locator('.account-cinema-settings');
+ await settings.scrollIntoViewIfNeeded(); await save('settings',settings,1.6,1.12);
+ const cinemaSwitch=settings.getByRole('switch',{name:tr('TOHOシネマズ 上大岡','TOHO Cinemas Kamiooka'),exact:true});
+ await cinemaSwitch.uncheck(); await settle(); await save('selected',settings,3.5,1.12);
+ await settings.getByRole('link').click(); await settle();
+ await page.locator('.cinema-strip').first().scrollIntoViewIfNeeded();
+ await save('result',page.locator('.cinema-strip').first(),5.4,1.25); end();
+ await nav(`#movies?date=${DATE}`);
  // 1. Real typing, submitting and the resulting filtered list.
  begin('search'); await save('before',page.locator('.schedule-search'),0,1.65);
  await search().fill(film); await save('typed',searchButton(),1.8,1.65);
@@ -76,14 +95,13 @@ for(const lang of ['ja','en']){
  const href=await booking.getAttribute('href');
  if(!href.startsWith('https://'))throw Error('Booking target must be external HTTPS');
  current.externalDestination=href; end();
- // 4. Go back to the real list and save a film; the app opens its settings sheet.
+ // Save a film from the actual list and show the selected star.
  await page.goBack(); await page.locator('.schedule-search').waitFor(); await settle();
  const star=page.locator('.movie-list-item').filter({has:page.getByRole('link',{name:film,exact:true})}).locator('button.favorite-button').first();
  await star.scrollIntoViewIfNeeded(); await settle();
  begin('watchlist'); await save('star',star,0,1.8);
- await star.click(); await page.locator('.movie-preference-dialog[open]').waitFor();
- await save('saved',page.locator('.movie-preference-actions'),2.3,1.5);
- await page.locator('.movie-preference-heading button').click();
+ await star.click(); await page.waitForFunction(()=>document.querySelector('.movie-list-item .favorite-button[aria-pressed="true"]'));
+ await save('saved',star,2.3,1.5);
  await save('selected',star,5,1.8); end();
  // 5. Add a particular showing and follow the menu to the saved plan.
  await nav(`#schedule?date=${DATE}`);

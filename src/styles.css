@@ -3911,3 +3911,24 @@ html[lang="en"] .brand-wordmark {
   .movie-overview { gap: 32px; }
   .shared-movies img { width: 100px; height: 140px; }
 }
+
+.account-cinema-settings {
+  min-width: 0;
+}
+.account-cinema-settings h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.account-cinema-settings > p {
+  margin-block: 10px;
+}
+.account-cinema-list .cinema-schedule-toggle + .cinema-schedule-toggle {
+  border-top: 1px solid var(--line);
+}
+.account-cinema-settings > a {
+  color: var(--text);
+  font-weight: 700;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
