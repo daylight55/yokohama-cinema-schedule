@@ -91,6 +91,12 @@ def gesture(t, start, peak, release, end):
     return ease((t-start)/(peak-start)) * (1-ease((t-release)/(end-release)))
 
 
+def farewell_time(lang, t):
+    # New outro WAVs say goodbye at 5.04s (ja) / 4.84s (en),
+    # plus the shared 0.4s audio lead-in. Keep wink, tilt and glint together.
+    return t - (2.3 if lang == 'ja' else 2.1)
+
+
 def mascot_pose(lang, t, closing):
     # One modest lift during the opening words. The two introductions have
     # different leading silence; the audio itself keeps its original timing.
@@ -113,8 +119,8 @@ def mascot_pose(lang, t, closing):
     invitation = gesture(t, 1.8, 2.2, 2.7, 3.1) if closing else gesture(t, 2.55, 3.05, 3.55, 4.35)
     angle += 2.2*invitation
     height += 5*invitation
-    # English's short Bye-bye lands earlier than the Japanese farewell.
-    farewell_t = t + (1.1 if lang == 'en' else 0)
+    # The final goodbye, after the longer invitation, cues the wink.
+    farewell_t = farewell_time(lang, t)
     wink = gesture(farewell_t, 3.2, 3.3, 3.65, 3.78) if closing else 0
     if closing:
         angle -= 2.5*gesture(farewell_t, 3.02, 3.35, 3.7, 4.35)
@@ -157,7 +163,7 @@ def mascot_scene(lang, index, t, manifest):
     center_y = 850-462*sy/2-height
     im.paste(sprite, (round((W-sprite.width)/2), round(center_y-sprite.height/2)), sprite)
     # One brief glint supports the wink; the resting shot stays quiet.
-    farewell_t = t + (1.1 if lang == 'en' else 0)
+    farewell_t = farewell_time(lang, t)
     glint = gesture(farewell_t, 3.28, 3.48, 3.58, 3.95) if closing else 0
     if glint:
         sparkle(draw, 698, 566, 16*glint, '#e78d62')
@@ -260,7 +266,6 @@ def scene(lang, index, t, manifest):
     for i,line in enumerate(wrapped):
         width=draw.textlength(line,font=font(size))
         text(draw,((W-width)/2,1021+i*(size+10)),line,size,INK)
-    text(draw,(38,1172),'実画面 / 上映・名前は説明用データ' if lang=='ja' else 'REAL APP / DEMONSTRATION DATA',16,MUTED)
     # Subtle progress line; no scene numbers or duration labels in the UI.
     progress_line(draw, index, t, manifest['languages'][lang])
     return im
