@@ -6,6 +6,7 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "英語で表示": JP EN
   - button "ダークモードに切り替える"
+  - group
 - main:
   - region "鑑賞予定":
     - paragraph: 映画を観に行く予定
@@ -23,8 +24,8 @@
             - text: 君の名は。
           - paragraph: 横浜ブルク13
           - paragraph: シアター1 / 2D
-          - checkbox "予約済み"
-          - text: 予約済み
-          - link "公式サイト":
+          - checkbox "予約済みにする"
+          - text: 予約済みにする
+          - link "予約サイトへ":
             - /url: https://tjoy.jp/yokohama_burg13
           - button "君の名は。を鑑賞予定から外す": 予定から外す
