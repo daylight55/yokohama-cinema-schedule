@@ -6,23 +6,30 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "Display in English" [checked]: JP EN
   - button "Switch to dark mode"
+  - group
 - main:
   - region "My account":
     - paragraph: Settings
     - heading "My account" [level=1]
     - paragraph: demo@example.com
-    - region "Cinemas in your showtimes":
-      - heading "Cinemas in your showtimes" [level=2]
-      - paragraph: See showtimes from your selected cinemas together. Changes are saved automatically.
-      - strong: Yokohama Burg 13
-      - switch "Yokohama Burg 13" [checked]
-      - strong: TOHO Cinemas Kamiooka
-      - switch "TOHO Cinemas Kamiooka" [checked]
-      - strong: AEON Cinema Minato Mirai
-      - switch "AEON Cinema Minato Mirai" [checked]
-      - status
-      - link "View showtimes":
-        - /url: "#schedule?date=2026-09-28"
+    - region "Profile":
+      - heading "Profile" [level=2]
+      - button "Change photo"
+      - text: Display name
+      - textbox "Display name": Hama
+      - text: About me
+      - textbox "About me":
+        - /placeholder: Favourite films or genres
+      - paragraph: Your profile is visible to other members.
+      - button "Save" [disabled]
+    - region "Movie activity":
+      - heading "Movie activity" [level=2]
+      - paragraph: Your movie activity is visible to members of the same group.
+      - group "Movie activity":
+        - button "Watchlist 0" [pressed]
+        - button "Watched 0"
+        - button "My screenings 0"
+      - paragraph: No movies on the watchlist yet.
     - region "Showtime display":
       - heading "Showtime display" [level=2]
       - text: Group showtimes
@@ -43,3 +50,16 @@
     - button "Set up"
     - heading "Passkeys" [level=2]
     - button "Add passkey"
+    - group: Close account
+    - region "Cinemas in your showtimes":
+      - heading "Cinemas in your showtimes" [level=2]
+      - paragraph: See showtimes from your selected cinemas together. Changes are saved automatically.
+      - strong: Yokohama Burg 13
+      - switch "Yokohama Burg 13" [checked]
+      - strong: TOHO Cinemas Kamiooka
+      - switch "TOHO Cinemas Kamiooka" [checked]
+      - strong: AEON Cinema Minato Mirai
+      - switch "AEON Cinema Minato Mirai" [checked]
+      - status
+      - link "View showtimes":
+        - /url: "#schedule?date=2026-09-28"
