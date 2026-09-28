@@ -4081,3 +4081,9 @@ html[lang="en"] .brand-wordmark {
 .notification-feed .notification-meta { display: flex; gap: 6px 12px; flex-wrap: wrap; margin-top: 12px; color: var(--muted); font-size: .875rem; }
 .notifications-page :is(a,button,summary,input):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (max-width: 390px) { .brand-wordmark, html[lang="en"] .brand-wordmark { display: none; } }
+
+/* On phones, all screening cards remain reachable without a competing carousel. */
+@media (max-width: 719px), (any-pointer: coarse) {
+  .cinema-strip { flex-wrap: wrap; overflow-x: visible; }
+  .cinema-slot { flex: 1 1 150px; }
+}

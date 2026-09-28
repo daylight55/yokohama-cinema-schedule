@@ -12,6 +12,7 @@ import {
 } from "./i18n";
 import { MoviePage } from "./MoviePage";
 import { MovieTimes } from "./MovieTimes";
+import { useDateSwipe } from "./useDateSwipe";
 import { useHistoryScroll } from "./useHistoryScroll";
 import { localize, localizedDate } from "./i18n";
 import {
@@ -43,7 +44,6 @@ import {
   Fragment,
   type FormEvent,
   type MouseEvent,
-  type TouchEvent,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -87,13 +87,11 @@ import {
   groupByScheduleTime,
   groupScheduleTimeBuckets,
   groupByMovie,
-  getDateSwipeDirection,
   getAppPageScrollTarget,
   getScheduleMoviePresentation,
   getScheduleTimeJumpTargets,
   getViewingPlanButtonState,
   hashForAppView,
-  isDateSwipeBlockedByHorizontalScroll,
   listMovieShowingDates,
   normalizeMovieTitle,
   parseColorTheme,
@@ -219,8 +217,6 @@ export function App() {
     () => getStoredColorTheme() !== null,
   );
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
-  const dateSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
-  const suppressClickUntilRef = useRef(0);
   const navigationDialogRef = useRef<HTMLDialogElement>(null);
   const moviePreferenceDialogRef = useRef<HTMLDialogElement>(null);
   const pendingMovieAnchorRef = useRef<{
@@ -1559,54 +1555,26 @@ export function App() {
     }
   };
 
-  const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
-    dateSwipeStartRef.current = null;
-    if (
-      (view !== "schedule" && view !== "movies") ||
-      loading ||
-      event.touches.length !== 1 ||
-      isDateSwipeBlockedByHorizontalScroll(event.target)
-    ) {
-      return;
-    }
-    const touch = event.touches[0];
-    dateSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleScheduleTouchEnd = (event: TouchEvent<HTMLElement>) => {
-    const start = dateSwipeStartRef.current;
-    dateSwipeStartRef.current = null;
-    const touch = event.changedTouches[0];
-    if (!start || !touch) return;
-
-    const direction = getDateSwipeDirection(
-      touch.clientX - start.x,
-      touch.clientY - start.y,
-    );
-    if (!direction) return;
-    suppressClickUntilRef.current = Date.now() + 500;
-    const swipeDates: Array<string | null> =
-      view === "movies" ? [null, ...dates] : dates;
-    const currentIndex =
-      view === "movies" && showAllMovieDates
-        ? 0
-        : swipeDates.indexOf(selectedDate);
-    const nextIndex =
-      direction === "next" ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex >= 0 && nextIndex < swipeDates.length) {
-      window.location.hash = hashForAppView(view, {
-        date: swipeDates[nextIndex],
-        query: normalizedSearchQuery,
-      });
-    }
-  };
-
-  const handleMainClickCapture = (event: MouseEvent<HTMLElement>) => {
-    if (Date.now() > suppressClickUntilRef.current) return;
-    suppressClickUntilRef.current = 0;
-    event.preventDefault();
-    event.stopPropagation();
-  };
+  const dateSwipeRef = useDateSwipe(
+    (view === "schedule" || view === "movies") && !loading,
+    `${view}:${selectedDate}:${showAllMovieDates}:${normalizedSearchQuery}`,
+    (direction) => {
+      const swipeDates: Array<string | null> =
+        view === "movies" ? [null, ...dates] : dates;
+      const currentIndex =
+        view === "movies" && showAllMovieDates
+          ? 0
+          : swipeDates.indexOf(selectedDate);
+      const nextIndex =
+        direction === "next" ? currentIndex + 1 : currentIndex - 1;
+      if (nextIndex >= 0 && nextIndex < swipeDates.length) {
+        window.location.hash = hashForAppView(view, {
+          date: swipeDates[nextIndex],
+          query: normalizedSearchQuery,
+        });
+      }
+    },
+  );
 
   const jumpToCurrentTime = () => {
     const marker = currentTimeMarkerRef.current;
@@ -2334,15 +2302,7 @@ export function App() {
         )}
       </dialog>
 
-      <main
-        id="main"
-        onClickCapture={handleMainClickCapture}
-        onTouchStart={handleScheduleTouchStart}
-        onTouchEnd={handleScheduleTouchEnd}
-        onTouchCancel={() => {
-          dateSwipeStartRef.current = null;
-        }}
-      >
+      <main id="main" ref={dateSwipeRef}>
         {localize(
           (view === "schedule" || view === "movies") && (
             <nav className="date-nav" aria-label={localize("上映日")}>
@@ -2790,6 +2750,7 @@ export function App() {
                                 ]
                                   .filter(Boolean)
                                   .join(" ")}
+                                data-date-swipe-card
                                 data-movie-key={movie.preferenceKey}
                                 key={movie.preferenceKey}
                               >
@@ -3792,6 +3753,7 @@ function CinemaSlot({
         .filter(Boolean)
         .join(" ")}
       role="listitem"
+      data-date-swipe-card
       data-showing-id={showing.id}
       tabIndex={-1}
     >

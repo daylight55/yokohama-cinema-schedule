@@ -442,8 +442,7 @@ describe("date swipe gestures", () => {
   it("blocks date swipes started inside an overflowing horizontal region", () => {
     const target = {
       closest: (selector: string) => {
-        expect(selector).toBe("[data-horizontal-scroll]");
-        return { clientWidth: 320, scrollWidth: 640 };
+        return selector === "[data-horizontal-scroll]" ? { contains: () => false } : null;
       },
     } as unknown as EventTarget;
 
@@ -452,7 +451,7 @@ describe("date swipe gestures", () => {
 
   it("keeps non-overflowing strips from triggering a full date change", () => {
     const target = {
-      closest: () => ({ clientWidth: 320, scrollWidth: 320 }),
+      closest: (selector: string) => selector === "[data-horizontal-scroll]" ? { contains: () => false } : null,
     } as unknown as EventTarget;
 
     expect(isDateSwipeBlockedByHorizontalScroll(target)).toBe(true);
