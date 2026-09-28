@@ -12,6 +12,7 @@ import unicodedata
 from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont
 from music import compose
+from narration import wav_duration
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'public/guide'
@@ -247,7 +248,16 @@ def scene(lang,index,t):
 
 
 def main():
-    parser=argparse.ArgumentParser(); parser.add_argument('--stills',action='store_true'); args=parser.parse_args()
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--stills',action='store_true')
+    parser.add_argument('--narration-dir', type=Path, help='Scene WAV directory from narration.py')
+    args=parser.parse_args()
+    if args.narration_dir and not args.stills:
+        for lang, copy in COPY.items():
+            for i in range(len(copy['scenes'])):
+                clip=args.narration_dir/f'{lang}-{i:02d}.wav'
+                if wav_duration(clip.read_bytes()) > SECONDS - 0.4:
+                    raise ValueError(f'{clip.name} exceeds {SECONDS - 0.4}s; regenerate with a faster --style before rendering.')
     OUT.mkdir(parents=True,exist_ok=True)
     staging=ROOT/'.wrangler/site-guide-render'
     staging.mkdir(parents=True,exist_ok=True)
@@ -262,6 +272,21 @@ def main():
         staging.mkdir(parents=True,exist_ok=True)
         rendered=staging/f'how-to-{lang}.mp4'
         command=['ffmpeg','-y','-hide_banner','-loglevel','error','-f','rawvideo','-vcodec','rawvideo','-s',f'{W}x{H}','-pix_fmt','rgb24','-r',str(FPS),'-i','-','-i',str(music),'-map','0:v:0','-map','1:a:0','-c:a','aac','-b:a','160k','-ar','48000','-af','loudnorm=I=-18:TP=-1.5:LRA=7','-shortest','-c:v','libx264','-preset','fast','-crf','23','-pix_fmt','yuv420p','-movflags','+faststart',str(rendered)]
+        if args.narration_dir:
+            mixed=staging/f'narrated-{lang}.wav'
+            inputs=['-i',str(music)]
+            filters=[]
+            for i in range(len(copy['scenes'])):
+                inputs.extend(['-i',str(args.narration_dir/f'{lang}-{i:02d}.wav')])
+                filters.append(f'[{i+1}:a]adelay={int((i*SECONDS+0.2)*1000)}:all=1[voice{i}]')
+            filters.append('[0:a]volume=0.18[bgm]')
+            voices=''.join(f'[voice{i}]' for i in range(len(copy['scenes'])))
+            filters.append(f'[bgm]{voices}amix=inputs={len(copy["scenes"])+1}:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=7[out]')
+            subprocess.run(['ffmpeg','-y','-hide_banner','-loglevel','error',*inputs,
+                            '-filter_complex',';'.join(filters),'-map','[out]','-ar','48000','-ac','2',str(mixed)],check=True)
+            command[command.index(str(music))]=str(mixed)
+            af=command.index('-af')
+            del command[af:af+2]
         proc=subprocess.Popen(command,stdin=subprocess.PIPE)
         try:
             for i in range(8):

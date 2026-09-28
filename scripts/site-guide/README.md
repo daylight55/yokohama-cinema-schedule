@@ -41,3 +41,46 @@ npm run ci:pr
 
 日英の映像とBGMの再生・ミュート・シーク・終了、320×700と390×844の横スクロール、テキスト版と字幕、
 Aboutの直接URL・再読み込み・履歴移動を確認してください。
+
+## Gemini 3.8 TTS のナレーション（任意）
+
+公式の [モデル仕様](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash-tts?hl=ja) と
+[音声生成ガイド](https://ai.google.dev/gemini-api/docs/speech-generation) に基づき、
+`narration.py` は `POST https://generativelanguage.googleapis.com/v1beta/interactions` を呼びます。
+モデルは `gemini-3.8-flash-tts`、認証は `x-goog-api-key` ヘッダーです。
+読み上げ本文と `speech_metadata` の `style` を分離し、音声は `steps` の
+`model_output.content` から取得します。3.8 の WAV 出力は既にヘッダー付きなので、そのまま保存します。
+Python標準ライブラリだけで呼び出せます。
+
+APIキーをローカル環境変数 `GEMINI_API_KEY` に設定してから実行してください。
+キーはチャット・ソース・コミットに含めず、`VITE_` 接頭辞も付けません。
+スクリプトは `.env` を自動で読み込みません。
+
+```sh
+# API呼び出しなしで原稿を確認
+python3 scripts/site-guide/narration.py --lang all --dry-run
+# 日英8場面ずつ、初回は計16回のAPI呼び出し（利用料金が発生する場合があります）
+python3 scripts/site-guide/narration.py --lang all --voice Kore
+# 保存済みWAVを読み込み、BGMの音量を下げて動画に合成
+python3 scripts/site-guide/render.py --narration-dir .wrangler/site-guide-narration
+```
+
+`--lang ja`（既定）または `--lang en` で片方だけ生成できます。
+レンダラーは日英両方を処理するため、合成前に両方のWAVを用意してください。
+`--style 'Warm, friendly and brisk.'` で話し方、`--voice` でプリセット音声、
+`--output-dir` で保存先を変更できます。本文・モデル・声・話し方が同じ音声は再利用します。
+APIエラー時は自動再試行せず停止し、再実行すると完了済み場面を再利用します。
+生成音声とキャッシュ情報の既定保存先 `.wrangler/` はGit管理外です。
+
+各場面の先頭・末尾に0.2秒の余裕を確保します。音声が5.6秒を超えるとレンダリング前に停止します。
+速めの `--style` で再生成してください。音声は途中で切りません。
+ナレーション合成時はBGMを18%に下げ、最終ミックスを-16 LUFS目標に正規化します。
+`--narration-dir` なしのレンダリングは従来通りBGMのみです。
+生成後は読み間違い、場面との同期、声とBGMのバランスを試聴してからMP4を公開してください。
+既存の配信動画は、ナレーション付きで再生成するまでBGMのみです。
+
+APIキーなしの検証:
+
+```sh
+python3 -m unittest discover -s scripts/site-guide -p 'test_*.py'
+```
