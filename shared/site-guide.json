@@ -7,12 +7,12 @@
     "scenes": [
       {
         "title": "横浜で映画、行こっ！",
-        "caption": "ぼく、はまむびくん！\n横浜の映画館ガイドだよ！",
+        "caption": "ぼく、はまむびくん！\n横浜の映画館って、わくわくがいっぱい！\nみんなにも知ってほしいな！",
         "short": "使い方ガイド"
       },
       {
         "title": "全映画館を、ひと目で！",
-        "caption": "上映スケジュールなら、\n全映画館の予定をまとめて見られるよ！",
+        "caption": "まずは、サイドバーから\n上映スケジュールを開いてみてね。\n全映画館の予定をまとめて見られるよ！",
         "short": "上映スケジュール"
       },
       {
@@ -57,7 +57,7 @@
       },
       {
         "title": "またね！",
-        "caption": "映画、楽しんでね！\nばいばい〜！",
+        "caption": "みんなの映画ライフを、\nたくさんサポートさせてね！\nよろしく！ ばいばい〜！",
         "short": "また映画に行こう！"
       }
     ]
@@ -70,12 +70,12 @@
     "scenes": [
       {
         "title": "Movies in Yokohama!",
-        "caption": "Hi! I’m your Hama Movie buddy.\nYour guide to cinemas in Yokohama!",
+        "caption": "Hi! I’m your Hama Movie buddy.\nYokohama’s cinemas are full of fun!\nI can’t wait to show you!",
         "short": "A quick guide"
       },
       {
         "title": "All cinemas.\nOne schedule!",
-        "caption": "See showtimes from all cinemas\ntogether in one schedule!",
+        "caption": "First, open the screening schedule from the sidebar!\nSee showtimes from all cinemas together.",
         "short": "Showtimes at a glance"
       },
       {
@@ -120,7 +120,7 @@
       },
       {
         "title": "See you soon!",
-        "caption": "Enjoy the movie!\nBye-bye!",
+        "caption": "Let me help you enjoy more movie adventures!\nLet’s have fun together! Bye-bye!",
         "short": "See you at the movies!"
       }
     ]

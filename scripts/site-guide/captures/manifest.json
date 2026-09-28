@@ -11,15 +11,37 @@
       {
         "name": "intro",
         "kind": "mascot",
-        "duration": 7
+        "duration": 10
       },
       {
         "name": "schedule",
         "kind": "screen",
-        "duration": 8,
+        "duration": 10,
         "frames": [
           {
             "at": 0,
+            "image": "ja-01-entry.png",
+            "focus": {
+              "x": 6,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 1,
+            "image": "ja-01-sidebar.png",
+            "focus": {
+              "x": 14,
+              "y": 89,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.25
+          },
+          {
+            "at": 2.8,
             "image": "ja-01-overview.png",
             "focus": {
               "x": 14,
@@ -30,7 +52,7 @@
             "zoom": 1.05
           },
           {
-            "at": 2.8,
+            "at": 5,
             "image": "ja-01-cinemas.png",
             "focus": {
               "x": 87,
@@ -41,7 +63,7 @@
             "zoom": 1.35
           },
           {
-            "at": 5.2,
+            "at": 7.4,
             "image": "ja-01-more-cinemas.png",
             "focus": {
               "x": 87,
@@ -51,7 +73,9 @@
             },
             "zoom": 1.35
           }
-        ]
+        ],
+        "sourceRevision": "dfdb99924d4d3aaceff37f538a6adc392b3bdd56",
+        "sourceWorkingTreeNote": "Current main app; local changes only to guide script, narration, and render assets."
       },
       {
         "name": "cinema-settings",
@@ -377,22 +401,44 @@
       {
         "name": "outro",
         "kind": "mascot",
-        "duration": 5
+        "duration": 8
       }
     ],
     "en": [
       {
         "name": "intro",
         "kind": "mascot",
-        "duration": 7
+        "duration": 10
       },
       {
         "name": "schedule",
         "kind": "screen",
-        "duration": 8,
+        "duration": 10,
         "frames": [
           {
             "at": 0,
+            "image": "en-01-entry.png",
+            "focus": {
+              "x": 6,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 1,
+            "image": "en-01-sidebar.png",
+            "focus": {
+              "x": 14,
+              "y": 89,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.25
+          },
+          {
+            "at": 2.8,
             "image": "en-01-overview.png",
             "focus": {
               "x": 14,
@@ -403,7 +449,7 @@
             "zoom": 1.05
           },
           {
-            "at": 2.8,
+            "at": 5,
             "image": "en-01-cinemas.png",
             "focus": {
               "x": 87,
@@ -414,7 +460,7 @@
             "zoom": 1.35
           },
           {
-            "at": 5.2,
+            "at": 7.4,
             "image": "en-01-more-cinemas.png",
             "focus": {
               "x": 87,
@@ -424,7 +470,9 @@
             },
             "zoom": 1.35
           }
-        ]
+        ],
+        "sourceRevision": "dfdb99924d4d3aaceff37f538a6adc392b3bdd56",
+        "sourceWorkingTreeNote": "Current main app; local changes only to guide script, narration, and render assets."
       },
       {
         "name": "cinema-settings",
@@ -750,7 +798,7 @@
       {
         "name": "outro",
         "kind": "mascot",
-        "duration": 5
+        "duration": 8
       }
     ]
   }
