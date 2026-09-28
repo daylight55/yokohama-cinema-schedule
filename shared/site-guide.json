@@ -6,8 +6,8 @@
     "label": "はまむび！の使い方（BGM付き）",
     "scenes": [
       {
-        "title": "映画、行こっ！",
-        "caption": "ぼく、はまむびくん！\nいっしょに映画を探そうよ！",
+        "title": "横浜で映画、行こっ！",
+        "caption": "ぼく、はまむびくん！\n横浜の映画館ガイドだよ！",
         "short": "使い方ガイド"
       },
       {
@@ -56,9 +56,9 @@
         "short": "日本語 / English"
       },
       {
-        "title": "さあ、映画へ！",
-        "caption": "さあ、映画を楽しもうよ！",
-        "short": "映画を楽しもう！"
+        "title": "またね！",
+        "caption": "映画、楽しんでね！\nばいばい〜！",
+        "short": "また映画に行こう！"
       }
     ]
   },
@@ -69,8 +69,8 @@
     "label": "How to use Hama Movie! (with music)",
     "scenes": [
       {
-        "title": "Movie time!",
-        "caption": "Hi! I’m your Hama Movie buddy.\nLet’s find a movie together!",
+        "title": "Movies in Yokohama!",
+        "caption": "Hi! I’m your Hama Movie buddy.\nYour guide to cinemas in Yokohama!",
         "short": "A quick guide"
       },
       {
@@ -119,9 +119,9 @@
         "short": "Japanese / English"
       },
       {
-        "title": "Let’s go to the movies!",
-        "caption": "Let’s go enjoy a movie!",
-        "short": "Enjoy the movie!"
+        "title": "See you soon!",
+        "caption": "Enjoy the movie!\nBye-bye!",
+        "short": "See you at the movies!"
       }
     ]
   }
