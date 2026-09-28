@@ -5,9 +5,13 @@ import base64
 import hashlib
 import io
 import json
+import math
 import os
 from pathlib import Path
 import sys
+import time
+import random
+from email.utils import parsedate_to_datetime
 import urllib.error
 import urllib.request
 import wave
@@ -15,7 +19,16 @@ import wave
 ROOT = Path(__file__).resolve().parents[2]
 ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions'
 MODEL = 'gemini-3.8-flash-tts'
-STYLE = 'Warm, friendly, lively guide. Speak clearly and briskly, without background music.'
+STYLE = (
+    'Speak fluently in the language of the supplied text. '
+    'Read only the supplied words, with no added sounds or music. '
+    'Keep the voice clear, pleasant and natural, without a strained falsetto or a nasal squeak. '
+    'A sweet, adorable anime-girl mascot voice speaking with the first-person boku. '
+    'Light, clear, higher feminine register, sparkling excitement and cute gently bouncy endings. '
+    'Affectionate and innocent, enthusiastic but easy to listen to.'
+)
+MAX_RETRIES = 2
+MAX_RETRY_WAIT = 120
 
 
 def request_body(text, voice, style):
@@ -48,28 +61,83 @@ def extract_audio(response):
     return data
 
 
+def retry_delay(error):
+    """Read only structured wait hints; never expose API error text or credentials."""
+    delays = []
+    header = (error.headers or {}).get('Retry-After', '')
+    if header:
+        try:
+            delays.append(float(header))
+        except ValueError:
+            try:
+                delays.append(parsedate_to_datetime(header).timestamp() - time.time())
+            except (ValueError, TypeError, OverflowError):
+                pass
+    try:
+        payload = json.loads(error.read(65536))
+        if isinstance(payload, dict) and isinstance(payload.get('error'), dict):
+            details = payload['error'].get('details', [])
+            for detail in details if isinstance(details, list) else []:
+                if not isinstance(detail, dict):
+                    continue
+                if detail.get('@type') == 'type.googleapis.com/google.rpc.RetryInfo':
+                    value = detail.get('retryDelay', '')
+                    if isinstance(value, str) and value.endswith('s'):
+                        try:
+                            delays.append(float(value[:-1]))
+                        except ValueError:
+                            pass
+    except (ValueError, OSError):
+        pass
+    delays = [value for value in delays if math.isfinite(value) and value >= 0]
+    # Honor both signals if the service supplies conflicting hints.
+    return max(delays) if delays else None
+
+
 def generate(body, key):
     request = urllib.request.Request(ENDPOINT, data=json.dumps(body).encode(), headers={
         'Content-Type': 'application/json', 'x-goog-api-key': key,
     })
-    try:
-        with urllib.request.urlopen(request, timeout=120) as response:
-            return extract_audio(json.load(response))
-    except urllib.error.HTTPError as error:
-        # Do not log response bodies, request headers or credentials.
-        raise RuntimeError(f'Gemini HTTP {error.code}; check API access, billing and quota. No automatic retry.') from None
-    except urllib.error.URLError:
-        raise RuntimeError('Gemini connection failed. No automatic retry.') from None
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=120) as response:
+                return extract_audio(json.load(response))
+        except urllib.error.HTTPError as error:
+            if error.code == 429 and attempt < MAX_RETRIES:
+                delay = retry_delay(error)
+                error.close()
+                if delay is None:
+                    delay = 10 * (2 ** attempt) + random.uniform(0, 1)
+                if delay > MAX_RETRY_WAIT:
+                    raise RuntimeError(
+                        f'Gemini HTTP 429 requests a {delay:.1f}s wait; '
+                        'stopped without retrying early. Resume later with the same command.'
+                    ) from None
+                # Round UP so a fractional RetryInfo delay is never shortened.
+                delay = math.ceil(delay)
+                print(f'Gemini HTTP 429: waiting {delay}s before retry '
+                      f'{attempt + 1}/{MAX_RETRIES}.', flush=True)
+                time.sleep(delay)
+                continue
+            error.close()
+            raise RuntimeError(f'Gemini HTTP {error.code}; stopped. Check API access, billing and quota.') from None
+        except urllib.error.URLError:
+            raise RuntimeError('Gemini connection failed; stopped without retrying.') from None
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--lang', choices=['ja', 'en', 'all'], default='ja')
-    parser.add_argument('--voice', default='Kore')
+    parser.add_argument('--voice', default='Leda')
+    parser.add_argument('--request-interval', type=float, default=7,
+                        help='Seconds between API requests (default: 7)')
     parser.add_argument('--style', default=STYLE)
     parser.add_argument('--output-dir', type=Path, default=ROOT / '.wrangler/site-guide-narration')
     parser.add_argument('--dry-run', action='store_true', help='Show text and request count without calling API')
     args = parser.parse_args()
+    if not 0 <= args.request_interval <= 60:
+        parser.error('--request-interval must be between 0 and 60 seconds')
+    requested = False
     copies = json.loads((ROOT / 'shared/site-guide.json').read_text())
     for lang in (copies if args.lang == 'all' else [args.lang]):
         for index, scene in enumerate(copies[lang]['scenes']):
@@ -87,7 +155,10 @@ def main():
             key = os.environ.get('GEMINI_API_KEY', '').strip()
             if not key:
                 raise RuntimeError('Set GEMINI_API_KEY in your local environment (do not commit it).')
+            if requested:
+                time.sleep(args.request_interval)
             data = generate(body, key)
+            requested = True
             args.output_dir.mkdir(parents=True, exist_ok=True)
             temporary = target.with_suffix('.wav.tmp')
             temporary.write_bytes(data)

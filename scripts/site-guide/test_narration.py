@@ -1,11 +1,12 @@
 import base64
 import io
+import json
 import unittest
 import urllib.error
 import wave
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from narration import extract_audio, generate, request_body, wav_duration
+from narration import extract_audio, generate, request_body, retry_delay, wav_duration
 
 
 class NarrationTests(unittest.TestCase):
@@ -31,12 +32,72 @@ class NarrationTests(unittest.TestCase):
 
     @patch('urllib.request.urlopen')
     def test_http_error_is_not_retried_or_leaked(self, urlopen):
-        urlopen.side_effect = urllib.error.HTTPError('url', 429, 'secret', {}, None)
-        with self.assertRaisesRegex(RuntimeError, 'HTTP 429') as error:
+        urlopen.side_effect = urllib.error.HTTPError('url', 403, 'secret', {}, None)
+        with self.assertRaisesRegex(RuntimeError, 'HTTP 403') as error:
             generate(request_body('hello', 'Kore', 'friendly'), 'private-key')
         self.assertNotIn('secret', str(error.exception))
         self.assertNotIn('private-key', str(error.exception))
         self.assertEqual(urlopen.call_count, 1)
+
+    def error(self, header=None, delay=None):
+        body = {'error': {'details': [{'@type': 'type.googleapis.com/google.rpc.RetryInfo',
+                                      'retryDelay': delay}]}}
+        return urllib.error.HTTPError('url', 429, 'private-error',
+                                      {'Retry-After': header} if header else {},
+                                      io.BytesIO(json.dumps(body).encode()))
+
+    def test_uses_longer_server_wait_hint(self):
+        self.assertEqual(retry_delay(self.error('12', '20.5s')), 20.5)
+
+    @patch('narration.time.time', return_value=0)
+    def test_retry_after_http_date(self, _):
+        self.assertEqual(retry_delay(self.error('Thu, 01 Jan 1970 00:00:30 GMT')), 30)
+
+    def test_malformed_hint_is_ignored(self):
+        self.assertIsNone(retry_delay(self.error('NaN', 'nonsense')))
+
+    @patch('narration.time.sleep')
+    @patch('urllib.request.urlopen')
+    def test_fractional_wait_is_rounded_up_and_retried(self, urlopen, sleep):
+        payload = {'steps': [{'type': 'model_output', 'content': [
+            {'type': 'audio', 'data': 'AA=='}]}]}
+        # Mock just the decoded audio so this test isolates transport retry behavior.
+        success = MagicMock()
+        success.__enter__.return_value = io.StringIO(json.dumps(payload))
+        urlopen.side_effect = [self.error(delay='8.3s'), success]
+        with patch('narration.extract_audio', return_value=b'wav'):
+            self.assertEqual(generate(request_body('hello', 'Leda', 'cute'), 'private-key'), b'wav')
+        sleep.assert_called_once_with(9)
+        self.assertEqual(urlopen.call_count, 2)
+
+    @patch('narration.time.sleep')
+    @patch('urllib.request.urlopen')
+    def test_repeated_429_stops_after_two_retries(self, urlopen, sleep):
+        urlopen.side_effect = [self.error(delay='1s') for _ in range(3)]
+        with self.assertRaisesRegex(RuntimeError, 'HTTP 429') as error:
+            generate(request_body('hello', 'Leda', 'cute'), 'private-key')
+        self.assertEqual(urlopen.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+        self.assertNotIn('private', str(error.exception))
+
+    @patch('narration.time.sleep')
+    @patch('urllib.request.urlopen')
+    def test_long_wait_stops_without_retrying_early(self, urlopen, sleep):
+        urlopen.side_effect = self.error(delay='300s')
+        with self.assertRaisesRegex(RuntimeError, '300.0s wait'):
+            generate(request_body('hello', 'Leda', 'cute'), 'private-key')
+        sleep.assert_not_called()
+        self.assertEqual(urlopen.call_count, 1)
+
+    @patch('narration.random.uniform', return_value=0.4)
+    @patch('narration.time.sleep')
+    @patch('urllib.request.urlopen')
+    def test_missing_hint_uses_bounded_backoff(self, urlopen, sleep, _):
+        urlopen.side_effect = [self.error() for _ in range(3)]
+        with self.assertRaisesRegex(RuntimeError, 'HTTP 429'):
+            generate(request_body('hello', 'Leda', 'cute'), 'private-key')
+        self.assertEqual([call.args[0] for call in sleep.call_args_list], [11, 21])
+        self.assertEqual(urlopen.call_count, 3)
 
 
 if __name__ == '__main__':
