@@ -91,6 +91,9 @@ export default {
     ctx: ExecutionContext,
   ): Promise<void> {
     if (controller.cron === "37 * * * *") {
+      ctx.waitUntil(env.DB.prepare("DELETE FROM group_activity WHERE created_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-90 days')").run().catch(error => {
+        console.error(JSON.stringify({event:"activity_cleanup_failed",error:String(error)}));
+      }));
       ctx.waitUntil(purgeExpiredAccounts(env.DB).then((deleted) => {
         console.log(JSON.stringify({ event: "expired_accounts_deleted", deleted }));
       }));
@@ -227,6 +230,7 @@ export async function refreshBatch(
   env: Env,
   batch: SourceBatch,
   onlySourceIds?: ReadonlySet<string>,
+  onlyDates?: ReadonlySet<string>,
 ): Promise<{
   startedAt: string;
   completedAt: string;
@@ -241,9 +245,12 @@ export async function refreshBatch(
 }> {
   const startedAt = new Date().toISOString();
   const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
-  const dates = dateRange(todayInJst(), days);
+  const dates = dateRange(todayInJst(), days).filter(
+    date => !onlyDates || onlyDates.has(date),
+  );
+  if (!dates.length) throw new Error("No requested dates in the collection window");
   await seedCinemas(env.DB);
-  if (batch === 0 && !onlySourceIds) {
+  if (batch === 0 && !onlySourceIds && !onlyDates) {
     await refreshTmdbReleaseDateCatalog(env, dates[0]);
   }
   const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
@@ -272,17 +279,15 @@ export async function refreshBatch(
     const sourceStartedAt = new Date().toISOString();
     try {
       const fetched = await source.fetch(sourceDates);
-      const validated = await validateSourceMovieTitles(env.DB, source.id, fetched.showings, identityBudget);
+      const validated = await validateSourceMovieTitles(
+        env.DB, source.id,
+        fetched.showings.filter(showing => sourceDates.includes(todayInJst(new Date(showing.startsAt)))),
+        identityBudget,
+      );
       for (const [date, error] of validated.dateErrors) fetched.dateErrors.set(date,error);
       const showings = deduplicate(
         validated.showings.map(normalizeShowingMovieTitle),
       );
-      if (fetched.showings.length === 0) {
-        const detail = [...fetched.dateErrors.entries()]
-          .map(([date, error]) => `${date}: ${error}`)
-          .join(" / ");
-        throw new Error(detail || "上映回を1件も取得できませんでした");
-      }
       const dateOutcomes = sourceDateOutcomes(
         sourceDates,
         showings,
@@ -555,7 +560,7 @@ async function fetchKino(dates: string[]): Promise<SourceFetchResult> {
     budget,
   );
   return successfulFetch(
-    parseKinoSchedule(await scheduleResponse.text(), dates[0], movieImages),
+    parseKinoSchedule(await scheduleResponse.text(), todayInJst(), movieImages),
   );
 }
 

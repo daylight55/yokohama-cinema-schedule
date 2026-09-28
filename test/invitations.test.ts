@@ -113,6 +113,7 @@ function context(
   role: "admin" | "member" = "admin",
   origin = "https://example.com",
 ) {
+  void db.prepare("UPDATE users SET email='admin@example.com' WHERE id='legacy-local'").run();
   return {
     request: new Request("https://example.com/api/account/invites", {
       method,
@@ -120,7 +121,7 @@ function context(
       ...(body ? { body: JSON.stringify(body) } : {}),
     }),
     env: { DB: db } as PagesEnv,
-    data: { userId: "legacy-local", authUser: { role } } as AuthContextData,
+    data: { userId: "legacy-local", authUser: { role, status: "active" } } as AuthContextData,
   } as Parameters<typeof onRequestPost>[0];
 }
 describe("invitation API authorization and email failures", () => {
@@ -146,18 +147,18 @@ describe("invitation API authorization and email failures", () => {
       sqlite.close();
     }
   });
-  it("denies members for all methods and cross-origin writes", async () => {
+  it("allows registered members to invite and rejects cross-origin writes", async () => {
     const { db, sqlite } = testDatabase();
     expect(
       (await onRequestPost(context(db, "POST", {}, "member"))).status,
-    ).toBe(403);
+    ).toBe(201);
     expect(
       (await onRequestGet(context(db, "GET", undefined, "member"))).status,
-    ).toBe(403);
+    ).toBe(200);
     expect(
       (await onRequestDelete(context(db, "DELETE", undefined, "member")))
         .status,
-    ).toBe(403);
+    ).toBe(400);
     expect(
       (
         await onRequestPost(

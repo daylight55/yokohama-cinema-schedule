@@ -14,6 +14,7 @@ function fixture() {
         "INSERT INTO users(id,email,role,status,created_at,updated_at) VALUES(?,?,'member','active','','')",
       )
       .run(id, `${id}@example.com`);
+  sqlite.exec("INSERT INTO sharing_groups VALUES ('ab','Alice & Bob',''); INSERT INTO sharing_group_members VALUES ('ab','alice'),('ab','bob');");
   function context(
     method = "GET",
     body?: object,

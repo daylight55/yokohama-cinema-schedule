@@ -1,15 +1,15 @@
+import { SharingControls } from "./SharingControls";
 import { MemberAvatar } from "./MemberProfile";
-import { groupSharedMovies } from "../shared/sharing";
+import { SharedWatchlist } from "./SharedWatchlist";
 import { useEffect, useState } from "react";
 import {
-  ArrowClockwiseIcon,
   CalendarDotsIcon,
   StarIcon,
   UsersThreeIcon,
 } from "@phosphor-icons/react";
 import type { SharedPlan, SharingResponse } from "../shared/sharing";
 import { formatJstDate } from "../shared/date";
-import { moviePreferenceKey, safeImageUrl } from "../shared/movie";
+import { moviePreferenceKey } from "../shared/movie";
 import { hashForAppView } from "./lib";
 import {
   localize as t,
@@ -19,11 +19,13 @@ import {
 } from "./i18n";
 import { PageHeader, PageShell } from "./PageLayout";
 
-export function SharedPage() {
+export function SharedPage({ manage = false }: { manage?: boolean }) {
   const [data, setData] = useState<SharingResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [groupId, setGroupId] = useState("");
   const [retry, setRetry] = useState(0);
+  const [noteMovieKey, setNoteMovieKey] = useState("");
   const [member, setMember] = useState("");
   const [tab, setTab] = useState<"plans" | "movies">("plans");
   useEffect(() => {
@@ -31,7 +33,10 @@ export function SharedPage() {
     setLoading(true);
     setError(false);
     setData(null);
-    void fetch("/api/sharing", { signal: controller.signal })
+    void fetch(
+      `/api/sharing${groupId ? `?group=${encodeURIComponent(groupId)}` : ""}`,
+      { signal: controller.signal },
+    )
       .then(async (response) => {
         if (!response.ok) throw new Error("sharing_failed");
         const value: SharingResponse = await response.json();
@@ -49,7 +54,7 @@ export function SharedPage() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [retry]);
+  }, [retry, groupId]);
   const members = new Map(data?.members.map((m) => [m.userId, m]));
   const plans = new Map<string, SharedPlan[]>();
   for (const plan of data?.plans ?? []) {
@@ -61,7 +66,6 @@ export function SharedPage() {
     const day = formatJstDate(new Date(rows[0].startsAt));
     days.set(day, [...(days.get(day) ?? []), rows]);
   }
-  const movies = groupSharedMovies(data?.movies ?? [], member);
   const date = localizedDate({
     month: "long",
     day: "numeric",
@@ -72,65 +76,142 @@ export function SharedPage() {
     minute: "2-digit",
     hourCycle: "h23",
   });
+  if (manage)
+    return (
+      <PageShell
+        className="shared-page"
+        labelledBy="groups-title"
+        busy={loading}
+      >
+        <PageHeader
+          eyebrow={t("共有")}
+          title={t("グループ管理")}
+          titleId="groups-title"
+        />
+        <a className="shared-back-link" href={hashForAppView("shared")}>
+          {t("共有に戻る")}
+        </a>
+        {loading ? (
+          <p role="status">{t("読み込み中…")}</p>
+        ) : error ? (
+          <p role="alert">
+            {t("共有データを取得できませんでした。再読み込みしてください。")}{" "}
+            <button
+              className="secondary-button"
+              onClick={() => setRetry((v) => v + 1)}
+            >
+              {t("再読み込み")}
+            </button>
+          </p>
+        ) : (
+          data && (
+            <>
+              <SharingControls
+                key={data.groupId ?? "none"}
+                data={data}
+                onSelect={(id) => {
+                  setMember("");
+                  setGroupId(id);
+                }}
+                onChanged={() => setRetry((v) => v + 1)}
+              />
+              {!!data.members.length && (
+                <section className="group-member-list">
+                  <h2>{t("メンバー")}</h2>
+                  <ul>
+                    {data.members.map((m) => (
+                      <li key={m.userId}>
+                        <MemberAvatar name={m.name} url={m.avatarUrl} />
+                        <span>{m.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </>
+          )
+        )}
+      </PageShell>
+    );
   return (
     <PageShell className="shared-page" labelledBy="shared-title" busy={loading}>
       <PageHeader
         eyebrow={t("みんなの映画")}
         title={t("共有")}
         titleId="shared-title"
-        meta={
-          <button
-            className="icon-button"
-            type="button"
-            disabled={loading}
-            aria-label={t("再読み込み")}
-            onClick={() => setRetry((v) => v + 1)}
-          >
-            <ArrowClockwiseIcon size={20} aria-hidden="true" />
-          </button>
-        }
       />
-      <div className="shared-controls">
-        <div
-          className="shared-tabs"
-          role="group"
-          aria-label={t("共有する情報")}
-        >
-          <button
-            type="button"
-            aria-pressed={tab === "plans"}
-            onClick={() => setTab("plans")}
-          >
-            <CalendarDotsIcon size={19} aria-hidden="true" />
-            {t("みんなの予定")}
-          </button>
-          <button
-            type="button"
-            aria-pressed={tab === "movies"}
-            onClick={() => setTab("movies")}
-          >
-            <StarIcon size={19} aria-hidden="true" />
-            {t("気になる")}
-          </button>
+      {!loading && !error && data && (
+        <div className="sharing-view-heading">
+          {data.groups.length > 1 ? (
+            <label>
+              {t("共有グループ")}
+              <select
+                value={data.groupId ?? ""}
+                onChange={(e) => {
+                  setMember("");
+                  setGroupId(e.target.value);
+                }}
+              >
+                {data.groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : data.groups.length === 1 ? (
+            <h2>{data.groups[0].name}</h2>
+          ) : (
+            <p>{t("まずは一緒に映画を楽しむ相手を招待してね！")}</p>
+          )}
+          <a className="shared-back-link" href={hashForAppView("groups")}>
+            {t("グループ管理")}
+          </a>
         </div>
-        <label className="shared-member-filter">
-          <UsersThreeIcon size={18} aria-hidden="true" />
-          <span className="shared-filter-label">{t("メンバー")}</span>
-          <select
-            value={member}
-            onChange={(e) => setMember(e.target.value)}
-            disabled={loading}
+      )}
+      {!!data?.groupId && (
+        <div className="shared-controls">
+          <div
+            className="shared-tabs"
+            role="group"
+            aria-label={t("共有する情報")}
           >
-            <option value="">{t("全員")}</option>
-            {(data?.members ?? []).map((m) => (
-              <option key={m.userId} value={m.userId}>
-                {m.name}
-                {m.userId === data?.userId ? ` ${t("（自分）")}` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+            <button
+              type="button"
+              aria-pressed={tab === "plans"}
+              onClick={() => setTab("plans")}
+            >
+              <CalendarDotsIcon size={19} aria-hidden="true" />
+              {t("みんなの予定")}
+            </button>
+            <button
+              type="button"
+              aria-pressed={tab === "movies"}
+              onClick={() => setTab("movies")}
+            >
+              <StarIcon size={19} aria-hidden="true" />
+              {t("気になる")}
+            </button>
+          </div>
+          <label className="shared-member-filter">
+            <UsersThreeIcon size={18} aria-hidden="true" />
+            <span className="shared-filter-label">{t("メンバー")}</span>
+            <select
+              value={member}
+              onChange={(e) => setMember(e.target.value)}
+              disabled={loading}
+            >
+              <option value="">{t("全員")}</option>
+              {(data?.members ?? []).map((m) => (
+                <option key={m.userId} value={m.userId}>
+                  {m.name}
+                  {m.userId === data?.userId ? ` ${t("（自分）")}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
       {member && members.has(member) && (
         <section
           className="shared-member-summary"
@@ -152,7 +233,7 @@ export function SharedPage() {
         <p role="alert">
           {t("共有データを取得できませんでした。再読み込みしてください。")}
         </p>
-      ) : tab === "plans" ? (
+      ) : !data?.groupId ? null : tab === "plans" ? (
         <>
           {!plans.size && (
             <div className="shared-empty">
@@ -223,62 +304,15 @@ export function SharedPage() {
           ))}
         </>
       ) : (
-        <>
-          {!movies.size && (
-            <div className="shared-empty">
-              <StarIcon size={32} aria-hidden="true" />
-              <p>{t("気になる作品はまだありません。")}</p>
-              <a href={hashForAppView("movies")}>{t("上映作品")}</a>
-            </div>
-          )}
-          <ul className="shared-movies">
-            {[...movies].map(([key, rows]) => {
-              const movie = rows[0],
-                image = safeImageUrl(
-                  rows.find((m) => safeImageUrl(m.imageUrl))?.imageUrl,
-                );
-              return (
-                <li key={key}>
-                  <div>
-                    <a
-                      className="shared-film-title"
-                      href={hashForAppView("movie", { movie: key })}
-                    >
-                      {movieTitle(movie.title)}
-                    </a>
-                    <ul
-                      className="shared-people"
-                      aria-label={t("気になっているメンバー")}
-                    >
-                      {rows.map((m) => (
-                        <li key={m.userId}>
-                          <MemberAvatar
-                            name={members.get(m.userId)?.name ?? ""}
-                            url={members.get(m.userId)?.avatarUrl}
-                          />
-                          <span title={members.get(m.userId)?.bio}>
-                            {members.get(m.userId)?.name}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {image && (
-                    <img
-                      src={image}
-                      alt=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        e.currentTarget.hidden = true;
-                      }}
-                    />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </>
+        <SharedWatchlist
+          data={data!}
+          member={member}
+          autoEditKey={noteMovieKey}
+          onChanged={(key) => {
+            setNoteMovieKey(key);
+            setRetry((v) => v + 1);
+          }}
+        />
       )}
     </PageShell>
   );

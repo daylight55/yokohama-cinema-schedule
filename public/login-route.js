@@ -3,7 +3,9 @@ const allowedHashes = new Set([
   "#movies",
   "#cinemas",
   "#viewing-plans",
-    "#shared",
+  "#shared",
+  "#groups",
+  "#notifications",
   "#planner",
   "#profile",
   "#account",
@@ -14,7 +16,7 @@ const returnHashInputs = document.querySelectorAll(
 const currentHash = window.location.hash.toLowerCase();
 
 if (
-  allowedHashes.has(currentHash)
+  allowedHashes.has(currentHash) || /^#collection-status(?:\?date=\d{4}-\d{2}-\d{2})?$/.test(currentHash)
 ) {
   for (const input of returnHashInputs) {
     if (input instanceof HTMLInputElement) input.value = currentHash;

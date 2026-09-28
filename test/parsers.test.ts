@@ -233,3 +233,9 @@ describe("schedule parsers", () => {
     ).toBe("https://example.com/united.jpg");
   });
 });
+
+it("does not treat API error payloads as unpublished schedules", () => {
+  expect(() => parseTohoSchedule({ status: "1", data: [] }, "2026-10-02", "toho", "toho", "https://example.com")).toThrow("invalid");
+  expect(() => parseEigalandSchedule({ error: "temporarily unavailable" }, "jack", "jack", "https://example.com")).toThrow("invalid");
+  expect(() => parseAeonSchedule({ error: "temporarily unavailable" }, new Set(["2026-10-02"]))).toThrow("invalid");
+});

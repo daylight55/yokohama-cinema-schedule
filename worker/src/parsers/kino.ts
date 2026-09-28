@@ -10,8 +10,24 @@ export function parseKinoSchedule(
   movieImages: ReadonlyMap<string, string> = new Map(),
 ): NormalizedShowing[] {
   const $ = load(html);
-  const dates = $(".schedule__day-btn button:not([disabled])")
-    .map((index) => addDays(firstDate, index))
+  const buttons = $(".schedule__day-btn button");
+  if (!buttons.length || !$(".schedule__container, .schedule__item").length)
+    throw new Error("Kino schedule markup is missing");
+  const dates = buttons
+    .map((index, button) => {
+      const label = $(button).attr("aria-label") ?? $(button).text();
+      const match = label.match(/(\d{1,2})[月/](\d{1,2})/);
+      if (!match) return addDays(firstDate, index);
+      const year = Number(firstDate.slice(0, 4));
+      const suffix = `${match[1].padStart(2, "0")}-${match[2].padStart(2, "0")}`;
+      return [year - 1, year, year + 1]
+        .map((y) => `${y}-${suffix}`)
+        .sort(
+          (a, b) =>
+            Math.abs(Date.parse(a) - Date.parse(firstDate)) -
+            Math.abs(Date.parse(b) - Date.parse(firstDate)),
+        )[0];
+    })
     .get();
   const result: NormalizedShowing[] = [];
 

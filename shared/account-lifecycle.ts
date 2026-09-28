@@ -40,7 +40,8 @@ export async function withdrawAccount(db: D1Database, userId: string, now = new 
 export async function purgeExpiredAccounts(db: D1Database, now = new Date().toISOString()): Promise<number> {
   const result = await db.prepare(`DELETE FROM users WHERE id IN (
     SELECT id FROM users WHERE withdrawn_at IS NOT NULL AND delete_after<=? AND status='disabled'
-    ORDER BY delete_after LIMIT 100) AND withdrawn_at IS NOT NULL AND delete_after<=? AND status='disabled'`)
-    .bind(now, now).run();
-  return result.meta.changes ?? 0;
+    ORDER BY delete_after LIMIT 100) AND withdrawn_at IS NOT NULL AND delete_after<=? AND status='disabled' RETURNING id`)
+    .bind(now, now).all<{ id: string }>();
+  // D1 changes includes cascaded profile/group/session deletes; report accounts only.
+  return result.results.length;
 }
