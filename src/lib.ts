@@ -40,6 +40,7 @@ export type AppView =
   | "viewingPlans"
   | "shared"
   | "groups"
+  | "collectionStatus"
   | "notifications"
   | "planner"
   | "adminUsers"
@@ -93,6 +94,7 @@ const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#viewing-plans": "viewingPlans",
   "#shared": "shared",
   "#groups": "groups",
+  "#collection-status": "collectionStatus",
   "#notifications": "notifications",
   "#planner": "planner",
   "#profile": "account",
@@ -109,6 +111,7 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   viewingPlans: "#viewing-plans",
   shared: "#shared",
   groups: "#groups",
+  collectionStatus: "#collection-status",
   notifications: "#notifications",
   planner: "#planner",
   account: "#account",

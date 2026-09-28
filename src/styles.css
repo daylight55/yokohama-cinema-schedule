@@ -4087,3 +4087,41 @@ html[lang="en"] .brand-wordmark {
   .cinema-strip { flex-wrap: wrap; overflow-x: visible; }
   .cinema-slot { flex: 1 1 150px; }
 }
+
+/* Schedule collection: one date, then readable cinema rows. */
+.collection-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+.collection-toolbar button, .collection-toolbar a, .collection-row-actions > a, .collection-status-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+.collection-toolbar button { padding: 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; }
+.collection-toolbar button:disabled { opacity: .6; }
+.collection-dates { display: flex; overflow-x: auto; gap: 8px; padding: 4px 0 14px; }
+.collection-dates a { flex: 0 0 auto; min-height: 48px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; font-weight: 700; }
+.collection-dates a[aria-current] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.collection-overview { padding: 20px 0 24px; border-bottom: 1px solid var(--line); }
+.collection-overview h2 { font-size: clamp(1.35rem, 5vw, 1.85rem); line-height: 1.4; margin: 8px 0 12px; }
+.collection-overview p { margin: 8px 0; line-height: 1.7; }
+.collection-attention { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.collection-cinemas { list-style: none; margin: 0; padding: 0; }
+.collection-cinema { padding: 24px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.collection-cinema-heading { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px 12px; align-items: start; }
+.collection-cinema-heading h3 { margin: 0; font-size: 1.05rem; line-height: 1.5; overflow-wrap: anywhere; }
+.collection-result { grid-column: 2; font-weight: 700; }
+.collection-cinema.is-published .collection-cinema-heading > svg { color: var(--accent); }
+.collection-cinema-body { margin: 12px 0 0 36px; min-width: 0; }
+.collection-cinema-body p { margin: 8px 0; line-height: 1.6; }
+.collection-count { font-weight: 600; }
+.collection-row-actions { display: flex; flex-wrap: wrap; align-items: start; gap: 12px 24px; }
+.collection-row-actions details { flex: 1 1 150px; min-width: 0; }
+.collection-row-actions summary { padding: 12px 0; min-height: 44px; cursor: pointer; }
+.collection-row-actions dl { margin: 4px 0 12px; display: grid; gap: 12px; }
+.collection-row-actions dt { color: var(--muted); }
+.collection-row-actions dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.collection-cadence { line-height: 1.7; margin-top: 24px; }
+.collection-status-link { margin-bottom: 20px; }
+.collection-page :is(a, button, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (min-width: 720px) {
+  .collection-cinema-heading { grid-template-columns: 24px minmax(0, 1fr) auto; }
+  .collection-result { grid-column: 3; }
+}
+.collection-page a, .collection-status-link { color: var(--text); text-underline-offset: 4px; }
+.collection-page .collection-dates a[aria-current] { color: var(--accent-ink); }
+.collection-cinema.is-error .collection-cinema-heading > svg { color: var(--danger); }

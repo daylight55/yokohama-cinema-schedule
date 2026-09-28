@@ -229,6 +229,7 @@ export async function refreshBatch(
   env: Env,
   batch: SourceBatch,
   onlySourceIds?: ReadonlySet<string>,
+  onlyDates?: ReadonlySet<string>,
 ): Promise<{
   startedAt: string;
   completedAt: string;
@@ -243,9 +244,12 @@ export async function refreshBatch(
 }> {
   const startedAt = new Date().toISOString();
   const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
-  const dates = dateRange(todayInJst(), days);
+  const dates = dateRange(todayInJst(), days).filter(
+    date => !onlyDates || onlyDates.has(date),
+  );
+  if (!dates.length) throw new Error("No requested dates in the collection window");
   await seedCinemas(env.DB);
-  if (batch === 0 && !onlySourceIds) {
+  if (batch === 0 && !onlySourceIds && !onlyDates) {
     await refreshTmdbReleaseDateCatalog(env, dates[0]);
   }
   const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
@@ -274,14 +278,10 @@ export async function refreshBatch(
     try {
       const fetched = await source.fetch(sourceDates);
       const showings = deduplicate(
-        fetched.showings.map(normalizeShowingMovieTitle),
+        fetched.showings
+          .filter(showing => sourceDates.includes(todayInJst(new Date(showing.startsAt))))
+          .map(normalizeShowingMovieTitle),
       );
-      if (showings.length === 0) {
-        const detail = [...fetched.dateErrors.entries()]
-          .map(([date, error]) => `${date}: ${error}`)
-          .join(" / ");
-        throw new Error(detail || "上映回を1件も取得できませんでした");
-      }
       const dateOutcomes = sourceDateOutcomes(
         sourceDates,
         showings,
@@ -554,7 +554,7 @@ async function fetchKino(dates: string[]): Promise<SourceFetchResult> {
     budget,
   );
   return successfulFetch(
-    parseKinoSchedule(await scheduleResponse.text(), dates[0], movieImages),
+    parseKinoSchedule(await scheduleResponse.text(), todayInJst(), movieImages),
   );
 }
 

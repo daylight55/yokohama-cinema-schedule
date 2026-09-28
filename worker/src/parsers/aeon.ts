@@ -25,6 +25,9 @@ export function parseAeonSchedule(
   input: unknown,
   requestedDates: Set<string>,
 ): NormalizedShowing[] {
+  if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some(key => !/^\d{8}$/.test(key))) {
+    throw new Error("AEON schedule response is invalid");
+  }
   const schedule = input as AeonSchedule;
   const result: NormalizedShowing[] = [];
 
