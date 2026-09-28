@@ -1,3 +1,4 @@
+import { listMovieTitles } from "../_lib/movie-titles";
 import { addDays, jstDateBounds, todayInJst } from "../../shared/date";
 import {
   normalizeSearchQuery,
@@ -129,21 +130,7 @@ export const onRequestGet: PagesFunction<
       .bind(date)
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
-    context.env.DB.prepare(
-      `SELECT r.title_key AS titleKey, r.japanese_title AS japaneseTitle,
-        r.original_title AS originalTitle, r.english_title AS englishTitle,
-        r.source_url AS sourceUrl, r.source_kind AS sourceKind,
-        i.introduction_ja AS introductionJa, i.introduction_en AS introductionEn,
-        i.source_url AS introductionSourceUrl,
-        s.synopsis_ja AS synopsisJa, s.synopsis_en AS synopsisEn,
-        s.source_url AS synopsisSourceUrl,
-        c.credits_json AS creditsJson
-      FROM movie_title_research r
-      LEFT JOIN movie_introductions i ON i.title_key = r.title_key
-      LEFT JOIN movie_synopses s ON s.title_key = r.title_key
-      LEFT JOIN movie_credits c ON c.title_key = r.title_key AND c.status = 'verified'
-      WHERE r.status = 'verified'`,
-    ).all<import("../../shared/types").MovieTitleRecord & { creditsJson: string | null }>(),
+    listMovieTitles(context.env.DB),
   ]);
   const [preferences, cinemaTravelPreferences, userProfile] = await Promise.all(
     [
@@ -193,9 +180,7 @@ export const onRequestGet: PagesFunction<
 
   const response: ScheduleResponse = {
     date,
-    movieTitles: (titleCatalog.results ?? []).map(({ creditsJson, ...title }) => ({
-      ...title, credits: creditsJson ? JSON.parse(creditsJson) : null,
-    })),
+    movieTitles: titleCatalog,
     generatedAt: new Date().toISOString(),
     lastUpdatedAt: health?.last_updated_at ?? null,
     cinemas,

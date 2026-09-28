@@ -1,3 +1,4 @@
+import { listMovieTitles } from "../_lib/movie-titles";
 import { moviePreferenceKey } from "../../shared/movie";
 import { addDays, todayInJst, jstDateBounds } from "../../shared/date";
 import { avatarUrl, profileName } from "../../shared/member-profile";
@@ -112,11 +113,7 @@ export const onRequestGet: PagesFunction<
     const nextShowingAt = nextByMovie.get(moviePreferenceKey(movie.title));
     return nextShowingAt ? [{ ...movie, nextShowingAt }] : [];
   });
-  const titles = await db
-    .prepare(
-      `SELECT japanese_title AS japaneseTitle, english_title AS englishTitle FROM movie_title_research WHERE status = 'verified'`,
-    )
-    .all<{ japaneseTitle: string; englishTitle: string | null }>();
+  const titles = await listMovieTitles(db);
   const result: SharingResponse = {
     userId: ctx.data.userId,
     groups,
@@ -129,7 +126,7 @@ export const onRequestGet: PagesFunction<
     })),
     plans: plans.results.map((p) => ({ ...p, reserved: !!p.reserved })),
     movies: currentMovies,
-    titles: titles.results,
+    titles: titles.map(({japaneseTitle, englishTitle}) => ({japaneseTitle, englishTitle})),
   };
   return Response.json(result, { headers });
 };
