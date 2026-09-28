@@ -3,7 +3,10 @@
 現行アプリをPlaywrightで操作して撮影した実画面に、ズーム、緑のフォーカス枠、タップの波紋、
 短いテキスト、Gemini TTSの声とオリジナルBGMを重ねる日英の操作ガイドです。
 UIを図形で描き直しません。操作前後の実際の表示を使い、検索・作品詳細・公式サイトへのリンク・
-スター・鑑賞予定・グループ共有・言語切り替えを8場面、各8秒で紹介します。
+スター・鑑賞予定・グループ共有・言語切り替えを紹介します。
+冒頭6秒は、はまむびくんが跳ねながら自己紹介する専用シーンです。操作説明6場面を各8秒、
+言語切り替えを5秒で紹介し、最後の5秒は再びマスコットだけのシーンに切り替わります。
+着地のあと片目を閉じ、約2秒ウィンクを見せて締めます。全9場面・64秒です。
 
 画面内の上映・人物・グループは撮影用データです。実アカウントや本番の予定は使用しません。
 映画館のリンクは実際の公開サイトを指し、新規タブを開くところまで確認して閉じます。
@@ -16,7 +19,8 @@ UIを図形で描き直しません。操作前後の実際の表示を使い、
 - 実画面の撮影: `capture.mjs` と `capture-fixture.mjs`
 - 撮影元のGitリビジョン・注目箇所・操作タイミング: `captures/manifest.json`
 - 元スクリーンショットとアクセシビリティスナップショット: `captures/`
-- ズーム・注釈・動画合成: `render.py`
+- ズーム・注釈・マスコットのジャンプ・動画合成: `render.py`
+- マスコット: `public/brand/hamamubi-icon-{v2,wink}.svg` を `rasterize-mascot.mjs` でPNG化した `mascot/`
 - ナレーション: `narration.py`（Leda、明るく甘いアニメ風）
 - 配信ファイル: `public/guide/how-to-{ja,en}.{mp4,webp,vtt}`
 
@@ -74,22 +78,29 @@ python3 scripts/site-guide/narration.py --lang all --voice Leda
 `--request-interval`（0〜60秒）、`--lang`（ja/en/all）、`--voice`、`--style`、`--output-dir` を指定できます。
 本文・声・話し方が同じ完了済み音声は再利用します。既定保存先 `.wrangler/` はGit管理外です。
 今回の動画では既存音声を再利用し、予約・共有の台本を実画面に合わせて再生成しました。
-1場面が8秒になったため、以前の短い動画用の倍速処理を外し、元の自然な読み上げに戻しています。
+操作説明は1場面8秒で、以前の短い動画用の倍速処理を外し、元の自然な読み上げに戻しています。
+マスコットの専用シーン追加時にはAPIを呼ばず、既存の言語切り替え・締めのWAVを文間の無音で分割しました。
+日本語は3.10秒、英語は4.15秒で分割し、`.wrangler/site-guide-narration-mascot/` に保存しています。
+冒頭を含め、声そのものの高さ・速さ・発音は変更していません。
 
 ## 動画の再生成
 
 Python 3、Pillow、NumPy、ffmpeg（libx264 / AAC）を用意します。
 
 ```sh
-python3 scripts/site-guide/render.py --narration-dir .wrangler/site-guide-narration
+python3 scripts/site-guide/render.py --narration-dir .wrangler/site-guide-narration-mascot
 ```
 
 macOSのヒラギノ角ゴシックを使用します。他の環境では `GUIDE_FONT` と `GUIDE_FONT_BOLD` に
-日本語フォントを指定してください。`--stills` では確認用PNGとポスターだけを生成します。
+日本語フォントを指定してください。マスコットのPNGは同梱済みです。
+ブランドSVGを更新した場合は `npm ci` 後に `node scripts/site-guide/rasterize-mascot.mjs` で再生成します
+（npmの依存に含まれるsharpを使用）。元のアイコンの形・背景・色はそのまま保持します。`--stills` では確認用PNGとポスターだけを生成します。
 `--output-dir` で公開先以外に出力できます。`--narration-dir` なしではBGMのみです。
 
 出力は900×1200、24fps、64秒、H.264/yuv420p、48kHzステレオAAC、faststart付きです。
-ナレーション開始は各場面の0.4秒後。7.2秒を超える音声は途中で切らず、生成前にエラーにします。
+場面の種類と長さは `captures/manifest.json` が管理します。ナレーション開始は各場面の0.4秒後です。
+音声が場面の長さから0.8秒を引いた長さを超えた場合は、途中で切らず生成前にエラーにします。
+字幕・ナレーション・進捗表示は同じタイムラインを使います。
 BGMは18%に下げ、声を含めた最終ミックスを-16 LUFS目標に正規化します。
 完成したMP4のみ公開先に移し、25MiB未満であることを検証します。
 

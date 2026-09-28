@@ -41,9 +41,14 @@
         "short": "メンバーと共有"
       },
       {
-        "title": "さあ、映画へ！",
-        "caption": "JP / ENで言葉を切り替えてね！\nさあ、映画を楽しもうよ！",
+        "title": "言葉を切り替えよう",
+        "caption": "JP / ENで言葉を切り替えてね！",
         "short": "日本語 / English"
+      },
+      {
+        "title": "さあ、映画へ！",
+        "caption": "さあ、映画を楽しもうよ！",
+        "short": "映画を楽しもう！"
       }
     ]
   },
@@ -89,9 +94,14 @@
         "short": "Shared with members"
       },
       {
-        "title": "Your language.\nYour movie!",
-        "caption": "Tap JP / EN to switch languages.\nLet’s go enjoy a movie!",
+        "title": "Your language!",
+        "caption": "Tap JP / EN to switch languages.",
         "short": "Japanese / English"
+      },
+      {
+        "title": "Let’s go to the movies!",
+        "caption": "Let’s go enjoy a movie!",
+        "short": "Enjoy the movie!"
       }
     ]
   }

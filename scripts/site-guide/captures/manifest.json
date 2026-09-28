@@ -9,37 +9,8 @@
     "ja": [
       {
         "name": "intro",
-        "duration": 8,
-        "frames": [
-          {
-            "at": 0,
-            "image": "ja-00-overview.png",
-            "focus": null,
-            "zoom": 1
-          },
-          {
-            "at": 2,
-            "image": "ja-00-menu.png",
-            "focus": {
-              "x": 14,
-              "y": 141,
-              "width": 290.796875,
-              "height": 48
-            },
-            "zoom": 1.5
-          },
-          {
-            "at": 4.5,
-            "image": "ja-00-films.png",
-            "focus": {
-              "x": 0,
-              "y": 126,
-              "width": 390,
-              "height": 63
-            },
-            "zoom": 1.4
-          }
-        ]
+        "kind": "mascot",
+        "duration": 6
       },
       {
         "name": "search",
@@ -78,7 +49,8 @@
             },
             "zoom": 1.35
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "film",
@@ -117,7 +89,8 @@
             },
             "zoom": 1.25
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "booking",
@@ -146,7 +119,8 @@
             "zoom": 1.7
           }
         ],
-        "externalDestination": "https://tjoy.jp/yokohama_burg13"
+        "externalDestination": "https://tjoy.jp/yokohama_burg13",
+        "kind": "screen"
       },
       {
         "name": "watchlist",
@@ -185,7 +159,8 @@
             },
             "zoom": 1.8
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "plan",
@@ -235,7 +210,8 @@
             },
             "zoom": 1.1
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "sharing",
@@ -263,11 +239,12 @@
             },
             "zoom": 1.3
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "language",
-        "duration": 8,
+        "duration": 5,
         "frames": [
           {
             "at": 0,
@@ -292,7 +269,7 @@
             "zoom": 1.2
           },
           {
-            "at": 5,
+            "at": 4,
             "image": "ja-07-return.png",
             "focus": {
               "x": 142,
@@ -302,43 +279,20 @@
             },
             "zoom": 1.5
           }
-        ]
+        ],
+        "kind": "screen"
+      },
+      {
+        "name": "outro",
+        "kind": "mascot",
+        "duration": 5
       }
     ],
     "en": [
       {
         "name": "intro",
-        "duration": 8,
-        "frames": [
-          {
-            "at": 0,
-            "image": "en-00-overview.png",
-            "focus": null,
-            "zoom": 1
-          },
-          {
-            "at": 2,
-            "image": "en-00-menu.png",
-            "focus": {
-              "x": 14,
-              "y": 141,
-              "width": 290.796875,
-              "height": 48
-            },
-            "zoom": 1.5
-          },
-          {
-            "at": 4.5,
-            "image": "en-00-films.png",
-            "focus": {
-              "x": 0,
-              "y": 126,
-              "width": 390,
-              "height": 63
-            },
-            "zoom": 1.4
-          }
-        ]
+        "kind": "mascot",
+        "duration": 6
       },
       {
         "name": "search",
@@ -377,7 +331,8 @@
             },
             "zoom": 1.35
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "film",
@@ -416,7 +371,8 @@
             },
             "zoom": 1.25
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "booking",
@@ -445,7 +401,8 @@
             "zoom": 1.7
           }
         ],
-        "externalDestination": "https://tjoy.jp/yokohama_burg13"
+        "externalDestination": "https://tjoy.jp/yokohama_burg13",
+        "kind": "screen"
       },
       {
         "name": "watchlist",
@@ -484,7 +441,8 @@
             },
             "zoom": 1.8
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "plan",
@@ -534,7 +492,8 @@
             },
             "zoom": 1.1
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "sharing",
@@ -562,11 +521,12 @@
             },
             "zoom": 1.3
           }
-        ]
+        ],
+        "kind": "screen"
       },
       {
         "name": "language",
-        "duration": 8,
+        "duration": 5,
         "frames": [
           {
             "at": 0,
@@ -591,7 +551,7 @@
             "zoom": 1.2
           },
           {
-            "at": 5,
+            "at": 4,
             "image": "en-07-return.png",
             "focus": {
               "x": 142,
@@ -601,7 +561,13 @@
             },
             "zoom": 1.5
           }
-        ]
+        ],
+        "kind": "screen"
+      },
+      {
+        "name": "outro",
+        "kind": "mascot",
+        "duration": 5
       }
     ]
   },

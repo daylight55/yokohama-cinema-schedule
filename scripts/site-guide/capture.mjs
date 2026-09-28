@@ -38,7 +38,7 @@ for(const lang of ['ja','en']){
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
    if(overflow)throw Error(`Page overflow: ${filename}`);
  };
- const begin=(name)=>{current={name,duration:8,frames:[]};};
+ const begin=(name,duration=8)=>{current={name,kind:'screen',duration,frames:[]};};
  const end=()=>{scenes.push(current); console.log(`${lang}: captured ${current.name}`);};
  const menu=()=>page.getByRole('button',{name:tr('メニューを開く','Open menu'),exact:true});
  const film=tr(TITLE,TITLE_EN);
@@ -50,12 +50,8 @@ for(const lang of ['ja','en']){
    await page.locator(`#primary-navigation a[href="${href}"]`).click();
    await settle();
  };
- // 0. A real menu interaction establishes where the viewer is.
- begin('intro');
- await save('overview',null,0,1);
- await menu().click(); await save('menu',page.locator('#primary-navigation a[href="#movies"]'),2,1.5);
- await page.locator('#primary-navigation a[href="#movies"]').click(); await settle();
- await save('films',page.locator('.schedule-search'),4.5,1.4); end();
+ // 0. The greeting is a dedicated mascot scene, with no app capture underneath.
+ scenes.push({name:'intro',kind:'mascot',duration:6});
  // 1. Real typing, submitting and the resulting filtered list.
  begin('search'); await save('before',page.locator('.schedule-search'),0,1.65);
  await search().fill(film); await save('typed',searchButton(),1.8,1.65);
@@ -106,10 +102,12 @@ for(const lang of ['ja','en']){
  await page.locator('.shared-tabs button').nth(1).click(); await settle();
  await save('watchlist',page.locator('.shared-movies').first(),2.4,1.3); end();
  // 7. Toggle the real persisted JP / EN setting and show the translated screen.
- begin('language'); const toggle=page.getByRole('switch');
+ begin('language',5); const toggle=page.getByRole('switch');
  await save('before',toggle,0,1.9); await toggle.click(); await settle();
  await save('translated',page.locator('main'),2.7,1.2);
- await toggle.click(); await settle(); await save('return',toggle,5,1.5); end();
+ await toggle.click(); await settle(); await save('return',toggle,4,1.5); end();
+ // 8. A separate goodbye gives the mascot time to hop, land and hold its wink.
+ scenes.push({name:'outro',kind:'mascot',duration:5});
  for(const [width,height] of [[320,700],[390,844]]) {
    await page.setViewportSize({width,height}); await settle();
    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error(`Overflow at ${width}`);
