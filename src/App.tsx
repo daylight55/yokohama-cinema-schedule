@@ -739,11 +739,7 @@ export function App() {
         ),
     );
     return groupByMovie(areaShowings).sort((movieA, movieB) => {
-      const starredDifference =
-        Number(starredMovieKeys.has(movieB.preferenceKey)) -
-        Number(starredMovieKeys.has(movieA.preferenceKey));
       return (
-        starredDifference ||
         movieTitle(movieA.title).localeCompare(
           movieTitle(movieB.title),
           language,
@@ -754,7 +750,6 @@ export function App() {
     interactiveSearchQuery,
     schedule?.showings,
     selectedArea,
-    starredMovieKeys,
     language,
   ]);
   const movieCount = useMemo(
