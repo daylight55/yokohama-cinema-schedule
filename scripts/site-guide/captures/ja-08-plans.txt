@@ -6,11 +6,14 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "英語で表示": JP EN
   - button "ダークモードに切り替える"
+  - group
 - main:
   - region "共有":
     - paragraph: みんなの映画
     - heading "共有" [level=1]
-    - button "再読み込み"
+    - heading "映画ともだち" [level=2]
+    - link "グループ管理":
+      - /url: "#groups"
     - group "共有する情報":
       - button "みんなの予定" [pressed]
       - button "気になる"
@@ -29,4 +32,7 @@
           - /url: "#movie?movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
         - paragraph: 横浜ブルク13
         - list "鑑賞するメンバー":
-          - listitem: はまむび
+          - listitem:
+            - link "はまむび · マイページ":
+              - /url: "#member?user=guide"
+              - text: はまむび
