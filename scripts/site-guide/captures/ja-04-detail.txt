@@ -9,8 +9,6 @@
   - group
 - main:
   - region "君の名は。":
-    - link "作品一覧に戻る":
-      - /url: "#movies"
     - paragraph: 今後7日間の上映
     - heading "君の名は。" [level=1]
     - navigation "上映日へ移動":

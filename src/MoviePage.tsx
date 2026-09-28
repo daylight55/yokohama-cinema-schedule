@@ -1,10 +1,9 @@
 import { movieTitle, screeningInfo } from "./i18n";
 import { useEffect, useState } from "react";
 import { addDays, formatJstDate } from "../shared/date";
-import { ArrowLeftIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { moviePreferenceKey, safeImageUrl } from "../shared/movie";
 import type { ScheduleResponse } from "../shared/types";
-import { hashForAppView } from "./lib";
 import {
   localize as t,
   localizedDate,
@@ -75,10 +74,6 @@ export function MoviePage({
   });
   return (
     <PageShell className="movie-page" busy={loading} labelledBy="movie-title">
-      <a className="movie-back" href={hashForAppView("movies")}>
-        <ArrowLeftIcon size={18} aria-hidden="true" />
-        {t("作品一覧に戻る")}
-      </a>
       <div className="movie-overview">
         <div className="movie-overview-copy">
           <PageHeader
