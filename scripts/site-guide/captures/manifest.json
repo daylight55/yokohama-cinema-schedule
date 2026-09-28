@@ -604,5 +604,6 @@
         ]
       }
     ]
-  }
+  },
+  "sourceWorkingTreeNote": "Base revision 518c606 with local title-language work present during the capture session. The committed captures are the authoritative input for this export."
 }

@@ -8,7 +8,7 @@ const base=process.env.GUIDE_URL || 'http://127.0.0.1:5194';
 const root=path.dirname(fileURLToPath(import.meta.url));
 const output=path.join(root,'captures'); await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true});
-const manifest={viewport:{width:390,height:700},sourceRevision:process.env.GUIDE_SOURCE_REVISION||'unknown',data:'Demonstration data in the real app; no personal accounts or external writes',languages:{}};
+const manifest={viewport:{width:390,height:700},sourceRevision:process.env.GUIDE_SOURCE_REVISION||'unknown',sourceWorkingTreeNote:process.env.GUIDE_SOURCE_NOTE||'Record any local changes in the source checkout here.',data:'Demonstration data in the real app; no personal accounts or external writes',languages:{}};
 try {
 for(const lang of ['ja','en']){
  const context=await browser.newContext({viewport:manifest.viewport,deviceScaleFactor:2,locale:lang==='ja'?'ja-JP':'en-GB',colorScheme:'light'});
