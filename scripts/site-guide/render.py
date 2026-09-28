@@ -113,9 +113,11 @@ def mascot_pose(lang, t, closing):
     invitation = gesture(t, 1.8, 2.2, 2.7, 3.1) if closing else gesture(t, 2.55, 3.05, 3.55, 4.35)
     angle += 2.2*invitation
     height += 5*invitation
-    wink = gesture(t, 3.2, 3.3, 3.65, 3.78) if closing else 0
+    # English's short Bye-bye lands earlier than the Japanese farewell.
+    farewell_t = t + (1.1 if lang == 'en' else 0)
+    wink = gesture(farewell_t, 3.2, 3.3, 3.65, 3.78) if closing else 0
     if closing:
-        angle -= 2.5*gesture(t, 3.02, 3.35, 3.7, 4.35)
+        angle -= 2.5*gesture(farewell_t, 3.02, 3.35, 3.7, 4.35)
     return height, sx, sy, angle, wink
 
 
@@ -155,7 +157,8 @@ def mascot_scene(lang, index, t, manifest):
     center_y = 850-462*sy/2-height
     im.paste(sprite, (round((W-sprite.width)/2), round(center_y-sprite.height/2)), sprite)
     # One brief glint supports the wink; the resting shot stays quiet.
-    glint = gesture(t, 3.28, 3.48, 3.58, 3.95) if closing else 0
+    farewell_t = t + (1.1 if lang == 'en' else 0)
+    glint = gesture(farewell_t, 3.28, 3.48, 3.58, 3.95) if closing else 0
     if glint:
         sparkle(draw, 698, 566, 16*glint, '#e78d62')
     size = 42
