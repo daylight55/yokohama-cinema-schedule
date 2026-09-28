@@ -51,7 +51,7 @@ for(const lang of ['ja','en']){
    await settle();
  };
  // 0. The greeting is a dedicated mascot scene, with no app capture underneath.
- scenes.push({name:'intro',kind:'mascot',duration:6});
+ scenes.push({name:'intro',kind:'mascot',duration:7});
  // The main feature comes first: compare cinemas in the same schedule.
  begin('schedule');
  await page.locator('.cinema-strip').first().scrollIntoViewIfNeeded(); await settle();
