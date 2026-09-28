@@ -86,23 +86,37 @@ def progress_line(draw, index, t, scenes):
     draw.rectangle((0, H-4, int(W*elapsed/guide_duration(scenes)), H), fill=GREEN)
 
 
-def hop(t, closing):
-    """Anticipation, a clear airborne arc, then a short soft landing."""
-    jumps = [(0.25, .9, 110, -7), (1.6, .9, 135, 8), (3.05, .9, 95, -6), (4.4, .75, 55, 5)]
+def gesture(t, start, peak, release, end):
+    """A single conversational gesture with a pause, rather than a looping motion."""
+    return ease((t-start)/(peak-start)) * (1-ease((t-release)/(end-release)))
+
+
+def mascot_pose(lang, t, closing):
+    # One modest lift during the opening words. The two introductions have
+    # different leading silence; the audio itself keeps its original timing.
+    start = .8 if closing or lang == 'ja' else .48
+    duration = .95
+    height, sx, sy, angle = 0, 1, 1, 0
+    p = (t-start)/duration
+    if start-.13 <= t < start:
+        squeeze = math.sin(math.pi*(t-start+.13)/.13)
+        sx, sy = 1+.01*squeeze, 1-.015*squeeze
+    elif 0 <= p <= 1:
+        arc = math.sin(math.pi*p)
+        height = (24 if closing else 36)*arc
+        sx, sy = 1-.008*arc, 1+.012*arc
+        angle = -1.4*math.sin(2*math.pi*p)
+    elif start+duration < t < start+duration+.22:
+        squeeze = math.sin(math.pi*(t-start-duration)/.22)
+        sx, sy = 1+.015*squeeze, 1-.012*squeeze
+    # A small change of weight accompanies the invitation, then settles.
+    invitation = gesture(t, 1.8, 2.2, 2.7, 3.1) if closing else gesture(t, 2.55, 3.05, 3.55, 4.35)
+    angle += 2.2*invitation
+    height += 5*invitation
+    wink = gesture(t, 3.2, 3.3, 3.65, 3.78) if closing else 0
     if closing:
-        jumps = [(0.25, .9, 110, 8), (1.6, .85, 80, -6)]
-    for start, duration, height, lean in jumps:
-        p = (t-start)/duration
-        if -.16/duration <= p < 0:
-            squeeze = math.sin(math.pi*(t-start+.16)/.16)
-            return 0, 1+.045*squeeze, 1-.065*squeeze, 0
-        if 0 <= p <= 1:
-            stretch = math.sin(math.pi*p)
-            return 4*height*p*(1-p), 1-.025*stretch, 1+.04*stretch, lean*math.sin(2*math.pi*p)
-        if 0 < t-start-duration < .24:
-            squeeze = math.sin(math.pi*(t-start-duration)/.24)
-            return 0, 1+.075*squeeze, 1-.065*squeeze, 0
-    return 0, 1, 1, 0
+        angle -= 2.5*gesture(t, 3.02, 3.35, 3.7, 4.35)
+    return height, sx, sy, angle, wink
 
 
 def sparkle(draw, x, y, radius, color):
@@ -128,24 +142,22 @@ def mascot_scene(lang, index, t, manifest):
     text(draw, ((W-width)/2, 158), title, size, INK, True)
     # The original icon stays intact; movement gives it personality without new limbs.
     draw.ellipse((142, 269, 758, 885), fill='#e5f1de')
-    height, sx, sy, angle = hop(t, closing)
-    wink = closing and t >= 3.05
-    if wink:
-        angle = -5*ease((t-2.9)/.3)
+    height, sx, sy, angle, wink = mascot_pose(lang, t, closing)
     shadow_width = 310-height*.7
     shadow_height = 24-height*.08
     shade = round(190+height*.18)
     draw.ellipse((450-shadow_width/2, 868-shadow_height/2,
                   450+shadow_width/2, 868+shadow_height/2), fill=(shade, 215, 192))
-    sprite = mascot_actor(wink).resize((round(462*sx), round(462*sy)), Image.Resampling.LANCZOS)
+    actor = Image.blend(mascot_actor(), mascot_actor(True), wink) if wink else mascot_actor()
+    sprite = actor.resize((round(462*sx), round(462*sy)), Image.Resampling.LANCZOS)
     sprite = sprite.rotate(angle, Image.Resampling.BICUBIC, expand=True)
     # Pivot around the icon's centre so tilting does not shift its baseline.
     center_y = 850-462*sy/2-height
     im.paste(sprite, (round((W-sprite.width)/2), round(center_y-sprite.height/2)), sprite)
-    sparkle(draw, 157, 480, 13+4*math.sin(t*3), '#f3b68e')
-    sparkle(draw, 750, 372, 18+4*math.sin(t*3+1), '#92c5a6')
-    if wink:
-        sparkle(draw, 703, 566, 29*ease((t-3.05)/.3), '#e78d62')
+    # One brief glint supports the wink; the resting shot stays quiet.
+    glint = gesture(t, 3.28, 3.48, 3.58, 3.95) if closing else 0
+    if glint:
+        sparkle(draw, 698, 566, 16*glint, '#e78d62')
     size = 42
     wrapped = lines(copy['caption'], size, 810)
     while len(wrapped) > 3:
