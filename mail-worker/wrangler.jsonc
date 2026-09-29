@@ -21,5 +21,18 @@
   "vars": {
     "APP_ORIGIN": "https://hama-movie.daylight55.dev",
     "INVITE_FROM_EMAIL": "noreply@notify.daylight55.dev"
-  }
+  },
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "yokohama-cinema-schedule",
+      "database_id": "e657eee0-8431-4641-a5b9-bd08cb70d191",
+      "migrations_dir": "../migrations"
+    }
+  ]
 }

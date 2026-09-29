@@ -51,7 +51,6 @@
     - button "設定する"
     - heading "パスキー" [level=2]
     - button "パスキーを追加"
-    - group: 退会する
     - region "スケジュールに表示する映画館":
       - heading "スケジュールに表示する映画館" [level=2]
       - paragraph: 選んだ映画館の上映予定をまとめて表示します。変更は自動で保存されます。
@@ -64,3 +63,4 @@
       - status
       - link "上映スケジュールを見る":
         - /url: "#schedule?date=2026-09-28"
+    - button "退会する"

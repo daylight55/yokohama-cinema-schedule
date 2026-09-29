@@ -4232,3 +4232,16 @@ html[lang="en"] .brand-wordmark {
   background: var(--surface);
   border-color: var(--line);
 }
+
+.account-withdrawal { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line-soft); }
+.account-danger-button { background: #b52d43; border: 1px solid #b52d43; color: #fff; min-height: 44px; padding: 10px 18px; border-radius: 10px; font-weight: 650; cursor: pointer; }
+.account-danger-button:hover:not(:disabled) { background: #982338; }
+.account-withdrawal-dialog { width: min(440px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 20px; overflow-y: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--text); }
+.account-withdrawal-dialog::backdrop { background: rgb(0 0 0 / 65%); }
+.account-withdrawal-dialog h2 { margin: 0 0 16px; font-size: 1.2rem; }
+.account-withdrawal-dialog p { line-height: 1.7; overflow-wrap: anywhere; }
+.account-withdrawal-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.account-withdrawal-actions button { margin-top: 0; padding: 10px 14px; flex: 1 1 140px; min-width: 0; min-height: 44px; }
+.account-withdrawal button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.account-danger-button:disabled { opacity: .55; cursor: wait; }
