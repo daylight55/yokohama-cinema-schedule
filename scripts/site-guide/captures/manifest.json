@@ -3,8 +3,8 @@
     "width": 390,
     "height": 700
   },
-  "sourceRevision": "3911497",
-  "sourceWorkingTreeNote": "Fixed-height member activity lists under review",
+  "sourceRevision": "1834ad5",
+  "sourceWorkingTreeNote": "Account withdrawal moved below cinema settings with two confirmation dialogs",
   "data": "Demonstration data in the real app; no personal accounts or external writes",
   "languages": {
     "ja": [
@@ -74,8 +74,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "3911497",
-        "sourceWorkingTreeNote": "Fixed-height member activity lists under review"
+        "sourceRevision": "1834ad5",
+        "sourceWorkingTreeNote": "Account withdrawal moved below cinema settings with two confirmation dialogs"
       },
       {
         "name": "cinema-settings",
@@ -120,7 +120,7 @@
             "image": "ja-02-settings.png",
             "focus": {
               "x": 14,
-              "y": 320.09375,
+              "y": 282.09375,
               "width": 362,
               "height": 332.1875
             },
@@ -131,7 +131,7 @@
             "image": "ja-02-selected.png",
             "focus": {
               "x": 14,
-              "y": 320.09375,
+              "y": 282.09375,
               "width": 362,
               "height": 332.1875
             },
@@ -493,8 +493,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "3911497",
-        "sourceWorkingTreeNote": "Fixed-height member activity lists under review"
+        "sourceRevision": "1834ad5",
+        "sourceWorkingTreeNote": "Account withdrawal moved below cinema settings with two confirmation dialogs"
       },
       {
         "name": "cinema-settings",
@@ -539,7 +539,7 @@
             "image": "en-02-settings.png",
             "focus": {
               "x": 14,
-              "y": 326.09375,
+              "y": 285.09375,
               "width": 362,
               "height": 326.1875
             },
@@ -550,7 +550,7 @@
             "image": "en-02-selected.png",
             "focus": {
               "x": 14,
-              "y": 326.09375,
+              "y": 285.09375,
               "width": 362,
               "height": 326.1875
             },

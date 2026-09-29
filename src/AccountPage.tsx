@@ -328,11 +328,11 @@ export function AccountPage({
                 ),
               )}
             </section>
-            <WithdrawAccount />
           </>
         ),
       )}
       {localize(scheduleSettings)}
+      {!account.user.legacy && <WithdrawAccount />}
     </PageShell>
   );
 }

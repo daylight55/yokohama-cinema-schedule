@@ -51,7 +51,6 @@
     - button "Set up"
     - heading "Passkeys" [level=2]
     - button "Add passkey"
-    - group: Close account
     - region "Cinemas in your showtimes":
       - heading "Cinemas in your showtimes" [level=2]
       - paragraph: See showtimes from your selected cinemas together. Changes are saved automatically.
@@ -64,3 +63,4 @@
       - status
       - link "View showtimes":
         - /url: "#schedule?date=2026-09-28"
+    - button "Close account"

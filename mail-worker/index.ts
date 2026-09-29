@@ -1,12 +1,26 @@
+import { deliverWithdrawalEmails } from "./withdrawal";
 import { invitationFailureReason } from "../shared/invitation-diagnostics";
 
 interface Env {
   EMAIL: SendEmail;
+  DB?: D1Database;
   INVITE_FROM_EMAIL?: string;
   APP_ORIGIN: string;
 }
 export default {
+  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    if (!env.DB) throw new Error("withdrawal_email_database_unavailable");
+    ctx.waitUntil(deliverWithdrawalEmails({ ...env, DB: env.DB }));
+  },
   async fetch(request: Request, env: Env): Promise<Response> {
+    if (request.method === "POST" && new URL(request.url).pathname === "/withdrawal") {
+      if (!env.DB) return new Response("Not configured", { status: 503 });
+      let body: { userId?: unknown };
+      try { body = await request.json(); } catch { return new Response("Invalid request", { status: 400 }); }
+      if (typeof body?.userId !== "string" || !body.userId) return new Response("Invalid request", { status: 400 });
+      await deliverWithdrawalEmails({ ...env, DB: env.DB }, body.userId);
+      return Response.json({ processed: true });
+    }
     // This Worker has no public route; only the Pages service binding can call it.
     if (request.method !== "POST" || new URL(request.url).pathname !== "/send")
       return new Response("Not found", { status: 404 });

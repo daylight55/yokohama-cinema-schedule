@@ -22,6 +22,10 @@ export async function accountCanLogin(db: D1Database, userId: string, now = new 
 export async function withdrawAccount(db: D1Database, userId: string, now = new Date()): Promise<string | null> {
   const deadline = accountDeletionDeadline(now);
   const results = await db.batch([
+    db.prepare(`INSERT INTO account_withdrawal_emails(id,user_id,delete_after,language,created_at,next_attempt_at)
+      SELECT ?,id,?,language,?,? FROM users
+      WHERE id=? AND email IS NOT NULL AND status='active' AND withdrawn_at IS NULL`)
+      .bind(crypto.randomUUID(), deadline, now.toISOString(), now.toISOString(), userId),
     db.prepare(`UPDATE users SET status='disabled', withdrawn_at=?, delete_after=?, updated_at=?
       WHERE id=? AND email IS NOT NULL AND status='active' AND withdrawn_at IS NULL`)
       .bind(now.toISOString(), deadline, now.toISOString(), userId),
@@ -33,7 +37,7 @@ export async function withdrawAccount(db: D1Database, userId: string, now = new 
       AND revoked_at IS NULL AND EXISTS (SELECT 1 FROM users WHERE id=? AND withdrawn_at IS NOT NULL)`)
       .bind(now.toISOString(), userId, userId),
   ]);
-  return results[0].meta.changes === 1 ? deadline : null;
+  return results[1].meta.changes === 1 ? deadline : null;
 }
 
 /** Single SQL statement: restore-vs-delete races resolve inside D1, never from a stale ID list. */
