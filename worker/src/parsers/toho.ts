@@ -36,6 +36,7 @@ interface TohoTheater {
 interface TohoScheduleResponse {
   status?: string;
   data?: Array<{
+    code?: string;
     list?: TohoTheater[];
   }>;
 }
@@ -48,6 +49,7 @@ export function parseTohoSchedule(
   bookingUrl: string,
 ): NormalizedShowing[] {
   const response = input as TohoScheduleResponse;
+  if (response?.status === "1" && response.data?.length === 1 && response.data[0]?.code === "ERR-1191") return [];
   if (!response || response.status !== "0" || !Array.isArray(response.data)) throw new Error("TOHO schedule response is invalid");
 
   const result: NormalizedShowing[] = [];

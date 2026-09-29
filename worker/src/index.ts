@@ -385,7 +385,7 @@ export async function refreshBatch(
   return summary;
 }
 
-function buildSources(browser?: BrowserRun): Source[] {
+export function buildSources(browser?: BrowserRun): Source[] {
   return [
     {
       id: "tjoy-yokohama",

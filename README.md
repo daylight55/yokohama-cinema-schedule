@@ -609,3 +609,36 @@ node scripts/refresh-date.mjs 2026-10-02
 公開用の再取得APIや追加の秘密鍵は作成しません。映画館を直列に処理し、外側での自動再試行は
 しません。従来の最大5失敗・403/429即停止を保ち、営業期間外はスキップします。
 取得失敗や0件で以前の上映を削除しません。終了時に一時的な開発環境を停止します。
+
+### Codex・ローカルからの日付指定同期と履歴
+
+公式サイトにローカルからアクセスし、通常のパーサーで確認できます。
+プレビューはDBを書き換えません。`--apply`を付けると本番D1へ反映します。
+Cloudflareのログイン権限が必要です。Workerと同じアクセス回数制限を使い、
+403/429を受けた取得元はその実行内で再試行しません。
+
+```bash
+npm run sync:schedules -- --date 2026-10-02 --output /tmp/schedule-preview.json
+npm run sync:schedules -- --date 2026-10-02 --apply --output /tmp/schedule-result.json
+# 対象館を絞る場合（複数指定可）
+npm run sync:schedules -- --date 2026-10-02 --source aeon-minatomirai --apply
+```
+
+反映前にマイグレーション0025を適用します。既存の`fetch_runs`に加え、
+`source_date_history`に映画館・対象日・試行日時・件数・結果・エラーを
+追記します。自動同期も手動同期もDBトリガーで記録され、最新状態の更新で
+過去の結果が消えることはありません。導入前の履歴は復元しません。
+`fetch_runs`とは`source_id`と`attempted_at = started_at`で対応付けられます。
+途中終了で最終結果が保存されなかった実行はWorkerの実行ログを確認してください。
+
+```sql
+SELECT source_id, schedule_date, attempted_at, status, showing_count, error_message
+FROM source_date_history
+WHERE schedule_date = '2026-10-02'
+ORDER BY id DESC;
+```
+
+`published`は取得できた上映回があることを示し、全プログラムの公開完了を
+保証しません。先行販売分のみの場合もあります。公式の未登録応答は
+`not_published`、アクセス拒否や解析失敗は`error`として扱います。
+どちらの場合も以前の上映データを削除しません。
