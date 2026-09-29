@@ -16,6 +16,9 @@ if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
     !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) {
   throw new Error('Use --date YYYY-MM-DD');
 }
+const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+const lastDate = new Date(Date.parse(today) + 6 * 86400000).toISOString().slice(0, 10);
+if (date < today || date > lastDate) throw new Error(`Date must be within ${today} to ${lastDate}`);
 const directory = await mkdtemp(resolve('node_modules/.schedule-sync-'));
 let proxy;
 try {
@@ -50,9 +53,10 @@ try {
     for (const source of buildSources().filter(s => ids.has(s.id))) {
       try {
         const result = await source.fetch([date]);
+        const showings = result.showings.filter(s =>
+          new Date(Date.parse(s.startsAt) + 9 * 3600000).toISOString().slice(0, 10) === date);
         report.results.push({ sourceId: source.id,
-          outcomes: sourceDateOutcomes([date], result.showings, result.dateErrors),
-          showings: result.showings });
+          outcomes: sourceDateOutcomes([date], showings, result.dateErrors), showings });
       } catch (error) {
         report.results.push({ sourceId: source.id, error: error.message });
       }

@@ -326,6 +326,7 @@ it("records every date attempt while retaining earlier successes and stored show
       result: '<div id="film"><a class="calendar-active calendar-item" data-date="2026-10-02"></a>' +
         (unavailable ? '<p class="text-notify">スケジュールは調整中です。</p>' : film) + '</div>',
     }));
+    vi.stubGlobal("fetch", vi.fn(async () => new Response('<body id="film-detail"><h1 class="carosuel-header">テスト映画</h1><button data-code="C9999"></button></body>')));
     const env = { DB: db, BROWSER: { quickAction } as unknown as BrowserRun };
     const ids = new Set(["tjoy-yokohama"]);
     await refreshBatch(env, 0, ids, new Set(["2026-10-02"]));
