@@ -8,19 +8,14 @@
   - button "Switch to dark mode"
   - group
 - dialog "Your Name.":
-  - text: Film preferences
+  - text: Added to your watchlist
   - heading "Your Name." [level=2]
-  - button "Close film preferences"
-  - link "View film showtimes":
-    - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&q=Your+Name."
-  - group "Status of Your Name.":
-    - button "Watchlist" [pressed]
-    - button "Watched"
-    - button "Not interested"
+  - button "Close note"
   - text: A note for your groups (optional)
   - textbox "A note for your groups (optional)":
     - /placeholder: What makes you want to see it?
   - button "Save note"
+  - button "Skip for now"
 - main:
   - navigation "Screening dates":
     - link "All 7 days":
@@ -80,6 +75,5 @@
           - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-0"
           - time: 12:00
       - 'button "Remove from watchlist: Your Name." [pressed]'
-      - group "Viewing status of Your Name.":
-        - button "Watched"
-        - button "Not interested"
+      - button "Film preferences · Your Name."
+- button "Switch schedules"

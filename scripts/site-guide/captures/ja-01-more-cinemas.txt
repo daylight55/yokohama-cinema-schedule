@@ -120,4 +120,4 @@
             - /url: https://www.aeoncinema.com/cinema/minatomirai/
             - text: 予約
           - button "サマーウォーズ 15:00 イオンシネマを鑑賞予定に追加": 観に行く
-- button "現在地から間に合う上映を更新": 現在地で更新
+- button "スケジュールを切替"

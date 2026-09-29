@@ -120,10 +120,10 @@ for(const lang of ['ja','en']){
  await star.scrollIntoViewIfNeeded(); await settle();
  begin('watchlist'); await save('star',star,0,1.8);
  await star.click(); await page.waitForFunction(()=>document.querySelector('.movie-list-item .favorite-button[aria-pressed="true"]'));
- const preferenceDialog=page.locator('.movie-preference-dialog');
+ const preferenceDialog=page.locator('dialog[aria-labelledby="movie-preference-title"]');
  await preferenceDialog.waitFor({state:'visible'});
- await save('saved',preferenceDialog.getByRole('button',{name:tr('気になる','Watchlist'),exact:true}),2.3,1.3);
- await preferenceDialog.getByRole('button',{name:tr('作品の設定を閉じる','Close film preferences'),exact:true}).click();
+ await save('saved',preferenceDialog.locator('textarea'),2.3,1.3);
+ await preferenceDialog.getByRole('button',{name:tr('ひとこと入力を閉じる','Close note'),exact:true}).click();
  await settle(); await save('selected',star,5,1.8); end();
  // 5. Add a particular showing and follow the menu to the saved plan.
  await nav(`#schedule?date=${DATE}`);

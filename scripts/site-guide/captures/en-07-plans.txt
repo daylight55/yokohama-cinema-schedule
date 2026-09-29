@@ -29,3 +29,4 @@
           - link "Book on cinema website":
             - /url: https://tjoy.jp/yokohama_burg13
           - button "Remove Your Name. from your plans": Remove from plans
+- button "Switch schedules"

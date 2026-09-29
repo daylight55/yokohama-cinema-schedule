@@ -29,3 +29,4 @@
           - link "予約サイトへ":
             - /url: https://tjoy.jp/yokohama_burg13
           - button "君の名は。を鑑賞予定から外す": 予定から外す
+- button "スケジュールを切替"
