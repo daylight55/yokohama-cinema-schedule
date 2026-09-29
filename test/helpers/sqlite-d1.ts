@@ -9,8 +9,10 @@ export function testDatabase() {
   const prepare = (sql: string) => {
     let values: SQLInputValue[] = [];
     const statement = {
-      bind: (...args: SQLInputValue[]) => {
-        values = args;
+      bind: (...args: (SQLInputValue | ArrayBuffer)[]) => {
+        values = args.map((value) =>
+          value instanceof ArrayBuffer ? new Uint8Array(value) : value,
+        );
         return statement;
       },
       first: async () => sqlite.prepare(sql).get(...values) ?? null,
@@ -20,11 +22,14 @@ export function testDatabase() {
         meta: {},
       }),
       run: async () => {
-        const result = sqlite.prepare(sql).run(...values);
+        // D1 meta.changes uses the total_changes delta, including triggers/cascades.
+        const before = Number(sqlite.prepare("SELECT total_changes() n").get()?.n);
+        sqlite.prepare(sql).run(...values);
+        const changes = Number(sqlite.prepare("SELECT total_changes() n").get()?.n) - before;
         return {
           success: true,
           results: [],
-          meta: { changes: Number(result.changes) },
+          meta: { changes },
         };
       },
     };

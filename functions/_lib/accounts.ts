@@ -1,5 +1,6 @@
 import type { Language } from "../../shared/language";
-import { registerInvitedGoogleUser } from "./invitations";
+import { accountCanLogin } from "../../shared/account-lifecycle";
+import { acceptExistingInvite, registerInvitedGoogleUser } from "./invitations";
 import type { AuthUser, ResolvedSession } from "./auth";
 import { findUserByEmail, LEGACY_USER_ID, normalizeEmail } from "./auth";
 import { prepareDepartureLocationTransfer } from "./user-profile";
@@ -124,7 +125,7 @@ export async function completeGoogleLogin(
 
   const identityUser = await findGoogleIdentity(db, identity.subject);
   if (identityUser) {
-    if (identityUser.status !== "active") {
+    if (!(await accountCanLogin(db, identityUser.id))) {
       throw new Error("user_disabled");
     }
     await db
@@ -140,18 +141,20 @@ export async function completeGoogleLogin(
         identityUser.id,
       )
       .run();
+    if (inviteToken) await acceptExistingInvite(db, inviteToken, identityUser.id, normalizedEmail);
     return { ...identityUser, displayEmail: identity.email };
   }
 
   const emailUser = await findUserByEmail(db, normalizedEmail);
   if (emailUser) {
-    if (emailUser.status !== "active") throw new Error("user_disabled");
+    if (!(await accountCanLogin(db, emailUser.id))) throw new Error("user_disabled");
     await linkGoogleIdentity(
       db,
       emailUser.id,
       identity.subject,
       normalizedEmail,
     );
+    if (inviteToken) await acceptExistingInvite(db, inviteToken, emailUser.id, normalizedEmail);
     return emailUser;
   }
 

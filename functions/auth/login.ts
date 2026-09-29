@@ -23,6 +23,7 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
     "",
     "",
     requestLanguage(context.request),
+    new URL(context.request.url).searchParams.get("withdrawn") === "1",
   );
 };
 
@@ -87,16 +88,24 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
 
 export function normalizeReturnHash(value: FormDataEntryValue | null): string {
   if (typeof value !== "string") return "";
+  if (/^#member\?user=[A-Za-z0-9_.~%+-]{1,384}$/i.test(value)) {
+    const user = new URLSearchParams(value.split("?")[1]).get("user")!;
+    return user.length <= 128 ? `#member?${new URLSearchParams({ user })}` : "";
+  }
   const normalized = value.toLowerCase();
+  if (/^#collection-status(?:\?date=\d{4}-\d{2}-\d{2})?$/.test(normalized)) return normalized;
   return [
     "#schedule",
     "#movies",
     "#cinemas",
     "#viewing-plans",
     "#shared",
+    "#groups",
+    "#notifications",
     "#planner",
     "#profile",
     "#account",
+    "#member",
   ].includes(normalized)
     ? normalized
     : "";

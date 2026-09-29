@@ -1,3 +1,4 @@
+import { listMovieTitles } from "../_lib/movie-titles";
 import { addDays, jstDateBounds, todayInJst } from "../../shared/date";
 import {
   normalizeSearchQuery,
@@ -129,9 +130,7 @@ export const onRequestGet: PagesFunction<
       .bind(date)
       .first<HealthRow>(),
     listActiveCinemas(context.env.DB, date, publicOnly),
-    context.env.DB.prepare(
-      "SELECT title_key AS titleKey, japanese_title AS japaneseTitle, original_title AS originalTitle, english_title AS englishTitle, source_url AS sourceUrl, source_kind AS sourceKind FROM movie_title_research WHERE status = 'verified'",
-    ).all<import("../../shared/types").MovieTitleRecord>(),
+    listMovieTitles(context.env.DB),
   ]);
   const [preferences, cinemaTravelPreferences, userProfile] = await Promise.all(
     [
@@ -181,7 +180,7 @@ export const onRequestGet: PagesFunction<
 
   const response: ScheduleResponse = {
     date,
-    movieTitles: titleCatalog.results ?? [],
+    movieTitles: titleCatalog,
     generatedAt: new Date().toISOString(),
     lastUpdatedAt: health?.last_updated_at ?? null,
     cinemas,

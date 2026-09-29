@@ -1,3 +1,8 @@
+import { CollectionStatusPage } from "./CollectionStatusPage";
+import { WatchlistNote } from "./WatchlistNote";
+import { activeMetrics } from "./performanceMetrics";
+import { MemberPage } from "./MemberPage";
+import { ProfileMenu } from "./MemberProfile";
 import { UsersThreeIcon } from "@phosphor-icons/react";
 import { movieTitle, screeningInfo } from "./i18n";
 import {
@@ -8,6 +13,9 @@ import {
   englishText,
 } from "./i18n";
 import { MoviePage } from "./MoviePage";
+import { MovieTimes } from "./MovieTimes";
+import { useDateSwipe } from "./useDateSwipe";
+import { useHistoryScroll } from "./useHistoryScroll";
 import { localize, localizedDate } from "./i18n";
 import {
   ArrowSquareOutIcon,
@@ -26,13 +34,11 @@ import {
   MoonIcon,
   MoonStarsIcon,
   PathIcon,
-  SignOutIcon,
   StarIcon,
   SunDimIcon,
   SunHorizonIcon,
   SunIcon,
   TrashIcon,
-  UserCircleIcon,
   WarningCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -40,7 +46,6 @@ import {
   Fragment,
   type FormEvent,
   type MouseEvent,
-  type TouchEvent,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -84,13 +89,11 @@ import {
   groupByScheduleTime,
   groupScheduleTimeBuckets,
   groupByMovie,
-  getDateSwipeDirection,
   getAppPageScrollTarget,
   getScheduleMoviePresentation,
   getScheduleTimeJumpTargets,
   getViewingPlanButtonState,
   hashForAppView,
-  isDateSwipeBlockedByHorizontalScroll,
   listMovieShowingDates,
   normalizeMovieTitle,
   parseColorTheme,
@@ -113,6 +116,7 @@ import { AdminUsersPage } from "./AdminUsersPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
+import { NotificationsPage } from "./Notifications";
 import { SharedPage } from "./SharedPage";
 import { ViewingPlansPage } from "./ViewingPlansPage";
 
@@ -197,6 +201,7 @@ export function App() {
     }
   }
 
+  useEffect(() => { activeMetrics?.commit(); });
   const [now, setNow] = useState(() => new Date());
   const [theme, setTheme] = useState<ColorTheme>(() => {
     const bootstrappedTheme = parseColorTheme(
@@ -214,8 +219,6 @@ export function App() {
     () => getStoredColorTheme() !== null,
   );
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
-  const dateSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
-  const suppressClickUntilRef = useRef(0);
   const navigationDialogRef = useRef<HTMLDialogElement>(null);
   const moviePreferenceDialogRef = useRef<HTMLDialogElement>(null);
   const pendingMovieAnchorRef = useRef<{
@@ -266,10 +269,15 @@ export function App() {
       : null,
   );
   const [selectedArea, setSelectedArea] = useState<CinemaArea | "all">("all");
+  const [selectedMemberId, setSelectedMemberId] = useState(initialHashState.user ?? "");
+  const [selectedShowingId, setSelectedShowingId] = useState(initialHashState.showing ?? null);
+  const lastShowingFocusRef = useRef<string | null>(null);
+  const [loadedScheduleKey, setLoadedScheduleKey] = useState("");
   const [futureOnly, setFutureOnly] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
   const [routes, setRoutes] = useState<RouteEstimate[]>([]);
   const [view, setView] = useState<AppView>(initialHashState.view);
+  const scheduleRequestKey = `${view}:${selectedDate}:${showAllMovieDates}`;
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [showJumpToNow, setShowJumpToNow] = useState(false);
   const [activeScheduleTimePeriod, setActiveScheduleTimePeriod] =
@@ -298,6 +306,7 @@ export function App() {
   const [cinemaPreferenceError, setCinemaPreferenceError] = useState<
     string | null
   >(null);
+  const [movieNotes, setMovieNotes] = useState<Map<string,string>>(new Map());
   const [starredMovieKeys, setStarredMovieKeys] = useState<Set<string>>(
     () => new Set(),
   );
@@ -340,6 +349,11 @@ export function App() {
   const [routeUpdatedAt, setRouteUpdatedAt] = useState<string | null>(null);
   const selectedMovieListDate =
     view === "movies" && showAllMovieDates ? null : selectedDate;
+  const historyScroll = useHistoryScroll(
+    hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie", "collectionStatus"].includes(view) ? selectedDate : null,
+      user: selectedMemberId, movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
+    !loading && loadedScheduleKey === scheduleRequestKey && interactiveSearchQuery === normalizedSearchQuery,
+  );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -398,6 +412,7 @@ export function App() {
           : view;
     if (lastPageScrollKeyRef.current === pageScrollKey) return;
     lastPageScrollKeyRef.current = pageScrollKey;
+    if (historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash) return;
 
     const scrollTarget = getAppPageScrollTarget(
       view,
@@ -409,7 +424,7 @@ export function App() {
     pendingHomeScrollRef.current = false;
     didInitialTimeScrollRef.current = false;
 
-    if (scrollTarget === "linked-movie") {
+    if (scrollTarget === "linked-movie" || selectedShowingId) {
       lastMovieDeepLinkRef.current = null;
       return;
     }
@@ -449,7 +464,7 @@ export function App() {
   }, [routes]);
 
   useEffect(() => {
-    const updateClock = () => setNow(new Date());
+    const updateClock = () => { if (document.visibilityState === "visible") setNow(new Date()); };
     const interval = window.setInterval(updateClock, 30_000);
     document.addEventListener("visibilitychange", updateClock);
     return () => {
@@ -472,7 +487,8 @@ export function App() {
       const usesWeeklyDate =
         nextView === "schedule" ||
         nextView === "movies" ||
-        nextView === "movie";
+        nextView === "movie" ||
+        nextView === "collectionStatus";
       const nextShowAllMovieDates =
         nextView === "movies" && hashState.date === null;
       const nextScheduleDate =
@@ -497,16 +513,21 @@ export function App() {
                 : null,
         movie: nextMovieKey,
         query: usesWeeklyDate ? hashState.query : null,
+        showing: nextView === "schedule" ? hashState.showing : null,
+        user: nextView === "member" ? hashState.user : null,
       });
       if (window.location.hash !== canonicalHash) {
-        window.history.replaceState(null, "", canonicalHash);
+        window.history.replaceState(window.history.state, "", canonicalHash);
       }
       setView(nextView);
+      setSelectedMemberId(nextView === "member" ? hashState.user ?? "" : "");
       setSelectedDate(nextScheduleDate);
       setShowAllMovieDates(nextShowAllMovieDates);
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
       setPlannerDate(nextPlannerDate);
       setSelectedMovieKey(nextMovieKey);
+      setSelectedShowingId(nextView === "schedule" ? hashState.showing ?? null : null);
+      lastShowingFocusRef.current = null;
     };
 
     syncViewFromHash();
@@ -537,8 +558,11 @@ export function App() {
         return response.json() as Promise<ScheduleResponse>;
       })
       .then((data) => {
+        if (controller.signal.aborted) return;
+        setLoadedScheduleKey(scheduleRequestKey);
         registerTitleTranslations(data.movieTitles ?? []);
         setSchedule(data);
+        setMovieNotes(new Map(data.preferences.map(p => [p.movieKey,p.comment ?? ""])));
         setStarredMovieKeys(
           new Set(
             data.preferences
@@ -618,7 +642,7 @@ export function App() {
           );
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [dates, selectedDate, showAllMovieDates, view]);
 
@@ -681,13 +705,15 @@ export function App() {
     [routeByCinema, schedule?.cinemas, selectedArea],
   );
   const visibleShowings = useMemo(
-    () =>
-      filterShowings(schedule?.showings ?? [], {
+    () => {
+      const filtered = new Set(filterShowings(schedule?.showings ?? [], {
         selectedArea,
         futureOnly: futureOnly && selectedDate === dates[0],
         now,
-      }).filter(
-        (showing) =>
+      }).map((showing) => showing.id));
+      return (schedule?.showings ?? []).filter((showing) =>
+        showing.id === selectedShowingId || (
+          filtered.has(showing.id) &&
           (cinemaScheduleVisibility.get(showing.cinemaId) ?? true) &&
           !movieStatusByKey.has(normalizeMovieTitle(showing.title)) &&
           matchesShowingSearchQuery(
@@ -695,8 +721,10 @@ export function App() {
             `${showing.title} ${englishText(showing.title)}`,
             `${showing.cinemaName} ${englishText(showing.cinemaName)}`,
             `${showing.cinemaShortName} ${englishText(showing.cinemaShortName)}`,
-          ),
-      ),
+          )
+        ),
+      );
+    },
     [
       dates,
       cinemaScheduleVisibility,
@@ -707,6 +735,7 @@ export function App() {
       schedule?.showings,
       selectedArea,
       selectedDate,
+      selectedShowingId,
     ],
   );
   const timeGroups = useMemo(
@@ -772,7 +801,23 @@ export function App() {
     currentTimeMarkerIndex === -1;
 
   useLayoutEffect(() => {
+    if (!selectedShowingId || view !== "schedule" || loading || error || loadedScheduleKey !== scheduleRequestKey ||
+      historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash) return;
+    const key = window.location.hash;
+    if (lastShowingFocusRef.current === key) return;
+    const target = Array.from(document.querySelectorAll<HTMLElement>("[data-showing-id]"))
+      .find((el) => el.dataset.showingId === selectedShowingId);
+    if (!target) return;
+    const section = target.closest<HTMLDetailsElement>("details.schedule-window");
+    if (section) section.open = true;
+    target.scrollIntoView({ behavior: "instant", block: "center", inline: "center" });
+    target.focus({ preventScroll: true });
+    lastShowingFocusRef.current = key;
+  }, [selectedShowingId, view, loading, error, loadedScheduleKey, scheduleRequestKey, timeGroups]);
+
+  useLayoutEffect(() => {
     if (
+      selectedShowingId || historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash ||
       loading ||
       error ||
       schedule?.date !== selectedDate ||
@@ -808,6 +853,7 @@ export function App() {
   useLayoutEffect(() => {
     if (
       didInitialTimeScrollRef.current ||
+      selectedShowingId || historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash ||
       loading ||
       error ||
       schedule?.date !== selectedDate ||
@@ -873,7 +919,9 @@ export function App() {
     }
 
     let animationFrame = 0;
+    let scrollTimer = 0;
     const updateActivePeriod = () => {
+      window.clearTimeout(scrollTimer);
       window.cancelAnimationFrame(animationFrame);
       animationFrame = window.requestAnimationFrame(() => {
         const timeline = document.querySelector<HTMLElement>(".timeline");
@@ -930,13 +978,25 @@ export function App() {
       });
     };
 
+    // The active-period indicator can wait until scrolling settles. Do not
+    // measure every timeline row while the browser is processing a fling.
+    const deferActivePeriod = () => {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(updateActivePeriod, 150);
+    };
+    const onScrollEnd = (event: Event) => {
+      if (event.target === document) updateActivePeriod();
+    };
     updateActivePeriod();
-    window.addEventListener("scroll", updateActivePeriod, { passive: true });
+    window.addEventListener("scroll", deferActivePeriod, { passive: true });
+    document.addEventListener("scrollend", onScrollEnd);
     window.addEventListener("resize", updateActivePeriod);
     document.addEventListener("toggle", updateActivePeriod, true);
     return () => {
       window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("scroll", updateActivePeriod);
+      window.clearTimeout(scrollTimer);
+      window.removeEventListener("scroll", deferActivePeriod);
+      document.removeEventListener("scrollend", onScrollEnd);
       window.removeEventListener("resize", updateActivePeriod);
       document.removeEventListener("toggle", updateActivePeriod, true);
     };
@@ -1501,54 +1561,26 @@ export function App() {
     }
   };
 
-  const handleScheduleTouchStart = (event: TouchEvent<HTMLElement>) => {
-    dateSwipeStartRef.current = null;
-    if (
-      (view !== "schedule" && view !== "movies") ||
-      loading ||
-      event.touches.length !== 1 ||
-      isDateSwipeBlockedByHorizontalScroll(event.target)
-    ) {
-      return;
-    }
-    const touch = event.touches[0];
-    dateSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleScheduleTouchEnd = (event: TouchEvent<HTMLElement>) => {
-    const start = dateSwipeStartRef.current;
-    dateSwipeStartRef.current = null;
-    const touch = event.changedTouches[0];
-    if (!start || !touch) return;
-
-    const direction = getDateSwipeDirection(
-      touch.clientX - start.x,
-      touch.clientY - start.y,
-    );
-    if (!direction) return;
-    suppressClickUntilRef.current = Date.now() + 500;
-    const swipeDates: Array<string | null> =
-      view === "movies" ? [null, ...dates] : dates;
-    const currentIndex =
-      view === "movies" && showAllMovieDates
-        ? 0
-        : swipeDates.indexOf(selectedDate);
-    const nextIndex =
-      direction === "next" ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex >= 0 && nextIndex < swipeDates.length) {
-      window.location.hash = hashForAppView(view, {
-        date: swipeDates[nextIndex],
-        query: normalizedSearchQuery,
-      });
-    }
-  };
-
-  const handleMainClickCapture = (event: MouseEvent<HTMLElement>) => {
-    if (Date.now() > suppressClickUntilRef.current) return;
-    suppressClickUntilRef.current = 0;
-    event.preventDefault();
-    event.stopPropagation();
-  };
+  const dateSwipeRef = useDateSwipe(
+    (view === "schedule" || view === "movies") && !loading,
+    `${view}:${selectedDate}:${showAllMovieDates}:${normalizedSearchQuery}`,
+    (direction) => {
+      const swipeDates: Array<string | null> =
+        view === "movies" ? [null, ...dates] : dates;
+      const currentIndex =
+        view === "movies" && showAllMovieDates
+          ? 0
+          : swipeDates.indexOf(selectedDate);
+      const nextIndex =
+        direction === "next" ? currentIndex + 1 : currentIndex - 1;
+      if (nextIndex >= 0 && nextIndex < swipeDates.length) {
+        window.location.hash = hashForAppView(view, {
+          date: swipeDates[nextIndex],
+          query: normalizedSearchQuery,
+        });
+      }
+    },
+  );
 
   const jumpToCurrentTime = () => {
     const marker = currentTimeMarkerRef.current;
@@ -1603,6 +1635,8 @@ export function App() {
     setSelectedArea("all");
     setFutureOnly(false);
     setSelectedMovieKey(null);
+    setSelectedShowingId(null);
+    lastShowingFocusRef.current = null;
 
     const homeHash = hashForAppView("schedule", { date: today });
     if (window.location.hash !== homeHash) {
@@ -1692,6 +1726,9 @@ export function App() {
         }),
       });
       if (!response.ok) throw new Error();
+      const saved = await response.json() as {comment?:string};
+      setMovieNotes(current => new Map(current).set(movie.preferenceKey,saved.comment ?? ""));
+      if (nextStarred) openMoviePreferenceDialog(movie, null);
     } catch {
       rememberMovieScroll();
       setStarredMovieKeys((current) => {
@@ -1889,7 +1926,7 @@ export function App() {
                   </div>
                   <div
                     className="cinema-strip"
-                    data-horizontal-scroll
+                    data-horizontal-scroll={`cinema:${group.time}:${movie.key}`}
                     role="list"
                     aria-label={localize(`${movieTitle(movie.title)}の上映館`)}
                   >
@@ -2008,6 +2045,7 @@ export function App() {
                 ),
               )}
             </button>
+            <ProfileMenu />
           </div>
         </div>
       </header>
@@ -2078,8 +2116,8 @@ export function App() {
             </a>
             <a
               href={hashForAppView("shared")}
-              className={view === "shared" ? "active" : ""}
-              aria-current={view === "shared" ? "page" : undefined}
+              className={(view === "shared" || view === "groups") ? "active" : ""}
+              aria-current={(view === "shared" || view === "groups") ? "page" : undefined}
               onClick={closeNavigation}
             >
               <UsersThreeIcon size={20} aria-hidden="true" />
@@ -2096,14 +2134,12 @@ export function App() {
               <PathIcon size={20} aria-hidden="true" />
               {localize("映画はしごガチャ")}
             </a>
-            <a
-              href={hashForAppView("account")}
-              className={view === "account" ? "active" : ""}
-              aria-current={view === "account" ? "page" : undefined}
-              onClick={closeNavigation}
-            >
-              <UserCircleIcon size={20} aria-hidden="true" />
-              {localize("マイページ")}
+            <a href={hashForAppView("collectionStatus", { date: selectedDate })}
+              className={view === "collectionStatus" ? "active" : ""}
+              aria-current={view === "collectionStatus" ? "page" : undefined}
+              onClick={closeNavigation}>
+              <ClockIcon size={20} aria-hidden="true" />
+              {language === "en" ? "Schedule updates" : "更新状況"}
             </a>
             <a
               href={hashForAppView("about")}
@@ -2114,16 +2150,6 @@ export function App() {
               <InfoIcon size={20} aria-hidden="true" />
               {localize("このサイトについて")}
             </a>
-            <form
-              className="navigation-logout"
-              method="post"
-              action="/auth/logout"
-            >
-              <button type="submit">
-                <SignOutIcon size={20} aria-hidden="true" />
-                {localize("ログアウト")}
-              </button>
-            </form>
             {userRole === "admin" && (
               <div className="navigation-admin">
                 <a
@@ -2270,6 +2296,11 @@ export function App() {
                   {localize("興味なし")}
                 </button>
               </div>
+              {starredMovieKeys.has(activeMoviePreference.preferenceKey) && (
+                <WatchlistNote key={activeMoviePreference.preferenceKey} title={activeMoviePreference.title}
+                  initialValue={movieNotes.get(activeMoviePreference.preferenceKey) ?? ""}
+                  onSaved={comment => setMovieNotes(current => new Map(current).set(activeMoviePreference.preferenceKey,comment))} />
+              )}
               {localize(
                 preferenceError && (
                   <p className="inline-status error" role="status">
@@ -2283,19 +2314,11 @@ export function App() {
         )}
       </dialog>
 
-      <main
-        id="main"
-        onClickCapture={handleMainClickCapture}
-        onTouchStart={handleScheduleTouchStart}
-        onTouchEnd={handleScheduleTouchEnd}
-        onTouchCancel={() => {
-          dateSwipeStartRef.current = null;
-        }}
-      >
+      <main id="main" ref={dateSwipeRef}>
         {localize(
           (view === "schedule" || view === "movies") && (
             <nav className="date-nav" aria-label={localize("上映日")}>
-              <div className="date-strip" data-horizontal-scroll>
+              <div className="date-strip" data-horizontal-scroll="dates">
                 {localize(
                   view === "movies" && (
                     <a
@@ -2420,7 +2443,7 @@ export function App() {
             >
               <div
                 className="area-strip"
-                data-horizontal-scroll
+                data-horizontal-scroll="areas"
                 role="group"
                 aria-label={localize("エリア")}
               >
@@ -2538,6 +2561,8 @@ export function App() {
             <MoviePage movieKey={selectedMovieKey} today={today} />
           ) : view === "adminUsers" ? (
             <AdminUsersPage />
+          ) : view === "member" ? (
+            <MemberPage key={selectedMemberId} userId={selectedMemberId} />
           ) : view === "account" ? (
             <AccountPage
               scheduleSettings={
@@ -2633,8 +2658,12 @@ export function App() {
                 ) : null
               }
             />
-          ) : view === "shared" ? (
-            <SharedPage />
+          ) : view === "collectionStatus" ? (
+            <CollectionStatusPage date={selectedDate} language={language} />
+          ) : view === "notifications" ? (
+            <NotificationsPage />
+          ) : (view === "shared" || view === "groups") ? (
+            <SharedPage manage={view === "groups"} />
           ) : view === "viewingPlans" ? (
             <ViewingPlansPage
               plans={viewingPlans}
@@ -2690,20 +2719,11 @@ export function App() {
                 }
               />
 
-              {localize(
-                schedule?.lastUpdatedAt && !loading && (
-                  <p className="update-status">
-                    {localize(
-                      `更新：${updatedFormatter.format(new Date(schedule.lastUpdatedAt))}`,
-                    )}
-                    {localize(
-                      schedule.sourceHealth.total > 0 &&
-                        schedule.sourceHealth.healthy <
-                          schedule.sourceHealth.total &&
-                        ` / ${schedule.sourceHealth.total - schedule.sourceHealth.healthy}館は更新確認できず`,
-                    )}
-                  </p>
-                ),
+              {!loading && (view === "schedule" || view === "movies") && (
+                <a className="collection-status-link" href={hashForAppView("collectionStatus", { date: selectedDate })}>
+                  <ClockIcon size={18} aria-hidden="true" />
+                  {language === "en" ? "Check schedule updates" : "更新状況を見る"}
+                </a>
               )}
 
               {localize(loading && view === "schedule" && <LoadingTimeline />)}
@@ -2767,6 +2787,11 @@ export function App() {
                       <ul className="movie-list">
                         {localize(
                           movieList.map((movie, index) => {
+                            const movieHref = hashForAppView("movie", {
+                              date: selectedMovieListDate,
+                              movie: movie.preferenceKey,
+                              query: normalizedSearchQuery,
+                            });
                             const isStarred = starredMovieKeys.has(
                               movie.preferenceKey,
                             );
@@ -2808,36 +2833,40 @@ export function App() {
                                 ]
                                   .filter(Boolean)
                                   .join(" ")}
+                                data-date-swipe-card
                                 data-movie-key={movie.preferenceKey}
                                 key={movie.preferenceKey}
                               >
-                                {localize(
-                                  movie.imageUrl ? (
-                                    <img
-                                      src={movie.imageUrl}
-                                      alt={localize("")}
-                                      width="104"
-                                      height="66"
-                                      loading={index < 3 ? "eager" : "lazy"}
-                                      decoding="async"
-                                    />
-                                  ) : (
-                                    <div
-                                      className="movie-image-placeholder"
-                                      aria-hidden="true"
-                                    >
-                                      {movieTitle(movie.title).slice(0, 1)}
-                                    </div>
-                                  ),
-                                )}
+                                <a
+                                  className="movie-image-link"
+                                  href={movieHref}
+                                  onClick={navigateHashLink}
+                                  aria-label={movieTitle(movie.title)}
+                                >
+                                  {localize(
+                                    movie.imageUrl ? (
+                                      <img
+                                        src={movie.imageUrl}
+                                        alt={localize("")}
+                                        width="104"
+                                        height="66"
+                                        loading={index < 3 ? "eager" : "lazy"}
+                                        decoding="async"
+                                      />
+                                    ) : (
+                                      <div
+                                        className="movie-image-placeholder"
+                                        aria-hidden="true"
+                                      >
+                                        {movieTitle(movie.title).slice(0, 1)}
+                                      </div>
+                                    ),
+                                  )}
+                                </a>
                                 <div className="movie-list-copy">
                                   <strong>
                                     <a
-                                      href={hashForAppView("movie", {
-                                        date: selectedMovieListDate,
-                                        movie: movie.preferenceKey,
-                                        query: normalizedSearchQuery,
-                                      })}
+                                      href={movieHref}
                                       onClick={navigateHashLink}
                                       aria-current={
                                         selectedMovieKey === movie.preferenceKey
@@ -2914,6 +2943,7 @@ export function App() {
                                     ),
                                   )}
                                 </div>
+                                {!showAllMovieDates && <MovieTimes showings={movie.showings} language={language} title={movieTitle(movie.title)} />}
                                 {localize(
                                   schedule?.preferencesEnabled && (
                                     <FavoriteButton
@@ -3292,6 +3322,7 @@ export function App() {
                               return (
                                 <details
                                   className="schedule-window"
+                                  id={`schedule-window-${bucket.key}`}
                                   key={`${selectedDate}-${userProfile.scheduleCollapseMinutes}-${bucket.key}`}
                                   open={defaultOpen || undefined}
                                 >
@@ -3805,6 +3836,9 @@ function CinemaSlot({
         .filter(Boolean)
         .join(" ")}
       role="listitem"
+      data-date-swipe-card
+      data-showing-id={showing.id}
+      tabIndex={-1}
     >
       <div className="cinema-slot-info">
         <div className="slot-time">

@@ -1,0 +1,21 @@
+{
+  "reviewedAt": "2026-09-28T01:10:00.000Z",
+  "films": [
+    {
+      "japaneseTitles": ["沼影市民プール"],
+      "englishTitle": "Numakage Public Pool",
+      "originalTitle": "沼影市民プール",
+      "sourceUrl": "https://db.nipponconnection.com/en/event/1943/numakage-public-pool",
+      "sourceKind": "official",
+      "evidence": "Nippon Connection festival page pairs the headings Numakage Public Pool and 沼影市民プール, credits director Shingo OTA 太田信吾 and lists Japan 2025, 80 minutes. This corrects the machine translation's mistaken place name."
+    },
+    {
+      "japaneseTitles": ["栄光のバックホーム"],
+      "englishTitle": "One Last Throw",
+      "originalTitle": "栄光のバックホーム",
+      "sourceUrl": "https://jfdb.jp/en/title/10365",
+      "sourceKind": "reference",
+      "evidence": "JFDB English entry 10365 pairs ONE LAST THROW with Eiko no Back Home and a Japanese-title link 栄光のバックホーム; director AKIYAMA Jun, release November 28, 2025, distributor GAGA."
+    }
+  ]
+}

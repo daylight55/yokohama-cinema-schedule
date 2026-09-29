@@ -1,12 +1,14 @@
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
-export function formatJstDate(date: Date): string {
-  return new Intl.DateTimeFormat("sv-SE", {
+const jstDateFormatter = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Tokyo",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(date);
+  });
+
+export function formatJstDate(date: Date): string {
+  return jstDateFormatter.format(date);
 }
 
 export function todayInJst(now = new Date()): string {

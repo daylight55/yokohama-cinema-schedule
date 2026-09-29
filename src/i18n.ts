@@ -1,3 +1,5 @@
+import { isEnglishMovieTitle } from "../shared/movie-title-language";
+import { reusableDateFormatter } from "./dateFormatter";
 import { moviePreferenceKey } from "../shared/movie";
 import { useEffect, useSyncExternalStore } from "react";
 import {
@@ -83,7 +85,7 @@ export function registerTitleTranslations(
   records: Array<{ japaneseTitle: string; englishTitle: string | null }>,
 ) {
   for (const row of records)
-    if (row.englishTitle)
+    if (isEnglishMovieTitle(row.englishTitle))
       titles.set(moviePreferenceKey(row.japaneseTitle), row.englishTitle);
 }
 export function localize<T>(value: T): T {
@@ -92,13 +94,7 @@ export function localize<T>(value: T): T {
   return value;
 }
 export function localizedDate(options: Intl.DateTimeFormatOptions) {
-  return {
-    format: (value: Date | number) =>
-      new Intl.DateTimeFormat(localeCode(), {
-        timeZone: "Asia/Tokyo",
-        ...options,
-      }).format(value),
-  };
+  return reusableDateFormatter(options, localeCode);
 }
 
 export function englishText(value: string) {

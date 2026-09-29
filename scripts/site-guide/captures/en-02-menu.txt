@@ -1,32 +1,19 @@
 - link "Skip to showtimes":
   - /url: "#main"
 - banner:
-  - button "Open menu" [expanded]
+  - button "Open menu"
   - link "Go to current showtimes":
     - /url: "#schedule?date=2026-09-28"
   - switch "Display in English" [checked]: JP EN
   - button "Switch to dark mode"
-- dialog "Menu":
-  - strong: Menu
-  - button "Close menu"
-  - navigation "Main navigation":
-    - link "Showtimes":
-      - /url: "#schedule?date=2026-09-28"
-    - link "Films":
-      - /url: "#movies?date=2026-09-28"
-    - link "Cinemas":
-      - /url: "#cinemas"
-    - link "My screenings":
-      - /url: "#viewing-plans"
-    - link "Shared":
-      - /url: "#shared"
-    - link "Movie marathon":
-      - /url: "#planner?date=2026-09-28"
-    - link "My account":
-      - /url: "#account"
-    - link "About":
-      - /url: "#about"
-    - button "Sign out"
+  - group:
+    - navigation "Account":
+      - strong: Hama
+      - link "My account":
+        - /url: "#account"
+      - link "Updates":
+        - /url: "#notifications"
+      - button "Sign out"
 - main:
   - navigation "Screening dates":
     - link "Today Mon":
@@ -63,7 +50,8 @@
   - paragraph: Today
   - heading "Showtimes" [level=1]
   - text: 2 films6 screenings
-  - paragraph: "Updated: 28/09, 08:00"
+  - link "Check schedule updates":
+    - /url: "#collection-status?date=2026-09-28"
   - time: Now 10:00
   - region "12:00":
     - time: 12:00

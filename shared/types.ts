@@ -55,10 +55,17 @@ export interface Showing {
 export interface MovieTitleRecord {
   titleKey: string;
   japaneseTitle: string;
-  sourceKind: "reference" | "official";
+  sourceKind: "reference" | "official" | "machine_translation";
   originalTitle: string | null;
   englishTitle: string | null;
   sourceUrl: string | null;
+  introductionJa?: string | null;
+  introductionEn?: string | null;
+  introductionSourceUrl?: string | null;
+  synopsisJa?: string | null;
+  synopsisEn?: string | null;
+  synopsisSourceUrl?: string | null;
+  credits?: import("./movie-credits").MovieCredits | null;
 }
 export interface ScheduleResponse {
   movieTitles?: MovieTitleRecord[];
@@ -137,6 +144,7 @@ export interface RouteOrigin {
 }
 
 export interface MoviePreference {
+  comment?: string;
   movieKey: string;
   title: string;
   imageUrl: string | null;

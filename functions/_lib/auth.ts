@@ -1,4 +1,5 @@
 import { translate } from "../../shared/i18n";
+import { accountCanLogin } from "../../shared/account-lifecycle";
 import { languageCookie, type Language } from "../../shared/language";
 import type { PagesEnv } from "./env";
 
@@ -123,19 +124,28 @@ export async function createUserSession(
   const tokenHash = await sha256(token);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + maxAge * 1000);
-  await env.DB.prepare(
+  if (!(await accountCanLogin(env.DB, userId, now.toISOString()))) throw new Error("user_disabled");
+  // Called only after credential verification. Restoration and session creation
+  // share a transaction; cookies/session refresh alone can never restore a user.
+  const results = await env.DB.batch([
+    env.DB.prepare(`UPDATE users SET status='active',withdrawn_at=NULL,delete_after=NULL,last_login_at=?,updated_at=?
+      WHERE id=? AND ((status='active' AND withdrawn_at IS NULL) OR
+      (status='disabled' AND withdrawn_at IS NOT NULL AND delete_after>?))`)
+      .bind(now.toISOString(), now.toISOString(), userId, now.toISOString()),
+    env.DB.prepare(
     `INSERT INTO user_sessions (
        token_hash, user_id, created_at, expires_at, last_used_at
-     ) VALUES (?, ?, ?, ?, ?)`,
+     ) SELECT ?, id, ?, ?, ? FROM users WHERE id=? AND status='active' AND withdrawn_at IS NULL`,
   )
     .bind(
       tokenHash,
-      userId,
       now.toISOString(),
       expiresAt.toISOString(),
       now.toISOString(),
-    )
-    .run();
+      userId,
+    ),
+  ]);
+  if (results[1].meta.changes !== 1) throw new Error("user_disabled");
   return { value: `${SESSION_VERSION}.${token}`, maxAge };
 }
 
@@ -481,11 +491,14 @@ export function loginPage(
   errorMessage = "",
   inviteToken = "",
   language: Language = "ja",
+  withdrawn = false,
 ): Response {
   const t = (text: string) => translate(text, language);
   const message =
     errorMessage || (error ? "管理者用パスワードが違います。" : "");
-  const errorMarkup = message
+  const errorMarkup = withdrawn
+    ? `<p role="status">${escapeHtml(t("退会しました。1か月以内に再ログインすると復帰できます。"))}</p>`
+    : message
     ? `<p class="error" role="alert">${escapeHtml(t(message))}</p>`
     : "";
   const escapedReturnHash = escapeHtml(returnHash);

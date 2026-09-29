@@ -1,3 +1,4 @@
+import { sharedShowing } from "./helpers/shared-showings";
 import { groupSharedMovies } from "../shared/sharing";
 import { describe, expect, it } from "vitest";
 import { testDatabase } from "./helpers/sqlite-d1";
@@ -42,6 +43,9 @@ function fixture() {
           id === "alice" ? "2026-01-01" : null,
         );
   }
+  db.sqlite.exec(`INSERT INTO sharing_groups VALUES ('ab','Alice & Bob','');
+    INSERT INTO sharing_group_members VALUES ('ab','alice'),('ab','bob'),('ab','disabled');`);
+  sharedShowing(db.sqlite,"共有映画");
   return db;
 }
 function context(DB: D1Database, userId = "alice", publicMode = false) {
@@ -54,7 +58,7 @@ function context(DB: D1Database, userId = "alice", publicMode = false) {
     } as AuthContextData,
   } as Parameters<typeof onRequestGet>[0];
 }
-describe("automatic sharing between registered users", () => {
+describe("sharing within invitation groups", () => {
   it("shares active users without opt-in, labels every entry, and excludes past plans and unstarred films", async () => {
     const { db, sqlite } = fixture();
     try {

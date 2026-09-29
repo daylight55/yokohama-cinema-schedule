@@ -33,6 +33,7 @@ for(const lang of ['ja','en']){
    const filename=`${lang}-${String(scenes.length).padStart(2,'0')}-${label}.png`;
    const box=target?await target.boundingBox():null;
    if(target&&!box)throw Error(`Missing focus target: ${label}`);
+   if(box && (box.x + box.width <= 0 || box.y + box.height <= 0 || box.x >= manifest.viewport.width || box.y >= manifest.viewport.height))throw Error(`Focus target outside viewport: ${label}`);
    await page.screenshot({path:path.join(output,filename)});
    current.frames.push({at,image:filename,focus:box,zoom});
    await fs.writeFile(path.join(output,filename.replace('.png','.txt')),await page.locator('body').ariaSnapshot());
@@ -72,17 +73,22 @@ for(const lang of ['ja','en']){
    manifest.languages[lang][1]=scenes[1];
    await context.close(); continue;
  }
- // Personalize the schedule in My page, then show the actual filtered result.
- await menu().click();
- begin('cinema-settings'); await save('menu',page.locator('#primary-navigation a[href="#account"]'),0,1.3);
- await page.locator('#primary-navigation a[href="#account"]').click(); await settle();
+ // Open the current profile menu, then scroll to the cinema settings at the bottom.
+ begin('cinema-settings');
+ const profileMenu=page.locator('.profile-menu > summary');
+ await save('profile',profileMenu,0,1.3);
+ await profileMenu.click();
+ const accountLink=page.locator('.profile-menu a[href="#account"]');
+ await save('menu',accountLink,.8,1.3);
+ await accountLink.click(); await page.locator('.member-activity-tabs').waitFor(); await settle();
+ await save('account-top',page.locator('.account-page h1'),1.8,1.05);
  const settings=page.locator('.account-cinema-settings');
- await settings.scrollIntoViewIfNeeded(); await save('settings',settings,1.6,1.12);
+ await settings.scrollIntoViewIfNeeded(); await settle(); await save('settings',settings,2.8,1.12);
  const cinemaSwitch=settings.getByRole('switch',{name:tr('TOHOシネマズ 上大岡','TOHO Cinemas Kamiooka'),exact:true});
- await cinemaSwitch.uncheck(); await settle(); await save('selected',settings,3.5,1.12);
+ await cinemaSwitch.uncheck(); await settle(); await save('selected',settings,4.2,1.12);
  await settings.getByRole('link').click(); await settle();
  await page.locator('.cinema-strip').first().scrollIntoViewIfNeeded();
- await save('result',page.locator('.cinema-strip').first(),5.4,1.25); end();
+ await save('result',page.locator('.cinema-strip').first(),5.7,1.25); end();
  await nav(`#movies?date=${DATE}`);
  // 1. Real typing, submitting and the resulting filtered list.
  begin('search'); await save('before',page.locator('.schedule-search'),0,1.65);
@@ -114,8 +120,11 @@ for(const lang of ['ja','en']){
  await star.scrollIntoViewIfNeeded(); await settle();
  begin('watchlist'); await save('star',star,0,1.8);
  await star.click(); await page.waitForFunction(()=>document.querySelector('.movie-list-item .favorite-button[aria-pressed="true"]'));
- await save('saved',star,2.3,1.5);
- await save('selected',star,5,1.8); end();
+ const preferenceDialog=page.locator('.movie-preference-dialog');
+ await preferenceDialog.waitFor({state:'visible'});
+ await save('saved',preferenceDialog.getByRole('button',{name:tr('気になる','Watchlist'),exact:true}),2.3,1.3);
+ await preferenceDialog.getByRole('button',{name:tr('作品の設定を閉じる','Close film preferences'),exact:true}).click();
+ await settle(); await save('selected',star,5,1.8); end();
  // 5. Add a particular showing and follow the menu to the saved plan.
  await nav(`#schedule?date=${DATE}`);
  await search().fill(film); await searchButton().click(); await settle();

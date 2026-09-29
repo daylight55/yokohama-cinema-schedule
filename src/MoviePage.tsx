@@ -1,16 +1,18 @@
 import { movieTitle, screeningInfo } from "./i18n";
 import { useEffect, useState } from "react";
 import { addDays, formatJstDate } from "../shared/date";
-import { ArrowLeftIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { moviePreferenceKey, safeImageUrl } from "../shared/movie";
 import type { ScheduleResponse } from "../shared/types";
-import { hashForAppView } from "./lib";
 import {
   localize as t,
   localizedDate,
   registerTitleTranslations,
+  localeCode,
 } from "./i18n";
 import { PageHeader, PageShell } from "./PageLayout";
+import { MovieCredits } from "./MovieCredits";
+import { MovieSynopsis } from "./MovieSynopsis";
 
 export function MoviePage({
   movieKey,
@@ -51,12 +53,15 @@ export function MoviePage({
   const showings = (data?.showings ?? []).filter(
     (showing) => moviePreferenceKey(showing.title) === movieKey,
   );
-  const title = showings[0]?.title;
+  const record = data?.movieTitles?.find((row) => row.titleKey === movieKey);
+  const title = showings[0]?.title ?? record?.japaneseTitle;
+  const introduction = localeCode() === "en-GB"
+    ? record?.introductionEn
+    : record?.introductionJa;
   const poster = safeImageUrl(
     showings.find((row) => safeImageUrl(row.imageUrl))?.imageUrl,
   );
   const days = Array.from({ length: 7 }, (_, index) => addDays(today, index));
-  const record = data?.movieTitles?.find((row) => row.titleKey === movieKey);
   const date = localizedDate({
     month: "short",
     day: "numeric",
@@ -69,10 +74,6 @@ export function MoviePage({
   });
   return (
     <PageShell className="movie-page" busy={loading} labelledBy="movie-title">
-      <a className="movie-back" href={hashForAppView("movies")}>
-        <ArrowLeftIcon size={18} aria-hidden="true" />
-        {t("作品一覧に戻る")}
-      </a>
       <div className="movie-overview">
         <div className="movie-overview-copy">
           <PageHeader
@@ -84,7 +85,7 @@ export function MoviePage({
             record.originalTitle !== movieTitle(title ?? "") && (
               <p className="movie-original-title">{record.originalTitle}</p>
             )}
-          {record?.sourceUrl && (
+          {!introduction && record?.sourceUrl && (
             <a
               className="movie-source"
               href={record.sourceUrl}
@@ -107,6 +108,19 @@ export function MoviePage({
               e.currentTarget.hidden = true;
             }}
           />
+        )}
+        {(introduction || record?.credits || record?.synopsisJa || record?.synopsisEn) && (
+          <div className="movie-introduction">
+            {introduction && <p>{introduction}</p>}
+            {introduction && record?.introductionSourceUrl && (
+              <a className="movie-source" href={record.introductionSourceUrl} target="_blank" rel="noreferrer">
+                {t("紹介文の出典")}
+                <ArrowSquareOutIcon size={14} aria-hidden="true" />
+              </a>
+            )}
+            <MovieCredits credits={record?.credits} language={localeCode() === "en-GB" ? "en" : "ja"} />
+            <MovieSynopsis movie={record} language={localeCode() === "en-GB" ? "en" : "ja"} />
+          </div>
         )}
       </div>
       {loading ? (

@@ -1,3 +1,6 @@
+import { MemberActivity } from "./MemberPage";
+import { ProfileEditor } from "./MemberProfile";
+import { WithdrawAccount } from "./WithdrawAccount";
 import { localeCode, localize } from "./i18n";
 import {
   FingerprintIcon,
@@ -152,11 +155,11 @@ export function AccountPage({
       <PageShell className="account-page" label={localize("マイページ")}>
         <PageHeader eyebrow={localize("設定")} title={localize("マイページ")} />
 
-        {localize(scheduleSettings)}
         {localize(profileSettings)}
         <p className={error ? "account-message error" : "account-muted"}>
           {localize(error ?? "アカウント情報を読み込んでいます…")}
         </p>
+        {localize(scheduleSettings)}
       </PageShell>
     );
   }
@@ -170,7 +173,8 @@ export function AccountPage({
         lead={localize(email ?? "管理者用セッション")}
       />
 
-      {localize(scheduleSettings)}
+      {!account.user.legacy && <ProfileEditor />}
+      {!account.user.legacy && <MemberActivity />}
       {localize(profileSettings)}
 
       {localize(
@@ -324,9 +328,11 @@ export function AccountPage({
                 ),
               )}
             </section>
+            <WithdrawAccount />
           </>
         ),
       )}
+      {localize(scheduleSettings)}
     </PageShell>
   );
 }

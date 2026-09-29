@@ -75,6 +75,7 @@ export function isPublicAuthPath(pathname: string): boolean {
 export function isPublicShellAssetPath(pathname: string): boolean {
   return (
     pathname.startsWith("/brand/") ||
+    pathname === "/notifications-sw.js" ||
     pathname === "/base-theme.css" ||
     pathname === "/page-layout.css" ||
     pathname === "/site.webmanifest" ||

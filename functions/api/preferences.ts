@@ -11,6 +11,7 @@ import type { AuthContextData, PagesEnv } from "../_lib/env";
 
 interface PreferenceRequest {
   title?: string;
+  comment?: string;
   imageUrl?: string | null;
   starred?: boolean;
   status?: MoviePreferenceStatus | null;
@@ -23,6 +24,7 @@ interface PreferenceRow {
   starred: number;
   status: MoviePreferenceStatus | null;
   updated_at: string;
+  comment: string;
 }
 
 export const onRequestPost: PagesFunction<
@@ -31,12 +33,14 @@ export const onRequestPost: PagesFunction<
   AuthContextData
 > = async (context) => {
   if (context.env.PUBLIC_MODE === "true") {
-    return Response.json(
-      { error: "preferences_unavailable" },
-      { status: 403 },
-    );
+    return Response.json({ error: "preferences_unavailable" }, { status: 403 });
   }
 
+  if (
+    context.request.headers.get("origin") !==
+    new URL(context.request.url).origin
+  )
+    return Response.json({ error: "forbidden" }, { status: 403 });
   let body: PreferenceRequest;
   try {
     body = await context.request.json<PreferenceRequest>();
@@ -44,7 +48,15 @@ export const onRequestPost: PagesFunction<
     return Response.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const title = body.title?.trim() ?? "";
+  if (!body || typeof body !== "object" || typeof body.title !== "string")
+    return Response.json({ error: "invalid_preference" }, { status: 400 });
+  const commentProvided = Object.hasOwn(body, "comment");
+  if (
+    commentProvided &&
+    (typeof body.comment !== "string" || body.comment.length > 200)
+  )
+    return Response.json({ error: "invalid_comment" }, { status: 400 });
+  const title = body.title.trim();
   const starredProvided = typeof body.starred === "boolean";
   const statusProvided = Object.hasOwn(body, "status");
   const validStatus =
@@ -52,30 +64,24 @@ export const onRequestPost: PagesFunction<
   if (
     title.length === 0 ||
     title.length > 300 ||
-    (!starredProvided && !statusProvided) ||
+    (!starredProvided && !statusProvided && !commentProvided) ||
     (statusProvided && !validStatus)
   ) {
-    return Response.json(
-      { error: "invalid_preference" },
-      { status: 400 },
-    );
+    return Response.json({ error: "invalid_preference" }, { status: 400 });
   }
 
   const movieKey = moviePreferenceKey(title);
   if (!movieKey || movieKey.length > 300) {
-    return Response.json(
-      { error: "invalid_preference" },
-      { status: 400 },
-    );
+    return Response.json({ error: "invalid_preference" }, { status: 400 });
   }
 
   const imageUrl = safeImageUrl(body.imageUrl);
   const updatedAt = new Date().toISOString();
   await context.env.DB.prepare(
     `INSERT INTO movie_preferences (
-       user_id, movie_key, title, image_url, starred, status, updated_at
+       user_id, movie_key, title, image_url, starred, status, updated_at, comment
      )
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id, movie_key) DO UPDATE SET
        title = excluded.title,
        image_url = COALESCE(excluded.image_url, movie_preferences.image_url),
@@ -87,6 +93,7 @@ export const onRequestPost: PagesFunction<
          WHEN ? = 1 THEN excluded.status
          ELSE movie_preferences.status
        END,
+       comment = CASE WHEN ? = 1 THEN excluded.comment ELSE movie_preferences.comment END,
        updated_at = excluded.updated_at`,
   )
     .bind(
@@ -97,8 +104,10 @@ export const onRequestPost: PagesFunction<
       body.starred ? 1 : 0,
       statusProvided ? body.status : null,
       updatedAt,
+      body.comment?.trim() ?? "",
       starredProvided ? 1 : 0,
       statusProvided ? 1 : 0,
+      commentProvided ? 1 : 0,
     )
     .run();
 
@@ -107,13 +116,13 @@ export const onRequestPost: PagesFunction<
      WHERE movie_key = ?
        AND user_id = ?
        AND starred = 0
-       AND status IS NULL`,
+       AND status IS NULL AND comment = ''`,
   )
     .bind(movieKey, context.data.userId)
     .run();
 
   const row = await context.env.DB.prepare(
-    `SELECT movie_key, title, image_url, starred, status, updated_at
+    `SELECT movie_key, title, image_url, starred, status, updated_at, comment
      FROM movie_preferences
      WHERE movie_key = ?
        AND user_id = ?`,
@@ -128,6 +137,7 @@ export const onRequestPost: PagesFunction<
         starred: Boolean(row.starred),
         status: row.status,
         updatedAt: row.updated_at,
+        comment: row.comment,
       }
     : {
         movieKey,
@@ -136,6 +146,7 @@ export const onRequestPost: PagesFunction<
         starred: false,
         status: null,
         updatedAt,
+        comment: "",
       };
   return Response.json(preference, {
     headers: { "cache-control": "private, no-store" },

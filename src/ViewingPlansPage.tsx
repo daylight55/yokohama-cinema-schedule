@@ -167,14 +167,14 @@ export function ViewingPlansPage({
                               )
                             }
                           />
-                          <span>{localize("予約済み")}</span>
+                          <span>{localize(plan.reservedAt ? "予約済み" : "予約済みにする")}</span>
                         </label>
                         <a
                           href={plan.bookingUrl}
                           target="_blank"
                           rel="noreferrer"
                         >
-                          {localize("公式サイト")}
+                          {localize("予約サイトへ")}
                           <ArrowSquareOutIcon size={14} aria-hidden="true" />
                         </a>
                         <button

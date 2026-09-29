@@ -1,4 +1,5 @@
 import { addDays, formatJstDate, todayInJst } from "../shared/date";
+import { canonicalMovieKey } from "../shared/movie-title-corrections";
 import { moviePreferenceKey } from "../shared/movie";
 import { normalizeSearchQuery } from "../shared/search";
 import type {
@@ -38,8 +39,12 @@ export type AppView =
   | "cinemas"
   | "viewingPlans"
   | "shared"
+  | "groups"
+  | "collectionStatus"
+  | "notifications"
   | "planner"
   | "adminUsers"
+  | "member"
   | "account"
   | "about";
 
@@ -89,9 +94,13 @@ const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#cinemas": "cinemas",
   "#viewing-plans": "viewingPlans",
   "#shared": "shared",
+  "#groups": "groups",
+  "#collection-status": "collectionStatus",
+  "#notifications": "notifications",
   "#planner": "planner",
   "#profile": "account",
   "#account": "account",
+  "#member": "member",
   "#admin-users": "adminUsers",
   "#about": "about",
 };
@@ -103,8 +112,12 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   cinemas: "#cinemas",
   viewingPlans: "#viewing-plans",
   shared: "#shared",
+  groups: "#groups",
+  collectionStatus: "#collection-status",
+  notifications: "#notifications",
   planner: "#planner",
   account: "#account",
+  member: "#member",
   adminUsers: "#admin-users",
   about: "#about",
 };
@@ -114,6 +127,8 @@ export interface AppHashState {
   date: string | null;
   movie: string | null;
   query: string;
+  showing?: string | null;
+  user?: string | null;
 }
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -127,8 +142,10 @@ export function appHashStateFromHash(hash: string): AppHashState {
   return {
     view,
     date: date && ISO_DATE_PATTERN.test(date) ? date : null,
-    movie: movie ? movie.slice(0, 240) : null,
+    movie: movie ? canonicalMovieKey(movie.slice(0, 240)) : null,
     query: normalizeSearchQuery(params.get("q")),
+    ...(view === "member" && params.get("user") ? { user: params.get("user")!.slice(0, 128) } : {}),
+    ...(params.get("showing") ? { showing: params.get("showing")!.slice(0, 1000) } : {}),
   };
 }
 
@@ -142,6 +159,8 @@ export function hashForAppView(
     date?: string | null;
     movie?: string | null;
     query?: string | null;
+    showing?: string | null;
+    user?: string | null;
   } = {},
 ): string {
   const params = new URLSearchParams();
@@ -151,7 +170,9 @@ export function hashForAppView(
   if (state.movie?.trim()) {
     params.set("movie", state.movie.trim().slice(0, 240));
   }
+  if (view === "member" && state.user) params.set("user", state.user.slice(0, 128));
   const searchQuery = normalizeSearchQuery(state.query);
+  if (view === "schedule" && state.showing) params.set("showing", state.showing.slice(0, 1000));
   if (searchQuery) {
     params.set("q", searchQuery);
   }
@@ -197,19 +218,13 @@ export type DateSwipeDirection = "previous" | "next";
 export function isDateSwipeBlockedByHorizontalScroll(
   target: EventTarget | null,
 ): boolean {
-  const closest = (
-    target as {
-      closest?: (
-        selector: string,
-      ) => { clientWidth: number; scrollWidth: number } | null;
-    } | null
-  )?.closest;
-  if (typeof closest !== "function") return false;
-
-  const scrollRegion = closest.call(target, "[data-horizontal-scroll]");
-  return Boolean(
-    scrollRegion && scrollRegion.scrollWidth > scrollRegion.clientWidth,
-  );
+  const element = target as { closest?: (selector: string) => { contains: (other: unknown) => boolean } | null } | null;
+  if (typeof element?.closest !== "function") return false;
+  const strip = element.closest("[data-horizontal-scroll]");
+  const card = element.closest("[data-date-swipe-card]");
+  // Cards can sit inside a cinema strip. Nested time/date/filter strips keep
+  // their own scrolling, even when they fit or have reached the edge.
+  return !!strip && !(card && strip.contains(card));
 }
 
 export function getDateSwipeDirection(

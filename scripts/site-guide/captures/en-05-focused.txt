@@ -6,10 +6,9 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "Display in English" [checked]: JP EN
   - button "Switch to dark mode"
+  - group
 - main:
   - region "Your Name.":
-    - link "Back to films":
-      - /url: "#movies"
     - paragraph: Showtimes for the next 7 days
     - heading "Your Name." [level=1]
     - paragraph: 君の名は。

@@ -6,6 +6,7 @@
     - /url: "#schedule?date=2026-09-28"
   - switch "Display in English" [checked]: JP EN
   - button "Switch to dark mode"
+  - group
 - main:
   - region "My screenings":
     - paragraph: Your cinema plans
@@ -23,8 +24,8 @@
             - text: Your Name.
           - paragraph: Yokohama Burg 13
           - paragraph: Screen 1 / 2D
-          - checkbox "Reserved"
-          - text: Reserved
-          - link "Official website":
+          - checkbox "Mark as booked"
+          - text: Mark as booked
+          - link "Book on cinema website":
             - /url: https://tjoy.jp/yokohama_burg13
           - button "Remove Your Name. from your plans": Remove from plans
