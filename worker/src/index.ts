@@ -5,6 +5,7 @@ import { refreshMovieCredits } from "./movie-credits";
 import { purgeExpiredAccounts } from "../../shared/account-lifecycle";
 import { refreshSynopses, workersSynopsisModel } from "./synopsis-research";
 import { validBearer } from "./request-auth";
+import { MovieIdentityBudget, validateSourceMovieTitles } from "./movie-identity";
 import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
 import { activeDatesForCinema } from "../../shared/cinema-availability";
@@ -259,6 +260,7 @@ export async function refreshBatch(
     await refreshTmdbReleaseDateCatalog(env, dates[0]);
   }
   const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
+  const identityBudget = new MovieIdentityBudget();
 
   const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
   const sourceIds = SOURCE_BATCH_IDS[batch];
@@ -283,10 +285,14 @@ export async function refreshBatch(
     const sourceStartedAt = new Date().toISOString();
     try {
       const fetched = await source.fetch(sourceDates);
+      const validated = await validateSourceMovieTitles(
+        env.DB, source.id,
+        fetched.showings.filter(showing => sourceDates.includes(todayInJst(new Date(showing.startsAt)))),
+        identityBudget,
+      );
+      for (const [date, error] of validated.dateErrors) fetched.dateErrors.set(date,error);
       const showings = deduplicate(
-        fetched.showings
-          .filter(showing => sourceDates.includes(todayInJst(new Date(showing.startsAt))))
-          .map(normalizeShowingMovieTitle),
+        validated.showings.map(normalizeShowingMovieTitle),
       );
       const dateOutcomes = sourceDateOutcomes(
         sourceDates,
@@ -379,7 +385,7 @@ export async function refreshBatch(
   return summary;
 }
 
-function buildSources(browser?: BrowserRun): Source[] {
+export function buildSources(browser?: BrowserRun): Source[] {
   return [
     {
       id: "tjoy-yokohama",
@@ -865,8 +871,8 @@ async function replaceSourceDates(
           `INSERT INTO showings (
             id, source_id, cinema_id, movie_key, title, image_url,
             release_date, starts_at, ends_at,
-            screen, format, booking_url, purchasable, fetched_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            screen, format, booking_url, purchasable, fetched_at, source_movie_id, source_title
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id,
@@ -883,6 +889,8 @@ async function replaceSourceDates(
           showing.bookingUrl,
           showing.purchasable === null ? null : Number(showing.purchasable),
           fetchedAt,
+          showing.sourceMovieId ?? null,
+          showing.sourceTitle ?? showing.title,
         );
     }),
     ...publishedShowings.map((showing) => {
@@ -1175,7 +1183,7 @@ export function normalizeShowingMovieTitle(
   showing: NormalizedShowing,
 ): NormalizedShowing {
   const title = collectedMovieTitle(showing.title, showing.sourceId, showing.movieKey);
-  const hasInfinityVision = /INFINITY\s*VISION|インフィニティビジョン/i.test(showing.title);
+  const hasInfinityVision = /INFINITY\s*VISION|インフィニティビジョン/i.test(showing.sourceTitle ?? showing.title);
   const format = hasInfinityVision && !/INFINITY\s*VISION|インフィニティビジョン/i.test(showing.format ?? "")
     ? [showing.format, "INFINITY VISION"].filter(Boolean).join(" / ")
     : showing.format;

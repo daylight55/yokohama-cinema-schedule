@@ -91,6 +91,7 @@ export function parseTjoySchedule(
         cinemaId,
         movieKey,
         title,
+        sourceTitle: rawTitle,
         imageUrl,
         startsAt: jstLocalToIso(date, match[1]),
         endsAt: jstEndToIso(date, match[1], match[2]),

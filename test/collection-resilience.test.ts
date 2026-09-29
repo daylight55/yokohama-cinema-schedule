@@ -215,7 +215,7 @@ it("keeps budgets separate between collections", async () => {
   expect(quickAction).toHaveBeenCalledTimes(2);
 });
 
-const film = `<section class="section-container"><h2 class="js-title-film">テスト映画</h2><div class="schedule-box"><p class="schedule-time">18:10 ～ 20:20</p></div></section>`;
+const film = `<section class="section-container"><a href="/t-joy_yokohama/film_detail/C9999">detail</a><h2 class="js-title-film">テスト映画</h2><div class="schedule-box"><p class="schedule-time">18:10 ～ 20:20</p></div></section>`;
 const parse = (html: string) =>
   parseTjoySchedule(
     html,
@@ -270,6 +270,7 @@ it("preserves stored showings and search rows for a malformed date while refresh
       SCHEDULE_DAYS: "2",
       BROWSER: { quickAction } as unknown as BrowserRun,
     };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response('<body id="film-detail"><h1 class="carosuel-header">テスト映画</h1><button data-code="C9999"></button></body>')));
     const sources = new Set(["tjoy-yokohama"]);
     expect((await refreshBatch(env, 0, sources)).succeeded).toBe(1);
     const saved = sqlite
@@ -313,4 +314,35 @@ it("preserves stored showings and search rows for a malformed date while refresh
   } finally {
     sqlite.close();
   }
+});
+
+it("records every date attempt while retaining earlier successes and stored showings", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-02T00:00:00Z"));
+  const { db, sqlite } = testDatabase();
+  try {
+    let unavailable = false;
+    const quickAction = vi.fn(async () => Response.json({ success: true,
+      result: '<div id="film"><a class="calendar-active calendar-item" data-date="2026-10-02"></a>' +
+        (unavailable ? '<p class="text-notify">スケジュールは調整中です。</p>' : film) + '</div>',
+    }));
+    vi.stubGlobal("fetch", vi.fn(async () => new Response('<body id="film-detail"><h1 class="carosuel-header">テスト映画</h1><button data-code="C9999"></button></body>')));
+    const env = { DB: db, BROWSER: { quickAction } as unknown as BrowserRun };
+    const ids = new Set(["tjoy-yokohama"]);
+    await refreshBatch(env, 0, ids, new Set(["2026-10-02"]));
+    unavailable = true;
+    const empty = await refreshBatch(env, 0, ids, new Set(["2026-10-02"]));
+    expect(empty.failed).toBe(0);
+    quickAction.mockRejectedValue(new Error("Browser Run: HTTP 403"));
+    const failed = await refreshBatch(env, 0, ids, new Set(["2026-10-02"]));
+    expect(failed.failed).toBe(1);
+    const history = sqlite.prepare(
+      "SELECT status, showing_count, error_message FROM source_date_history ORDER BY id",
+    ).all();
+    expect(history.map(row => row.status)).toEqual(["published", "not_published", "error"]);
+    expect(history.map(row => row.showing_count)).toEqual([1, 0, 0]);
+    expect(history[2].error_message).toContain("HTTP 403");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM showings").get()?.count).toBe(1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM fetch_runs").get()?.count).toBe(3);
+  } finally { sqlite.close(); }
 });

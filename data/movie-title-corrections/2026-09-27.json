@@ -2,12 +2,31 @@
   "reviewedAt": "2026-09-27",
   "corrections": [
     {
-      "sourceIds": ["yokohama-burg13", "tjoy-yokohama"],
+      "sourceIds": [
+        "yokohama-burg13",
+        "tjoy-yokohama"
+      ],
       "sourceMovieId": "C5089",
-      "observedTitles": ["アベンジャーズ/エンドゲーム:ア", "アベンジャーズ/エンドゲーム:アンコール"],
+      "observedTitles": [
+        "アベンジャーズ/エンドゲーム:ア",
+        "アベンジャーズ/エンドゲーム:アンコール"
+      ],
       "canonicalTitle": "アベンジャーズ/エンドゲーム:アンコール",
       "sourceUrl": "https://tjoy.jp/yokohama_burg13/cinema_detail/C5089",
       "evidence": "The schedule heading truncates the title after :ア, but its cinema_detail/C5089 link opens a detail page whose .carosuel-header is アベンジャーズ／エンドゲーム：アンコール. Its official distributor link and English title Avengers: Endgame Encore agree."
+    },
+    {
+      "sourceIds": [
+        "aeon-minatomirai"
+      ],
+      "sourceMovieId": "1014719",
+      "observedTitles": [
+        "舞台挨拶中継付き)時給三〇〇円の死神",
+        "舞台挨拶中継付き）時給三〇〇円の死神"
+      ],
+      "canonicalTitle": "時給三〇〇円の死神",
+      "sourceUrl": "https://theater.aeoncinema.com/schedule/v2/data/minatomirai/schedule.json",
+      "evidence": "2026-09-29: The official 20261002 schedule uses workPerformed.identifier 1014719 for the regular screening and the two screenings labelled 舞台挨拶中継付き. Both refer to 時給三〇〇円の死神. Retain the event label in screening format."
     }
   ],
   "legacyMovieKeys": {

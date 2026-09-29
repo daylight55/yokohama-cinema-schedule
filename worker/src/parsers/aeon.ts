@@ -83,6 +83,7 @@ function detectFormat(title: string): string | null {
     "3D",
     "Dolby Atmos",
     "DolbyCinema",
+    "舞台挨拶中継付き",
   ].filter((label) => title.toLowerCase().includes(label.toLowerCase()));
   return labels.length > 0 ? labels.join(" / ") : null;
 }
