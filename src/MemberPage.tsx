@@ -105,62 +105,68 @@ export function MemberActivity({
               </button>
             ))}
           </div>
-          {tab === "plans" ? (
-            data.plans.length ? (
-              <ul className="member-plan-list">
-                {data.plans.map((plan) => (
-                  <li key={plan.showingId}>
-                    <time dateTime={plan.startsAt}>
-                      {date.format(new Date(plan.startsAt))}
-                    </time>
-                    <a
-                      href={hashForAppView("movie", {
-                        movie: moviePreferenceKey(plan.title),
-                      })}
-                    >
-                      {movieTitle(plan.title)}
+          <div
+            key={tab}
+            className="member-activity-scroll"
+            role="region"
+            aria-label={t(tab === "plans" ? "鑑賞予定" : tab === "watched" ? "鑑賞済み" : "気になる")}
+            tabIndex={0}
+          >
+            {tab === "plans" ? (
+              data.plans.length ? (
+                <ul className="member-plan-list">
+                  {data.plans.map((plan) => (
+                    <li key={plan.showingId}>
+                      <a
+                        href={hashForAppView("movie", {
+                          movie: moviePreferenceKey(plan.title),
+                        })}
+                      >
+                        <span>{movieTitle(plan.title)}</span>
+                        <span className="member-plan-meta">
+                          <time dateTime={plan.startsAt}>{date.format(new Date(plan.startsAt))}</time>
+                          {" · "}{t(plan.cinemaName)}
+                          {plan.reserved ? ` · ${t("予約済み")}` : ""}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="account-muted">
+                  {t("今後の鑑賞予定はまだありません。")}
+                </p>
+              )
+            ) : movies.length ? (
+              <ul className="member-movie-list">
+                {movies.map((movie) => (
+                  <li key={movie.movieKey}>
+                    <a href={hashForAppView("movie", { movie: movie.movieKey })}>
+                      {movie.imageUrl && (
+                        <img
+                          src={movie.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.hidden = true;
+                          }}
+                        />
+                      )}
+                      <span>{movieTitle(movie.title)}</span>
                     </a>
-                    <span>
-                      {t(plan.cinemaName)}
-                      {plan.reserved ? ` · ${t("予約済み")}` : ""}
-                    </span>
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="account-muted">
-                {t("今後の鑑賞予定はまだありません。")}
+                {t(
+                  tab === "watched"
+                    ? "鑑賞済みの映画はまだありません。"
+                    : "気になる映画はまだありません。",
+                )}
               </p>
-            )
-          ) : movies.length ? (
-            <ul className="member-movie-list">
-              {movies.map((movie) => (
-                <li key={movie.movieKey}>
-                  <a href={hashForAppView("movie", { movie: movie.movieKey })}>
-                    {movie.imageUrl && (
-                      <img
-                        src={movie.imageUrl}
-                        alt=""
-                        loading="lazy"
-                        onError={(event) => {
-                          event.currentTarget.hidden = true;
-                        }}
-                      />
-                    )}
-                    <span>{movieTitle(movie.title)}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="account-muted">
-              {t(
-                tab === "watched"
-                  ? "鑑賞済みの映画はまだありません。"
-                  : "気になる映画はまだありません。",
-              )}
-            </p>
-          )}
+            )}
+          </div>
         </>
       )}
     </section>

@@ -29,7 +29,8 @@
         - button "Watchlist 0" [pressed]
         - button "Watched 0"
         - button "My screenings 0"
-      - paragraph: No movies on the watchlist yet.
+      - region "Watchlist":
+        - paragraph: No movies on the watchlist yet.
     - region "Showtime display":
       - heading "Showtime display" [level=2]
       - text: Group showtimes
