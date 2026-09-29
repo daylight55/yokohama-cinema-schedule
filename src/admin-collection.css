@@ -1,0 +1,13 @@
+.admin-collection { min-width:0; overflow-wrap:anywhere; }
+.admin-collection form { display:flex; flex-wrap:wrap; align-items:end; gap:1rem; }
+.admin-collection label { display:flex; flex-direction:column; gap:.5rem; min-width:0; max-width:100%; }
+.admin-collection select,.admin-collection button { min-height:44px; max-width:100%; }
+.admin-collection details { border-top:1px solid var(--border); padding:1rem 0; }
+.admin-collection summary { cursor:pointer; min-height:44px; }
+.admin-collection pre,.admin-collection code { display:block; white-space:pre-wrap; overflow-wrap:anywhere; font-size:.85rem; }
+.admin-collection dd { margin:0 0 .8rem; }
+.admin-collection dt,.admin-collection small { opacity:.75; }
+.admin-collection h2 { margin-top:2rem; }
+.sync-results { list-style:none; padding:0; }
+.sync-results li { display:flex; flex-direction:column; gap:.3rem; padding:.75rem 0; border-bottom:1px solid var(--border); }
+@media(max-width:480px){.admin-collection form { flex-direction:column; align-items:stretch; }}
