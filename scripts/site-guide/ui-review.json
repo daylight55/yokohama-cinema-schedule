@@ -1,13 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-09-29T07:18:22.169Z",
-    "baseRevision": "1834ad50f33244ebd9a12d9492ebeff52d74e267",
-    "outcome": "recaptured",
-    "scenes": [
-      "cinema-settings"
-    ],
-    "note": "退会ボタンを映画館設定の後へ移動。日英のマイページと映画館設定を再撮影・再合成し、320px/390pxの配信用Aboutで再生・シーク・字幕設定を確認。退会の2段階ダイアログも日英スマホで確認。音声とBGMはSHA256一致で保持。"
+    "reviewedAt": "2026-09-29T07:28:14.196Z",
+    "baseRevision": "9e2b5f5278a66cbed5d6e61e19a5de991b6f1d20",
+    "outcome": "visually-unchanged",
+    "scenes": [],
+    "note": "日英の全操作場面を現行UIで再撮影し、全PNGとAXテキストが既存素材と一致することをgit diffで確認。変更は写真設定済みの場合に「写真を変更」から開く選択ダイアログと既存画像の読み込みのみ。動画では写真変更を操作しないため、操作先・ラベル・結果に差はない。新しい選択・加工・保存は日英320px/390pxのブラウザ検証で確認。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -42,7 +40,7 @@
     "shared/i18n.ts": "9018ec07ce757bda69653ae54f54eec58e0e0f84f44e22c4a862c9915af19569",
     "shared/invitation-diagnostics.ts": "31c8b7491f6f3bde2f372eee8cd2a5a2b79a15cd343ee045cd21e5bfabec6f74",
     "shared/language.ts": "a5d55807e6936442fa8073ad6a1f4bbfc3508da91b000cdae70bb580123093c1",
-    "shared/locales/en.json": "6b59a5b998627001f4ad3c1570d8da8a717ac86ef7dbadf769cb922273be5980",
+    "shared/locales/en.json": "53fdcd3b26ad8c129066b9b716a80a830900343619f739f4a0ce4d672d8fbb47",
     "shared/maps.ts": "5cc48b2175f6990faa0849d3f9508bf7382a72fb064d38cd74b6f6c3d194aab9",
     "shared/member-page.ts": "397d3fe038a862613d84add5e0a79c2ec6b410ea304b8ada1ab834827b6c43a1",
     "shared/member-profile.ts": "1c311f5b82be07ca822be0342469a38e6a475660502a05fedfdcd6db944a2ca1",
@@ -61,10 +59,10 @@
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
     "src/App.tsx": "4f3e2feac7d96daab1c46137cd337012128396b1bb06c33efa3ad64a9b9f3f98",
-    "src/AvatarCropper.tsx": "0971612aaddc299f2f726bee5105e412a377919ca46eac163d78e23e024a4195",
+    "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "43ef7276f337722ddb47dd988d0261c3cdafc1a9ede438983bb76d06e0a10a82",
     "src/MemberPage.tsx": "d7ed5c2875602a42e069d5848ce6bab7581730b89b743fb1a787ec1ced488539",
-    "src/MemberProfile.tsx": "2a457e457d1ecbb80ff56d51089bcbee27fea4a1faa81d90b445f09459200458",
+    "src/MemberProfile.tsx": "1b50d1368568773e6d5a632f5832af231494999e3459dd3a0f7ddd80b0504ac0",
     "src/MovieCredits.tsx": "2840f17258447ea302657bcde7e63c353e564e3d9848ccd1da2475c7f9eb4924",
     "src/MoviePage.tsx": "757189a823bc08ee8df49ba3a6ab90c2a6e8cb1bcc552a421aba0aa4c3055cba",
     "src/MovieSynopsis.tsx": "f1f99db1575f347587e3bd6e4e7ce3df809bd77978c002e0eafa111aff5da6f1",

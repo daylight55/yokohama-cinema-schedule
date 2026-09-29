@@ -19,10 +19,13 @@ try {
     await page.route('**/api/account/profile', async route => {
       if (route.request().method() === 'PATCH') {
         const body = route.request().postDataJSON(); patches.push(body);
-        profile = { ...profile, ...body, avatarUrl: body.avatar || null };
+        profile = { ...profile, ...body, avatarUrl: body.avatar === undefined ? profile.avatarUrl : body.avatar ? `/api/account/avatar?userId=guide&v=${patches.length}` : null };
       }
       await route.fulfill({ json: profile });
     });
+    await page.route('**/api/account/avatar?**', route => route.fulfill({
+      contentType: 'image/jpeg', body: Buffer.from(patches.at(-1).avatar.split(',')[1], 'base64'),
+    }));
     await page.route('**/api/member-page**', async route => {
       const userId = new URL(route.request().url()).searchParams.get('userId') || 'guide';
       if (denied || !['guide', 'friend'].includes(userId)) return route.fulfill({ status: 404, json: {error:'not_found'} });
@@ -41,7 +44,7 @@ try {
     await page.goto(`${base}#account`);
     await page.locator('.member-activity-tabs').waitFor();
     await page.locator('.account-cinema-list').waitFor();
-    assert.equal(await page.locator('.account-page > :last-child').getAttribute('class'), 'account-section account-cinema-settings');
+    assert.equal(await page.locator('.account-page > :last-child').getAttribute('class'), 'account-withdrawal');
     assert.equal(await page.locator('.profile-unread-badge').textContent(), '125');
     await page.locator('.profile-menu > summary').click();
     assert.equal(await page.locator('.menu-unread-badge').textContent(), '125');
@@ -84,7 +87,40 @@ try {
     assert.equal(pixels.width, 256); assert.equal(pixels.height, 256);
     for (const pixel of [pixels.centre, pixels.corner]) assert.ok(pixel[2] > 240 && pixel[0] < 15, 'crop contains the selected blue region');
     await upload(); await page.locator('.avatar-crop-viewport img').waitFor(); await page.keyboard.press('Escape');
-    assert.equal(await page.locator('.profile-photo-row img').getAttribute('src'), patches[0].avatar);
+    assert.equal(await page.locator('.profile-photo-row img').getAttribute('src'), profile.avatarUrl);
+    // Re-edit the saved HTTP avatar without opening a file picker or writing before Save.
+    await page.reload(); await page.locator('.profile-photo-row img').waitFor();
+    const change = page.getByRole('button', {name: lang === 'ja' ? '写真を変更' : 'Change photo', exact: true});
+    const editCurrent = () => page.getByRole('button', {name: lang === 'ja' ? '現在の写真を加工' : 'Edit current photo', exact: true}).click();
+    await change.click(); await fits();
+    await page.screenshot({path: `output/playwright/member-photo-choice-${lang}-${width}.png`});
+    await editCurrent(); await page.locator('.avatar-crop-viewport img').waitFor();
+    assert.equal(await page.locator('.avatar-crop-viewport img').getAttribute('src'), new URL(profile.avatarUrl, base).href);
+    await page.keyboard.press('Escape'); assert.equal(patches.length, 1);
+    assert.equal(await change.evaluate(e => e === document.activeElement), true);
+    await change.click(); await editCurrent(); await page.locator('.avatar-crop-viewport img').waitFor();
+    await ranges.nth(0).fill('1.5');
+    await page.screenshot({path: `output/playwright/member-edit-current-${lang}-${width}.png`});
+    await page.locator('.avatar-crop-actions button').last().click();
+    assert.equal(patches.length, 1);
+    const preview = await page.locator('.profile-photo-row img').getAttribute('src');
+    assert.ok(preview.startsWith('data:image/jpeg;base64,'));
+    // A second edit uses the unsaved preview, and cancelling keeps it.
+    await change.click(); await editCurrent(); await page.locator('.avatar-crop-viewport img').waitFor();
+    assert.equal(await page.locator('.avatar-crop-viewport img').getAttribute('src'), preview);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('.profile-photo-row img').getAttribute('src'), preview);
+    await page.locator('.profile-save-row button').click(); await page.locator('.profile-save-row [role=status]').waitFor();
+    assert.equal(patches.length, 2); assert.equal(patches[1].avatar, preview);
+    await page.reload(); await page.locator('.profile-photo-row img').waitFor();
+    assert.equal(await page.locator('.profile-photo-row img').getAttribute('src'), profile.avatarUrl);
+    // The chooser still opens the native picker for a replacement image.
+    await change.click();
+    const picker = page.waitForEvent('filechooser');
+    await page.getByRole('button', {name: lang === 'ja' ? '新しい写真をアップロード' : 'Upload a new photo', exact: true}).click();
+    await (await picker).setFiles({name:'new.png',mimeType:'image/png',buffer:Buffer.from(source,'base64')});
+    await page.locator('.avatar-crop-viewport img').waitFor(); await page.keyboard.press('Escape');
+    assert.equal(patches.length, 2);
     await page.goto(`${base}#groups`);
     await page.locator('.group-member-list a[href="#member?user=friend"]').click();
     await page.getByRole('heading', { level: 1, name: 'Sora' }).waitFor();
@@ -103,7 +139,7 @@ try {
     await page.locator('.profile-menu > summary').click(); assert.equal(await page.locator('.menu-unread-badge').count(), 0);
     assert.equal(await page.locator('.notification-bell').count(), 0); await fits();
     assert.deepEqual(errors, []);
-    results.push({ width, height, lang, crop: pixels, memberNavigation: 'passed', notificationRead: 'passed', overflow: false });
+    results.push({ width, height, lang, crop: pixels, editCurrentAvatar: 'passed', memberNavigation: 'passed', notificationRead: 'passed', overflow: false });
     await context.close();
   }
   await fs.writeFile('output/playwright/member-ui-qa.json', JSON.stringify(results, null, 2));
