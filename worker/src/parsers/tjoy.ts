@@ -1,6 +1,7 @@
 import { load } from "cheerio";
 import { resolveBookingUrl } from "./booking";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
+import { collectedMovieTitle } from "../../../shared/movie-title-corrections";
 import { safeImageUrl } from "../../../shared/movie";
 import type { NormalizedShowing } from "../../../shared/types";
 
@@ -39,8 +40,7 @@ export function parseTjoySchedule(
   sections.each((_, sectionElement) => {
     const section = $(sectionElement);
     const rawTitle = cleanText(section.find(".js-title-film").first().text());
-    const title = rawTitle.replace(/^【[^】]+】\s*/, "");
-    if (!title) throw new Error("T-Joy movie title is missing");
+    if (!rawTitle) throw new Error("T-Joy movie title is missing");
     if (!section.find(".schedule-box").length) {
       throw new Error("T-Joy movie schedule is missing");
     }
@@ -52,6 +52,7 @@ export function parseTjoySchedule(
     const movieKey =
       movieHref?.match(/(?:film_detail|cinema_detail)\/([^/?#]+)/)?.[1] ??
       rawTitle;
+    const title = collectedMovieTitle(rawTitle, sourceId, movieKey);
     const rawImageUrl = section.find(".film-img img").first().attr("src");
     const imageUrl = safeImageUrl(
       rawImageUrl ? new URL(rawImageUrl, origin).toString() : null,
@@ -109,7 +110,7 @@ export function parseTjoySchedule(
 
 function detectFormat(title: string): string | null {
   const labels = title.match(
-    /DolbyCinema|DolbyAtmos|SCREENX|IMAX|字幕|吹替|3D|2D/g,
+    /INFINITY VISION|DolbyCinema|DolbyAtmos|SCREENX|IMAX|字幕|吹替|3D|2D/g,
   );
   return labels ? [...new Set(labels)].join(" / ") : null;
 }

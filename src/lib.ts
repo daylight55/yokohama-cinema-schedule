@@ -1,4 +1,5 @@
 import { addDays, formatJstDate, todayInJst } from "../shared/date";
+import { canonicalMovieKey } from "../shared/movie-title-corrections";
 import { moviePreferenceKey } from "../shared/movie";
 import { normalizeSearchQuery } from "../shared/search";
 import type {
@@ -127,7 +128,7 @@ export function appHashStateFromHash(hash: string): AppHashState {
   return {
     view,
     date: date && ISO_DATE_PATTERN.test(date) ? date : null,
-    movie: movie ? movie.slice(0, 240) : null,
+    movie: movie ? canonicalMovieKey(movie.slice(0, 240)) : null,
     query: normalizeSearchQuery(params.get("q")),
   };
 }

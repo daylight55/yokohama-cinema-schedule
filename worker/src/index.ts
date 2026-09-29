@@ -9,7 +9,8 @@ import {
   timestampForCacheBuster,
   todayInJst,
 } from "../../shared/date";
-import { movieDisplayTitle, moviePreferenceKey } from "../../shared/movie";
+import { collectedMovieTitle } from "../../shared/movie-title-corrections";
+import { moviePreferenceKey } from "../../shared/movie";
 import { showingSearchText } from "../../shared/search";
 import type { NormalizedShowing } from "../../shared/types";
 import { parseAeonSchedule } from "./parsers/aeon";
@@ -1139,11 +1140,15 @@ function deduplicate(showings: NormalizedShowing[]): NormalizedShowing[] {
 export function normalizeShowingMovieTitle(
   showing: NormalizedShowing,
 ): NormalizedShowing {
-  const title = movieDisplayTitle(showing.title) || showing.title.trim();
+  const title = collectedMovieTitle(showing.title, showing.sourceId, showing.movieKey);
+  const hasInfinityVision = /INFINITY\s*VISION|インフィニティビジョン/i.test(showing.title);
+  const format = hasInfinityVision && !/INFINITY\s*VISION|インフィニティビジョン/i.test(showing.format ?? "")
+    ? [showing.format, "INFINITY VISION"].filter(Boolean).join(" / ")
+    : showing.format;
   const movieKey = moviePreferenceKey(title) || showing.movieKey;
 
-  return title !== showing.title || movieKey !== showing.movieKey
-    ? { ...showing, title, movieKey }
+  return title !== showing.title || movieKey !== showing.movieKey || format !== showing.format
+    ? { ...showing, title, movieKey, format }
     : showing;
 }
 
