@@ -98,32 +98,18 @@ def farewell_time(lang, t):
 
 
 def mascot_pose(lang, t, closing):
-    # One modest lift during the opening words. The two introductions have
-    # different leading silence; the audio itself keeps its original timing.
-    start = .8 if closing or lang == 'ja' else .48
-    duration = .95
-    height, sx, sy, angle = 0, 1, 1, 0
-    p = (t-start)/duration
-    if start-.13 <= t < start:
-        squeeze = math.sin(math.pi*(t-start+.13)/.13)
-        sx, sy = 1+.01*squeeze, 1-.015*squeeze
-    elif 0 <= p <= 1:
-        arc = math.sin(math.pi*p)
-        height = (24 if closing else 36)*arc
-        sx, sy = 1-.008*arc, 1+.012*arc
-        angle = -1.4*math.sin(2*math.pi*p)
-    elif start+duration < t < start+duration+.22:
-        squeeze = math.sin(math.pi*(t-start-duration)/.22)
-        sx, sy = 1+.015*squeeze, 1-.012*squeeze
-    # A small change of weight accompanies the invitation, then settles.
-    invitation = gesture(t, 1.8, 2.2, 2.7, 3.1) if closing else gesture(t, 2.55, 3.05, 3.55, 4.35)
-    angle += 2.2*invitation
-    height += 5*invitation
-    # The final goodbye, after the longer invitation, cues the wink.
+    # Stay airborne throughout the introduction, with a slow bob and bank.
+    # The closing speech also keeps moving until the held farewell pose.
     farewell_t = farewell_time(lang, t)
-    wink = gesture(farewell_t, 3.2, 3.3, 3.65, 3.78) if closing else 0
-    if closing:
-        angle -= 2.5*gesture(farewell_t, 3.02, 3.35, 3.7, 4.35)
+    hold = gesture(farewell_t, 3.02, 3.3, 4.8, 5.15) if closing else 0
+    phase = 2 * math.pi * t / 2.6
+    motion = 1 - hold
+    height = (16 + 9 * math.sin(phase)) * motion if closing else 48 + 22 * math.sin(phase)
+    sx = 1 + .006 * math.sin(phase) * motion
+    sy = 1 - .006 * math.sin(phase) * motion
+    angle = 2.4 * math.sin(2 * math.pi * t / 3.4) * motion - 2.5 * hold
+    # Fully closed for 1.5 seconds; body settles so the wink reads clearly.
+    wink = gesture(farewell_t, 3.2, 3.3, 4.8, 5.05) if closing else 0
     return height, sx, sy, angle, wink
 
 
@@ -225,7 +211,10 @@ def scene(lang, index, t, manifest):
     while draw.textlength(title, font=font(title_size, True)) > 720:
         title_size -= 1
     icon = mascot()
-    im.paste(icon, (34, 25), icon)
+    # Keep the speaking guide alive during the app demonstrations too.
+    bob = round(3 * math.sin(2 * math.pi * t / 2.6))
+    icon = icon.rotate(2 * math.sin(2 * math.pi * t / 3.4), Image.Resampling.BICUBIC)
+    im.paste(icon, (34, 25 + bob), icon)
     text(draw, (124, 26), 'はまむび！使い方ガイド' if lang == 'ja' else 'HAMA MOVIE! / HOW TO', 18, MUTED, True)
     text(draw, (123, 58), title, title_size, INK, True)
     draw.rounded_rectangle((29, 122, 871, 994), 26, fill='#c4dacf')
@@ -276,8 +265,11 @@ def main():
     parser.add_argument('--lang',choices=['ja','en','all'],default='all')
     parser.add_argument('--stills',action='store_true')
     parser.add_argument('--narration-dir',type=Path)
+    parser.add_argument('--audio-from-dir', type=Path, help='Reuse the published MP4 audio stream unchanged for motion-only edits.')
     parser.add_argument('--output-dir',type=Path,default=OUT)
     args=parser.parse_args()
+    if args.audio_from_dir and args.narration_dir:
+        parser.error('--audio-from-dir and --narration-dir are mutually exclusive')
     copies=COPY if args.lang=='all' else {args.lang:COPY[args.lang]}
     manifest=json.loads((CAPTURES/'manifest.json').read_text())
     for lang,copy in copies.items():
@@ -296,14 +288,14 @@ def main():
     if any(guide_duration(specs) != duration for specs in manifest['languages'].values()):
         raise ValueError('Language timelines must have the same duration.')
     music=staging/'original-pop.wav'
-    if not args.stills: compose(music,duration)
+    if not args.stills and not args.audio_from_dir: compose(music,duration)
     for lang,copy in copies.items():
         scene(lang,0,2.05,manifest).save(args.output_dir/f'how-to-{lang}.webp',quality=88)
         if args.stills:
             for i in range(len(copy['scenes'])):
                 scene(lang,i,3.2,manifest).save(staging/f'real-{lang}-{i}.png')
             continue
-        audio=music
+        audio=args.audio_from_dir/f'how-to-{lang}.mp4' if args.audio_from_dir else music
         if args.narration_dir:
             audio=staging/f'narrated-{lang}.wav'; inputs=['-i',str(music)]; filters=[]
             for i, spec in enumerate(manifest['languages'][lang]):
@@ -316,7 +308,11 @@ def main():
             subprocess.run(['ffmpeg','-y','-hide_banner','-loglevel','error',*inputs,'-filter_complex',';'.join(filters),'-map','[out]','-ar','48000','-ac','2',str(audio)],check=True)
         rendered=staging/f'how-to-{lang}.mp4'
         command=['ffmpeg','-y','-hide_banner','-loglevel','error','-f','rawvideo','-vcodec','rawvideo','-s',f'{W}x{H}','-pix_fmt','rgb24','-r',str(FPS),'-i','-','-i',str(audio),'-map','0:v:0','-map','1:a:0','-c:a','aac','-b:a','160k','-ar','48000','-shortest','-c:v','libx264','-preset','fast','-crf','21','-pix_fmt','yuv420p','-movflags','+faststart',str(rendered)]
-        if not args.narration_dir: command[-1:-1]=['-af','loudnorm=I=-18:TP=-1.5:LRA=7']
+        if args.audio_from_dir:
+            audio_start = command.index('-c:a')
+            audio_end = command.index('-shortest')
+            command[audio_start:audio_end] = ['-c:a', 'copy']
+        if not args.narration_dir and not args.audio_from_dir: command[-1:-1]=['-af','loudnorm=I=-18:TP=-1.5:LRA=7']
         proc=subprocess.Popen(command,stdin=subprocess.PIPE)
         try:
             for i, spec in enumerate(manifest['languages'][lang]):
