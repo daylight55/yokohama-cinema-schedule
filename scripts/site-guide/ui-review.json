@@ -1,14 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-09-28T06:59:39.425Z",
-    "baseRevision": "e1fb09ddec7d3d666477c83c8a70fab0198cf5bc",
-    "outcome": "recaptured",
-    "scenes": [
-      "film",
-      "booking"
-    ],
-    "note": "作品詳細・グループ管理・メンバーページの戻るリンクを削除。日英320x700・390x844で対象3画面、ブラウザの戻る／進む、再読み込み、横溢れなしを確認。全操作場面を再撮影して比較し、見た目の変更は作品詳細・予約案内だけ。日英MP4を再合成し配信用ビルドで再生・シーク・字幕既定オフ・手動字幕維持を確認。音声ストリーム一致、89秒と既存マスコット演出を保持。"
+    "reviewedAt": "2026-09-29T04:50:43.379Z",
+    "baseRevision": "cb2563ce6c65fa5171b53d0348fde9c29185f242",
+    "outcome": "visually-unchanged",
+    "scenes": [],
+    "note": "本番cb2563cの実画面キャプチャと導線を維持。変更はマスコットの常時浮遊と1.5秒の静止ウィンクのみで再合成。日英AACハッシュ一致、配信用ビルドで320x700と390x844の日英再生・シーク・字幕オフ・手動字幕・横溢れを検証。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -32,7 +29,7 @@
     "scripts/site-guide/mascot/normal.png": "c1b8966832afd18ec7b91d64bce37cd17a39ebe1c79df2221e2dcc117b7dd7c0",
     "scripts/site-guide/mascot/wink.png": "c38b96fd813e4c5005d856f81fbabc50aeee75aca6455b4c6857c6fb13b78553",
     "scripts/site-guide/music.py": "28b3b10c55263d93f428ac845663fdc1885a582af501e8636a98744270aeee1b",
-    "scripts/site-guide/render.py": "13ed74aa1c9711686fcb5ddedb5b2f1e69eeb91e0f217c58a99ca842db4bce09",
+    "scripts/site-guide/render.py": "9adde32f29b37438611264b1e5fb9f5364e6fbd85971d55c9f87bac66533877a",
     "shared/account-lifecycle.ts": "fa6a8ee9d95227ae86a50d42c46ae327bc232ce3243b1b53cb7ef46f2dbf67a0",
     "shared/cinema-availability.ts": "28c4fe5768960ed38b06f7e0f3ae8f7598ca3519e3aa13b371628525c82fa2b5",
     "shared/cinemas.ts": "2bbee5ab237f5a929df44f81adb5fdffc82f18941dfee9528467ef177bfb5ded",
@@ -91,12 +88,12 @@
     "vite.config.ts": "a4864ab280b19522c24def7fa61597ddf6cf01cad88c10343eb430f8c2531963"
   },
   "artifacts": {
-    "public/guide/how-to-en.mp4": "5fc0b024e58307bb3c6bc752d0f612738d052d3f5397459974117293e73f8ab4",
+    "public/guide/how-to-en.mp4": "c1c1e49c9e2d23ecef04ef74a1036488602e9f750ff6a434448d67c3280b49ec",
     "public/guide/how-to-en.vtt": "7f5a7696bfc778c5ece1197f8e42ba40c16e936dacebca4b516ea48d834361f3",
-    "public/guide/how-to-en.webp": "1fdd2cd82955325ea176a2491fd99329a5fad540a970f2d731b8ba7234d6ff69",
-    "public/guide/how-to-ja.mp4": "aa32fe849f0f26c619f87f07354e8f003a79a8059c9474c5d818259702433321",
+    "public/guide/how-to-en.webp": "f437cefbdabedce82b6f0cb8f5eb9ee8df01c6ebf88d6b33399ef755ac7a35b2",
+    "public/guide/how-to-ja.mp4": "4902509b53178a906d76edcaf3692a43d51e0172d2fe9a7c550b0501d3cad585",
     "public/guide/how-to-ja.vtt": "fb003acd66664aedb6a852eed96a236372e3129c4840bdcc02f8dac43765f972",
-    "public/guide/how-to-ja.webp": "150f7b612915cc189e10eee0d6acc93f89c3f4ce9c0bcd1cdcda409ca1013322",
+    "public/guide/how-to-ja.webp": "b9157c9bf22fec66326d2b190a11657e09008a4bd8c3684e71258e953df257a9",
     "scripts/site-guide/captures/en-01-cinemas.png": "41cb95a85dd19b4a065bcd7276803cbddd92f4e32054e4a44692d19499ff2019",
     "scripts/site-guide/captures/en-01-cinemas.txt": "7ee8704705a701549410100bddd4e5d75161d2ac9a876193fa49af6c48735d9f",
     "scripts/site-guide/captures/en-01-entry.png": "614232e6bc93232e5b35615b5ac82cb793c03790ac33d71bafe55c0882018072",
