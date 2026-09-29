@@ -29,7 +29,8 @@
         - button "気になる 0" [pressed]
         - button "鑑賞済み 0"
         - button "鑑賞予定 0"
-      - paragraph: 気になる映画はまだありません。
+      - region "気になる":
+        - paragraph: 気になる映画はまだありません。
     - region "上映スケジュール表示":
       - heading "上映スケジュール表示" [level=2]
       - text: 上映時間の折りたたみ
