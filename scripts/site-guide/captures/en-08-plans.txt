@@ -36,3 +36,4 @@
             - link "Hama · My account":
               - /url: "#member?user=guide"
               - text: Hama
+- button "Switch schedules"

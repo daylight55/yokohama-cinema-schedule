@@ -98,4 +98,4 @@
             - /url: https://www.aeoncinema.com/cinema/minatomirai/
             - text: Book
           - 'button "Your Name. 12:00 イオンシネマ: added planned screening"': Add to plans
-- button "Find screenings you can reach from here": Use current location
+- button "Switch schedules"

@@ -583,5 +583,17 @@
   "鑑賞済みの映画はまだありません。": "No watched movies yet.",
   "気になる映画はまだありません。": "No movies on the watchlist yet.",
   "プロフィールを編集": "Edit profile",
-  "映画の記録は同じグループのメンバーに表示されます。": "Your movie activity is visible to members of the same group."
+  "映画の記録は同じグループのメンバーに表示されます。": "Your movie activity is visible to members of the same group.",
+  "気になるに追加しました": "Added to your watchlist",
+  "ひとこと入力を閉じる": "Close note",
+  "今は書かずに閉じる": "Skip for now",
+  "スケジュールを切替": "Switch schedules",
+  "スケジュールの表示": "Schedule views",
+  "時間順": "By time",
+  "作品別": "By film",
+  "共有の気になる": "Shared watchlist",
+  "移動時間を再取得": "Retry travel times",
+  "現在地からの移動時間を調べる": "Check travel times from here",
+  "移動時間を取得できませんでした。位置情報の許可を確認してください。": "Could not get travel times. Check location permissions.",
+  "現在地から間に合う上映を更新しました": "Updated reachable screenings from your location"
 }

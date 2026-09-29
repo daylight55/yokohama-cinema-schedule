@@ -36,3 +36,4 @@
             - link "はまむび · マイページ":
               - /url: "#member?user=guide"
               - text: はまむび
+- button "スケジュールを切替"

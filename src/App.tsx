@@ -1,4 +1,5 @@
 import { CollectionStatusPage } from "./CollectionStatusPage";
+import { ScheduleNavigator } from "./ScheduleNavigator";
 import { WatchlistNote } from "./WatchlistNote";
 import { activeMetrics } from "./performanceMetrics";
 import { MemberPage } from "./MemberPage";
@@ -24,7 +25,7 @@ import {
   CheckCircleIcon,
   ClockIcon,
   CrosshairIcon,
-  DotsThreeIcon,
+  SlidersHorizontalIcon,
   FilmSlateIcon,
   HouseLineIcon,
   InfoIcon,
@@ -318,6 +319,7 @@ export function App() {
     () => new Set(),
   );
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
+  const [preferenceDialogMode, setPreferenceDialogMode] = useState<"note" | "settings">("settings");
   const [activeMoviePreference, setActiveMoviePreference] =
     useState<MoviePreferenceTarget | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -1729,7 +1731,7 @@ export function App() {
       if (!response.ok) throw new Error();
       const saved = await response.json() as {comment?:string};
       setMovieNotes(current => new Map(current).set(movie.preferenceKey,saved.comment ?? ""));
-      if (nextStarred) openMoviePreferenceDialog(movie, null);
+      if (nextStarred && !activeMoviePreference) openMoviePreferenceDialog(movie, null, "note");
     } catch {
       rememberMovieScroll();
       setStarredMovieKeys((current) => {
@@ -1814,8 +1816,10 @@ export function App() {
   const openMoviePreferenceDialog = (
     movie: MoviePreferenceTarget,
     anchorElement: HTMLElement | null,
+    mode: "note" | "settings" = "settings",
   ) => {
     setPreferenceError(null);
+    setPreferenceDialogMode(mode);
     setActiveMoviePreference({ ...movie, anchorElement });
   };
 
@@ -1910,7 +1914,7 @@ export function App() {
                           event.currentTarget.closest<HTMLElement>(".program-block"),
                         )}
                       >
-                        <DotsThreeIcon size={24} aria-hidden="true" />
+                        <SlidersHorizontalIcon size={22} aria-hidden="true" />
                       </button>
                     )}
                     {localize(
@@ -2191,7 +2195,7 @@ export function App() {
             <div className="movie-preference-sheet">
               <div className="movie-preference-heading">
                 <div>
-                  <small>{localize("作品の設定")}</small>
+                  <small>{localize(preferenceDialogMode === "note" ? "気になるに追加しました" : "作品の設定")}</small>
                   <h2 id="movie-preference-title">
                     {movieTitle(activeMoviePreference.title)}
                   </h2>
@@ -2199,12 +2203,13 @@ export function App() {
                 <button
                   className="icon-button"
                   type="button"
-                  aria-label={localize("作品の設定を閉じる")}
+                  aria-label={localize(preferenceDialogMode === "note" ? "ひとこと入力を閉じる" : "作品の設定を閉じる")}
                   onClick={closeMoviePreferenceDialog}
                 >
                   <XIcon size={20} aria-hidden="true" />
                 </button>
               </div>
+              {preferenceDialogMode === "settings" && <>
               <a
                 className="movie-schedule-link"
                 href={hashForAppView("movie", {
@@ -2298,10 +2303,19 @@ export function App() {
                   {localize("興味なし")}
                 </button>
               </div>
+              </>}
               {starredMovieKeys.has(activeMoviePreference.preferenceKey) && (
                 <WatchlistNote key={activeMoviePreference.preferenceKey} title={activeMoviePreference.title}
                   initialValue={movieNotes.get(activeMoviePreference.preferenceKey) ?? ""}
-                  onSaved={comment => setMovieNotes(current => new Map(current).set(activeMoviePreference.preferenceKey,comment))} />
+                  onSaved={comment => {
+                    setMovieNotes(current => new Map(current).set(activeMoviePreference.preferenceKey,comment));
+                    if (preferenceDialogMode === "note") closeMoviePreferenceDialog();
+                  }} />
+              )}
+              {preferenceDialogMode === "note" && (
+                <button className="secondary-button" type="button" onClick={closeMoviePreferenceDialog}>
+                  {localize("今は書かずに閉じる")}
+                </button>
               )}
               {localize(
                 preferenceError && (
@@ -2964,58 +2978,12 @@ export function App() {
                                 )}
                                 {localize(
                                   schedule?.preferencesEnabled && (
-                                    <div
-                                      className="movie-status-actions"
-                                      role="group"
-                                      aria-label={localize(
-                                        `${movieTitle(movie.title)}の鑑賞状態`,
-                                      )}
-                                    >
-                                      <button
-                                        type="button"
-                                        className={
-                                          status === "watched" ? "active" : ""
-                                        }
-                                        aria-pressed={status === "watched"}
-                                        disabled={savingMovieKeys.has(
-                                          movie.preferenceKey,
-                                        )}
-                                        onClick={(event) =>
-                                          void updateMovieStatus(
-                                            movie,
-                                            "watched",
-                                            event.currentTarget.closest<HTMLElement>(
-                                              ".movie-list-item",
-                                            ),
-                                          )
-                                        }
-                                      >
-                                        {localize("鑑賞済み")}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className={
-                                          status === "not_interested"
-                                            ? "active"
-                                            : ""
-                                        }
-                                        aria-pressed={
-                                          status === "not_interested"
-                                        }
-                                        disabled={savingMovieKeys.has(
-                                          movie.preferenceKey,
-                                        )}
-                                        onClick={(event) =>
-                                          void updateMovieStatus(
-                                            movie,
-                                            "not_interested",
-                                            event.currentTarget.closest<HTMLElement>(
-                                              ".movie-list-item",
-                                            ),
-                                          )
-                                        }
-                                      >
-                                        {localize("興味なし")}
+                                    <div className="movie-status-actions">
+                                      <button className="icon-button movie-options-button" type="button"
+                                        aria-label={`${localize("作品の設定")} · ${movieTitle(movie.title)}`}
+                                        aria-haspopup="dialog"
+                                        onClick={event => openMoviePreferenceDialog(movie, event.currentTarget.closest<HTMLElement>(".movie-list-item"))}>
+                                        <SlidersHorizontalIcon size={22} aria-hidden="true" />
                                       </button>
                                     </div>
                                   ),
@@ -3367,38 +3335,22 @@ export function App() {
         )}
       </main>
 
-      {localize(
-        shouldShowCurrentLocationRefresh(view, selectedDate, today) && (
-          <button
-            type="button"
-            className={`current-location-routes-button${
-              routeState === "error" ? " error" : ""
-            }`}
-            aria-label={localize(
-              routeState === "loading"
-                ? "現在地から間に合う上映を更新中"
-                : "現在地から間に合う上映を更新",
-            )}
-            title={localize(
-              routeOrigin === "current" && routeUpdatedAt
-                ? `最終更新 ${updatedFormatter.format(new Date(routeUpdatedAt))}`
-                : undefined,
-            )}
-            disabled={routeState === "loading"}
-            onClick={() => void fetchCurrentLocationRoutes()}
-          >
-            <CrosshairIcon size={18} weight="bold" aria-hidden="true" />
-            {localize(
-              routeState === "loading"
-                ? "取得中…"
-                : routeState === "error"
-                  ? "再取得"
-                  : routeOrigin === "current"
-                    ? "現在地で再取得"
-                    : "現在地で更新",
-            )}
-          </button>
-        ),
+      {(view === "schedule" || view === "movies" || view === "shared" || view === "viewingPlans") && (
+        <ScheduleNavigator
+          view={view}
+          dates={dates}
+          selectedDate={selectedDate}
+          query={normalizedSearchQuery}
+          locationAction={shouldShowCurrentLocationRefresh(view, selectedDate, today) ? (
+            <button type="button" className="secondary-button" disabled={routeState === "loading"}
+              title={routeOrigin === "current" && routeUpdatedAt ? localize(`最終更新 ${updatedFormatter.format(new Date(routeUpdatedAt))}`) : undefined}
+              onClick={() => void fetchCurrentLocationRoutes()}>
+              <CrosshairIcon size={18} aria-hidden="true" />
+              {localize(routeState === "loading" ? "取得中…" : routeState === "error" ? "移動時間を再取得" : "現在地からの移動時間を調べる")}
+            </button>
+          ) : undefined}
+          locationStatus={routeState === "error" ? localize("移動時間を取得できませんでした。位置情報の許可を確認してください。") : routeOrigin === "current" && routeState === "ready" ? localize("現在地から間に合う上映を更新しました") : undefined}
+        />
       )}
 
       {localize(
