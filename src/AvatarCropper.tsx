@@ -3,11 +3,11 @@ import { AVATAR_MAX_BYTES } from "../shared/member-profile";
 import { localize as t } from "./i18n";
 
 export function AvatarCropper({
-  file,
+  source,
   onApply,
   onCancel,
 }: {
-  file: File;
+  source: File | string;
   onApply: (data: string) => void;
   onCancel: () => void;
 }) {
@@ -21,7 +21,7 @@ export function AvatarCropper({
     const element = dialog.current!;
     element.showModal();
     let active = true;
-    const url = URL.createObjectURL(file);
+    const url = typeof source === "string" ? source : URL.createObjectURL(source);
     const img = new Image();
     img.src = url;
     void img
@@ -41,10 +41,10 @@ export function AvatarCropper({
       });
     return () => {
       active = false;
-      URL.revokeObjectURL(url);
+      if (typeof source !== "string") URL.revokeObjectURL(url);
       element.close();
     };
-  }, [file]);
+  }, [source]);
   const clamp = (value: number) => Math.max(-1, Math.min(1, value));
   const side = image
     ? Math.min(image.naturalWidth, image.naturalHeight) / zoom

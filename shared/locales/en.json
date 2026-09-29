@@ -600,5 +600,7 @@
   "退会の最終確認": "Confirm account closure",
   "本当に退会しますか？": "Are you sure you want to close your account?",
   "退会完了のお知らせを登録メールアドレスにお送りします。": "We will send an account closure confirmation to your registered email address.",
-  "確認して次へ": "Confirm and continue"
+  "確認して次へ": "Confirm and continue",
+  "現在の写真を加工": "Edit current photo",
+  "新しい写真をアップロード": "Upload a new photo"
 }

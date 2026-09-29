@@ -176,8 +176,16 @@ function ProfileForm({
   const [bio, setBio] = useState(profile.bio);
   const [avatar, setAvatar] = useState<string | null | undefined>(undefined);
   const [busy, setBusy] = useState(false);
-  const [cropFile, setCropFile] = useState<File | null>(null);
-  const processing = cropFile !== null;
+  const [cropSource, setCropSource] = useState<File | string | null>(null);
+  const photoChoices = useRef<HTMLDialogElement>(null);
+  const photoButton = useRef<HTMLButtonElement>(null);
+  const currentAvatar = avatar === undefined ? profile.avatarUrl : avatar;
+  const processing = cropSource !== null;
+  const wasProcessing = useRef(false);
+  useEffect(() => {
+    if (wasProcessing.current && !processing) photoButton.current?.focus();
+    wasProcessing.current = processing;
+  }, [processing]);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -191,7 +199,7 @@ function ProfileForm({
       setError(t("5MB以下のJPEG・PNG・WebP画像を選んでください。"));
       return;
     }
-    setCropFile(file);
+    setCropSource(file);
   }
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -224,7 +232,20 @@ function ProfileForm({
       className="member-profile-section"
       aria-labelledby="member-profile-title"
     >
-      {cropFile && <AvatarCropper file={cropFile} onCancel={() => setCropFile(null)} onApply={(data) => { setAvatar(data); setCropFile(null); setSaved(false); }} />}
+      {cropSource && <AvatarCropper source={cropSource} onCancel={() => { setCropSource(null); }} onApply={(data) => { setAvatar(data); setCropSource(null); setSaved(false); }} />}
+      <dialog ref={photoChoices} className="avatar-crop-dialog profile-photo-choice" aria-labelledby="profile-photo-choice-title">
+        <h2 id="profile-photo-choice-title">{t("写真を変更")}</h2>
+        {currentAvatar && <button type="button" className="account-secondary-button" onClick={() => {
+          photoChoices.current?.close();
+          setError("");
+          setCropSource(currentAvatar);
+        }}>{t("現在の写真を加工")}</button>}
+        <button type="button" className="account-secondary-button" onClick={() => {
+          photoChoices.current?.close();
+          fileRef.current?.click();
+        }}>{t("新しい写真をアップロード")}</button>
+        <button type="button" className="account-secondary-button" onClick={() => photoChoices.current?.close()}>{t("キャンセル")}</button>
+      </dialog>
       <h2 id="member-profile-title">{t("プロフィール")}</h2>
       <form
         className="member-profile-form"
@@ -233,7 +254,7 @@ function ProfileForm({
         <div className="profile-photo-row">
           <MemberAvatar
             name={name}
-            url={avatar === undefined ? profile.avatarUrl : avatar}
+            url={currentAvatar}
             large
           />
           <div className="profile-photo-actions">
@@ -253,12 +274,13 @@ function ProfileForm({
             <button
               type="button"
               disabled={busy || processing}
-              onClick={() => fileRef.current?.click()}
+              ref={photoButton}
+              onClick={() => currentAvatar ? photoChoices.current?.showModal() : fileRef.current?.click()}
             >
               <CameraIcon size={20} aria-hidden="true" />
               {processing ? t("画像を準備中…") : t("写真を変更")}
             </button>
-            {(avatar === undefined ? profile.avatarUrl : avatar) && (
+            {currentAvatar && (
               <button
                 className="profile-photo-remove"
                 type="button"
