@@ -1,10 +1,13 @@
 /// <reference path="../env.d.ts" />
+import { SOURCE_BATCH_IDS } from "../../shared/collection-sources";
+import { claimCollectionJob, expireCollectionJobs, releaseCollectionJob, type CollectionJob, type SyncResult, type SyncSourceResult } from "../../shared/collection-jobs";
 import { refreshMovieTitleTranslations } from "./title-translation";
 import { refreshMovieTitleResearch } from "./title-research";
 import { refreshMovieCredits } from "./movie-credits";
 import { purgeExpiredAccounts } from "../../shared/account-lifecycle";
 import { refreshSynopses, workersSynopsisModel } from "./synopsis-research";
 import { validBearer } from "./request-auth";
+import { MovieIdentityBudget, validateSourceMovieTitles } from "./movie-identity";
 import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
 import { activeDatesForCinema } from "../../shared/cinema-availability";
@@ -65,17 +68,6 @@ export type SourceBatch = 0 | 1 | 2;
 // Six-hour collection cadence: report a missed pair of runs as stale.
 export const SOURCE_DATE_STALE_AFTER_MS = 12 * 60 * 60 * 1000;
 
-const SOURCE_BATCH_IDS: Record<SourceBatch, ReadonlySet<string>> = {
-  0: new Set([
-    "tjoy-yokohama",
-    "movil",
-    "toho-kamiooka",
-    "yokohama-burg13",
-    "aeon-minatomirai",
-  ]),
-  1: new Set(["united-minatomirai", "kino-minatomirai", "jack-and-betty"]),
-  2: new Set(["cinemarine", "novecento"]),
-};
 
 const USER_AGENT =
   "YokohamaCinemaSchedule/0.1 (private personal schedule viewer)";
@@ -90,6 +82,10 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
+    if (controller.cron === "* * * * *") {
+      ctx.waitUntil(processCollectionQueue(env));
+      return;
+    }
     if (controller.cron === "37 * * * *") {
       if (env.AI) ctx.waitUntil(refreshMovieTitleTranslations(env.DB, env.AI).catch(() => {
         console.warn(JSON.stringify({event: "movie_title_translation_unavailable"}));
@@ -103,7 +99,7 @@ export default {
       return;
     }
     ctx.waitUntil(
-      refreshBatch(env, sourceBatchForCron(controller.cron))
+      refreshBatch(env, sourceBatchForCron(controller.cron), undefined, undefined, { trigger: "scheduled" })
         .then(async (result) => {
           if (env.AI) {
             try {
@@ -232,22 +228,57 @@ export function configuredSourceIds(): string[] {
 }
 
 export async function refreshBatch(
-  env: Env,
-  batch: SourceBatch,
-  onlySourceIds?: ReadonlySet<string>,
+  env: Env, batch: SourceBatch, onlySourceIds?: ReadonlySet<string>,
   onlyDates?: ReadonlySet<string>,
-): Promise<{
-  startedAt: string;
-  completedAt: string;
-  succeeded: number;
-  failed: number;
-  sources: Array<{
-    sourceId: string;
-    status: "success" | "failed";
-    count: number;
-    error?: string;
-  }>;
-}> {
+  options: { trigger?: CollectionJob["trigger_kind"]; jobId?: string } = {},
+): Promise<SyncResult> {
+  const now = new Date().toISOString();
+  const id = options.jobId ?? crypto.randomUUID();
+  await expireCollectionJobs(env.DB);
+  if (!options.jobId) {
+    const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
+    await env.DB.prepare(`INSERT INTO collection_jobs
+      (id,trigger_kind,batch,source_ids,dates,state,requested_at) VALUES (?,?,?,?,?,'queued',?)`)
+      .bind(id, options.trigger ?? "operator", batch,
+        JSON.stringify(onlySourceIds ? [...onlySourceIds] : sourceIdsForBatch(batch)),
+        JSON.stringify(dateRange(todayInJst(), days).filter(d => !onlyDates || onlyDates.has(d))), now).run();
+  }
+  if (!(await claimCollectionJob(env.DB, id))) {
+    if (!options.jobId) await env.DB.prepare(`UPDATE collection_jobs SET state='skipped',completed_at=?,
+      error_message='Another collection is running' WHERE id=?`).bind(now,id).run();
+    return { startedAt: now, completedAt: now, succeeded: 0, failed: 0, sources: [], skipped: true };
+  }
+  try {
+    const result = await runRefreshBatch(env, batch, onlySourceIds, onlyDates, async sources => {
+      await env.DB.prepare('UPDATE collection_jobs SET result_json=? WHERE id=?')
+        .bind(JSON.stringify({sources}), id).run();
+    });
+    await env.DB.prepare('UPDATE collection_jobs SET state=?,completed_at=?,result_json=? WHERE id=?')
+      .bind(result.failed ? (result.succeeded ? 'partial' : 'failed') : 'succeeded',
+        result.completedAt, JSON.stringify(result), id).run();
+    return result;
+  } catch (error) {
+    await env.DB.prepare("UPDATE collection_jobs SET state='failed',completed_at=?,error_message=? WHERE id=?")
+      .bind(new Date().toISOString(), safeError(error), id).run();
+    throw error;
+  } finally {
+    await releaseCollectionJob(env.DB, id);
+  }
+}
+
+export async function processCollectionQueue(env: Env): Promise<void> {
+  await expireCollectionJobs(env.DB);
+  const job = await env.DB.prepare(`SELECT * FROM collection_jobs
+    WHERE state='queued' AND trigger_kind='admin' ORDER BY requested_at,id LIMIT 1`).first<CollectionJob>();
+  if (!job) return;
+  await refreshBatch(env, job.batch, new Set(JSON.parse(job.source_ids) as string[]),
+    new Set(JSON.parse(job.dates) as string[]), {jobId: job.id, trigger: 'admin'});
+}
+
+async function runRefreshBatch(
+  env: Env, batch: SourceBatch, onlySourceIds?: ReadonlySet<string>,
+  onlyDates?: ReadonlySet<string>, onProgress?: (sources: SyncSourceResult[]) => Promise<void>,
+): Promise<SyncResult> {
   const startedAt = new Date().toISOString();
   const days = Math.min(Math.max(Number(env.SCHEDULE_DAYS ?? "7"), 1), 14);
   const dates = dateRange(todayInJst(), days).filter(
@@ -259,6 +290,7 @@ export async function refreshBatch(
     await refreshTmdbReleaseDateCatalog(env, dates[0]);
   }
   const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
+  const identityBudget = new MovieIdentityBudget();
 
   const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
   const sourceIds = SOURCE_BATCH_IDS[batch];
@@ -267,12 +299,7 @@ export async function refreshBatch(
       sourceIds.has(source.id) &&
       (!onlySourceIds || onlySourceIds.has(source.id)),
   );
-  const results: Array<{
-    sourceId: string;
-    status: "success" | "failed";
-    count: number;
-    error?: string;
-  }> = [];
+  const results: SyncSourceResult[] = [];
   // 取得元へ短時間に大量のリクエストを送らないよう、映画館単位で直列実行する。
   for (const source of sources) {
     const cinemaWindow = activeCinemaWindows.get(source.id);
@@ -283,10 +310,14 @@ export async function refreshBatch(
     const sourceStartedAt = new Date().toISOString();
     try {
       const fetched = await source.fetch(sourceDates);
+      const validated = await validateSourceMovieTitles(
+        env.DB, source.id,
+        fetched.showings.filter(showing => sourceDates.includes(todayInJst(new Date(showing.startsAt)))),
+        identityBudget,
+      );
+      for (const [date, error] of validated.dateErrors) fetched.dateErrors.set(date,error);
       const showings = deduplicate(
-        fetched.showings
-          .filter(showing => sourceDates.includes(todayInJst(new Date(showing.startsAt))))
-          .map(normalizeShowingMovieTitle),
+        validated.showings.map(normalizeShowingMovieTitle),
       );
       const dateOutcomes = sourceDateOutcomes(
         sourceDates,
@@ -326,6 +357,7 @@ export async function refreshBatch(
         sourceId: source.id,
         status,
         count: showings.length,
+        dates: dateOutcomes,
         ...(dateErrorMessage ? { error: dateErrorMessage } : {}),
       });
       console.log("Schedule source refreshed", {
@@ -358,8 +390,10 @@ export async function refreshBatch(
         status: "failed",
         count: 0,
         error: message,
+        dates: sourceDates.map(date => ({date, status: "error", count: 0, error: message})),
       });
     }
+    await onProgress?.(results);
   }
 
   const summary = {
@@ -379,7 +413,7 @@ export async function refreshBatch(
   return summary;
 }
 
-function buildSources(browser?: BrowserRun): Source[] {
+export function buildSources(browser?: BrowserRun): Source[] {
   return [
     {
       id: "tjoy-yokohama",
@@ -865,8 +899,8 @@ async function replaceSourceDates(
           `INSERT INTO showings (
             id, source_id, cinema_id, movie_key, title, image_url,
             release_date, starts_at, ends_at,
-            screen, format, booking_url, purchasable, fetched_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            screen, format, booking_url, purchasable, fetched_at, source_movie_id, source_title
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id,
@@ -883,6 +917,8 @@ async function replaceSourceDates(
           showing.bookingUrl,
           showing.purchasable === null ? null : Number(showing.purchasable),
           fetchedAt,
+          showing.sourceMovieId ?? null,
+          showing.sourceTitle ?? showing.title,
         );
     }),
     ...publishedShowings.map((showing) => {
@@ -1175,7 +1211,7 @@ export function normalizeShowingMovieTitle(
   showing: NormalizedShowing,
 ): NormalizedShowing {
   const title = collectedMovieTitle(showing.title, showing.sourceId, showing.movieKey);
-  const hasInfinityVision = /INFINITY\s*VISION|インフィニティビジョン/i.test(showing.title);
+  const hasInfinityVision = /INFINITY\s*VISION|インフィニティビジョン/i.test(showing.sourceTitle ?? showing.title);
   const format = hasInfinityVision && !/INFINITY\s*VISION|インフィニティビジョン/i.test(showing.format ?? "")
     ? [showing.format, "INFINITY VISION"].filter(Boolean).join(" / ")
     : showing.format;

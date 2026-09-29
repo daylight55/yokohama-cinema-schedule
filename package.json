@@ -21,6 +21,7 @@
     "test:worker-runtime": "node scripts/worker-runtime-smoke.mjs",
     "perf:benchmark": "node --experimental-strip-types scripts/frontend-performance.mjs",
     "test:performance": "vitest run test/frontend-performance.test.ts test/history-scroll.test.mjs",
+    "sync:schedules": "node scripts/sync-schedules.mjs",
     "guide:check": "node scripts/site-guide/freshness.mjs check",
     "guide:review": "node scripts/site-guide/freshness.mjs review"
   },
@@ -41,7 +42,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10",
-    "wrangler": "^4.113.0"
+    "wrangler": "^4.113.0",
+    "esbuild": "0.28.1"
   },
   "overrides": {
     "sharp": "^0.35.3"

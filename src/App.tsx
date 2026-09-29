@@ -112,6 +112,7 @@ import {
   type ScheduleTimePeriod,
 } from "./lib";
 import { PlannerPage } from "./PlannerPage";
+import { AdminCollectionPage } from "./AdminCollectionPage";
 import { AdminUsersPage } from "./AdminUsersPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
@@ -350,7 +351,7 @@ export function App() {
   const selectedMovieListDate =
     view === "movies" && showAllMovieDates ? null : selectedDate;
   const historyScroll = useHistoryScroll(
-    hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie", "collectionStatus"].includes(view) ? selectedDate : null,
+    hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie", "collectionStatus", "adminCollection"].includes(view) ? selectedDate : null,
       user: selectedMemberId, movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
     !loading && loadedScheduleKey === scheduleRequestKey && interactiveSearchQuery === normalizedSearchQuery,
   );
@@ -488,7 +489,7 @@ export function App() {
         nextView === "schedule" ||
         nextView === "movies" ||
         nextView === "movie" ||
-        nextView === "collectionStatus";
+        nextView === "collectionStatus" || nextView === "adminCollection";
       const nextShowAllMovieDates =
         nextView === "movies" && hashState.date === null;
       const nextScheduleDate =
@@ -2152,6 +2153,7 @@ export function App() {
             </a>
             {userRole === "admin" && (
               <div className="navigation-admin">
+                <a href="#admin-collection" onClick={closeNavigation} aria-current={view === "adminCollection" ? "page" : undefined}>{language === "en" ? "Schedule synchronization" : "上映情報の同期"}</a>
                 <a
                   href={hashForAppView("adminUsers")}
                   className={view === "adminUsers" ? "active" : ""}
@@ -2559,6 +2561,8 @@ export function App() {
         {localize(
           view === "movie" ? (
             <MoviePage movieKey={selectedMovieKey} today={today} />
+          ) : view === "adminCollection" ? (
+            <AdminCollectionPage language={language} date={selectedDate} />
           ) : view === "adminUsers" ? (
             <AdminUsersPage />
           ) : view === "member" ? (

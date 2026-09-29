@@ -93,7 +93,7 @@ export function normalizeReturnHash(value: FormDataEntryValue | null): string {
     return user.length <= 128 ? `#member?${new URLSearchParams({ user })}` : "";
   }
   const normalized = value.toLowerCase();
-  if (/^#collection-status(?:\?date=\d{4}-\d{2}-\d{2})?$/.test(normalized)) return normalized;
+  if (/^#(?:collection-status|admin-collection)(?:\?date=\d{4}-\d{2}-\d{2})?$/.test(normalized)) return normalized;
   return [
     "#schedule",
     "#movies",
@@ -105,6 +105,7 @@ export function normalizeReturnHash(value: FormDataEntryValue | null): string {
     "#planner",
     "#profile",
     "#account",
+    "#admin-collection",
     "#member",
   ].includes(normalized)
     ? normalized

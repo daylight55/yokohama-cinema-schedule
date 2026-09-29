@@ -43,6 +43,7 @@ export type AppView =
   | "collectionStatus"
   | "notifications"
   | "planner"
+  | "adminCollection"
   | "adminUsers"
   | "member"
   | "account"
@@ -102,6 +103,7 @@ const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#account": "account",
   "#member": "member",
   "#admin-users": "adminUsers",
+  "#admin-collection": "adminCollection",
   "#about": "about",
 };
 
@@ -119,6 +121,7 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   account: "#account",
   member: "#member",
   adminUsers: "#admin-users",
+  adminCollection: "#admin-collection",
   about: "#about",
 };
 
