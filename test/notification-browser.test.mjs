@@ -2,7 +2,8 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { NotificationProvider, NotificationBell } from "../src/Notifications";
+import { NotificationProvider } from "../src/Notifications";
+import { ProfileMenu } from "../src/MemberProfile";
 let root, host, result, show;
 beforeEach(() => {
   vi.useFakeTimers();
@@ -58,7 +59,7 @@ const mount = () =>
       React.createElement(
         NotificationProvider,
         null,
-        React.createElement(NotificationBell),
+        React.createElement(ProfileMenu),
       ),
     ),
   );
@@ -115,4 +116,17 @@ it("suspends hidden tabs without permission and stops after five server failures
   expect(fetch).toHaveBeenCalledTimes(6);
   await act(async () => vi.advanceTimersByTimeAsync(3600000));
   expect(fetch).toHaveBeenCalledTimes(6);
+});
+it("shows matching numeric counts on the avatar and menu link, then clears both when read", async () => {
+  result.unread = 125;
+  await mount();
+  expect(host.querySelector('.profile-unread-badge')?.textContent).toBe('125');
+  expect(host.querySelector('a[href="#notifications"] .menu-unread-badge')?.textContent).toBe('125');
+  expect(host.querySelector('summary')?.getAttribute('aria-label')).toContain('125');
+  expect(host.querySelector('.notification-bell')).toBeNull();
+  result.unread = 0;
+  await act(async () => vi.advanceTimersByTimeAsync(60000));
+  expect(host.querySelector('.profile-unread-badge')).toBeNull();
+  expect(host.querySelector('.menu-unread-badge')).toBeNull();
+  expect(host.querySelector('a[href="#notifications"]')).not.toBeNull();
 });

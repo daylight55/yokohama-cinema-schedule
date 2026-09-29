@@ -1,282 +1,334 @@
 #!/usr/bin/env python3
-"""Render the comic-style guide with original music. Requires Pillow, NumPy and ffmpeg.
-No account data, film artwork, network calls or screen recordings are used.
-"""
+"""Render mascot bookends and real app captures with captions and narration."""
 import argparse
+from functools import lru_cache
 import json
 import math
 import os
 from pathlib import Path
 import subprocess
 import unicodedata
-from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont
 from music import compose
+from narration import wav_duration
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'public/guide'
 COPY = json.loads((ROOT / 'shared/site-guide.json').read_text())
-W, H, FPS, SECONDS = 900, 1200, 24, 6
-BG, INK, MUTED = '#fff8ee', '#25322d', '#60736a'
-GREEN, PALE, LINE, CORAL, GOLD = '#159a6b', '#dff6e9', '#b9d8ca', '#e34f5f', '#a56a00'
-FONT_DIR = Path('/System/Library/Fonts')
-def font_path(weight):
-    override = os.environ.get('GUIDE_FONT_BOLD' if weight else 'GUIDE_FONT')
+CAPTURES = Path(__file__).parent / 'captures'
+W, H, FPS = 900, 1200, 24
+BG, INK, GREEN, MUTED = '#fff8ee', '#25322d', '#159a6b', '#60736a'
+# This viewport contains the real screenshot. It is never redrawn as a mock UI.
+SCREEN = (34, 127, 866, 987)
+
+
+def font_path(bold):
+    override = os.environ.get('GUIDE_FONT_BOLD' if bold else 'GUIDE_FONT')
     if override:
         return override
-    for p in FONT_DIR.glob('*.ttc'):
-        if unicodedata.normalize('NFC', p.name) == f'ヒラギノ角ゴシック W{6 if weight else 3}.ttc':
+    for p in Path('/System/Library/Fonts').glob('*.ttc'):
+        if unicodedata.normalize('NFC', p.name) == f'ヒラギノ角ゴシック W{6 if bold else 3}.ttc':
             return str(p)
     raise RuntimeError('Set GUIDE_FONT and GUIDE_FONT_BOLD to Japanese-capable font files.')
 
-@lru_cache(maxsize=100)
+
+@lru_cache(maxsize=64)
 def font(size, bold=False):
     return ImageFont.truetype(font_path(bold), size)
 
-def text(d, xy, value, size=32, color=INK, bold=False):
-    d.text(xy, value, font=font(size, bold), fill=color, anchor='lt', spacing=12)
 
-def wrap(d, value, width, size):
-    lines=[]
+def text(draw, xy, value, size=32, fill=INK, bold=False):
+    draw.text(xy, value, font=font(size, bold), fill=fill, anchor='lt', spacing=10)
+
+
+def lines(value, size, width):
+    draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+    result = []
     for paragraph in value.split('\n'):
         words = paragraph.split(' ') if ' ' in paragraph else list(paragraph)
         sep = ' ' if ' ' in paragraph else ''
-        line=''
+        line = ''
         for word in words:
-            candidate = (line+sep+word) if line else word
-            if d.textlength(candidate, font=font(size)) > width and line:
-                lines.append(line); line=word
+            candidate = line + (sep if line else '') + word
+            if line and draw.textlength(candidate, font=font(size)) > width:
+                result.append(line)
+                line = word
             else:
-                line=candidate
-        lines.append(line)
-    return lines
+                line = candidate
+        result.append(line)
+    return result
 
-def paragraph(d, xy, value, width, size=31, color=INK, bold=False, gap=12):
-    x,y=xy
-    lines=wrap(d,value,width,size)
-    for line in lines:
-        text(d,(x,y),line,size,color,bold); y+=size+gap
-    return y
 
-def box(d, bounds, fill='white', outline=None, radius=20, width=2):
-    d.rounded_rectangle(bounds, radius=radius, fill=fill, outline=outline, width=width)
+@lru_cache(maxsize=80)
+def screenshot(name):
+    return Image.open(CAPTURES / name).convert('RGB')
 
-def star(d,x,y,r=20,fill=GOLD):
-    pts=[]
-    for i in range(10):
-        a=-math.pi/2+i*math.pi/5; s=r if i%2==0 else r*.44
-        pts.append((x+math.cos(a)*s,y+math.sin(a)*s))
-    d.polygon(pts,fill=fill)
-
-def tap(im, xy, t):
-    if not 1.3<t<4.5: return
-    d=ImageDraw.Draw(im); x,y=xy
-    pulse=(t-1.3)%1.6; radius=22+int(pulse*20)
-    d.ellipse((x-radius,y-radius,x+radius,y+radius),outline=CORAL,width=4)
-    d.ellipse((x-8,y-8,x+8,y+8),fill=CORAL)
 
 @lru_cache(maxsize=1)
-def brand_icon():
-    logo=Image.open(ROOT/'public/brand/hamamubi-icon-v2-512.png').convert('RGBA')
-    logo.thumbnail((245,245))
-    return logo
+def mascot():
+    result = Image.open(ROOT / 'public/brand/hamamubi-icon-v2-512.png').convert('RGBA')
+    result.thumbnail((68, 68))
+    return result
 
-def diagram(lang,index,t):
-    """One action per illustrated screen; no unrelated navigation or fine print."""
-    jp=lang=='ja'; tr=lambda a,b:a if jp else b
-    im=Image.new('RGB',(W,H),BG); d=ImageDraw.Draw(im)
-    target=None
-    box(d,(58,295,842,914),'#fffefa',INK,26,4)
-    film=tr('観たい映画','Your film')
 
-    def action(y,label,active=True):
-        box(d,(110,y,790,y+100),GREEN if active else PALE,INK,20,3)
-        tw=d.textlength(label,font=font(40,True))
-        text(d,((W-tw)/2,y+29),label,40,'white' if active else INK,True)
+@lru_cache(maxsize=2)
+def mascot_actor(wink=False):
+    name = 'wink' if wink else 'normal'
+    return Image.open(Path(__file__).parent / f'mascot/{name}.png').convert('RGBA')
 
-    def down(y):
-        d.line((450,y,450,y+43),fill=GREEN,width=6)
-        d.polygon([(436,y+30),(464,y+30),(450,y+47)],fill=GREEN)
 
-    if index==1:
-        box(d,(110,375,790,482),'white',INK,18,3)
-        text(d,(139,409),film if t>1 else tr('映画のタイトル','Film title'),43,INK)
-        action(530,tr('検索','Search'))
-        if t>2:
-            box(d,(110,716,790,833),PALE,None,22)
-            text(d,(143,754),film,43,GREEN,True)
-        target=(690,580)
-    elif index==2:
-        text(d,(110,361),film,49,INK,True)
-        d.line((110,424,368 if jp else 338,424),fill=GREEN,width=3)
-        d.line((128,505,128,828),fill=LINE,width=5)
-        for i,(time,cinema) in enumerate([
-            ('14:00',tr('T・ジョイ横浜','T-Joy Yokohama')),
-            ('16:30',tr('横浜ブルク13','Yokohama Burg 13')),
-            ('19:10',tr('イオンシネマ','AEON Cinema')),
-        ]):
-            y=495+i*140
-            d.ellipse((115,y+10,141,y+36),fill=GREEN)
-            text(d,(167,y),time,42,INK,True)
-            text(d,(340,y+5),cinema,33,INK)
-        target=(378,401)
-    elif index==3:
-        text(d,(110,359),film,47,INK,True)
-        text(d,(110,437),'14:00',45,GREEN,True)
-        text(d,(320,448),tr('T・ジョイ横浜','T-Joy Yokohama'),33,INK)
-        action(545,tr('予約 ↗','Book ↗'))
-        down(679)
-        box(d,(110,761,790,856),PALE,None,22)
-        text(d,(154,791),tr('映画館のサイト','Cinema website'),40,GREEN,True)
-        target=(670,596)
-    elif index==4:
-        text(d,(110,365),film,48,INK,True)
-        d.ellipse((337,490,563,716),fill='#fff0bf',outline=INK,width=3)
-        star(d,450,604,70,GOLD if t>1.3 else MUTED)
-        if t>2: action(764,tr('気になる','Watchlist'),False)
-        target=(469,626)
-    elif index==5:
-        text(d,(110,359),film,47,INK,True)
-        text(d,(110,437),'14:00',45,GREEN,True)
-        text(d,(320,448),tr('T・ジョイ横浜','T-Joy Yokohama'),33,INK)
-        action(545,tr('観に行く','Add to plans'))
-        down(679)
-        box(d,(110,761,790,856),PALE,None,22)
-        text(d,(154,791),tr('鑑賞予定','My screenings'),40,GREEN,True)
-        target=(670,596)
-    elif index==6:
-        text(d,(110,359),tr('共有','Shared'),49,INK,True)
-        box(d,(110,467,790,657),PALE,None,22)
-        text(d,(142,498),film,45,INK,True)
-        text(d,(142,574),'14:00',39,GREEN,True)
-        # Two friendly faces communicate members without names or account data.
-        d.line((324,765,576,765),fill=LINE,width=8)
-        for x,color in [(312,GREEN),(588,CORAL)]:
-            d.ellipse((x-64,699,x+64,827),fill=color,outline=INK,width=3)
-            for eye in [x-21,x+21]:
-                d.ellipse((eye-5,738,eye+5,748),fill='white')
-            d.arc((x-25,752,x+25,788),0,180,fill='white',width=5)
-    if target: tap(im,target,t)
-    return im.crop((54,295,848,916)).convert('RGBA')
+def guide_duration(scenes):
+    return sum(spec['duration'] for spec in scenes)
 
-PALETTES = ['#ffdf62','#c8f1df','#ffd5d9','#f9e6a0','#e3dbff','#c9eafa','#ffe1c4','#c8f1df']
 
-def burst(d,x,y,r,fill,rotation=0):
-    points=[]
-    for i in range(24):
-        angle=rotation+i*math.pi/12
-        radius=r if i%2==0 else r*.79
-        points.append((x+math.cos(angle)*radius,y+math.sin(angle)*radius))
-    d.polygon(points,fill=fill,outline=INK,width=4)
+def progress_line(draw, index, t, scenes):
+    elapsed = guide_duration(scenes[:index]) + t
+    draw.rectangle((0, H-4, int(W*elapsed/guide_duration(scenes)), H), fill=GREEN)
 
-def paste_mascot(im,x,y,size,t,lean=0):
-    # Squash and stretch on the beat, with a damped entrance bounce.
-    beat=max(0,math.sin(t*math.pi*2))
-    w=int(size*(1+.025*beat)); h=int(size*(1-.035*beat))
-    logo=brand_icon().resize((w,h),Image.Resampling.LANCZOS)
-    logo=logo.rotate(lean+5*math.sin(t*math.pi),resample=Image.Resampling.BICUBIC,expand=True)
-    y-=int(17*beat)
-    d=ImageDraw.Draw(im)
-    d.ellipse((x-size*.32,y+size*.9,x+size*.32,y+size*1.02),fill='#25322d')
-    im.paste(logo,(int(x-logo.width/2),int(y)),logo)
 
-def sticker(im,x,y,label,t,fill='#fffefa',size=32,angle=-3):
-    tw=int(ImageDraw.Draw(im).textlength(label,font=font(size,True)))
-    layer=Image.new('RGBA',(tw+68,size+64))
-    d=ImageDraw.Draw(layer)
-    box(d,(8,8,tw+57,size+53),INK,INK,18,3)
-    box(d,(1,1,tw+49,size+45),fill,INK,18,3)
-    text(d,(24,21),label,size,INK,True)
-    layer=layer.rotate(angle,resample=Image.Resampling.BICUBIC,expand=True)
-    im.paste(layer,(int(x),int(y)),layer)
+def gesture(t, start, peak, release, end):
+    """A single conversational gesture with a pause, rather than a looping motion."""
+    return ease((t-start)/(peak-start)) * (1-ease((t-release)/(end-release)))
 
-def scene(lang,index,t):
-    jp=lang=='ja'; tr=lambda a,b:a if jp else b
-    s=COPY[lang]['scenes'][index]
-    bg=PALETTES[index]
-    im=Image.new('RGB',(W,H),bg); d=ImageDraw.Draw(im)
-    # Halftone corners and a few moving confetti marks give the composition
-    # comic energy without flashing or moving the explanatory text.
-    for x in range(14,180,20):
-        for y in range(12,220,20):
-            if x+y<220: d.ellipse((x,y,x+4,y+4),fill=INK)
-    for i in range(9):
-        x=35 if i%2 else 865; y=440+i*70+int(8*math.sin(t+i))
-        d.line((x-9,y-9,x+9,y+9),fill=[GREEN,CORAL,INK][i%3],width=5)
-    text(d,(55,32),'HAMA MOVIE!',27,INK,True)
-    # The headline lands with a quick spring and then stays readable.
-    title=s['title']
-    size=73 if jp else 67
-    lines=wrap(d,title,756,size)
-    while len(lines)>2 or any(d.textlength(line,font=font(size,True))>756 for line in lines):
-        size-=1; lines=wrap(d,title,756,size)
-    top=95+int(-20*math.exp(-t*7)*math.sin(t*19))
-    for row,line in enumerate(lines):
-        # Small offset shadow, then the bold title itself.
-        text(d,(57,top+row*(size+9)+4),line,size,'#fffefa',True)
-        text(d,(52,top+row*(size+9)),line,size,INK,True)
-    box(d,(54,248,854,434),INK,INK,24,3)
-    box(d,(46,240,846,426),'#fffefa',INK,24,3)
-    end=paragraph(d,(67,263),s['caption'],756,38,INK,False,10)
-    if end>428: raise ValueError(f'Caption overflow {lang} {index}')
-    if index in (0,7):
-        burst(d,450,713,242,'#fffefa',.04*math.sin(t))
-        paste_mascot(im,450,520,340,t)
-        # Let the original mascot bounce as-is, with only surrounding sparkles.
-        for x,y in [(157,542),(745,555),(157,880),(755,884)]:
-            star(d,x,y,18+5*math.sin(t*2),CORAL if x<450 else GREEN)
-        if index==0:
-            sticker(im,77,471,tr('さがす！','FIND IT!'),t,'#fffefa',32,-6)
-            sticker(im,570,471,tr('観に行く！','LET’S GO!'),t,'#ffadba',32,5)
-        else:
-            sticker(im,90,474,'JP',t,'#fffefa',42,-7)
-            sticker(im,668,474,'EN',t,'#ffdf62',42,7)
-            sticker(im,170,922,tr('次の映画、見つけよう！','FIND YOUR NEXT FILM!'),t,'#ffdf62',34,-2)
-    else:
-        # Keep the real button labels recognizable inside the comic frame.
-        inner=diagram(lang,index,t)
-        # Quick slide-in only at the scene cut; no perpetual movement of controls.
-        entrance=int(55*math.exp(-t*12))
-        shadow=Image.new('RGBA',inner.size,(0,0,0,0)); sd=ImageDraw.Draw(shadow)
-        box(sd,(4,4,inner.width-4,inner.height-4),INK,INK,30,4)
-        im.paste(shadow,(66,463+entrance),shadow)
-        im.paste(inner,(54,451+entrance),inner)
-        # The buddy cheers from the margin, away from buttons and captions.
-        paste_mascot(im,795,1080,82,t,8)
+
+def farewell_time(lang, t):
+    # New outro WAVs say goodbye at 5.04s (ja) / 4.84s (en),
+    # plus the shared 0.4s audio lead-in. Keep wink, tilt and glint together.
+    return t - (2.3 if lang == 'ja' else 2.1)
+
+
+def mascot_pose(lang, t, closing):
+    # Stay airborne throughout the introduction, with a slow bob and bank.
+    # The closing speech also keeps moving until the held farewell pose.
+    farewell_t = farewell_time(lang, t)
+    hold = gesture(farewell_t, 3.02, 3.3, 4.8, 5.15) if closing else 0
+    phase = 2 * math.pi * t / 2.6
+    motion = 1 - hold
+    height = (16 + 9 * math.sin(phase)) * motion if closing else 48 + 22 * math.sin(phase)
+    sx = 1 + .006 * math.sin(phase) * motion
+    sy = 1 - .006 * math.sin(phase) * motion
+    angle = 2.4 * math.sin(2 * math.pi * t / 3.4) * motion - 2.5 * hold
+    # Fully closed for 1.5 seconds; body settles so the wink reads clearly.
+    wink = gesture(farewell_t, 3.2, 3.3, 4.8, 5.05) if closing else 0
+    return height, sx, sy, angle, wink
+
+
+def sparkle(draw, x, y, radius, color):
+    draw.polygon([(x,y-radius),(x+radius*.25,y-radius*.25),(x+radius,y),
+                  (x+radius*.25,y+radius*.25),(x,y+radius),(x-radius*.25,y+radius*.25),
+                  (x-radius,y),(x-radius*.25,y-radius*.25)], fill=color)
+
+
+def mascot_scene(lang, index, t, manifest):
+    specs = manifest['languages'][lang]
+    closing = specs[index]['name'] == 'outro'
+    copy = COPY[lang]['scenes'][index]
+    im = Image.new('RGB', (W, H), BG)
+    draw = ImageDraw.Draw(im)
+    brand = 'はまむび！' if lang == 'ja' else 'HAMA MOVIE!'
+    width = draw.textlength(brand, font=font(27, True))
+    text(draw, ((W-width)/2, 61), brand, 27, GREEN, True)
+    title = copy['title'].replace('\n', ' ')
+    size = 78
+    while draw.textlength(title, font=font(size, True)) > 820:
+        size -= 1
+    width = draw.textlength(title, font=font(size, True))
+    text(draw, ((W-width)/2, 158), title, size, INK, True)
+    # The original icon stays intact; movement gives it personality without new limbs.
+    draw.ellipse((142, 269, 758, 885), fill='#e5f1de')
+    height, sx, sy, angle, wink = mascot_pose(lang, t, closing)
+    shadow_width = 310-height*.7
+    shadow_height = 24-height*.08
+    shade = round(190+height*.18)
+    draw.ellipse((450-shadow_width/2, 868-shadow_height/2,
+                  450+shadow_width/2, 868+shadow_height/2), fill=(shade, 215, 192))
+    actor = Image.blend(mascot_actor(), mascot_actor(True), wink) if wink else mascot_actor()
+    sprite = actor.resize((round(462*sx), round(462*sy)), Image.Resampling.LANCZOS)
+    sprite = sprite.rotate(angle, Image.Resampling.BICUBIC, expand=True)
+    # Pivot around the icon's centre so tilting does not shift its baseline.
+    center_y = 850-462*sy/2-height
+    im.paste(sprite, (round((W-sprite.width)/2), round(center_y-sprite.height/2)), sprite)
+    # One brief glint supports the wink; the resting shot stays quiet.
+    farewell_t = farewell_time(lang, t)
+    glint = gesture(farewell_t, 3.28, 3.48, 3.58, 3.95) if closing else 0
+    if glint:
+        sparkle(draw, 698, 566, 16*glint, '#e78d62')
+    size = 42
+    wrapped = lines(copy['caption'], size, 810)
+    while len(wrapped) > 3:
+        size -= 1
+        wrapped = lines(copy['caption'], size, 810)
+    for i, line in enumerate(wrapped):
+        width = draw.textlength(line, font=font(size))
+        text(draw, ((W-width)/2, 970+i*(size+17)), line, size, INK)
+    progress_line(draw, index, t, specs)
+    return im
+
+
+def ease(value):
+    value = max(0, min(1, value))
+    return value * value * (3 - 2 * value)
+
+
+def clipped_focus(frame):
+    focus = frame['focus']
+    if not focus:
+        return None
+    x0 = max(0, focus['x'])
+    y0 = max(0, focus['y'])
+    x1 = min(390, focus['x'] + focus['width'])
+    y1 = min(700, focus['y'] + focus['height'])
+    return (x0, y0, x1, y1) if x1 > x0 and y1 > y0 else None
+
+
+def camera(frame, progress, previous=None):
+    focus = clipped_focus(frame)
+    amount = ease(progress / 0.85)
+    from_zoom = previous['zoom'] if previous else 1
+    previous_focus = clipped_focus(previous) if previous else None
+    from_y = (previous_focus[1] + previous_focus[3]) / 2 if previous_focus else 350
+    to_y = (focus[1] + focus[3]) / 2 if focus else 350
+    zoom = from_zoom + (frame['zoom'] - from_zoom) * amount
+    center_y = from_y + (to_y - from_y) * amount
+    scale = (SCREEN[3] - SCREEN[1]) / 700 * zoom
+    visible_h = (SCREEN[3] - SCREEN[1]) / scale
+    center_y = max(visible_h / 2, min(700 - visible_h / 2, center_y))
+    return scale, center_y, focus
+
+
+def scene(lang, index, t, manifest):
+    spec = manifest['languages'][lang][index]
+    if spec['kind'] == 'mascot':
+        return mascot_scene(lang, index, t, manifest)
+    frames = spec['frames']
+    active = max(i for i, frame in enumerate(frames) if frame['at'] <= t)
+    frame = frames[active]
+    elapsed = t - frame['at']
+    im = Image.new('RGB', (W, H), BG)
+    draw = ImageDraw.Draw(im)
+    title = COPY[lang]['scenes'][index]['title'].replace('\n', ' ')
+    title_size = 39
+    while draw.textlength(title, font=font(title_size, True)) > 720:
+        title_size -= 1
+    icon = mascot()
+    # Keep the speaking guide alive during the app demonstrations too.
+    bob = round(3 * math.sin(2 * math.pi * t / 2.6))
+    icon = icon.rotate(2 * math.sin(2 * math.pi * t / 3.4), Image.Resampling.BICUBIC)
+    im.paste(icon, (34, 25 + bob), icon)
+    text(draw, (124, 26), 'はまむび！使い方ガイド' if lang == 'ja' else 'HAMA MOVIE! / HOW TO', 18, MUTED, True)
+    text(draw, (123, 58), title, title_size, INK, True)
+    draw.rounded_rectangle((29, 122, 871, 994), 26, fill='#c4dacf')
+    x0, y0, x1, y1 = SCREEN
+    sw, sh = x1-x0, y1-y0
+    scale, cy, focus = camera(frame, elapsed, frames[active-1] if active else None)
+    image = screenshot(frame['image'])
+    # Sample the source directly for a crisp animated camera, at capture pixel ratio 2.
+    view_w, view_h = sw / scale, sh / scale
+    crop = ((195-view_w/2)*2, (cy-view_h/2)*2, (195+view_w/2)*2, (cy+view_h/2)*2)
+    panel = image.transform((sw,sh), Image.Transform.EXTENT, crop, Image.Resampling.BICUBIC, fillcolor=BG)
+    mask = Image.new('L', (sw,sh), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0,0,sw,sh),22,fill=255)
+    # Draw callouts in video coordinates, preserving the screenshot underneath.
+    overlay=Image.new('RGBA',(sw,sh),(0,0,0,0)); od=ImageDraw.Draw(overlay)
+    if focus and elapsed > 0.6:
+        fx0, fy0, fx1, fy1 = focus
+        rect=((fx0-195)*scale+sw/2, (fy0-cy)*scale+sh/2,
+              (fx1-195)*scale+sw/2, (fy1-cy)*scale+sh/2)
+        # Large areas get a quiet outline; controls receive a tap pulse.
+        pad=7
+        od.rounded_rectangle((rect[0]-pad,rect[1]-pad,rect[2]+pad,rect[3]+pad),14,
+                             outline=(21,154,107,235),width=5)
+        if fx1-fx0 < 370 and fy1-fy0 < 140:
+            px, py=(rect[0]+rect[2])/2,(rect[1]+rect[3])/2
+            pulse=(elapsed-0.6)%1.8
+            if pulse < 0.7:
+                radius=12+28*pulse
+                od.ellipse((px-radius,py-radius,px+radius,py+radius),outline=(237,109,68,int(230*(1-pulse/0.7))),width=5)
+    panel=Image.alpha_composite(panel.convert('RGBA'),overlay).convert('RGB')
+    im.paste(panel,(x0,y0),mask)
+    # Two clear lines of supplementary copy below the screen.
+    caption=COPY[lang]['scenes'][index]['caption']
+    size=33
+    wrapped=lines(caption,size,810)
+    while len(wrapped)>3:
+        size-=1; wrapped=lines(caption,size,810)
+    for i,line in enumerate(wrapped):
+        width=draw.textlength(line,font=font(size))
+        text(draw,((W-width)/2,1021+i*(size+10)),line,size,INK)
+    # Subtle progress line; no scene numbers or duration labels in the UI.
+    progress_line(draw, index, t, manifest['languages'][lang])
     return im
 
 
 def main():
-    parser=argparse.ArgumentParser(); parser.add_argument('--stills',action='store_true'); args=parser.parse_args()
-    OUT.mkdir(parents=True,exist_ok=True)
-    staging=ROOT/'.wrangler/site-guide-render'
-    staging.mkdir(parents=True,exist_ok=True)
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--lang',choices=['ja','en','all'],default='all')
+    parser.add_argument('--stills',action='store_true')
+    parser.add_argument('--narration-dir',type=Path)
+    parser.add_argument('--audio-from-dir', type=Path, help='Reuse the published MP4 audio stream unchanged for motion-only edits.')
+    parser.add_argument('--output-dir',type=Path,default=OUT)
+    args=parser.parse_args()
+    if args.audio_from_dir and args.narration_dir:
+        parser.error('--audio-from-dir and --narration-dir are mutually exclusive')
+    copies=COPY if args.lang=='all' else {args.lang:COPY[args.lang]}
+    manifest=json.loads((CAPTURES/'manifest.json').read_text())
+    for lang,copy in copies.items():
+        if len(copy['scenes']) != len(manifest['languages'][lang]):
+            raise ValueError(f'Copy/capture scene count mismatch: {lang}')
+        for i,spec in enumerate(manifest['languages'][lang]):
+            for frame in spec.get('frames', []):
+                if not (CAPTURES/frame['image']).is_file(): raise FileNotFoundError(frame['image'])
+            if args.narration_dir and not args.stills:
+                clip=args.narration_dir/f'{lang}-{i:02d}.wav'
+                if wav_duration(clip.read_bytes())>spec['duration']-0.8:
+                    raise ValueError(f'{clip.name} is too long; regenerate at a brisker pace.')
+    args.output_dir.mkdir(parents=True,exist_ok=True)
+    staging=ROOT/'.wrangler/site-guide-render'; staging.mkdir(parents=True,exist_ok=True)
+    duration=guide_duration(manifest['languages']['ja'])
+    if any(guide_duration(specs) != duration for specs in manifest['languages'].values()):
+        raise ValueError('Language timelines must have the same duration.')
     music=staging/'original-pop.wav'
-    if not args.stills: compose(music, len(COPY['ja']['scenes'])*SECONDS)
-    for lang,copy in COPY.items():
-        scene(lang,0,2).save(OUT/f'how-to-{lang}.webp',quality=88)
+    if not args.stills and not args.audio_from_dir: compose(music,duration)
+    for lang,copy in copies.items():
+        scene(lang,0,2.05,manifest).save(args.output_dir/f'how-to-{lang}.webp',quality=88)
         if args.stills:
-            for i in range(8): scene(lang,i,3.5).save(Path('/tmp')/f'hama-guide-{lang}-{i}.png')
+            for i in range(len(copy['scenes'])):
+                scene(lang,i,3.2,manifest).save(staging/f'real-{lang}-{i}.png')
             continue
-        staging=ROOT/'.wrangler/site-guide-render'
-        staging.mkdir(parents=True,exist_ok=True)
+        audio=args.audio_from_dir/f'how-to-{lang}.mp4' if args.audio_from_dir else music
+        if args.narration_dir:
+            audio=staging/f'narrated-{lang}.wav'; inputs=['-i',str(music)]; filters=[]
+            for i, spec in enumerate(manifest['languages'][lang]):
+                inputs.extend(['-i',str(args.narration_dir/f'{lang}-{i:02d}.wav')])
+                start=guide_duration(manifest['languages'][lang][:i])
+                filters.append(f'[{i+1}:a]adelay={int((start+0.4)*1000)}:all=1[voice{i}]')
+            filters.append('[0:a]volume=0.18[bgm]')
+            voices=''.join(f'[voice{i}]' for i in range(len(copy['scenes'])))
+            filters.append(f'[bgm]{voices}amix=inputs={len(copy["scenes"])+1}:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=7[out]')
+            subprocess.run(['ffmpeg','-y','-hide_banner','-loglevel','error',*inputs,'-filter_complex',';'.join(filters),'-map','[out]','-ar','48000','-ac','2',str(audio)],check=True)
         rendered=staging/f'how-to-{lang}.mp4'
-        command=['ffmpeg','-y','-hide_banner','-loglevel','error','-f','rawvideo','-vcodec','rawvideo','-s',f'{W}x{H}','-pix_fmt','rgb24','-r',str(FPS),'-i','-','-i',str(music),'-map','0:v:0','-map','1:a:0','-c:a','aac','-b:a','160k','-ar','48000','-af','loudnorm=I=-18:TP=-1.5:LRA=7','-shortest','-c:v','libx264','-preset','fast','-crf','23','-pix_fmt','yuv420p','-movflags','+faststart',str(rendered)]
+        command=['ffmpeg','-y','-hide_banner','-loglevel','error','-f','rawvideo','-vcodec','rawvideo','-s',f'{W}x{H}','-pix_fmt','rgb24','-r',str(FPS),'-i','-','-i',str(audio),'-map','0:v:0','-map','1:a:0','-c:a','aac','-b:a','160k','-ar','48000','-shortest','-c:v','libx264','-preset','fast','-crf','21','-pix_fmt','yuv420p','-movflags','+faststart',str(rendered)]
+        if args.audio_from_dir:
+            audio_start = command.index('-c:a')
+            audio_end = command.index('-shortest')
+            command[audio_start:audio_end] = ['-c:a', 'copy']
+        if not args.narration_dir and not args.audio_from_dir: command[-1:-1]=['-af','loudnorm=I=-18:TP=-1.5:LRA=7']
         proc=subprocess.Popen(command,stdin=subprocess.PIPE)
         try:
-            for i in range(8):
-                for f in range(FPS*SECONDS):
-                    proc.stdin.write(scene(lang,i,f/FPS).tobytes())
-                print(f'{lang}: scene {i+1}/8',flush=True)
-        finally:
-            proc.stdin.close()
-        if proc.wait(): raise RuntimeError('ffmpeg failed')
-        # Publish only finalized MP4s, never a partially written encoding.
-        rendered.replace(OUT/f'how-to-{lang}.mp4')
-        def timestamp(seconds): return f'00:{seconds//60:02d}:{seconds%60:02d}.000'
+            for i, spec in enumerate(manifest['languages'][lang]):
+                for f in range(round(FPS*spec['duration'])):proc.stdin.write(scene(lang,i,f/FPS,manifest).tobytes())
+                print(f'{lang}: scene {i+1}/{len(copy["scenes"])}',flush=True)
+        finally:proc.stdin.close()
+        if proc.wait():raise RuntimeError('ffmpeg failed')
+        if rendered.stat().st_size>=25*1024*1024:raise ValueError('Video exceeds Cloudflare Pages limit')
+        rendered.replace(args.output_dir/f'how-to-{lang}.mp4')
+        def timestamp(seconds):return f'00:{seconds//60:02d}:{seconds%60:02d}.000'
         cues=['WEBVTT','']
+        start=0
         for i,s in enumerate(copy['scenes']):
-            cues.extend([f'{timestamp(i*SECONDS)} --> {timestamp((i+1)*SECONDS)}',('[軽快なBGM]\n' if lang=='ja' else '[Upbeat music]\n')+s['caption'] if i==0 else s['caption'],''])
-        (OUT/f'how-to-{lang}.vtt').write_text('\n'.join(cues))
+            end=start+manifest['languages'][lang][i]['duration']
+            cues.extend([f'{timestamp(start)} --> {timestamp(end)}',s['caption'],''])
+            start=end
+        (args.output_dir/f'how-to-{lang}.vtt').write_text('\n'.join(cues))
 
-if __name__=='__main__': main()
+if __name__=='__main__':main()

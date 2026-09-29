@@ -81,6 +81,13 @@ export function AboutPage() {
           controls
           playsInline
           preload="none"
+          onLoadedMetadata={(event) => {
+            // The video already includes captions; override automatic OS/browser
+            // selection once at load, while allowing viewers to enable them later.
+            for (const track of event.currentTarget.textTracks) {
+              track.mode = "disabled";
+            }
+          }}
           poster={`/guide/how-to-${language}.webp`}
           width="900"
           height="1200"

@@ -9,6 +9,7 @@ const allowedHashes = new Set([
   "#planner",
   "#profile",
   "#account",
+  "#member",
 ]);
 const returnHashInputs = document.querySelectorAll(
   'input[name="returnHash"]',
@@ -20,5 +21,13 @@ if (
 ) {
   for (const input of returnHashInputs) {
     if (input instanceof HTMLInputElement) input.value = currentHash;
+  }
+}
+
+// Preserve case-sensitive member IDs when returning from authentication.
+if (/^#member\?user=[A-Za-z0-9_.~%+-]{1,384}$/i.test(window.location.hash)) {
+  const user = new URLSearchParams(window.location.hash.split("?")[1]).get("user");
+  if (user && user.length <= 128) for (const input of returnHashInputs) {
+    if (input instanceof HTMLInputElement) input.value = `#member?${new URLSearchParams({ user })}`;
   }
 }

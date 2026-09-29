@@ -1,0 +1,65 @@
+- link "上映スケジュールへ移動":
+  - /url: "#main"
+- banner:
+  - button "メニューを開く"
+  - link "今日の現在時刻の上映へ戻る":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "英語で表示": JP EN
+  - button "ダークモードに切り替える"
+  - group
+- main:
+  - region "マイページ":
+    - paragraph: 設定
+    - heading "マイページ" [level=1]
+    - paragraph: demo@example.com
+    - region "プロフィール":
+      - heading "プロフィール" [level=2]
+      - button "写真を変更"
+      - text: 表示名
+      - textbox "表示名": はまむび
+      - text: ひとこと
+      - textbox "ひとこと":
+        - /placeholder: 好きな映画やジャンルなど
+      - paragraph: プロフィールは共有メンバーに表示されます。
+      - button "保存する" [disabled]
+    - region "映画の記録":
+      - heading "映画の記録" [level=2]
+      - paragraph: 映画の記録は同じグループのメンバーに表示されます。
+      - group "映画の記録":
+        - button "気になる 0" [pressed]
+        - button "鑑賞済み 0"
+        - button "鑑賞予定 0"
+      - paragraph: 気になる映画はまだありません。
+    - region "上映スケジュール表示":
+      - heading "上映スケジュール表示" [level=2]
+      - text: 上映時間の折りたたみ
+      - combobox "上映時間の折りたたみ":
+        - option "なし" [selected]
+        - option "30分"
+        - option "1時間"
+    - region "ベース出発地点を登録":
+      - heading "ベース出発地点を登録" [level=2]
+      - button "現在地をベース出発地点として登録"
+    - heading "Google" [level=2]
+    - strong: 連携済み
+    - heading "パスワード" [level=2]
+    - text: 新しいパスワード
+    - textbox "新しいパスワード"
+    - text: 確認
+    - textbox "確認"
+    - button "設定する"
+    - heading "パスキー" [level=2]
+    - button "パスキーを追加"
+    - group: 退会する
+    - region "スケジュールに表示する映画館":
+      - heading "スケジュールに表示する映画館" [level=2]
+      - paragraph: 選んだ映画館の上映予定をまとめて表示します。変更は自動で保存されます。
+      - strong: 横浜ブルク13
+      - switch "横浜ブルク13" [checked]
+      - strong: TOHOシネマズ 上大岡
+      - switch "TOHOシネマズ 上大岡"
+      - strong: イオンシネマみなとみらい
+      - switch "イオンシネマみなとみらい" [checked]
+      - status
+      - link "上映スケジュールを見る":
+        - /url: "#schedule?date=2026-09-28"

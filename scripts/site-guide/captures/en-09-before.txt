@@ -1,0 +1,43 @@
+- link "Skip to showtimes":
+  - /url: "#main"
+- banner:
+  - button "Open menu"
+  - link "Go to current showtimes":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "Display in English" [checked]: JP EN
+  - button "Switch to dark mode"
+  - group
+- main:
+  - region "Shared":
+    - paragraph: Members’ movies
+    - heading "Shared" [level=1]
+    - heading "Movie friends" [level=2]
+    - link "Manage groups":
+      - /url: "#groups"
+    - group "Shared information":
+      - button "Screenings"
+      - button "Watchlist" [pressed]
+    - text: Member
+    - combobox "Member":
+      - option "Everyone" [selected]
+      - option "Hama (you)"
+      - option "Sora"
+    - list:
+      - listitem:
+        - text: Shared interest · 2
+        - link "Your Name.":
+          - /url: "#movie?movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
+        - list "Why we want to see it":
+          - listitem:
+            - link "Hama · My account":
+              - /url: "#member?user=guide"
+              - text: Hama
+            - paragraph: Let’s go this weekend!
+          - listitem:
+            - link "Sora · My account":
+              - /url: "#member?user=friend"
+              - text: Sora
+            - paragraph: I want to see it too!
+        - link "Choose a showtime →":
+          - /url: "#movie?movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
+        - group: Edit note

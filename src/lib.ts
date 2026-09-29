@@ -45,6 +45,7 @@ export type AppView =
   | "planner"
   | "adminCollection"
   | "adminUsers"
+  | "member"
   | "account"
   | "about";
 
@@ -100,6 +101,7 @@ const APP_VIEW_BY_HASH: Record<string, AppView> = {
   "#planner": "planner",
   "#profile": "account",
   "#account": "account",
+  "#member": "member",
   "#admin-users": "adminUsers",
   "#admin-collection": "adminCollection",
   "#about": "about",
@@ -117,6 +119,7 @@ const HASH_BY_APP_VIEW: Record<AppView, string> = {
   notifications: "#notifications",
   planner: "#planner",
   account: "#account",
+  member: "#member",
   adminUsers: "#admin-users",
   adminCollection: "#admin-collection",
   about: "#about",
@@ -128,6 +131,7 @@ export interface AppHashState {
   movie: string | null;
   query: string;
   showing?: string | null;
+  user?: string | null;
 }
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -143,6 +147,7 @@ export function appHashStateFromHash(hash: string): AppHashState {
     date: date && ISO_DATE_PATTERN.test(date) ? date : null,
     movie: movie ? canonicalMovieKey(movie.slice(0, 240)) : null,
     query: normalizeSearchQuery(params.get("q")),
+    ...(view === "member" && params.get("user") ? { user: params.get("user")!.slice(0, 128) } : {}),
     ...(params.get("showing") ? { showing: params.get("showing")!.slice(0, 1000) } : {}),
   };
 }
@@ -158,6 +163,7 @@ export function hashForAppView(
     movie?: string | null;
     query?: string | null;
     showing?: string | null;
+    user?: string | null;
   } = {},
 ): string {
   const params = new URLSearchParams();
@@ -167,6 +173,7 @@ export function hashForAppView(
   if (state.movie?.trim()) {
     params.set("movie", state.movie.trim().slice(0, 240));
   }
+  if (view === "member" && state.user) params.set("user", state.user.slice(0, 128));
   const searchQuery = normalizeSearchQuery(state.query);
   if (view === "schedule" && state.showing) params.set("showing", state.showing.slice(0, 1000));
   if (searchQuery) {

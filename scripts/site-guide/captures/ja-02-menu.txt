@@ -1,0 +1,130 @@
+- link "上映スケジュールへ移動":
+  - /url: "#main"
+- banner:
+  - button "メニューを開く"
+  - link "今日の現在時刻の上映へ戻る":
+    - /url: "#schedule?date=2026-09-28"
+  - switch "英語で表示": JP EN
+  - button "ダークモードに切り替える"
+  - group:
+    - navigation "アカウント":
+      - strong: はまむび
+      - link "マイページ":
+        - /url: "#account"
+      - link "新着情報":
+        - /url: "#notifications"
+      - button "ログアウト"
+- main:
+  - navigation "上映日":
+    - link "今日 月":
+      - /url: "#schedule?date=2026-09-28"
+    - link "9/29 火":
+      - /url: "#schedule?date=2026-09-29"
+    - link "9/30 水":
+      - /url: "#schedule?date=2026-09-30"
+    - link "10/1 木":
+      - /url: "#schedule?date=2026-10-01"
+    - link "10/2 金":
+      - /url: "#schedule?date=2026-10-02"
+    - link "10/3 土":
+      - /url: "#schedule?date=2026-10-03"
+    - link "10/4 日":
+      - /url: "#schedule?date=2026-10-04"
+  - search:
+    - text: 作品名・映画館名
+    - searchbox "作品名・映画館名"
+    - button "検索"
+  - region "上映の絞り込み":
+    - group "エリア":
+      - button "すべて" [pressed]
+      - button "横浜駅"
+      - button "桜木町・みなとみらい"
+      - button "関内・伊勢佐木町"
+      - button "戸部"
+      - button "上大岡"
+    - group "時間":
+      - button "これから"
+      - button "全時間" [pressed]
+    - link "マイページでベース出発地点を登録":
+      - /url: "#account"
+  - paragraph: 今日
+  - heading "上映スケジュール" [level=1]
+  - text: 2作品6上映
+  - link "更新状況を見る":
+    - /url: "#collection-status?date=2026-09-28"
+  - time: 現在10:00
+  - region "12:00":
+    - time: 12:00
+    - text: 3上映
+    - article:
+      - heading "君の名は。" [level=2]:
+        - link "君の名は。":
+          - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
+      - button "作品の設定 · 君の名は。"
+      - button "君の名は。をスターする"
+      - list "君の名は。の上映館":
+        - listitem:
+          - strong: 12:00
+          - text: 13:50終了
+          - strong: ブルク13
+          - text: シアター1 / 2D
+          - link "予約サイトへ · 君の名は。 · 12:00 · ブルク13":
+            - /url: https://tjoy.jp/yokohama_burg13
+            - text: 予約
+          - button "君の名は。 12:00 ブルク13を鑑賞予定に追加": 観に行く
+        - listitem:
+          - strong: 12:00
+          - text: 13:50終了
+          - strong: TOHO上大岡
+          - text: シアター2 / 2D
+          - link "予約サイトへ · 君の名は。 · 12:00 · TOHO上大岡":
+            - /url: https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do
+            - text: 予約
+          - button "君の名は。 12:00 TOHO上大岡を鑑賞予定に追加": 観に行く
+        - listitem:
+          - strong: 12:00
+          - text: 13:50終了
+          - strong: イオンシネマ
+          - text: シアター3 / 2D
+          - link "予約サイトへ · 君の名は。 · 12:00 · イオンシネマ":
+            - /url: https://www.aeoncinema.com/cinema/minatomirai/
+            - text: 予約
+          - button "君の名は。 12:00 イオンシネマを鑑賞予定に追加": 観に行く
+  - region "15:00":
+    - time: 15:00
+    - text: 3上映
+    - article:
+      - heading "サマーウォーズ" [level=2]:
+        - link "サマーウォーズ":
+          - /url: "#movie?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA"
+      - button "作品の設定 · サマーウォーズ"
+      - button "サマーウォーズをスターする"
+      - list "サマーウォーズの上映館":
+        - listitem:
+          - strong: 15:00
+          - text: 16:50終了
+          - strong: ブルク13
+          - text: シアター4 / 2D
+          - link "予約サイトへ · サマーウォーズ · 15:00 · ブルク13":
+            - /url: https://tjoy.jp/yokohama_burg13
+            - text: 予約
+          - button "サマーウォーズ 15:00 ブルク13を鑑賞予定に追加": 観に行く
+        - listitem:
+          - strong: 15:00
+          - text: 16:50終了
+          - strong: TOHO上大岡
+          - text: シアター5 / 2D
+          - link "予約サイトへ · サマーウォーズ · 15:00 · TOHO上大岡":
+            - /url: https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do
+            - text: 予約
+          - button "サマーウォーズ 15:00 TOHO上大岡を鑑賞予定に追加": 観に行く
+        - listitem:
+          - strong: 15:00
+          - text: 16:50終了
+          - strong: イオンシネマ
+          - text: シアター6 / 2D
+          - link "予約サイトへ · サマーウォーズ · 15:00 · イオンシネマ":
+            - /url: https://www.aeoncinema.com/cinema/minatomirai/
+            - text: 予約
+          - button "サマーウォーズ 15:00 イオンシネマを鑑賞予定に追加": 観に行く
+- button "現在地から間に合う上映を更新": 現在地で更新

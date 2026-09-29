@@ -1,3 +1,4 @@
+import { MemberActivity } from "./MemberPage";
 import { ProfileEditor } from "./MemberProfile";
 import { WithdrawAccount } from "./WithdrawAccount";
 import { localeCode, localize } from "./i18n";
@@ -13,8 +14,10 @@ import { PageHeader, PageShell } from "./PageLayout";
 
 export function AccountPage({
   profileSettings,
+  scheduleSettings,
 }: {
   profileSettings?: ReactNode;
+  scheduleSettings?: ReactNode;
 }) {
   const [account, setAccount] = useState<AccountResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -156,6 +159,7 @@ export function AccountPage({
         <p className={error ? "account-message error" : "account-muted"}>
           {localize(error ?? "アカウント情報を読み込んでいます…")}
         </p>
+        {localize(scheduleSettings)}
       </PageShell>
     );
   }
@@ -170,7 +174,7 @@ export function AccountPage({
       />
 
       {!account.user.legacy && <ProfileEditor />}
-
+      {!account.user.legacy && <MemberActivity />}
       {localize(profileSettings)}
 
       {localize(
@@ -328,6 +332,7 @@ export function AccountPage({
           </>
         ),
       )}
+      {localize(scheduleSettings)}
     </PageShell>
   );
 }

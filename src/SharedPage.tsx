@@ -1,5 +1,5 @@
 import { SharingControls } from "./SharingControls";
-import { MemberAvatar } from "./MemberProfile";
+import { MemberProfileLink } from "./MemberProfile";
 import { SharedWatchlist } from "./SharedWatchlist";
 import { useEffect, useState } from "react";
 import {
@@ -88,9 +88,6 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           title={t("グループ管理")}
           titleId="groups-title"
         />
-        <a className="shared-back-link" href={hashForAppView("shared")}>
-          {t("共有に戻る")}
-        </a>
         {loading ? (
           <p role="status">{t("読み込み中…")}</p>
         ) : error ? (
@@ -121,8 +118,7 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
                   <ul>
                     {data.members.map((m) => (
                       <li key={m.userId}>
-                        <MemberAvatar name={m.name} url={m.avatarUrl} />
-                        <span>{m.name}</span>
+                        <MemberProfileLink userId={m.userId} name={m.name} url={m.avatarUrl} />
                       </li>
                     ))}
                   </ul>
@@ -164,7 +160,7 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           ) : (
             <p>{t("まずは一緒に映画を楽しむ相手を招待してね！")}</p>
           )}
-          <a className="shared-back-link" href={hashForAppView("groups")}>
+          <a className="shared-manage-link" href={hashForAppView("groups")}>
             {t("グループ管理")}
           </a>
         </div>
@@ -217,12 +213,11 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           className="shared-member-summary"
           aria-label={t("プロフィール")}
         >
-          <MemberAvatar
+          <MemberProfileLink userId={member}
             name={members.get(member)!.name}
             url={members.get(member)?.avatarUrl}
           />
           <div>
-            <strong>{members.get(member)!.name}</strong>
             {members.get(member)?.bio && <p>{members.get(member)!.bio}</p>}
           </div>
         </section>
@@ -280,13 +275,10 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
                         >
                           {rows.map((p) => (
                             <li key={p.userId}>
-                              <MemberAvatar
+                              <MemberProfileLink userId={p.userId}
                                 name={members.get(p.userId)?.name ?? ""}
                                 url={members.get(p.userId)?.avatarUrl}
                               />
-                              <span title={members.get(p.userId)?.bio}>
-                                {members.get(p.userId)?.name}
-                              </span>
                               {p.reserved && (
                                 <span className="shared-reserved">
                                   {t("予約済み")}

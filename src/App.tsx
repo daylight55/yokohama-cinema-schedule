@@ -1,6 +1,7 @@
 import { CollectionStatusPage } from "./CollectionStatusPage";
 import { WatchlistNote } from "./WatchlistNote";
 import { activeMetrics } from "./performanceMetrics";
+import { MemberPage } from "./MemberPage";
 import { ProfileMenu } from "./MemberProfile";
 import { UsersThreeIcon } from "@phosphor-icons/react";
 import { movieTitle, screeningInfo } from "./i18n";
@@ -116,7 +117,7 @@ import { AdminUsersPage } from "./AdminUsersPage";
 import { AccountPage } from "./AccountPage";
 import { AboutPage } from "./AboutPage";
 import { PageHeader, PageShell } from "./PageLayout";
-import { NotificationBell, NotificationsPage } from "./Notifications";
+import { NotificationsPage } from "./Notifications";
 import { SharedPage } from "./SharedPage";
 import { ViewingPlansPage } from "./ViewingPlansPage";
 
@@ -269,6 +270,7 @@ export function App() {
       : null,
   );
   const [selectedArea, setSelectedArea] = useState<CinemaArea | "all">("all");
+  const [selectedMemberId, setSelectedMemberId] = useState(initialHashState.user ?? "");
   const [selectedShowingId, setSelectedShowingId] = useState(initialHashState.showing ?? null);
   const lastShowingFocusRef = useRef<string | null>(null);
   const [loadedScheduleKey, setLoadedScheduleKey] = useState("");
@@ -350,7 +352,7 @@ export function App() {
     view === "movies" && showAllMovieDates ? null : selectedDate;
   const historyScroll = useHistoryScroll(
     hashForAppView(view, { date: view === "movies" ? selectedMovieListDate : ["schedule", "movie", "collectionStatus", "adminCollection"].includes(view) ? selectedDate : null,
-      movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
+      user: selectedMemberId, movie: selectedMovieKey, showing: selectedShowingId, query: normalizedSearchQuery }),
     !loading && loadedScheduleKey === scheduleRequestKey && interactiveSearchQuery === normalizedSearchQuery,
   );
 
@@ -513,11 +515,13 @@ export function App() {
         movie: nextMovieKey,
         query: usesWeeklyDate ? hashState.query : null,
         showing: nextView === "schedule" ? hashState.showing : null,
+        user: nextView === "member" ? hashState.user : null,
       });
       if (window.location.hash !== canonicalHash) {
         window.history.replaceState(window.history.state, "", canonicalHash);
       }
       setView(nextView);
+      setSelectedMemberId(nextView === "member" ? hashState.user ?? "" : "");
       setSelectedDate(nextScheduleDate);
       setShowAllMovieDates(nextShowAllMovieDates);
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
@@ -2042,7 +2046,6 @@ export function App() {
                 ),
               )}
             </button>
-            <NotificationBell />
             <ProfileMenu />
           </div>
         </div>
@@ -2562,8 +2565,86 @@ export function App() {
             <AdminCollectionPage language={language} date={selectedDate} />
           ) : view === "adminUsers" ? (
             <AdminUsersPage />
+          ) : view === "member" ? (
+            <MemberPage key={selectedMemberId} userId={selectedMemberId} />
           ) : view === "account" ? (
             <AccountPage
+              scheduleSettings={
+                <section
+                  className="account-section account-cinema-settings"
+                  aria-labelledby="schedule-cinemas-heading"
+                >
+                  <h2 id="schedule-cinemas-heading">
+                    {localize("スケジュールに表示する映画館")}
+                  </h2>
+                  <p className="account-muted">
+                    {localize(
+                      "選んだ映画館の上映予定をまとめて表示します。変更は自動で保存されます。",
+                    )}
+                  </p>
+                  {loading ? (
+                    <p role="status">{localize("読み込み中…")}</p>
+                  ) : error ? (
+                    <p role="alert" className="account-message error">
+                      {localize(error)}
+                    </p>
+                  ) : (
+                    <>
+                      {!schedule?.cinemaTravelPreferencesEnabled && (
+                        <p>
+                          {localize(
+                            "映画館の表示設定を変更するにはログインしてください。",
+                          )}
+                        </p>
+                      )}
+                      <div className="account-cinema-list">
+                        {(schedule?.cinemas ?? []).map((cinema) => (
+                          <label
+                            key={cinema.id}
+                            className="cinema-schedule-toggle"
+                          >
+                            <span>
+                              <strong>{localize(cinema.name)}</strong>
+                            </span>
+                            <input
+                              type="checkbox"
+                              role="switch"
+                              checked={
+                                cinemaScheduleVisibility.get(cinema.id) ?? true
+                              }
+                              disabled={
+                                savingCinemaIds.has(cinema.id) ||
+                                !schedule?.cinemaTravelPreferencesEnabled
+                              }
+                              onChange={(event) =>
+                                void saveCinemaScheduleVisibility(
+                                  cinema.id,
+                                  event.currentTarget.checked,
+                                )
+                              }
+                            />
+                          </label>
+                        ))}
+                      </div>
+                      <p role="status" className="account-muted">
+                        {savingCinemaIds.size > 0 ? localize("保存中…") : ""}
+                      </p>
+                      {cinemaPreferenceError && (
+                        <p role="alert" className="account-message error">
+                          {localize(cinemaPreferenceError)}
+                        </p>
+                      )}
+                      <a
+                        href={hashForAppView("schedule", {
+                          date: selectedDate,
+                        })}
+                      >
+                        {localize("上映スケジュールを見る")}
+                      </a>
+                    </>
+                  )}
+                </section>
+              }
               profileSettings={
                 !loading && !error ? (
                   <ProfilePanel

@@ -1,0 +1,849 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 700
+  },
+  "sourceRevision": "e1fb09ddec7d3d666477c83c8a70fab0198cf5bc",
+  "sourceWorkingTreeNote": "Remove redundant back links from film, group management, and member pages; rename group management link CSS class without visual change.",
+  "data": "Demonstration data in the real app; no personal accounts or external writes",
+  "languages": {
+    "ja": [
+      {
+        "name": "intro",
+        "kind": "mascot",
+        "duration": 10
+      },
+      {
+        "name": "schedule",
+        "kind": "screen",
+        "duration": 10,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-01-entry.png",
+            "focus": {
+              "x": 6,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 1,
+            "image": "ja-01-sidebar.png",
+            "focus": {
+              "x": 14,
+              "y": 89,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.25
+          },
+          {
+            "at": 2.8,
+            "image": "ja-01-overview.png",
+            "focus": {
+              "x": 14,
+              "y": 158.75,
+              "width": 362,
+              "height": 559.3125
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 5,
+            "image": "ja-01-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 242.75,
+              "width": 288,
+              "height": 457.3125
+            },
+            "zoom": 1.35
+          },
+          {
+            "at": 7.4,
+            "image": "ja-01-more-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 242.75,
+              "width": 288,
+              "height": 457.3125
+            },
+            "zoom": 1.35
+          }
+        ],
+        "sourceRevision": "e1fb09ddec7d3d666477c83c8a70fab0198cf5bc",
+        "sourceWorkingTreeNote": "Remove redundant back links from film, group management, and member pages; rename group management link CSS class without visual change."
+      },
+      {
+        "name": "cinema-settings",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-02-profile.png",
+            "focus": {
+              "x": 332,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 0.8,
+            "image": "ja-02-menu.png",
+            "focus": {
+              "x": 129,
+              "y": 118.5,
+              "width": 238,
+              "height": 48
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 1.8,
+            "image": "ja-02-account-top.png",
+            "focus": {
+              "x": 14,
+              "y": 100,
+              "width": 362,
+              "height": 32.75
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 2.8,
+            "image": "ja-02-settings.png",
+            "focus": {
+              "x": 14,
+              "y": 319.6875,
+              "width": 362,
+              "height": 332.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 4.2,
+            "image": "ja-02-selected.png",
+            "focus": {
+              "x": 14,
+              "y": 319.6875,
+              "width": 362,
+              "height": 332.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 5.7,
+            "image": "ja-02-result.png",
+            "focus": {
+              "x": 87,
+              "y": 390.75,
+              "width": 288,
+              "height": 308.875
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "search",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-03-before.png",
+            "focus": {
+              "x": 0,
+              "y": 126,
+              "width": 390,
+              "height": 63
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 1.8,
+            "image": "ja-03-typed.png",
+            "focus": {
+              "x": 308,
+              "y": 134,
+              "width": 68,
+              "height": 46
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 3.8,
+            "image": "ja-03-result.png",
+            "focus": {
+              "x": 14,
+              "y": 442.75,
+              "width": 362,
+              "height": 179.140625
+            },
+            "zoom": 1.35
+          }
+        ]
+      },
+      {
+        "name": "film",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-04-title.png",
+            "focus": {
+              "x": 139,
+              "y": 453.75,
+              "width": 172,
+              "height": 20.140625
+            },
+            "zoom": 1.7
+          },
+          {
+            "at": 2.6,
+            "image": "ja-04-detail.png",
+            "focus": {
+              "x": 14,
+              "y": 252.21875,
+              "width": 362,
+              "height": 369.5625
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 5,
+            "image": "ja-04-another-day.png",
+            "focus": {
+              "x": 14,
+              "y": 247.78125,
+              "width": 362,
+              "height": 369.5625
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "booking",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-05-link.png",
+            "focus": {
+              "x": 92,
+              "y": 319.78125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.6
+          },
+          {
+            "at": 2.3,
+            "image": "ja-05-focused.png",
+            "focus": {
+              "x": 92,
+              "y": 319.78125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.7
+          }
+        ],
+        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do"
+      },
+      {
+        "name": "watchlist",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-06-star.png",
+            "focus": {
+              "x": 323,
+              "y": 451.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2.3,
+            "image": "ja-06-saved.png",
+            "focus": {
+              "x": 29,
+              "y": 318,
+              "width": 332,
+              "height": 48
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 5,
+            "image": "ja-06-selected.png",
+            "focus": {
+              "x": 323,
+              "y": 451.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          }
+        ]
+      },
+      {
+        "name": "plan",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-07-add.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2,
+            "image": "ja-07-added.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 4,
+            "image": "ja-07-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 245,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 5.4,
+            "image": "ja-07-plans.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 490
+            },
+            "zoom": 1.1
+          }
+        ]
+      },
+      {
+        "name": "sharing",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-08-plans.png",
+            "focus": {
+              "x": 14,
+              "y": 249.75,
+              "width": 362,
+              "height": 49
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 2.4,
+            "image": "ja-08-watchlist.png",
+            "focus": {
+              "x": 14,
+              "y": 390.75,
+              "width": 362,
+              "height": 391
+            },
+            "zoom": 1.3
+          }
+        ]
+      },
+      {
+        "name": "language",
+        "kind": "screen",
+        "duration": 5,
+        "frames": [
+          {
+            "at": 0,
+            "image": "ja-09-before.png",
+            "focus": {
+              "x": 190,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.9
+          },
+          {
+            "at": 2.7,
+            "image": "ja-09-translated.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 764.75
+            },
+            "zoom": 1.2
+          },
+          {
+            "at": 4,
+            "image": "ja-09-return.png",
+            "focus": {
+              "x": 190,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.5
+          }
+        ]
+      },
+      {
+        "name": "outro",
+        "kind": "mascot",
+        "duration": 8
+      }
+    ],
+    "en": [
+      {
+        "name": "intro",
+        "kind": "mascot",
+        "duration": 10
+      },
+      {
+        "name": "schedule",
+        "kind": "screen",
+        "duration": 10,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-01-entry.png",
+            "focus": {
+              "x": 6,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 1,
+            "image": "en-01-sidebar.png",
+            "focus": {
+              "x": 14,
+              "y": 89,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.25
+          },
+          {
+            "at": 2.8,
+            "image": "en-01-overview.png",
+            "focus": {
+              "x": 14,
+              "y": 158.75,
+              "width": 362,
+              "height": 559.3125
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 5,
+            "image": "en-01-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 242.75,
+              "width": 288,
+              "height": 457.3125
+            },
+            "zoom": 1.35
+          },
+          {
+            "at": 7.4,
+            "image": "en-01-more-cinemas.png",
+            "focus": {
+              "x": 87,
+              "y": 242.75,
+              "width": 288,
+              "height": 457.3125
+            },
+            "zoom": 1.35
+          }
+        ],
+        "sourceRevision": "e1fb09ddec7d3d666477c83c8a70fab0198cf5bc",
+        "sourceWorkingTreeNote": "Remove redundant back links from film, group management, and member pages; rename group management link CSS class without visual change."
+      },
+      {
+        "name": "cinema-settings",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-02-profile.png",
+            "focus": {
+              "x": 332,
+              "y": 4.5,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 0.8,
+            "image": "en-02-menu.png",
+            "focus": {
+              "x": 129,
+              "y": 112.5,
+              "width": 238,
+              "height": 48
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 1.8,
+            "image": "en-02-account-top.png",
+            "focus": {
+              "x": 14,
+              "y": 97,
+              "width": 362,
+              "height": 32.75
+            },
+            "zoom": 1.05
+          },
+          {
+            "at": 2.8,
+            "image": "en-02-settings.png",
+            "focus": {
+              "x": 14,
+              "y": 325.6875,
+              "width": 362,
+              "height": 326.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 4.2,
+            "image": "en-02-selected.png",
+            "focus": {
+              "x": 14,
+              "y": 325.6875,
+              "width": 362,
+              "height": 326.1875
+            },
+            "zoom": 1.12
+          },
+          {
+            "at": 5.7,
+            "image": "en-02-result.png",
+            "focus": {
+              "x": 87,
+              "y": 390.75,
+              "width": 288,
+              "height": 308.875
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "search",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-03-before.png",
+            "focus": {
+              "x": 0,
+              "y": 126,
+              "width": 390,
+              "height": 63
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 1.8,
+            "image": "en-03-typed.png",
+            "focus": {
+              "x": 284.5,
+              "y": 134,
+              "width": 91.5,
+              "height": 46
+            },
+            "zoom": 1.65
+          },
+          {
+            "at": 3.8,
+            "image": "en-03-result.png",
+            "focus": {
+              "x": 14,
+              "y": 435.75,
+              "width": 362,
+              "height": 179.140625
+            },
+            "zoom": 1.35
+          }
+        ]
+      },
+      {
+        "name": "film",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-04-title.png",
+            "focus": {
+              "x": 139,
+              "y": 446.75,
+              "width": 172,
+              "height": 20.140625
+            },
+            "zoom": 1.7
+          },
+          {
+            "at": 2.6,
+            "image": "en-04-detail.png",
+            "focus": {
+              "x": 14,
+              "y": 301.71875,
+              "width": 362,
+              "height": 363.5625
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 5,
+            "image": "en-04-another-day.png",
+            "focus": {
+              "x": 14,
+              "y": 248.28125,
+              "width": 362,
+              "height": 363.5625
+            },
+            "zoom": 1.25
+          }
+        ]
+      },
+      {
+        "name": "booking",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-05-link.png",
+            "focus": {
+              "x": 92,
+              "y": 314.28125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.6
+          },
+          {
+            "at": 2.3,
+            "image": "en-05-focused.png",
+            "focus": {
+              "x": 92,
+              "y": 314.28125,
+              "width": 284,
+              "height": 77.1875
+            },
+            "zoom": 1.7
+          }
+        ],
+        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do"
+      },
+      {
+        "name": "watchlist",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-06-star.png",
+            "focus": {
+              "x": 323,
+              "y": 444.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2.3,
+            "image": "en-06-saved.png",
+            "focus": {
+              "x": 29,
+              "y": 322,
+              "width": 332,
+              "height": 48
+            },
+            "zoom": 1.3
+          },
+          {
+            "at": 5,
+            "image": "en-06-selected.png",
+            "focus": {
+              "x": 323,
+              "y": 444.75,
+              "width": 44,
+              "height": 44
+            },
+            "zoom": 1.8
+          }
+        ]
+      },
+      {
+        "name": "plan",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-07-add.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 2,
+            "image": "en-07-added.png",
+            "focus": {
+              "x": 238.5,
+              "y": 426.1875,
+              "width": 117.5,
+              "height": 44
+            },
+            "zoom": 1.8
+          },
+          {
+            "at": 4,
+            "image": "en-07-menu.png",
+            "focus": {
+              "x": 14,
+              "y": 245,
+              "width": 290.796875,
+              "height": 48
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 5.4,
+            "image": "en-07-plans.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 490
+            },
+            "zoom": 1.1
+          }
+        ]
+      },
+      {
+        "name": "sharing",
+        "kind": "screen",
+        "duration": 8,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-08-plans.png",
+            "focus": {
+              "x": 14,
+              "y": 241.75,
+              "width": 362,
+              "height": 49
+            },
+            "zoom": 1.4
+          },
+          {
+            "at": 2.4,
+            "image": "en-08-watchlist.png",
+            "focus": {
+              "x": 14,
+              "y": 382.75,
+              "width": 362,
+              "height": 373
+            },
+            "zoom": 1.3
+          }
+        ]
+      },
+      {
+        "name": "language",
+        "kind": "screen",
+        "duration": 5,
+        "frames": [
+          {
+            "at": 0,
+            "image": "en-09-before.png",
+            "focus": {
+              "x": 190,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.9
+          },
+          {
+            "at": 2.7,
+            "image": "en-09-translated.png",
+            "focus": {
+              "x": 0,
+              "y": 54,
+              "width": 390,
+              "height": 760.75
+            },
+            "zoom": 1.2
+          },
+          {
+            "at": 4,
+            "image": "en-09-return.png",
+            "focus": {
+              "x": 190,
+              "y": 2.5,
+              "width": 90,
+              "height": 48
+            },
+            "zoom": 1.5
+          }
+        ]
+      },
+      {
+        "name": "outro",
+        "kind": "mascot",
+        "duration": 8
+      }
+    ]
+  }
+}
