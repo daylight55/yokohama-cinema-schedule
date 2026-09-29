@@ -2851,42 +2851,6 @@ main {
   bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px);
 }
 
-.current-location-routes-button {
-  position: fixed;
-  z-index: 24;
-  right: max(14px, env(safe-area-inset-right));
-  bottom: max(18px, env(safe-area-inset-bottom));
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 7px;
-  padding: 0 15px;
-  border: 1px solid #d6f7e5;
-  border-radius: 999px;
-  background: #17241f;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 38%);
-  color: var(--accent);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.current-location-routes-button.error {
-  border-color: var(--danger);
-  color: var(--danger);
-}
-
-.current-location-routes-button:disabled {
-  cursor: wait;
-  opacity: 0.72;
-}
-
-.current-location-routes-button:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
-}
-
 .jump-to-now-button:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
@@ -4172,3 +4136,82 @@ html[lang="en"] .brand-wordmark {
 .avatar-crop-actions button:last-child { background: var(--accent); color: var(--accent-ink); }
 .avatar-crop-actions button:disabled { opacity: .5; cursor: default; }
 :is(.member-activity,.member-page,.avatar-crop-dialog) :is(a,button,input):focus-visible, .member-profile-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* Keep cross-schedule navigation available while browsing long lists. */
+.schedule-navigator-button {
+  position: fixed;
+  z-index: 24;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 25%);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.schedule-navigator-button:focus-visible,
+.schedule-navigator-dialog a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.schedule-navigator-dialog h2 { margin: 0; font-size: 18px; }
+.schedule-destinations, .schedule-jump-dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.schedule-destinations a, .schedule-jump-dates a {
+  display: flex;
+  min-height: 44px;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 13px;
+  text-align: center;
+  text-decoration: none;
+}
+.schedule-destinations a svg { flex-shrink: 0; }
+.schedule-navigator-dialog a[aria-current] { border-color: var(--accent); color: var(--accent); }
+.schedule-jump-dates { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 20px; }
+.schedule-location-action { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.schedule-location-action button { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.schedule-location-action p { font-size: 13px; }
+.schedule-time-jumps { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px); }
+.icon-button.movie-options-button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+.icon-button.movie-options-button:hover { border-color: var(--accent); color: var(--accent); }
+
+.schedule-navigator-dialog { overflow-y: auto; }
+.schedule-location-action .secondary-button {
+  width: 100%;
+  justify-content: center;
+  background: var(--control-surface, var(--surface));
+  color: var(--text);
+  border-color: var(--line);
+}
+.movie-preference-sheet > .secondary-button {
+  margin-top: 10px;
+  min-height: 44px;
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--line);
+}
