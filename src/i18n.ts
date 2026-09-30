@@ -68,7 +68,7 @@ export function useLanguage() {
   }, []);
   return value;
 }
-export async function saveLanguage(value: Language) {
+export async function saveLanguage(value: Language, beforeApply?: () => void) {
   revision += 1;
   const response = await fetch("/api/account/language", {
     method: "PATCH",
@@ -76,6 +76,9 @@ export async function saveLanguage(value: Language) {
     body: JSON.stringify({ language: value }),
   });
   if (!response.ok) throw new Error("言語設定を保存できませんでした。");
+  // Capture the current viewport only after saving succeeds, immediately before
+  // translated content changes its layout (the user may scroll while waiting).
+  beforeApply?.();
   applyLanguage(value);
 }
 export function localeCode() {
