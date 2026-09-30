@@ -4257,7 +4257,7 @@ html[lang="en"] .brand-wordmark {
 .movie-actions .movie-status-button.active { border-color: var(--accent); color: var(--accent); }
 .movie-actions > button:disabled { opacity: .55; cursor: wait; }
 .movie-card-actions { grid-column: 1 / -1; grid-row: 2; }
-.movie-detail-actions { margin-top: 16px; }
+.movie-detail-actions { grid-column: 1 / -1; }
 .movie-program-actions { width: calc(100% - 16px); margin: 8px; }
 @media (max-width: 390px) {
   html[lang="en"] .movie-program-actions .movie-status-button { font-size: .6875rem; }

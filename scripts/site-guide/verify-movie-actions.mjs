@@ -8,7 +8,9 @@ await mkdir('output/playwright',{recursive:true});
 try {
   for (const language of ['ja','en']) for (const width of [320,390]) {
     const page = await browser.newPage({viewport:{width,height:width===320?700:844}});
-    await installFixture(page,language);
+    const posterUrl='https://fixture.invalid/poster.svg';
+    await installFixture(page,language,{posterUrl});
+    await page.route(posterUrl,route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="180" height="270"><rect width="180" height="270" fill="#39765c"/></svg>'}));
     const tr=(ja,en)=>language==='ja'?ja:en;
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     let confirm=true;
@@ -52,6 +54,18 @@ try {
     await card.locator('.movie-image-link').click();
     const actions = page.locator('.movie-detail-actions');
     await actions.waitFor();await order(actions);
+    assert.ok(await page.locator('.movie-poster').isVisible(),'poster fixture is visible');
+    const detailLayout=await page.evaluate(()=>{
+      const actions=document.querySelector('.movie-detail-actions').getBoundingClientRect();
+      const overview=document.querySelector('.movie-overview').getBoundingClientRect();
+      const poster=document.querySelector('.movie-poster').getBoundingClientRect();
+      return {actionWidth:actions.width,overviewWidth:overview.width,actionsTop:actions.top,posterBottom:poster.bottom,
+        labelHeights:[...document.querySelectorAll('.movie-detail-actions .movie-status-button span')].map(n=>n.getBoundingClientRect().height)};
+    });
+    assert.equal(detailLayout.actionWidth,Math.min(320,detailLayout.overviewWidth),'actions use the overview width');
+    assert.ok(detailLayout.actionsTop>=detailLayout.posterBottom,'actions sit below the poster');
+    assert.ok(detailLayout.labelHeights.every(h=>h<=(language==='ja'?18:30)),'status labels avoid broken words beside a poster');
+    await page.screenshot({path:`output/playwright/movie-detail-poster-${language}-${width}.png`});
     assert.equal(await actions.locator('.movie-watched-button').getAttribute('aria-pressed'),'true');
     await actions.locator('.movie-watched-button').click();await settle();
     assert.equal(await actions.locator('.movie-watched-button').getAttribute('aria-pressed'),'false');
