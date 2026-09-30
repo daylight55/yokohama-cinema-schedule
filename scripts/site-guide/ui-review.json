@@ -1,19 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-09-30T11:45:05.493Z",
-    "baseRevision": "54d2a129a9bb3a1ccf949faf25772bbf02d7cd04",
-    "outcome": "recaptured",
-    "scenes": [
-      "schedule",
-      "search",
-      "film",
-      "booking",
-      "watchlist",
-      "sharing",
-      "language"
-    ],
-    "note": "一覧の常設鑑賞済み・設定→星、単体ページの気になる・鑑賞済み、グループ/共有の映画招待に合わせ日英7場面を実画面で再撮影・映像照合。配信用ビルド320/390pxで招待の送信・参加・見送り・取り消し・失敗復元・履歴・参加後の予定反映、About日英再生・シーク・字幕既定オフを確認。既存の声/BGMと89秒を維持。"
+    "reviewedAt": "2026-09-30T11:55:30.927Z",
+    "baseRevision": "7d96d3194dc17b56baf01e6468e7cf8fb350b771",
+    "outcome": "visually-unchanged",
+    "scenes": [],
+    "note": "共有・グループ画面の招待部品のReactキーをscreening接頭辞付きに変更し兄弟部品との重複を解消。描画・文言・位置・操作先は変更なし。日英320/390pxの送信・参加・見送り・取消・履歴を現行画面と既存動画素材で照合し、想定した保存失敗のHTTP500一件以外のconsole/pageerrorがないことを確認。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -84,7 +76,7 @@
     "src/PlannerPage.tsx": "63234a38dadbfef010278310a766e183303a6340ff1881069db6ff2156895654",
     "src/ScheduleNavigator.tsx": "d52ef7130b575c3c51a22ba6faf3a206829f5b5eec7e33a0cffc3e3f381e7330",
     "src/ScreeningInvitations.tsx": "c90daa0f0143112d71e77cab8a1927d00466e544f9aba195fde799334260d638",
-    "src/SharedPage.tsx": "5a047368b50d5f95d08dc6f4af63c9f3f4fd254b2e2ee9db48ff30e3ade59778",
+    "src/SharedPage.tsx": "5782565c0386ff5259b48e18bbc7fb461a3396bc89b63b879229355237b674df",
     "src/SharedWatchlist.tsx": "c8540c340e80a61dc7937d5c381c9b13eaff8ff39947fd31c06990e9285b07eb",
     "src/SharingControls.tsx": "26c070d1063aaed6d3ffed62b64618abe5659a6e389c397eb3f96bb65b9c22f2",
     "src/ViewingPlansPage.tsx": "87b61173c76fcb5fd7307d3e9788c8cc583f11b65ae7a61f9de8eec93aecdbe1",
