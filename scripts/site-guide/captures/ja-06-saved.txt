@@ -60,10 +60,10 @@
       - strong:
         - link "君の名は。":
           - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
-      - link "映画.com":
-        - /url: https://eiga.com/search/?t=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
-      - link "Filmarks":
-        - /url: https://filmarks.com/search/movies?q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
+      - group "作品の操作 · 君の名は。":
+        - button "その他 · 君の名は。"
+        - button "鑑賞済み · 君の名は。"
+        - button "君の名は。をスターから外す" [pressed]
       - navigation "上映時刻":
         - link "12:00 · TOHOシネマズ 上大岡 · 君の名は。":
           - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-1"
@@ -74,9 +74,4 @@
         - link "12:00 · 横浜ブルク13 · 君の名は。":
           - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-0"
           - time: 12:00
-      - group "作品の操作 · 君の名は。":
-        - button "その他 · 君の名は。": その他
-        - button "興味なし"
-        - button "鑑賞済み"
-        - button "君の名は。をスターから外す" [pressed]
 - button "スケジュールを切替"

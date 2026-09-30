@@ -47,7 +47,7 @@
               "x": 14,
               "y": 182.75,
               "width": 362,
-              "height": 635.3125
+              "height": 559.3125
             },
             "zoom": 1.05
           },
@@ -56,7 +56,7 @@
             "image": "ja-01-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 342.75,
+              "y": 266.75,
               "width": 288,
               "height": 457.3125
             },
@@ -67,15 +67,15 @@
             "image": "ja-01-more-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 342.75,
+              "y": 266.75,
               "width": 288,
               "height": 457.3125
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "cinema-settings",
@@ -142,15 +142,15 @@
             "image": "ja-02-result.png",
             "focus": {
               "x": 87,
-              "y": 342.75,
+              "y": 266.75,
               "width": 288,
               "height": 308.875
             },
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "search",
@@ -186,13 +186,13 @@
               "x": 14,
               "y": 442.75,
               "width": 362,
-              "height": 220
+              "height": 152.140625
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "film",
@@ -215,7 +215,7 @@
             "image": "ja-04-detail.png",
             "focus": {
               "x": 14,
-              "y": 328.21875,
+              "y": 312.21875,
               "width": 362,
               "height": 369.5625
             },
@@ -233,8 +233,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
-        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "booking",
@@ -265,8 +265,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
-        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "watchlist",
@@ -277,10 +277,10 @@
             "at": 0,
             "image": "ja-06-star.png",
             "focus": {
-              "x": 299,
-              "y": 529.75,
+              "x": 323,
+              "y": 477.890625,
               "width": 44,
-              "height": 60
+              "height": 44
             },
             "zoom": 1.8
           },
@@ -299,16 +299,16 @@
             "at": 5,
             "image": "ja-06-selected.png",
             "focus": {
-              "x": 299,
-              "y": 529.75,
+              "x": 323,
+              "y": 477.890625,
               "width": 44,
-              "height": 60
+              "height": 44
             },
             "zoom": 1.8
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "plan",
@@ -360,8 +360,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "sharing",
@@ -482,7 +482,7 @@
               "x": 14,
               "y": 182.75,
               "width": 362,
-              "height": 635.3125
+              "height": 559.3125
             },
             "zoom": 1.05
           },
@@ -491,7 +491,7 @@
             "image": "en-01-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 342.75,
+              "y": 266.75,
               "width": 288,
               "height": 457.3125
             },
@@ -502,15 +502,15 @@
             "image": "en-01-more-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 342.75,
+              "y": 266.75,
               "width": 288,
               "height": 457.3125
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "cinema-settings",
@@ -577,15 +577,15 @@
             "image": "en-02-result.png",
             "focus": {
               "x": 87,
-              "y": 342.75,
+              "y": 266.75,
               "width": 288,
               "height": 308.875
             },
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "search",
@@ -621,13 +621,13 @@
               "x": 14,
               "y": 435.75,
               "width": 362,
-              "height": 220
+              "height": 152.140625
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "film",
@@ -650,7 +650,7 @@
             "image": "en-04-detail.png",
             "focus": {
               "x": 14,
-              "y": 377.71875,
+              "y": 361.71875,
               "width": 362,
               "height": 363.5625
             },
@@ -668,8 +668,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
-        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "booking",
@@ -700,8 +700,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
-        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "watchlist",
@@ -712,10 +712,10 @@
             "at": 0,
             "image": "en-06-star.png",
             "focus": {
-              "x": 299,
-              "y": 522.75,
+              "x": 323,
+              "y": 470.890625,
               "width": 44,
-              "height": 60
+              "height": 44
             },
             "zoom": 1.8
           },
@@ -734,16 +734,16 @@
             "at": 5,
             "image": "en-06-selected.png",
             "focus": {
-              "x": 299,
-              "y": 522.75,
+              "x": 323,
+              "y": 470.890625,
               "width": 44,
-              "height": 60
+              "height": 44
             },
             "zoom": 1.8
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "plan",
@@ -795,8 +795,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
+        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
       },
       {
         "name": "sharing",

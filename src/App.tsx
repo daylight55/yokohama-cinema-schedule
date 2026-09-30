@@ -14,7 +14,7 @@ import {
   englishText,
 } from "./i18n";
 import { MoviePage } from "./MoviePage";
-import { MovieActions } from "./MovieActions";
+import { MovieActions, MovieStarButton } from "./MovieActions";
 import { MovieTimes } from "./MovieTimes";
 import { useDateSwipe } from "./useDateSwipe";
 import { useHistoryScroll } from "./useHistoryScroll";
@@ -1926,15 +1926,12 @@ export function App() {
                         {movieTitle(movie.title)}
                       </a>
                     </h2>
+                    {schedule?.preferencesEnabled && (
+                      <MovieStarButton compact title={movieTitle(movie.title)} starred={isStarred}
+                        saving={savingMovieKeys.has(movie.preferenceKey)}
+                        onClick={() => void toggleMovieStar(movie)} />
+                    )}
                   </div>
-                  {schedule?.preferencesEnabled && (
-                    <MovieActions className="movie-program-actions" title={movieTitle(movie.title)}
-                      status={movieStatusByKey.get(movie.preferenceKey) ?? null} starred={isStarred}
-                      saving={savingMovieKeys.has(movie.preferenceKey)}
-                      onMore={event => openMoviePreferenceDialog(movie, event.currentTarget.closest<HTMLElement>(".program-block"))}
-                      onStatus={(status, button) => void updateMovieStatus(movie, status, button.closest<HTMLElement>(".program-block"))}
-                      onStar={() => void toggleMovieStar(movie)} />
-                  )}
                   <div
                     className="cinema-strip"
                     data-horizontal-scroll={`cinema:${group.time}:${movie.key}`}
@@ -2231,6 +2228,14 @@ export function App() {
                 <CalendarDotsIcon size={20} aria-hidden="true" />
                 {localize("作品の上映スケジュール")}
               </a>
+              <div className="movie-external-links" aria-label={localize(`${movieTitle(activeMoviePreference.title)}の作品情報`)}>
+                {Object.entries(buildMovieExternalLinks(activeMoviePreference.title)).map(([site, href]) => (
+                  <a key={site} href={href} target="_blank" rel="noreferrer">
+                    {localize(site === "eiga" ? "映画.com" : "Filmarks")}
+                    <ArrowSquareOutIcon size={12} aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
               <div
                 className="movie-preference-actions"
                 role="group"
@@ -2832,9 +2837,6 @@ export function App() {
                             );
                             const status =
                               movieStatusByKey.get(movie.preferenceKey) ?? null;
-                            const externalLinks = buildMovieExternalLinks(
-                              movie.title,
-                            );
                             const releaseDateLabel = movie.releaseDate
                               ? dayFormatter.format(
                                   new Date(
@@ -2932,35 +2934,6 @@ export function App() {
                                       </p>
                                     ),
                                   )}
-                                  <div
-                                    className="movie-external-links"
-                                    aria-label={localize(
-                                      `${movieTitle(movie.title)}の作品情報`,
-                                    )}
-                                  >
-                                    <a
-                                      href={externalLinks.eiga}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                    >
-                                      {localize("映画.com")}
-                                      <ArrowSquareOutIcon
-                                        size={12}
-                                        aria-hidden="true"
-                                      />
-                                    </a>
-                                    <a
-                                      href={externalLinks.filmarks}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                    >
-                                      {localize("Filmarks")}
-                                      <ArrowSquareOutIcon
-                                        size={12}
-                                        aria-hidden="true"
-                                      />
-                                    </a>
-                                  </div>
                                   {localize(
                                     showAllMovieDates && (
                                       <p
@@ -2977,15 +2950,15 @@ export function App() {
                                       </p>
                                     ),
                                   )}
+                                  {schedule?.preferencesEnabled && (
+                                    <MovieActions className="movie-card-actions" title={movieTitle(movie.title)}
+                                      status={status} starred={isStarred} saving={savingMovieKeys.has(movie.preferenceKey)}
+                                      onMore={event => openMoviePreferenceDialog(movie, event.currentTarget.closest<HTMLElement>(".movie-list-item"))}
+                                      onStatus={(status, button) => void updateMovieStatus(movie, status, button.closest<HTMLElement>(".movie-list-item"))}
+                                      onStar={() => void toggleMovieStar(movie)} />
+                                  )}
                                 </div>
                                 {!showAllMovieDates && <MovieTimes showings={movie.showings} language={language} title={movieTitle(movie.title)} />}
-                                {schedule?.preferencesEnabled && (
-                                  <MovieActions className="movie-card-actions" title={movieTitle(movie.title)}
-                                    status={status} starred={isStarred} saving={savingMovieKeys.has(movie.preferenceKey)}
-                                    onMore={event => openMoviePreferenceDialog(movie, event.currentTarget.closest<HTMLElement>(".movie-list-item"))}
-                                    onStatus={(status, button) => void updateMovieStatus(movie, status, button.closest<HTMLElement>(".movie-list-item"))}
-                                    onStar={() => void toggleMovieStar(movie)} />
-                                )}
                               </li>
                             );
                           }),

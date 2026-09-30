@@ -53,11 +53,7 @@
       - heading "君の名は。" [level=2]:
         - link "君の名は。":
           - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
-      - group "作品の操作 · 君の名は。":
-        - button "その他 · 君の名は。": その他
-        - button "興味なし"
-        - button "鑑賞済み"
-        - button "君の名は。をスターから外す" [pressed]
+      - button "君の名は。をスターから外す" [pressed]
       - list "君の名は。の上映館":
         - listitem:
           - strong: 12:00
