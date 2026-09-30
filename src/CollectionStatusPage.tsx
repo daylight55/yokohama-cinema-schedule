@@ -15,6 +15,7 @@ import type { Language } from "../shared/language";
 import { translate } from "../shared/i18n";
 import { PageHeader, PageShell } from "./PageLayout";
 import { hashForAppView } from "./lib";
+import { useDateSwipe } from "./useDateSwipe";
 
 export function CollectionStatusPage({
   date,
@@ -28,6 +29,13 @@ export function CollectionStatusPage({
   const [failed, setFailed] = useState(false);
   const datesRef = useRef<HTMLElement>(null);
   const [revision, setRevision] = useState(0);
+  const swipeRef = useDateSwipe(!loading && !failed && !!data, date, (direction) => {
+    const dates = data?.dates ?? [];
+    const index = dates.indexOf(date);
+    if (index < 0) return;
+    const next = dates[index + (direction === "next" ? 1 : -1)];
+    if (next) window.location.hash = hashForAppView("collectionStatus", { date: next });
+  });
   const t = (ja: string, en: string) => (language === "en" ? en : ja);
   const locale = language === "en" ? "en-GB" : "ja-JP";
   const formatDate = (value: string) =>
@@ -113,6 +121,7 @@ export function CollectionStatusPage({
     })[issue ?? "unknown"];
   return (
     <PageShell
+      ref={swipeRef}
       className="collection-page"
       labelledBy="collection-title"
       busy={loading}
@@ -150,6 +159,7 @@ export function CollectionStatusPage({
         <>
           <nav
             className="collection-dates"
+            data-horizontal-scroll="collection-dates"
             ref={datesRef}
             aria-label={t("確認する日", "Date to check")}
           >

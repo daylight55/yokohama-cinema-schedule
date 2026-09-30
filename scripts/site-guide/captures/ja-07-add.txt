@@ -45,8 +45,6 @@
   - paragraph: 今日
   - heading "上映スケジュール" [level=1]
   - text: 1作品2上映
-  - link "更新状況を見る":
-    - /url: "#collection-status?date=2026-09-28"
   - time: 現在10:00
   - region "12:00":
     - time: 12:00
