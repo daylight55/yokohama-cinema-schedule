@@ -1,19 +1,14 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-09-30T15:17:49.010Z",
-    "baseRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+    "reviewedAt": "2026-09-30T15:35:17.984Z",
+    "baseRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
     "outcome": "recaptured",
     "scenes": [
-      "schedule",
-      "cinema-settings",
-      "search",
       "film",
-      "booking",
-      "watchlist",
-      "plan"
+      "booking"
     ],
-    "note": "一覧・時間順・単体ページの作品操作をその他→興味なし→鑑賞済み→星の一列に統一し、日英の該当7場面を実画面で再撮影・再合成。作品名と操作行が固定検索バーの下に見える位置で撮影。共有・言語切替の操作場面は変更なし。配信用ビルドの日英320/390pxで順序・一列配置・44px以上・キャンセル・状態保存・星保持・失敗復元・履歴・非表示・横溢れを確認。320/1280pxのダーク表示と日付スワイプの回帰も確認。About日英の再生・シーク・字幕既定オフ・手動字幕・履歴・再読み込み、89秒/900x1200/24fps、既存音声ストリーム一致を確認。"
+    "note": "作品詳細の操作行をポスター下の全幅に配置。日英film・bookingを実画面で再撮影し、動画と字幕・テキスト版を照合、変更しない音声・BGM・89秒の尺を保持。ポスターありの配信用ビルドを320/390pxで確認し、順序・ラベルの折り返し・一列・保存・キャンセル・星保持・失敗復元・履歴・横溢れが正常。Aboutの日英再生・シーク・字幕既定オフ・手動字幕・再読み込み・履歴を確認。音声ストリーム一致、900x1200/24fps/48kHzを確認。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -33,7 +28,7 @@
     "public/brand/hamamubi-icon-v2.svg": "e4633813b1a7e5b2e6761b377c69c39977189e7f4cf5dd9911063fd2dd61ef16",
     "public/brand/hamamubi-icon-wink.svg": "bb535389759f003c615254fc75cf79a62e8781b084b88b8e9fbb4431cef9b67e",
     "public/page-layout.css": "6b88c45ddc7b50c3d35183b617f5918c7ffebe4877417df9bc282a97b7399325",
-    "scripts/site-guide/capture-fixture.mjs": "c0097d931e1bdb23fa909e2197b7874ca7088fd48873b67abd1a80bf7991d8f8",
+    "scripts/site-guide/capture-fixture.mjs": "c822986a1f081389e7462a2861045b99346bd4816bc43a434a54adc88d70d16b",
     "scripts/site-guide/capture.mjs": "49e80add377f544f55fc804e9d04af8483f9e3aba0d0d38fea91ef8741b79e42",
     "scripts/site-guide/mascot/normal.png": "c1b8966832afd18ec7b91d64bce37cd17a39ebe1c79df2221e2dcc117b7dd7c0",
     "scripts/site-guide/mascot/wink.png": "c38b96fd813e4c5005d856f81fbabc50aeee75aca6455b4c6857c6fb13b78553",
@@ -75,7 +70,7 @@
     "src/MemberProfile.tsx": "1b50d1368568773e6d5a632f5832af231494999e3459dd3a0f7ddd80b0504ac0",
     "src/MovieActions.tsx": "10bbe272d00d5158c454411794bde29b98becf56218da54ab4af514eabc232e6",
     "src/MovieCredits.tsx": "2840f17258447ea302657bcde7e63c353e564e3d9848ccd1da2475c7f9eb4924",
-    "src/MoviePage.tsx": "d73f1e4c9d65939d2edd76e0ca9e1d7a4f2e4af6c081871f2f027c65da50cab6",
+    "src/MoviePage.tsx": "098a4be3a8c5a1109e98624bcd0475166f7656045e2ccba3d90e26dd327a70e5",
     "src/MovieSynopsis.tsx": "f1f99db1575f347587e3bd6e4e7ce3df809bd77978c002e0eafa111aff5da6f1",
     "src/MovieTimes.tsx": "b23c53cb1c7dff8cdea3dd6c770895ce0db8f8393a8458fa323c8b29d8d3b2a0",
     "src/NotificationContext.ts": "82c34feff75c59e5952cfeb359ac86b2b42005199a75d6146ca2fde83cd7d130",
@@ -98,7 +93,7 @@
     "src/main.tsx": "53928de0ba5d6e1f3d5a90cf855ee19c1052bc9640e23d3def54cecb2fd844ba",
     "src/notification-support.ts": "7a0c53122f85e6264b423eb30ce476048b59128edf204cd14b83f96886d4a5a2",
     "src/performanceMetrics.ts": "c7adaff5b009aa609e6fdbb6e0b71a83e5f3f69ed91791bf636b0ae5a4bb73f3",
-    "src/styles.css": "be140e95cf7eacb43671645a18afab725b0d53c23e8ae43f7c924f18296ef36a",
+    "src/styles.css": "8c62f7261744f926ad7b41c96d291ecfaea9e4bea3a983d7b3d5b0fc3bd57f40",
     "src/useDateSwipe.ts": "9164d4bae92b3a7af857c6a716b9929b3ba6169fc31df3be71ae3460dde812ae",
     "src/useHistoryScroll.ts": "68954795a46a80e2d6dbd34ccf3eb291f43c1bbd519a05f07e8fa314498cb6f3",
     "src/useLanguageScroll.ts": "2ebaf35e4a45db83c518ddd4c9f0c1a6ed61e7a8bebd955d1d3b22958726a8f9",
@@ -106,7 +101,7 @@
     "vite.config.ts": "a4864ab280b19522c24def7fa61597ddf6cf01cad88c10343eb430f8c2531963"
   },
   "artifacts": {
-    "public/guide/how-to-en.mp4": "5bd960c8ee344a79e0e99b425afc4cd87992f2a01a40355efd4970a8f1061392",
+    "public/guide/how-to-en.mp4": "0cd363f5da614d4902c409aa26d679182b8d0134581a5e0cfae0f8811d27461e",
     "public/guide/how-to-en.vtt": "7f5a7696bfc778c5ece1197f8e42ba40c16e936dacebca4b516ea48d834361f3",
     "public/guide/how-to-en.webp": "f437cefbdabedce82b6f0cb8f5eb9ee8df01c6ebf88d6b33399ef755ac7a35b2",
     "public/guide/how-to-ja.mp4": "b99c6582e3053a234709c8af22b787f0a3abe122ee170156c84787a222f8368c",
@@ -140,15 +135,15 @@
     "scripts/site-guide/captures/en-03-result.txt": "caa9403d471ba48a5c7d5f1fd37fd4455f7138edd530ae91a5d82341a9038bc9",
     "scripts/site-guide/captures/en-03-typed.png": "5fa8538b84b434693e589e9b6b27bb2a0b77d19196c4fea4ac53e0943c405c60",
     "scripts/site-guide/captures/en-03-typed.txt": "caa9403d471ba48a5c7d5f1fd37fd4455f7138edd530ae91a5d82341a9038bc9",
-    "scripts/site-guide/captures/en-04-another-day.png": "e6cdd5bc660066862da47a8f8f8d88a3a2c504c6ae1e58b65ffd2275c1787a19",
+    "scripts/site-guide/captures/en-04-another-day.png": "5eb92230825e503166a807f92115880a4de0556fd62f02a0d7f53801a3fe3566",
     "scripts/site-guide/captures/en-04-another-day.txt": "01ea59bba7adddc8ad195c6b535f621af20fbaa012f6676c012c8f9c02ee408c",
-    "scripts/site-guide/captures/en-04-detail.png": "e239ebfd4dbc6ce1bac9abb01215470b449c9dd27cc6417ce98b3014c433efe6",
+    "scripts/site-guide/captures/en-04-detail.png": "a7d5677e8aff82af4a3eccfd12bb55325aad6c37ba61669f2fc326d01003eb22",
     "scripts/site-guide/captures/en-04-detail.txt": "01ea59bba7adddc8ad195c6b535f621af20fbaa012f6676c012c8f9c02ee408c",
     "scripts/site-guide/captures/en-04-title.png": "4911e3ac79ffea4e4e3178c4c2411b211f59dc3ef5ca3af7ffad98d565e65a52",
     "scripts/site-guide/captures/en-04-title.txt": "caa9403d471ba48a5c7d5f1fd37fd4455f7138edd530ae91a5d82341a9038bc9",
-    "scripts/site-guide/captures/en-05-focused.png": "74462ccb502c5710981af8b1b452f6fecbada3eec3f682c6fa88909781b967a0",
+    "scripts/site-guide/captures/en-05-focused.png": "b216621f7bc1a53f3540e93621b993e1209b56a512d2855f7d79771037f45ccb",
     "scripts/site-guide/captures/en-05-focused.txt": "01ea59bba7adddc8ad195c6b535f621af20fbaa012f6676c012c8f9c02ee408c",
-    "scripts/site-guide/captures/en-05-link.png": "e6cdd5bc660066862da47a8f8f8d88a3a2c504c6ae1e58b65ffd2275c1787a19",
+    "scripts/site-guide/captures/en-05-link.png": "5eb92230825e503166a807f92115880a4de0556fd62f02a0d7f53801a3fe3566",
     "scripts/site-guide/captures/en-05-link.txt": "01ea59bba7adddc8ad195c6b535f621af20fbaa012f6676c012c8f9c02ee408c",
     "scripts/site-guide/captures/en-06-saved.png": "ca11ed186a71cd3bb99cae50a51af248bcbef3511884d5ab52d99f84709a5b25",
     "scripts/site-guide/captures/en-06-saved.txt": "5a8aa7b003cddaefef5838ca6e26c677afe6a55473242408edae7597f85b33fa",
@@ -240,6 +235,6 @@
     "scripts/site-guide/captures/ja-09-translated.txt": "ebc35b76cb2e69b61f46d6c41985f7f8a7cc81e129523eece1aa7b20c0baccdc",
     "scripts/site-guide/captures/ja-qa-320.png": "148d2dd12742acf0557cf7b652655472e256b6140c2b805f6d809688a63dc35d",
     "scripts/site-guide/captures/ja-qa-390.png": "9f8267335174a94cfedbdaffc025a84a1b5b3f9da291b118d1d3949f5d0aa6ee",
-    "scripts/site-guide/captures/manifest.json": "761bec675e70162d67ce5ccecfe5e8136c2183339ccd71422d6ed1ae6f0c3340"
+    "scripts/site-guide/captures/manifest.json": "eea46aec818f00de0363b2d34385f7edf21a266904b137f35b7f0ff0d2fb7906"
   }
 }

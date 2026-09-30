@@ -233,8 +233,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
+        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
       },
       {
         "name": "booking",
@@ -265,8 +265,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
+        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
       },
       {
         "name": "watchlist",
@@ -650,7 +650,7 @@
             "image": "en-04-detail.png",
             "focus": {
               "x": 14,
-              "y": 362.71875,
+              "y": 377.71875,
               "width": 362,
               "height": 363.5625
             },
@@ -668,8 +668,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
+        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
       },
       {
         "name": "booking",
@@ -700,8 +700,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
-        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
+        "sourceRevision": "d77c5c9aef302d840897e9f183e956ee4c3c54ac",
+        "sourceWorkingTreeNote": "Move movie detail actions into full-width grid row so posters do not constrain status labels"
       },
       {
         "name": "watchlist",

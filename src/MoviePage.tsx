@@ -87,7 +87,6 @@ export function MoviePage({
             record.originalTitle !== movieTitle(title ?? "") && (
               <p className="movie-original-title">{record.originalTitle}</p>
             )}
-          {title && movieKey && renderActions({ title, preferenceKey: movieKey, imageUrl: poster })}
           {!introduction && record?.sourceUrl && (
             <a
               className="movie-source"
@@ -112,6 +111,7 @@ export function MoviePage({
             }}
           />
         )}
+        {title && movieKey && renderActions({ title, preferenceKey: movieKey, imageUrl: poster })}
         {(introduction || record?.credits || record?.synopsisJa || record?.synopsisEn) && (
           <div className="movie-introduction">
             {introduction && <p>{introduction}</p>}
