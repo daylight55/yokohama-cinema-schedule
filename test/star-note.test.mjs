@@ -65,7 +65,7 @@ it('keeps the schedule focused on its star and opens advanced actions from the f
   await act(async () => window.dispatchEvent(new HashChangeEvent('hashchange')));
   await click('.movie-options-button');
   expect(document.querySelector('.movie-preference-actions')?.textContent).toContain('鑑賞済み');
-  expect(document.querySelector('.movie-preference-actions')?.textContent).toContain('興味なし');
+  expect(document.querySelector('.movie-preference-actions')?.textContent).toContain('非表示');
   expect(writes).toHaveLength(0);
 });
 it('rolls back a failed star without showing a success note', async () => {

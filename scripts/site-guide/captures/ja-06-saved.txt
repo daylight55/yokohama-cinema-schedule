@@ -61,7 +61,7 @@
         - link "君の名は。":
           - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
       - group "作品の操作 · 君の名は。":
-        - button "その他 · 君の名は。"
+        - button "作品の設定 · 君の名は。"
         - button "鑑賞済み · 君の名は。"
         - button "君の名は。をスターから外す" [pressed]
       - navigation "上映時刻":

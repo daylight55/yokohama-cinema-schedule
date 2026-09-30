@@ -50,7 +50,7 @@
         - link "Summer Wars":
           - /url: "#movie?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA"
       - group "Film actions · Summer Wars":
-        - button "More · Summer Wars"
+        - button "Film preferences · Summer Wars"
         - button "Watched · Summer Wars"
         - 'button "Add to watchlist: Summer Wars"'
       - navigation "Showtimes":
@@ -70,7 +70,7 @@
         - link "Your Name.":
           - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
       - group "Film actions · Your Name.":
-        - button "More · Your Name."
+        - button "Film preferences · Your Name."
         - button "Watched · Your Name."
         - 'button "Add to watchlist: Your Name."'
       - navigation "Showtimes":

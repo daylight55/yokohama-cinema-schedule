@@ -12,7 +12,7 @@
     - paragraph: 今後7日間の上映
     - heading "君の名は。" [level=1]
     - group "作品の操作 · 君の名は。":
-      - button "その他 · 君の名は。"
+      - button "作品の設定 · 君の名は。"
       - button "鑑賞済み · 君の名は。"
       - button "君の名は。をスターする"
     - navigation "上映日へ移動":

@@ -30,7 +30,7 @@ const FEATURES: ReadonlyArray<{
   {
     title: "観たい作品を整理する",
     description:
-      "気になる作品にはスターを付け、鑑賞済み・興味なしの作品は上映スケジュールから外せます。",
+      "気になる作品にはスターを付け、鑑賞済みの作品や非表示にした作品は上映スケジュールから外せます。",
     icon: FilmSlateIcon,
     view: "movies",
   },
