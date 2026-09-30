@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-09-30T11:55:30.927Z",
-    "baseRevision": "7d96d3194dc17b56baf01e6468e7cf8fb350b771",
+    "reviewedAt": "2026-09-30T12:13:37.849Z",
+    "baseRevision": "43e9246809ccd7429addeab57013d174d8fff2f0",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "共有・グループ画面の招待部品のReactキーをscreening接頭辞付きに変更し兄弟部品との重複を解消。描画・文言・位置・操作先は変更なし。日英320/390pxの送信・参加・見送り・取消・履歴を現行画面と既存動画素材で照合し、想定した保存失敗のHTTP500一件以外のconsole/pageerrorがないことを確認。"
+    "note": "JP/EN切り替え直前の縦位置と識別子付き横スクロールを復元。320x700/390x844の配信用ビルドで日英往復、保存待ち中の移動、失敗、再読込、履歴、横溢れを確認。language場面を日英再撮影し、before/translated/returnの6 PNGすべてが既存素材とSHA-256完全一致。ヘッダーの位置・文言・操作対象・結果と他場面のレイアウトは変更なし。既存日英映像は維持し、両幅で89秒動画の再生・シーク・字幕既定オフと手動字幕維持を確認。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -60,7 +60,7 @@
     "src/AccountPage.tsx": "a4cb8e1835ea32181a5aab56233e3def8601688265e4bf4aa6bba95c25a3751f",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "43c629e8dde38cc77b38cfbfe65b90246d3862877efeaadf00da90177ec65067",
+    "src/App.tsx": "129434947209cd6a3d432c9b8a7c1661c356f575c22ec0d6a57d365fd8081664",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "43ef7276f337722ddb47dd988d0261c3cdafc1a9ede438983bb76d06e0a10a82",
     "src/MemberPage.tsx": "d7ed5c2875602a42e069d5848ce6bab7581730b89b743fb1a787ec1ced488539",
@@ -84,7 +84,7 @@
     "src/WithdrawAccount.tsx": "af2978765b7b36d8dbecdc1522b6cb0ca7a67ad69c6c86901db7c38c5d8df09f",
     "src/admin-collection.css": "16f809da889c174c298841422cc0a38dc533ee4f5a7d3ce23719104e86d76458",
     "src/dateFormatter.ts": "ff66e27f03717cd54c4ce9677deff512ea6be40111b0b2c579f035b8e09bd38b",
-    "src/i18n.ts": "1dce17b12f908c3e44d6298d21c7d8a7896cadb4d523b17e9ea57e02edc0579b",
+    "src/i18n.ts": "c88ae76904187610f2b44eb02c163dc894e858c4de23a5fe05b6695a73143d3b",
     "src/lib.ts": "43caab5906bc244e43b0be6bc5aa35c07b0e72d66764eab9cd4e2e94af08b2dd",
     "src/main.tsx": "53928de0ba5d6e1f3d5a90cf855ee19c1052bc9640e23d3def54cecb2fd844ba",
     "src/notification-support.ts": "7a0c53122f85e6264b423eb30ce476048b59128edf204cd14b83f96886d4a5a2",
@@ -92,6 +92,7 @@
     "src/styles.css": "44f758ec85cab48960f112af8efeccbcd814b41745507a0f1875b5b6988c30c4",
     "src/useDateSwipe.ts": "9164d4bae92b3a7af857c6a716b9929b3ba6169fc31df3be71ae3460dde812ae",
     "src/useHistoryScroll.ts": "68954795a46a80e2d6dbd34ccf3eb291f43c1bbd519a05f07e8fa314498cb6f3",
+    "src/useLanguageScroll.ts": "2ebaf35e4a45db83c518ddd4c9f0c1a6ed61e7a8bebd955d1d3b22958726a8f9",
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     "vite.config.ts": "a4864ab280b19522c24def7fa61597ddf6cf01cad88c10343eb430f8c2531963"
   },

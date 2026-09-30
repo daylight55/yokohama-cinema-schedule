@@ -17,6 +17,7 @@ import { MoviePage } from "./MoviePage";
 import { MovieTimes } from "./MovieTimes";
 import { useDateSwipe } from "./useDateSwipe";
 import { useHistoryScroll } from "./useHistoryScroll";
+import { useLanguageScroll } from "./useLanguageScroll";
 import { localize, localizedDate } from "./i18n";
 import {
   ArrowSquareOutIcon,
@@ -188,6 +189,7 @@ function storeColorTheme(theme: ColorTheme): void {
 
 export function App() {
   const language = useLanguage();
+  const captureLanguageScroll = useLanguageScroll(language);
   const userRole = useUserRole();
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState("");
@@ -195,7 +197,7 @@ export function App() {
     setLanguageSaving(true);
     setLanguageError("");
     try {
-      await saveLanguage(value);
+      await saveLanguage(value, captureLanguageScroll);
     } catch {
       setLanguageError("言語設定を保存できませんでした。");
     } finally {
