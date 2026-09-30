@@ -31,6 +31,7 @@ const INPUT_FILES = [
   "functions/api/account/profile.ts",
   "functions/api/member-page.ts",
   "functions/api/sharing.ts",
+  "functions/api/screening-invitations.ts",
   "functions/api/notifications.ts",
 ];
 const REQUIRED_ARTIFACTS = [

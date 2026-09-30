@@ -1,5 +1,5 @@
 import { movieTitle, screeningInfo } from "./i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { addDays, formatJstDate } from "../shared/date";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { moviePreferenceKey, safeImageUrl } from "../shared/movie";
@@ -17,9 +17,11 @@ import { MovieSynopsis } from "./MovieSynopsis";
 export function MoviePage({
   movieKey,
   today,
+  renderActions,
 }: {
   movieKey: string | null;
   today: string;
+  renderActions: (movie: { title: string; preferenceKey: string; imageUrl: string | null }) => ReactNode;
 }) {
   const [data, setData] = useState<ScheduleResponse | null>(null);
   const [error, setError] = useState(false);
@@ -85,6 +87,7 @@ export function MoviePage({
             record.originalTitle !== movieTitle(title ?? "") && (
               <p className="movie-original-title">{record.originalTitle}</p>
             )}
+          {title && movieKey && renderActions({ title, preferenceKey: movieKey, imageUrl: poster })}
           {!introduction && record?.sourceUrl && (
             <a
               className="movie-source"

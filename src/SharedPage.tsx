@@ -1,3 +1,4 @@
+import { ScreeningInvitations } from "./ScreeningInvitations";
 import { SharingControls } from "./SharingControls";
 import { MemberProfileLink } from "./MemberProfile";
 import { SharedWatchlist } from "./SharedWatchlist";
@@ -19,7 +20,7 @@ import {
 } from "./i18n";
 import { PageHeader, PageShell } from "./PageLayout";
 
-export function SharedPage({ manage = false }: { manage?: boolean }) {
+export function SharedPage({ manage = false, onPlansChanged }: { manage?: boolean; onPlansChanged?: () => void }) {
   const [data, setData] = useState<SharingResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -112,6 +113,7 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
                 }}
                 onChanged={() => setRetry((v) => v + 1)}
               />
+              {data.groupId && <ScreeningInvitations key={data.groupId} data={data} onChanged={joined => { setRetry(v => v + 1); if (joined) onPlansChanged?.(); }} />}
               {!!data.members.length && (
                 <section className="group-member-list">
                   <h2>{t("メンバー")}</h2>
@@ -165,6 +167,7 @@ export function SharedPage({ manage = false }: { manage?: boolean }) {
           </a>
         </div>
       )}
+      {!loading && !error && data?.groupId && <ScreeningInvitations key={data.groupId} data={data} onChanged={joined => { setRetry(v => v + 1); if (joined) onPlansChanged?.(); }} />}
       {!!data?.groupId && (
         <div className="shared-controls">
           <div

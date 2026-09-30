@@ -11,6 +11,9 @@
   - region "君の名は。":
     - paragraph: 今後7日間の上映
     - heading "君の名は。" [level=1]
+    - button "気になる"
+    - button "鑑賞済み"
+    - button "作品の設定"
     - navigation "上映日へ移動":
       - button "9月28日(月)"
       - button "9月29日(火)"

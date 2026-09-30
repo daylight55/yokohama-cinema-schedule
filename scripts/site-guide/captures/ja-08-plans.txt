@@ -14,6 +14,10 @@
     - heading "映画ともだち" [level=2]
     - link "グループ管理":
       - /url: "#groups"
+    - region "一緒に観に行く":
+      - heading "一緒に観に行く" [level=2]
+      - button "映画に招待"
+      - paragraph: 映画への招待はまだありません。
     - group "共有する情報":
       - button "みんなの予定" [pressed]
       - button "気になる"

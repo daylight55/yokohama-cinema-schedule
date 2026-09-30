@@ -14,6 +14,10 @@
     - heading "Movie friends" [level=2]
     - link "Manage groups":
       - /url: "#groups"
+    - region "Go to the cinema together":
+      - heading "Go to the cinema together" [level=2]
+      - button "Invite to a screening"
+      - paragraph: No screening invitations yet.
     - group "Shared information":
       - button "Screenings"
       - button "Watchlist" [pressed]

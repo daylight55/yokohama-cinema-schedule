@@ -9,7 +9,8 @@ const root=path.dirname(fileURLToPath(import.meta.url));
 const output=path.join(root,'captures'); await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const scheduleOnly=process.argv.includes('--schedule-only');
-const manifest=scheduleOnly ? JSON.parse(await fs.readFile(path.join(output,'manifest.json'),'utf8')) : {viewport:{width:390,height:700},sourceRevision:process.env.GUIDE_SOURCE_REVISION||'unknown',sourceWorkingTreeNote:process.env.GUIDE_SOURCE_NOTE||'Record any local changes in the source checkout here.',data:'Demonstration data in the real app; no personal accounts or external writes',languages:{}};
+const selectedScenes=process.argv.find(arg=>arg.startsWith('--scenes='))?.slice('--scenes='.length).split(',');
+const manifest=(scheduleOnly || selectedScenes) ? JSON.parse(await fs.readFile(path.join(output,'manifest.json'),'utf8')) : {viewport:{width:390,height:700},sourceRevision:process.env.GUIDE_SOURCE_REVISION||'unknown',sourceWorkingTreeNote:process.env.GUIDE_SOURCE_NOTE||'Record any local changes in the source checkout here.',data:'Demonstration data in the real app; no personal accounts or external writes',languages:{}};
 try {
 for(const lang of ['ja','en']){
  const context=await browser.newContext({viewport:manifest.viewport,deviceScaleFactor:2,locale:lang==='ja'?'ja-JP':'en-GB',colorScheme:'light'});
@@ -28,6 +29,7 @@ for(const lang of ['ja','en']){
  const scenes=[];
  let current;
  const save=async(label, target=null, at=0, zoom=1.5)=>{
+   if(selectedScenes && !selectedScenes.includes(current.name))return;
    await page.waitForTimeout(220);
    await page.evaluate(()=>document.fonts.ready);
    const filename=`${lang}-${String(scenes.length).padStart(2,'0')}-${label}.png`;
@@ -41,7 +43,14 @@ for(const lang of ['ja','en']){
    if(overflow)throw Error(`Page overflow: ${filename}`);
  };
  const begin=(name,duration=8)=>{current={name,kind:'screen',duration,frames:[]};};
- const end=()=>{scenes.push(current); console.log(`${lang}: captured ${current.name}`);};
+ const end=()=>{
+   if(!selectedScenes || selectedScenes.includes(current.name)){
+     current.sourceRevision=process.env.GUIDE_SOURCE_REVISION||'unknown';
+     current.sourceWorkingTreeNote=process.env.GUIDE_SOURCE_NOTE||'No local app changes';
+     console.log(`${lang}: captured ${current.name}`);
+   }
+   scenes.push(current);
+ };
  const menu=()=>page.getByRole('button',{name:tr('メニューを開く','Open menu'),exact:true});
  const film=tr(TITLE,TITLE_EN);
  const search=()=>page.getByRole('searchbox',{name:tr('作品名・映画館名','Film or cinema')});
@@ -156,7 +165,7 @@ for(const lang of ['ja','en']){
    await page.screenshot({path:path.join(output,`${lang}-qa-${width}.png`)});
  }
  if(errors.length)throw Error(errors.join('\n'));
- manifest.languages[lang]=scenes;
+ manifest.languages[lang]=selectedScenes ? manifest.languages[lang].map(scene=>selectedScenes.includes(scene.name)?scenes.find(candidate=>candidate.name===scene.name):scene) : scenes;
  await context.close();
 }
  await fs.writeFile(path.join(output,'manifest.json'),JSON.stringify(manifest,null,2));
