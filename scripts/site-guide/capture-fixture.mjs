@@ -61,7 +61,7 @@ export async function installFixture(page, language = 'ja', options = {}) {
         screeningInvitations=screeningInvitations.map(i=>i.id===body.id?{...i,status:body.action==='accept'?'accepted':body.action==='decline'?'declined':'cancelled'}:i);result={ok:true};
       }else result={invitations:screeningInvitations};
     }else if(path==='/api/sharing'){
-      result={userId:'guide',groups:[{id:'friends',name:lang==='ja'?'映画ともだち':'Movie friends'}],groupId:'friends',members:[{userId:'guide',name:lang==='ja'?'はまむび':'Hama'},{userId:'friend',name:lang==='ja'?'そら':'Sora'}],plans:plans.map(p=>({...p,userId:'guide',reserved:false})),movies:[{userId:'guide',movieKey:key,title:TITLE,imageUrl:null,comment:lang==='ja'?'週末に観たい！':'Let’s go this weekend!',nextShowingAt:showings[0].startsAt},{userId:'friend',movieKey:key,title:TITLE,imageUrl:null,comment:lang==='ja'?'私も気になる！':'I want to see it too!',nextShowingAt:showings[0].startsAt}],titles};
+      result={userId:'guide',groups:[{id:'friends',name:lang==='ja'?'映画ともだち':'Movie friends'}],groupId:'friends',members:[{userId:'guide',name:lang==='ja'?'はまむび':'Hama'},{userId:'friend',name:lang==='ja'?'そら':'Sora'}],plans:plans.map(p=>({...p,userId:'guide',reserved:false})),movies:[...(options.extraSharedMovies??[]),{userId:'guide',movieKey:key,title:TITLE,imageUrl:null,comment:lang==='ja'?'週末に観たい！':'Let’s go this weekend!',nextShowingAt:showings[0].startsAt},{userId:'friend',movieKey:key,title:TITLE,imageUrl:null,comment:lang==='ja'?'私も気になる！':'I want to see it too!',nextShowingAt:showings[0].startsAt}],titles};
     }else throw new Error(`Unimplemented fixture: ${path}`);
     await route.fulfill({json:result});
   });

@@ -94,6 +94,28 @@ describe("sharing within invitation groups", () => {
       sqlite.close();
     }
   });
+  it("includes a peer's watchlist without requiring the viewer's interest or upcoming showtimes", async () => {
+    const { db, sqlite } = fixture();
+    try {
+      sqlite.exec(`INSERT INTO movie_preferences(user_id,movie_key,title,starred,comment,updated_at)
+        VALUES ('bob','et','E.T.',1,'Want to see it',''),('disabled','private','Excluded',1,'Private','');`);
+      const data: SharingResponse = await (await onRequestGet(context(db))).json();
+      expect(data.movies.find(m => m.title === "E.T.")).toEqual({
+        userId: "bob", movieKey: "et", title: "E.T.", imageUrl: null, status: null, comment: "Want to see it",
+      });
+      expect(data.movies.filter(m => m.title === "E.T.")).toHaveLength(1);
+      expect(data.movies.some(m => m.title === "Excluded")).toBe(false);
+      // Collecting and removing availability changes planning, never membership.
+      sharedShowing(sqlite, "E.T.");
+      expect(((await (await onRequestGet(context(db))).json()) as SharingResponse)
+        .movies.find(m => m.title === "E.T.")?.nextShowingAt).toBeTruthy();
+      sqlite.exec("DELETE FROM showings WHERE title='E.T.'");
+      expect(((await (await onRequestGet(context(db))).json()) as SharingResponse)
+        .movies.find(m => m.title === "E.T.")?.userId).toBe("bob");
+    } finally {
+      sqlite.close();
+    }
+  });
   it("denies public mode, anonymous, unknown, disabled and unclaimed legacy accounts", async () => {
     const { db, sqlite } = fixture();
     try {

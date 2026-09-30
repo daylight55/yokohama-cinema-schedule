@@ -91,7 +91,8 @@ export const onRequestGet: PagesFunction<
     )
     .bind(groupId)
     .all<SharedMovie>();
-  // Only future screenings in the same seven-day window as the movie detail page.
+  // Availability helps planning; it must not remove a member's saved interest.
+  // Use the same seven-day window as the movie detail page.
   const [through] = jstDateBounds(addDays(todayInJst(), 7));
   const upcoming = await db
     .prepare(
@@ -109,9 +110,9 @@ export const onRequestGet: PagesFunction<
     if (!previous || row.nextShowingAt < previous)
       nextByMovie.set(key, row.nextShowingAt);
   }
-  const currentMovies = movies.results.flatMap((movie) => {
+  const sharedMovies = movies.results.map((movie) => {
     const nextShowingAt = nextByMovie.get(moviePreferenceKey(movie.title));
-    return nextShowingAt ? [{ ...movie, nextShowingAt }] : [];
+    return { ...movie, nextShowingAt };
   });
   const titles = await listMovieTitles(db);
   const result: SharingResponse = {
@@ -125,7 +126,7 @@ export const onRequestGet: PagesFunction<
       avatarUrl: avatarUrl(m.userId, m.avatar_version),
     })),
     plans: plans.results.map((p) => ({ ...p, reserved: !!p.reserved })),
-    movies: currentMovies,
+    movies: sharedMovies,
     titles: titles.map(({japaneseTitle, englishTitle}) => ({japaneseTitle, englishTitle})),
   };
   return Response.json(result, { headers });
