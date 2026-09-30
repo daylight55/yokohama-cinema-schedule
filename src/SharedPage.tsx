@@ -113,7 +113,7 @@ export function SharedPage({ manage = false, onPlansChanged }: { manage?: boolea
                 }}
                 onChanged={() => setRetry((v) => v + 1)}
               />
-              {data.groupId && <ScreeningInvitations key={data.groupId} data={data} onChanged={joined => { setRetry(v => v + 1); if (joined) onPlansChanged?.(); }} />}
+              {data.groupId && <ScreeningInvitations key={`screening:${data.groupId}`} data={data} onChanged={joined => { setRetry(v => v + 1); if (joined) onPlansChanged?.(); }} />}
               {!!data.members.length && (
                 <section className="group-member-list">
                   <h2>{t("メンバー")}</h2>
@@ -167,7 +167,7 @@ export function SharedPage({ manage = false, onPlansChanged }: { manage?: boolea
           </a>
         </div>
       )}
-      {!loading && !error && data?.groupId && <ScreeningInvitations key={data.groupId} data={data} onChanged={joined => { setRetry(v => v + 1); if (joined) onPlansChanged?.(); }} />}
+      {!loading && !error && data?.groupId && <ScreeningInvitations key={`screening:${data.groupId}`} data={data} onChanged={joined => { setRetry(v => v + 1); if (joined) onPlansChanged?.(); }} />}
       {!!data?.groupId && (
         <div className="shared-controls">
           <div

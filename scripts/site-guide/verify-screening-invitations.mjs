@@ -7,6 +7,9 @@ await fs.mkdir('output/playwright',{recursive:true});
 try {
   for(const lang of ['ja','en']) for(const width of [320,390]){
     const page=await browser.newPage({viewport:{width,height:width===320?700:844}});
+    const errors=[];
+    page.on("pageerror",error=>errors.push(error.message));
+    page.on("console",message=>{if(message.type()==="error")errors.push(message.text());});
     await installFixture(page,lang);
     const tr=(ja,en)=>lang==='ja'?ja:en;
     const base=process.env.GUIDE_URL || 'http://127.0.0.1:5194';
@@ -61,6 +64,10 @@ try {
     await area.getByRole('button',{name:tr('今回は見送る','Decline'),exact:true}).click();
     await area.getByText(tr('見送り','Declined'),{exact:true}).waitFor();
     console.log(`${lang} ${width}px: recipient accept, decline and failed save recovery passed`);
+    // The failed-save case deliberately returns exactly one HTTP 500.
+    const expectedNetworkFailures=errors.filter(message=>/^Failed to load resource:.*status of 500/.test(message));
+    assert.equal(expectedNetworkFailures.length,1);
+    assert.deepEqual(errors.filter(message=>!expectedNetworkFailures.includes(message)),[],"No React or browser console errors");
     await page.close();
   }
 } finally {await browser.close();}
