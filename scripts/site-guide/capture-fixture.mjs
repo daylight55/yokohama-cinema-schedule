@@ -46,7 +46,8 @@ export async function installFixture(page, language = 'ja', options = {}) {
         cinemaPreferences=[...cinemaPreferences.filter(p=>p.cinemaId!==body.cinemaId),result];
       }else result={preferences:cinemaPreferences};
     }else if(path==='/api/preferences'){
-      const pref={movieKey:body.title,title:body.title,imageUrl:null,starred:body.starred,status:body.status??null,comment:body.comment??'',updatedAt:`${DATE}T10:00:00+09:00`};
+      const previous=preferences.find(p=>p.movieKey===body.title);
+      const pref={movieKey:body.title,title:body.title,imageUrl:null,starred:false,status:null,comment:'',...previous,...body,updatedAt:`${DATE}T10:00:00+09:00`};
       preferences=[...preferences.filter(p=>p.movieKey!==pref.movieKey),pref]; result=pref;
     }else if(path==='/api/viewing-plans'){
       if(request.method()==='POST'){

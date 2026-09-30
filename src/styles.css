@@ -4248,12 +4248,20 @@ html[lang="en"] .brand-wordmark {
 
 .account-danger-button:disabled { opacity: .55; cursor: wait; }
 
-.movie-card-actions { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 8px; min-width: 0; }
-.movie-card-actions .movie-watched-button { margin-right: auto; }
-.movie-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; min-width: 0; }
-.movie-watched-button, .movie-detail-actions > button:not(.icon-button) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: .8125rem; }
-.movie-watched-button.active, .movie-detail-actions > button.active { border-color: var(--accent); color: var(--accent); }
-.movie-watched-button:disabled, .movie-detail-actions > button:disabled { opacity: .55; cursor: wait; }
+.movie-actions { display: grid; grid-template-columns: 44px minmax(44px, 1fr) minmax(44px, 1fr) 44px; gap: 4px; align-items: stretch; width: 100%; max-width: 320px; min-width: 0; }
+.movie-actions > button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; height: auto; min-width: 44px; min-height: 60px; padding: 6px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: .75rem; line-height: 1.2; cursor: pointer; }
+.movie-actions > button svg { flex-shrink: 0; }
+.movie-actions > button span { text-box: trim-both cap alphabetic; }
+.movie-actions > button:hover { border-color: var(--accent); color: var(--accent); }
+.movie-actions > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.movie-actions .movie-status-button.active { border-color: var(--accent); color: var(--accent); }
+.movie-actions > button:disabled { opacity: .55; cursor: wait; }
+.movie-card-actions { grid-column: 1 / -1; grid-row: 2; }
+.movie-detail-actions { margin-top: 16px; }
+.movie-program-actions { width: calc(100% - 16px); margin: 8px; }
+@media (max-width: 390px) {
+  html[lang="en"] .movie-program-actions .movie-status-button { font-size: .6875rem; }
+}
 .movie-list-item > .movie-image-link { grid-row: 1; }
 
 .screening-invitations { min-width: 0; margin-block: 24px; padding-block: 20px; border-block: 1px solid var(--line); }

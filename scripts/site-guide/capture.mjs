@@ -56,6 +56,13 @@ for(const lang of ['ja','en']){
  const search=()=>page.getByRole('searchbox',{name:tr('作品名・映画館名','Film or cinema')});
  const searchButton=()=>page.getByRole('button',{name:tr('検索','Search'),exact:true});
  const settle=async()=>{await page.waitForTimeout(350); await page.mouse.move(389,699);};
+ const showProgram=async()=>{
+   await page.locator('.program-block').first().evaluate(el=>{
+     const stickyBottom=document.querySelector('.schedule-search').getBoundingClientRect().bottom;
+     window.scrollTo({top:scrollY+el.getBoundingClientRect().top-stickyBottom-8,behavior:'instant'});
+   });
+   await settle();
+ };
  const nav=async(href)=>{
    await menu().click();
    await page.locator(`#primary-navigation a[href="${href}"]`).click();
@@ -72,7 +79,7 @@ for(const lang of ['ja','en']){
  const scheduleLink=page.locator(`#primary-navigation a[href="#schedule?date=${DATE}"]`);
  await save('sidebar',scheduleLink,1,1.25);
  await scheduleLink.click(); await settle();
- await page.locator('.cinema-strip').first().scrollIntoViewIfNeeded(); await settle();
+ await showProgram();
  await save('overview',page.locator('.timeline-hour').first(),2.8,1.05);
  await save('cinemas',page.locator('.cinema-strip').first(),5,1.35);
  await page.locator('.cinema-strip').first().evaluate(el=>el.scrollLeft=el.scrollWidth);
@@ -96,7 +103,7 @@ for(const lang of ['ja','en']){
  const cinemaSwitch=settings.getByRole('switch',{name:tr('TOHOシネマズ 上大岡','TOHO Cinemas Kamiooka'),exact:true});
  await cinemaSwitch.uncheck(); await settle(); await save('selected',settings,4.2,1.12);
  await settings.getByRole('link').click(); await settle();
- await page.locator('.cinema-strip').first().scrollIntoViewIfNeeded();
+ await showProgram();
  await save('result',page.locator('.cinema-strip').first(),5.7,1.25); end();
  await nav(`#movies?date=${DATE}`);
  // 1. Real typing, submitting and the resulting filtered list.
