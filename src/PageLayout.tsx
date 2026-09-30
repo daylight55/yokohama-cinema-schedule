@@ -1,7 +1,8 @@
 // Pages Functions also render this shell using Wrangler's classic JSX transform.
-import React, { type ReactNode } from "react";
+import React, { type ReactNode, type Ref } from "react";
 
 type PageShellProps = {
+  ref?: Ref<HTMLElement>;
   children: ReactNode;
   className?: string;
   labelledBy?: string;
@@ -23,6 +24,7 @@ function classNames(...values: Array<string | undefined>): string {
 }
 
 export function PageShell({
+  ref,
   children,
   className,
   labelledBy,
@@ -32,6 +34,7 @@ export function PageShell({
 }: PageShellProps) {
   return (
     <section
+      ref={ref}
       className={classNames("page-shell", className)}
       aria-labelledby={labelledBy}
       aria-label={label}

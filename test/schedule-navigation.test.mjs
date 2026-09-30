@@ -23,3 +23,11 @@ it("opens a daily schedule from a shared view without marking a day as already d
   expect($('.schedule-jump-dates a[aria-current]').length).toBe(0);
   expect(appHashStateFromHash($('.schedule-jump-dates a').attr('href'))).toMatchObject({view:'schedule',date:'2026-09-29'});
 });
+
+it.each([null, "2026-09-01"])("selects today when switching from all dates or an expired day: %s", selectedDate => {
+  const $ = load(renderToStaticMarkup(createElement(ScheduleNavigator, { view: "movies", dates: ["2026-09-29", "2026-09-30"], selectedDate, query: "映画" })));
+  for (const a of $('.schedule-destinations a').toArray().slice(0, 2)) {
+    expect(appHashStateFromHash($(a).attr('href'))).toMatchObject({date:'2026-09-29',query:'映画'});
+  }
+  expect($('.schedule-jump-dates a[aria-current]').length).toBe(0);
+});

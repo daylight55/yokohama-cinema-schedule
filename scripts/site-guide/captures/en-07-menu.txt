@@ -65,8 +65,6 @@
   - paragraph: Today
   - heading "Showtimes" [level=1]
   - text: 1 film2 screenings
-  - link "Check schedule updates":
-    - /url: "#collection-status?date=2026-09-28"
   - time: Now 10:00
   - region "12:00":
     - time: 12:00

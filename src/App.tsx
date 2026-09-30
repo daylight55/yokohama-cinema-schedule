@@ -223,6 +223,7 @@ export function App() {
     () => getStoredColorTheme() !== null,
   );
   const currentTimeMarkerRef = useRef<HTMLDivElement>(null);
+  const dateStripRef = useRef<HTMLDivElement>(null);
   const navigationDialogRef = useRef<HTMLDialogElement>(null);
   const moviePreferenceDialogRef = useRef<HTMLDialogElement>(null);
   const pendingMovieAnchorRef = useRef<{
@@ -527,7 +528,11 @@ export function App() {
       }
       setView(nextView);
       setSelectedMemberId(nextView === "member" ? hashState.user ?? "" : "");
-      setSelectedDate(nextScheduleDate);
+      // Date-less destinations (shared interests, plans, etc.) do not reset
+      // the day used by the floating schedule navigator.
+      setSelectedDate((previous) =>
+        usesWeeklyDate ? nextScheduleDate : dates.includes(previous) ? previous : dates[0],
+      );
       setShowAllMovieDates(nextShowAllMovieDates);
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
       setPlannerDate(nextPlannerDate);
@@ -542,6 +547,20 @@ export function App() {
       window.removeEventListener("hashchange", syncViewFromHash);
     };
   }, [dates, plannerMaxDate, today]);
+
+  useEffect(() => {
+    const strip = dateStripRef.current;
+    const active = strip?.querySelector<HTMLElement>("[aria-current]");
+    if (!strip || !active || historyScroll.pending.current || historyScroll.handledHash.current === window.location.hash) return;
+    const bounds = strip.getBoundingClientRect();
+    const target = active.getBoundingClientRect();
+    if (target.left < bounds.left || target.right > bounds.right) {
+      strip.scrollTo({
+        left: strip.scrollLeft + target.left - bounds.left - (bounds.width - target.width) / 2,
+        behavior: "instant",
+      });
+    }
+  }, [view, selectedDate, showAllMovieDates]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -2338,7 +2357,7 @@ export function App() {
         {localize(
           (view === "schedule" || view === "movies") && (
             <nav className="date-nav" aria-label={localize("上映日")}>
-              <div className="date-strip" data-horizontal-scroll="dates">
+              <div ref={dateStripRef} className="date-strip" data-horizontal-scroll="dates">
                 {localize(
                   view === "movies" && (
                     <a
@@ -2375,7 +2394,7 @@ export function App() {
                       <a
                         key={date}
                         className={
-                          !showAllMovieDates && date === selectedDate
+                          (view !== "movies" || !showAllMovieDates) && date === selectedDate
                             ? "day-button active"
                             : "day-button"
                         }
@@ -2384,7 +2403,7 @@ export function App() {
                           query: normalizedSearchQuery,
                         })}
                         aria-current={
-                          !showAllMovieDates && date === selectedDate
+                          (view !== "movies" || !showAllMovieDates) && date === selectedDate
                             ? "date"
                             : undefined
                         }
@@ -2763,7 +2782,7 @@ export function App() {
                 }
               />
 
-              {!loading && (view === "schedule" || view === "movies") && (
+              {!loading && view === "movies" && (
                 <a className="collection-status-link" href={hashForAppView("collectionStatus", { date: selectedDate })}>
                   <ClockIcon size={18} aria-hidden="true" />
                   {language === "en" ? "Check schedule updates" : "更新状況を見る"}
@@ -3355,7 +3374,7 @@ export function App() {
         <ScheduleNavigator
           view={view}
           dates={dates}
-          selectedDate={selectedDate}
+          selectedDate={selectedMovieListDate}
           query={normalizedSearchQuery}
           locationAction={shouldShowCurrentLocationRefresh(view, selectedDate, today) ? (
             <button type="button" className="secondary-button" disabled={routeState === "loading"}

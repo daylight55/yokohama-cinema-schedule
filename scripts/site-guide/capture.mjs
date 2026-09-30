@@ -138,7 +138,8 @@ for(const lang of ['ja','en']){
  await nav(`#schedule?date=${DATE}`);
  await search().fill(film); await searchButton().click(); await settle();
  const plan=page.locator('.viewing-plan-toggle').first();
- await plan.scrollIntoViewIfNeeded(); await settle();
+ // Keep the demonstrated action clear of the floating schedule navigator.
+ await plan.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'})); await settle();
  begin('plan'); await save('add',plan,0,1.8);
  await plan.click(); await page.waitForTimeout(450);
  await save('added',plan,2,1.8);

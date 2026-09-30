@@ -13,7 +13,7 @@ const destinations = [
 export function ScheduleNavigator({ view, dates, selectedDate, query, locationAction, locationStatus }: {
   view: AppView;
   dates: string[];
-  selectedDate: string;
+  selectedDate: string | null;
   query: string;
   locationAction?: ReactNode;
   locationStatus?: string;
@@ -21,6 +21,7 @@ export function ScheduleNavigator({ view, dates, selectedDate, query, locationAc
   const dialogRef = useRef<HTMLDialogElement>(null);
   const close = () => dialogRef.current?.close();
   const dateView = view === "movies" ? "movies" : "schedule";
+  const destinationDate = selectedDate && dates.includes(selectedDate) ? selectedDate : dates[0];
   return <>
     <button type="button" className="schedule-navigator-button" aria-haspopup="dialog"
       aria-controls="schedule-navigator" onClick={() => dialogRef.current?.showModal()}>
@@ -40,7 +41,7 @@ export function ScheduleNavigator({ view, dates, selectedDate, query, locationAc
         </div>
         <nav className="schedule-destinations" aria-label={t("スケジュールの表示")}>
           {destinations.map(({ view: target, label, Icon }) => <a key={target}
-            href={hashForAppView(target, { date: selectedDate, query: target === "schedule" || target === "movies" ? query : undefined })}
+            href={hashForAppView(target, { date: destinationDate, query: target === "schedule" || target === "movies" ? query : undefined })}
             aria-current={target === view ? "page" : undefined} onClick={close}>
             <Icon size={20} aria-hidden="true" />{t(label)}
           </a>)}

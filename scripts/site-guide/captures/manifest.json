@@ -74,8 +74,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "54d2a129a9bb3a1ccf949faf25772bbf02d7cd04",
-        "sourceWorkingTreeNote": "Movie detail preference actions and persistent watched card action; settings left of star"
+        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
+        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
       },
       {
         "name": "cinema-settings",
@@ -148,7 +148,9 @@
             },
             "zoom": 1.25
           }
-        ]
+        ],
+        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
+        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
       },
       {
         "name": "search",
@@ -349,7 +351,9 @@
             },
             "zoom": 1.1
           }
-        ]
+        ],
+        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
+        "sourceWorkingTreeNote": "Schedule date navigation fixes; recapture plan action above the floating navigator"
       },
       {
         "name": "sharing",
@@ -497,8 +501,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "54d2a129a9bb3a1ccf949faf25772bbf02d7cd04",
-        "sourceWorkingTreeNote": "Movie detail preference actions and persistent watched card action; settings left of star"
+        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
+        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
       },
       {
         "name": "cinema-settings",
@@ -571,7 +575,9 @@
             },
             "zoom": 1.25
           }
-        ]
+        ],
+        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
+        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
       },
       {
         "name": "search",
@@ -772,7 +778,9 @@
             },
             "zoom": 1.1
           }
-        ]
+        ],
+        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
+        "sourceWorkingTreeNote": "Schedule date navigation fixes; recapture plan action above the floating navigator"
       },
       {
         "name": "sharing",

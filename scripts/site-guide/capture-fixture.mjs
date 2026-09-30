@@ -35,6 +35,9 @@ export async function installFixture(page, language = 'ja', options = {}) {
     else if(path==='/api/showings'){
       const date=url.searchParams.get('date')||DATE, through=url.searchParams.get('through')||date;
       result={date,generatedAt:`${DATE}T10:00:00+09:00`,lastUpdatedAt:`${DATE}T08:00:00+09:00`,cinemas,showings:showings.filter(s=>s.startsAt.slice(0,10)>=date&&s.startsAt.slice(0,10)<=through),movieTitles:titles,preferences,preferencesEnabled:true,cinemaTravelPreferences:cinemaPreferences,cinemaTravelPreferencesEnabled:options.preferencesEnabled!==false,userProfile:{departureRegistered:false,departureUpdatedAt:null,scheduleCollapseMinutes:0},userProfileEnabled:true,sourceHealth:{healthy:2,total:2}};
+    }else if(path==='/api/collection-status'){
+      const dates=Array.from({length:7},(_,i)=>new Date(Date.parse(`${DATE}T12:00:00Z`)+i*86400000).toISOString().slice(0,10));
+      result={generatedAt:`${DATE}T10:00:00+09:00`,dates,cinemas:cinemas.map(cinema=>({...cinema,days:dates.map(date=>({date,status:'published',stale:false,fetchedCount:2,storedCount:2,lastAttemptAt:`${DATE}T08:00:00+09:00`,lastSuccessAt:`${DATE}T08:00:00+09:00`,storedUpdatedAt:`${DATE}T08:00:00+09:00`,issue:null}))}))};
     }else if(path==='/api/cinema-preferences'){
       if(request.method()==='POST'){
         if(options.saveDelay)await new Promise(resolve=>setTimeout(resolve,options.saveDelay));

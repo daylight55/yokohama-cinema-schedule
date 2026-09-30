@@ -204,3 +204,11 @@ GUIDE_URL=http://127.0.0.1:5194 node scripts/site-guide/verify-screening-invitat
 この検証は日英・320/390pxで送信、参加、見送り、取り消し、保存失敗、再読み込み、履歴移動を確認します。参加時の予定登録と権限境界は `test/screening-invitations.test.ts` で実DBを使って検証します。
 
 既存素材を保って一部の場面だけ撮影し直す場合は、`capture.mjs --scenes=sharing,language` のように場面名を指定できます。操作は実画面で実行し、指定した場面だけをmanifestへ反映します。再撮影した場面ごとに撮影元リビジョンと作業メモを記録します。
+
+上映スケジュール本文の更新状況リンクを外した際は、schedule・cinema-settings・plan場面を日英とも再撮影しました。鑑賞予定登録の撮影では、右下の切り替えボタンと重ならないよう操作対象を中央へスクロールします。既存の音声・BGM・字幕・89秒の尺を維持しています。
+
+日付ナビゲーションは、実際のChromiumタッチ入力で検証できます。日英・320/390pxで、右下の切り替え後の選択日、共有画面を経由した日付の保持、選択日の見える位置、更新状況の日付スワイプ、両端、日付バーの局所スクロール、縦スクロール、再読み込み、履歴移動を確認します。
+
+```sh
+GUIDE_URL=http://127.0.0.1:5195 node scripts/site-guide/verify-date-navigation.mjs
+```
