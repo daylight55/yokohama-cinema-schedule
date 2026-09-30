@@ -97,7 +97,7 @@ export function SharedWatchlist({
               </li>
             ))}
           </ul>
-          {!archived && (
+          {!archived && rows.some((row) => row.nextShowingAt) && (
             <a
               className="shared-showtime-link"
               href={hashForAppView("movie", { movie: key })}
@@ -161,15 +161,23 @@ export function SharedWatchlist({
           {t("保存できませんでした。もう一度お試しください。")}
         </p>
       )}
-      {!sections.planning.length && (
+      {!sections.planning.length && !sections.unscheduled.length && (
         <div className="shared-empty">
-          <p>{t("今後の上映がある気になる作品はありません。")}</p>
+          <p>{t("気になる作品はまだありません。")}</p>
           <a href={hashForAppView("movies")}>{t("上映作品")}</a>
         </div>
       )}
       <ul className="shared-movies">
         {sections.planning.map((entry) => renderMovie(entry))}
       </ul>
+      {!!sections.unscheduled.length && (
+        <section className="shared-unscheduled-section" aria-label={t("上映予定が未確認の気になる")}>
+          <h2>{t("上映予定が未確認の気になる")}</h2>
+          <ul className="shared-movies">
+            {sections.unscheduled.map((entry) => renderMovie(entry))}
+          </ul>
+        </section>
+      )}
       {!!sections.watched.length && (
         <details className="shared-watched-section">
           <summary>

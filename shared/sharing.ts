@@ -61,7 +61,8 @@ export function sharedWatchlistSections(movies: SharedMovie[], member = "") {
       a[0].localeCompare(b[0]),
   );
   return {
-    planning: entries.filter(([, rows]) => interestCount(rows) > 0),
+    planning: entries.filter(([, rows]) => interestCount(rows) > 0 && rows.some(row => row.nextShowingAt)),
+    unscheduled: entries.filter(([, rows]) => interestCount(rows) > 0 && !rows.some(row => row.nextShowingAt)),
     watched: entries.filter(([, rows]) => interestCount(rows) === 0),
   };
 }

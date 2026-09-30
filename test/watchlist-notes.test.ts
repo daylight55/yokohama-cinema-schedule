@@ -82,7 +82,7 @@ describe("shared watchlist planning", () => {
       sqlite.close();
     }
   });
-  it("excludes past, absent, far-future, hidden and disabled-cinema films", async () => {
+  it("keeps saved interest when showtimes are past, absent, far-future or in unavailable cinemas", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-27T10:00:00Z"));
     const { db, sqlite } = fixture();
@@ -120,12 +120,14 @@ describe("shared watchlist planning", () => {
         "UPDATE cinemas SET approval='disabled' WHERE id='disabled-test';UPDATE cinemas SET active_until='2026-09-26' WHERE id='closed-test';",
       );
       const data: SharingResponse = await (await onRequestGet(ctx(db))).json();
-      expect(data.movies.map((m) => m.title)).toEqual(["Future"]);
+      expect(data.movies.map((m) => m.title).sort()).toEqual([
+        "Closed", "Disabled", "Exact now", "Far future", "Future", "Missing", "Past",
+      ]);
+      expect(data.movies.filter(m => m.nextShowingAt).map(m => m.title)).toEqual(["Future"]);
       sqlite.exec("DELETE FROM showings");
-      expect(
-        ((await (await onRequestGet(ctx(db))).json()) as SharingResponse)
-          .movies,
-      ).toEqual([]);
+      const withoutShowings: SharingResponse = await (await onRequestGet(ctx(db))).json();
+      expect(withoutShowings.movies).toHaveLength(7);
+      expect(withoutShowings.movies.every(m => !m.nextShowingAt)).toBe(true);
     } finally {
       sqlite.close();
     }
@@ -162,7 +164,7 @@ describe("shared watchlist planning", () => {
       title: string,
       userId: string,
       status: null | "watched" = null,
-    ) => ({ title, userId, status, movieKey: title, imageUrl: null });
+    ) => ({ title, userId, status, movieKey: title, imageUrl: null, nextShowingAt: "2026-10-01T12:00:00Z" });
     const rows = [
       movie("Solo", "a"),
       movie("Together", "a"),
@@ -180,4 +182,25 @@ describe("shared watchlist planning", () => {
         .sort(),
     ).toEqual(["mixed", "seen"]);
   });
+});
+
+it("separates upcoming planning, unscheduled peer interest and all-watched films without losing members", () => {
+  const row = (title: string, userId: string, status: null | "watched" = null, nextShowingAt?: string) =>
+    ({title, userId, status, nextShowingAt, movieKey:title, imageUrl:null});
+  const rows = [
+    row("Upcoming", "a", null, "2026-10-01T12:00:00Z"),
+    row("E.T.", "b"),
+    row("Mixed", "a", "watched"),
+    row("Mixed", "b"),
+    row("Seen", "a", "watched"),
+  ];
+  const sections = sharedWatchlistSections(rows);
+  expect(sections.planning.map(([key]) => key)).toEqual(["upcoming"]);
+  expect(sections.unscheduled.map(([key]) => key)).toEqual(["e.t.", "mixed"]);
+  expect(sections.unscheduled[1][1].map(m => m.userId)).toEqual(["a", "b"]);
+  expect(sections.watched.map(([key]) => key)).toEqual(["seen"]);
+  const peer = sharedWatchlistSections(rows, "b");
+  expect(peer.planning).toEqual([]);
+  expect(peer.unscheduled.map(([key]) => key)).toEqual(["e.t.", "mixed"]);
+  expect(peer.unscheduled.flatMap(([, movies]) => movies).every(m => m.userId === "b")).toBe(true);
 });

@@ -4000,6 +4000,8 @@ html[lang="en"] .brand-wordmark {
 .shared-showtime-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); }
 .shared-note-editor summary, .shared-watched-section summary { display: list-item; padding: 12px 0; min-height: 44px; cursor: pointer; }
 .shared-watched-section { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 12px; }
+.shared-unscheduled-section { min-width: 0; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 12px; }
+.shared-unscheduled-section h2 { font-size: 1rem; overflow-wrap: anywhere; }
 .shared-watchlist-art { flex: 0 0 auto; }
 .shared-watchlist-content > .secondary-button { min-height: 44px; padding: 8px 12px; color: var(--text); }
 .watchlist-note :is(textarea,button):focus-visible, .shared-note-editor summary:focus-visible, .shared-watched-section summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
