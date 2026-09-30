@@ -1,3 +1,5 @@
+import { splitScreeningFormat } from "../shared/screening-format";
+import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import { CollectionStatusPage } from "./CollectionStatusPage";
 import { ScheduleNavigator } from "./ScheduleNavigator";
 import { WatchlistNote } from "./WatchlistNote";
@@ -8,6 +10,7 @@ import { UsersThreeIcon } from "@phosphor-icons/react";
 import { movieTitle, screeningInfo } from "./i18n";
 import {
   useLanguage,
+  localeCode,
   useUserRole,
   saveLanguage,
   registerTitleTranslations,
@@ -2952,6 +2955,7 @@ export function App() {
                                       </p>
                                     ),
                                   )}
+                                  {showAllMovieDates && <ScreeningFormat format={movie.showings.map(showing => showing.format).filter(Boolean).join(" / ")} language={language} />}
                                   {schedule?.preferencesEnabled && (
                                     <MovieActions className="movie-card-actions" title={movieTitle(movie.title)}
                                       status={status} starred={isStarred} saving={savingMovieKeys.has(movie.preferenceKey)}
@@ -3688,7 +3692,7 @@ function CinemaSlot({
   const end = showing.endsAt
     ? timeFormatter.format(new Date(showing.endsAt))
     : null;
-  const metadata = [showing.screen, showing.format]
+  const metadata = [showing.screen, splitScreeningFormat(showing.format).detail]
     .filter((value): value is string => Boolean(value))
     .map(screeningInfo)
     .join(" / ");
@@ -3761,6 +3765,7 @@ function CinemaSlot({
         <div className="slot-cinema">
           <strong>{localize(showing.cinemaShortName)}</strong>
         </div>
+        <ScreeningFormat format={showing.format} language={localeCode() === "en-GB" ? "en" : "ja"} />
         {localize(
           metadata && <span className="slot-meta">{localize(metadata)}</span>,
         )}
@@ -3771,7 +3776,7 @@ function CinemaSlot({
           href={showing.bookingUrl}
           target="_blank"
           rel="noreferrer"
-          aria-label={`${localize("予約サイトへ")} · ${movieTitle(showing.title)} · ${start} · ${localize(showing.cinemaShortName)}`}
+          aria-label={`${localize("予約サイトへ")} · ${movieTitle(showing.title)} · ${start} · ${localize(showing.cinemaShortName)}${screeningLanguageSuffix(showing.format, localize)}`}
         >
           {localize("予約")}
           <ArrowSquareOutIcon size={16} aria-hidden="true" />

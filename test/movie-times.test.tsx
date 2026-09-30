@@ -20,3 +20,14 @@ describe("showing hash compatibility",()=>{
    expect(hashForAppView('movie',{movie:'film'})).toBe('#movie?movie=film');
  });
 });
+it('distinguishes subtitled and dubbed showings at the same time in text and accessible names',()=>{
+  const row={title:'作品',startsAt:'2026-10-01T01:30:00Z',cinemaName:'ムービル'} as Showing;
+  const $=load(renderToStaticMarkup(<MovieTimes language="en" showings={[
+    {...row,id:'sub',format:'字幕 / IMAX'}, {...row,id:'dub',format:'吹替版'}, {...row,id:'unknown',format:null},
+  ]} />));
+  expect($('.screening-language').map((_,el)=>$(el).text()).get()).toEqual(['Subtitled','Dubbed']);
+  expect($('a').eq(0).attr('aria-label')).toContain('Subtitled');
+  expect($('a').eq(1).attr('aria-label')).toContain('Dubbed');
+  expect($('a').eq(2).text()).toBe('10:30');
+  expect($('a').map((_,el)=>appHashStateFromHash($(el).attr('href')!).showing).get()).toEqual(['sub','dub','unknown']);
+});

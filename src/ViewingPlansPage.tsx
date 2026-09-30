@@ -1,5 +1,7 @@
+import { splitScreeningFormat } from "../shared/screening-format";
+import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import { movieTitle } from "./i18n";
-import { localize, localizedDate } from "./i18n";
+import { localize, localizedDate, localeCode } from "./i18n";
 import {
   ArrowSquareOutIcon,
   CalendarDotsIcon,
@@ -143,11 +145,12 @@ export function ViewingPlansPage({
                         <MapPinIcon size={15} aria-hidden="true" />
                         {localize(plan.cinemaName)}
                       </p>
+                      <ScreeningFormat format={plan.format} language={localeCode() === "en-GB" ? "en" : "ja"} />
                       {localize(
-                        (plan.screen || plan.format) && (
+                        (plan.screen || splitScreeningFormat(plan.format).detail) && (
                           <p className="viewing-plan-meta">
                             {localize(
-                              [plan.screen, plan.format]
+                              [plan.screen, splitScreeningFormat(plan.format).detail]
                                 .filter(Boolean)
                                 .join(" / "),
                             )}
@@ -170,6 +173,7 @@ export function ViewingPlansPage({
                           <span>{localize(plan.reservedAt ? "予約済み" : "予約済みにする")}</span>
                         </label>
                         <a
+                          aria-label={`${localize("予約サイトへ")} · ${movieTitle(plan.title)}${screeningLanguageSuffix(plan.format, localize)}`}
                           href={plan.bookingUrl}
                           target="_blank"
                           rel="noreferrer"

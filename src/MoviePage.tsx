@@ -1,3 +1,5 @@
+import { splitScreeningFormat } from "../shared/screening-format";
+import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import { movieTitle, screeningInfo } from "./i18n";
 import { useEffect, useState, type ReactNode } from "react";
 import { addDays, formatJstDate } from "../shared/date";
@@ -197,13 +199,14 @@ export function MoviePage({
                           href={row.bookingUrl}
                           target="_blank"
                           rel="noreferrer"
-                          aria-label={`${time.format(new Date(row.startsAt))} ${t(row.cinemaName)} ${t("公式サイト")}`}
+                          aria-label={`${time.format(new Date(row.startsAt))} ${t(row.cinemaName)} ${t("公式サイト")}${screeningLanguageSuffix(row.format, t)}`}
                         >
                           <div className="screening-description">
                             <h3>{t(row.cinemaName)}</h3>
-                            {(row.screen || row.format) && (
+                            <ScreeningFormat format={row.format} language={localeCode() === "en-GB" ? "en" : "ja"} />
+                            {(row.screen || splitScreeningFormat(row.format).detail) && (
                               <p>
-                                {[row.screen, row.format]
+                                {[row.screen, splitScreeningFormat(row.format).detail]
                                   .filter(Boolean)
                                   .map((value) => screeningInfo(value!))
                                   .join(" · ")}

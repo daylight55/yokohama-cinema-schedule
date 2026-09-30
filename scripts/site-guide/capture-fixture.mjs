@@ -20,7 +20,7 @@ export async function installFixture(page, language = 'ja', options = {}) {
   for(let day=0;day<3;day++) for(let i=0;i<6;i++){
     const cinema=cinemas[i%3]; const date=`2026-09-${28+day}`; const title=i>=3?'サマーウォーズ':TITLE;
     showings.push({id:`guide-${day}-${i}`,sourceId:'guide',cinemaId:cinema.id,cinemaName:cinema.name,cinemaShortName:cinema.shortName,area:cinema.area,movieKey:title,title,imageUrl:options.posterUrl??null,
-      startsAt:`${date}T${12+Math.floor(i/3)*3}:00:00+09:00`,endsAt:`${date}T${13+Math.floor(i/3)*3}:50:00+09:00`,screen:`シアター${i+1}`,format:'2D',bookingUrl:cinema.sourceUrl,purchasable:true,fetchedAt:`${DATE}T08:00:00+09:00`});
+      startsAt:`${date}T${12+Math.floor(i/3)*3}:00:00+09:00`,endsAt:`${date}T${13+Math.floor(i/3)*3}:50:00+09:00`,screen:`シアター${i+1}`,format:options.formats ? options.formats[i%options.formats.length] : '2D',bookingUrl:cinema.sourceUrl,purchasable:true,fetchedAt:`${DATE}T08:00:00+09:00`});
   }
   await page.clock.setFixedTime(new Date(`${DATE}T10:00:00+09:00`));
   await page.addInitScript(lang=>{document.cookie=`hamamubi_language=${lang}; Path=/`; localStorage.setItem('hamamubi-color-theme','light');},lang);

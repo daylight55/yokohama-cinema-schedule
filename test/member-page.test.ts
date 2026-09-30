@@ -51,6 +51,7 @@ describe("member movie pages", () => {
   it("includes unscheduled watchlists, unstarred watched films and future plans without private account fields", async () => {
     const { sqlite, context } = fixture();
     try {
+      sqlite.prepare("UPDATE viewing_plans SET format='字幕 / 2D' WHERE user_id='bob'").run();
       const response = await onRequestGet(context());
       expect(response.status).toBe(200);
       expect(response.headers.get("cache-control")).toBe("private, no-store");
@@ -69,6 +70,7 @@ describe("member movie pages", () => {
       expect(data.plans[0]).toMatchObject({
         showingId: "2099-01-01",
         reserved: true,
+        format: '字幕 / 2D',
       });
       expect(JSON.stringify(data)).not.toMatch(
         /@example|private note|private\.example|password|bookingUrl/,

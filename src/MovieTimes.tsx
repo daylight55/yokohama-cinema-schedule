@@ -1,3 +1,4 @@
+import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import { useMemo } from "react";
 import type { Showing } from "../shared/types";
 import { formatJstDate } from "../shared/date";
@@ -13,8 +14,9 @@ export function MovieTimes({ showings, language = "ja", title }: { showings: Sho
     <nav className="movie-times" data-horizontal-scroll={`movie:${showings[0] ? moviePreferenceKey(showings[0].title) : "empty"}`} aria-label={t("上映時刻")}>
       {[...showings].sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.cinemaName.localeCompare(b.cinemaName)).map((s) => (
         <a key={s.id} href={hashForAppView("schedule", { date: formatJstDate(new Date(s.startsAt)), movie: moviePreferenceKey(s.title), showing: s.id })}
-          aria-label={`${time.format(new Date(s.startsAt))} · ${t(s.cinemaName)} · ${title ?? s.title}`}>
+          aria-label={`${time.format(new Date(s.startsAt))} · ${t(s.cinemaName)} · ${title ?? s.title}${screeningLanguageSuffix(s.format, t)}`}>
           <time dateTime={s.startsAt}>{time.format(new Date(s.startsAt))}</time>
+          <ScreeningFormat format={s.format} language={language} />
         </a>
       ))}
     </nav>

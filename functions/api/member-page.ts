@@ -44,7 +44,7 @@ export const onRequestGet: PagesFunction<
     .all<Omit<MemberMovie, "starred"> & { starred: number }>();
   const plans = await env.DB.prepare(
     `SELECT user_id AS userId,showing_id AS showingId,title,cinema_name AS cinemaName,
-    starts_at AS startsAt,ends_at AS endsAt,(reserved_at IS NOT NULL) AS reserved
+    starts_at AS startsAt,ends_at AS endsAt,format,(reserved_at IS NOT NULL) AS reserved
     FROM viewing_plans WHERE user_id=? AND datetime(starts_at)>CURRENT_TIMESTAMP ORDER BY starts_at,showing_id`,
   )
     .bind(userId)

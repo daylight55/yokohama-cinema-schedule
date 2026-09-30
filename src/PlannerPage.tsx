@@ -1,5 +1,6 @@
+import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import { movieTitle } from "./i18n";
-import { localize, localizedDate } from "./i18n";
+import { localize, localizedDate, localeCode } from "./i18n";
 import {
   ArrowSquareOutIcon,
   CalendarCheckIcon,
@@ -579,7 +580,8 @@ function PlanTimeline({ items }: { items: MovieMarathonProposal["items"] }) {
                 <MapPinIcon size={15} aria-hidden="true" />
                 {localize(item.cinemaName)}
               </p>
-              <a href={item.bookingUrl} target="_blank" rel="noreferrer">
+              <ScreeningFormat format={item.format} language={localeCode() === "en-GB" ? "en" : "ja"} />
+              <a aria-label={`${localize("公式サイト")} · ${movieTitle(item.title)}${screeningLanguageSuffix(item.format, localize)}`} href={item.bookingUrl} target="_blank" rel="noreferrer">
                 {localize("公式サイト")}
                 <ArrowSquareOutIcon size={14} aria-hidden="true" />
               </a>

@@ -211,6 +211,7 @@ export function optimizeMovieMarathon(
         startsAt: candidate.showing.startsAt,
         endsAt: new Date(candidate.endsAtMs).toISOString(),
         bookingUrl: candidate.showing.bookingUrl,
+        format: candidate.showing.format,
         starred: candidate.starred,
         transferMinutes,
       };

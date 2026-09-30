@@ -26,7 +26,8 @@
           - paragraph: シアター1 / 2D
           - checkbox "予約済みにする"
           - text: 予約済みにする
-          - link "予約サイトへ":
+          - link "予約サイトへ · 君の名は。":
             - /url: https://tjoy.jp/yokohama_burg13
+            - text: 予約サイトへ
           - button "君の名は。を鑑賞予定から外す": 予定から外す
 - button "スケジュールを切替"

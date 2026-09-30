@@ -79,7 +79,7 @@ export const onRequestGet: PagesFunction<
     }>();
   const plans = await db
     .prepare(
-      `SELECT p.user_id AS userId, p.showing_id AS showingId, p.title, p.cinema_name AS cinemaName, p.starts_at AS startsAt, p.ends_at AS endsAt, (p.reserved_at IS NOT NULL) AS reserved
+      `SELECT p.user_id AS userId, p.showing_id AS showingId, p.title, p.cinema_name AS cinemaName, p.starts_at AS startsAt, p.ends_at AS endsAt, p.format, (p.reserved_at IS NOT NULL) AS reserved
     FROM viewing_plans p JOIN users u ON u.id = p.user_id WHERE ${scope} AND datetime(p.starts_at) > CURRENT_TIMESTAMP ORDER BY p.starts_at, p.showing_id, p.user_id`,
     )
     .bind(groupId)

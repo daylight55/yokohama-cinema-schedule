@@ -11,6 +11,7 @@ export interface SharedPlan {
   showingId: string;
   title: string;
   cinemaName: string;
+  format?: string | null;
   startsAt: string;
   endsAt: string | null;
   reserved: boolean;

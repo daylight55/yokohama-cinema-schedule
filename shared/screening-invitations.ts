@@ -5,6 +5,7 @@ export interface ScreeningInvitation {
   showingId: string;
   title: string;
   cinemaName: string;
+  format?: string | null;
   startsAt: string;
   status: 'pending' | 'accepted' | 'declined' | 'cancelled';
 }
