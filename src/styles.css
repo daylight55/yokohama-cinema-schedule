@@ -1478,7 +1478,7 @@ main {
 .movie-list-item {
   display: grid;
   min-height: 82px;
-  grid-template-columns: 104px minmax(0, 1fr) 44px;
+  grid-template-columns: 104px minmax(0, 1fr);
   align-items: start;
   gap: 12px;
   overflow: hidden;
@@ -4245,3 +4245,27 @@ html[lang="en"] .brand-wordmark {
 .account-withdrawal button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 .account-danger-button:disabled { opacity: .55; cursor: wait; }
+
+.movie-card-actions { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.movie-card-actions .movie-watched-button { margin-right: auto; }
+.movie-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; min-width: 0; }
+.movie-watched-button, .movie-detail-actions > button:not(.icon-button) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: .8125rem; }
+.movie-watched-button.active, .movie-detail-actions > button.active { border-color: var(--accent); color: var(--accent); }
+.movie-watched-button:disabled, .movie-detail-actions > button:disabled { opacity: .55; cursor: wait; }
+.movie-list-item > .movie-image-link { grid-row: 1; }
+
+.screening-invitations { min-width: 0; margin-block: 24px; padding-block: 20px; border-block: 1px solid var(--line); }
+.screening-invitation-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; }
+.screening-invitation-heading h2 { margin: 0; font-size: 1.15rem; }
+.screening-invitations button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: .875rem; cursor: pointer; }
+.screening-invitations button[type="submit"], .screening-invitation-heading button { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.screening-invitations form { margin-top: 16px; min-width: 0; }
+.screening-invitations form > label { display: grid; gap: 8px; min-width: 0; }
+.screening-invitations select { width: 100%; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; }
+.screening-invitations fieldset { margin: 16px 0; padding: 0; border: 0; min-width: 0; }
+.screening-invitations fieldset label { display: flex; align-items: center; gap: 10px; min-height: 44px; overflow-wrap: anywhere; }
+.screening-invitation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.screening-invitation-list { list-style: none; margin: 16px 0 0; padding: 0; }
+.screening-invitation-list li { min-width: 0; padding-block: 16px; border-top: 1px solid var(--line-soft); overflow-wrap: anywhere; }
+.screening-invitation-list p { margin: 6px 0; }
+.screening-invitations button:disabled { opacity: .55; cursor: not-allowed; }

@@ -12,6 +12,9 @@
     - paragraph: Showtimes for the next 7 days
     - heading "Your Name." [level=1]
     - paragraph: 君の名は。
+    - button "Watchlist"
+    - button "Watched"
+    - button "Film preferences"
     - navigation "Jump to a screening date":
       - button "Mon 28 Sept"
       - button "Tue 29 Sept"

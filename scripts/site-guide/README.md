@@ -186,3 +186,21 @@ GUIDE_URL=http://127.0.0.1:5195 node scripts/site-guide/verify-playback.mjs
 ```sh
 python3 scripts/site-guide/render.py --audio-from-dir public/guide --output-dir output/guide/motion-review
 ```
+
+作品操作ボタンの更新では、一覧カードと単体ページの状態共有、保存、再読み込み、失敗時の復元、履歴移動を320px・390pxで確認できます。
+
+```sh
+GUIDE_URL=http://127.0.0.1:5194 node scripts/site-guide/verify-movie-actions.mjs
+```
+
+単体ページの「気になる」「鑑賞済み」と、一覧カードの常設「鑑賞済み」・「設定→星」の配置に合わせ、日英のschedule・search・film・booking・watchlist場面を再撮影しました。既存の音声とBGMはストリームをコピーして維持します。
+
+グループ画面と共有画面では、自分の鑑賞予定から上映回と既存メンバーを選び、映画への招待を送れます。招待先は画面内で参加・見送りを返答し、参加時に同じ上映回が鑑賞予定へ追加されます。メール送信やチケット購入は行いません。共有・言語切替場面の表示変更を日英とも再撮影しました。
+
+```sh
+GUIDE_URL=http://127.0.0.1:5194 node scripts/site-guide/verify-screening-invitations.mjs
+```
+
+この検証は日英・320/390pxで送信、参加、見送り、取り消し、保存失敗、再読み込み、履歴移動を確認します。参加時の予定登録と権限境界は `test/screening-invitations.test.ts` で実DBを使って検証します。
+
+既存素材を保って一部の場面だけ撮影し直す場合は、`capture.mjs --scenes=sharing,language` のように場面名を指定できます。操作は実画面で実行し、指定した場面だけをmanifestへ反映します。再撮影した場面ごとに撮影元リビジョンと作業メモを記録します。
