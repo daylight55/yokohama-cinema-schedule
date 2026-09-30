@@ -211,6 +211,7 @@ export interface MovieMarathonPlanItem {
   cinemaName: string;
   startsAt: string;
   endsAt: string;
+  format?: string | null;
   bookingUrl: string;
   starred: boolean;
   transferMinutes: number;

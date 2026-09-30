@@ -1,7 +1,8 @@
+import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import {useEffect,useState} from 'react';
 import type {SharingResponse} from '../shared/sharing';
 import type {ScreeningInvitation} from '../shared/screening-invitations';
-import {localize as t,localizedDate,movieTitle} from './i18n';
+import {localize as t,localizedDate,movieTitle,localeCode} from './i18n';
 import {hashForAppView} from './lib';
 
 export function ScreeningInvitations({data,onChanged}:{data:SharingResponse;onChanged:(joined:boolean)=>void}) {
@@ -55,7 +56,7 @@ export function ScreeningInvitations({data,onChanged}:{data:SharingResponse;onCh
       {!ownPlans.length ? <p>{t('まず自分の鑑賞予定を登録してください。')} <a href={hashForAppView('schedule')}>{t('上映スケジュールから選ぶ')}</a></p> : <>
         <label>{t('鑑賞予定')}<select value={showing} required disabled={busy} onChange={event=>{setShowing(event.target.value);setSelected([]);}}>
           <option value="">{t('上映回を選択')}</option>
-          {ownPlans.map(p=><option key={p.showingId} value={p.showingId}>{movieTitle(p.title)} · {t(p.cinemaName)} · {date.format(new Date(p.startsAt))}</option>)}
+          {ownPlans.map(p=><option key={p.showingId} value={p.showingId}>{movieTitle(p.title)} · {t(p.cinemaName)} · {date.format(new Date(p.startsAt))}{screeningLanguageSuffix(p.format, t)}</option>)}
         </select></label>
         <fieldset disabled={busy}><legend>{t('招待するメンバー')}</legend>
           {members.map(m=><label key={m.userId}><input type="checkbox" disabled={invitations.some(i=>i.senderId===data.userId && i.recipientId===m.userId && i.showingId===showing)} checked={selected.includes(m.userId)} onChange={event=>setSelected(current=>event.target.checked?[...current,m.userId]:current.filter(id=>id!==m.userId))}/>{m.name}{invitations.some(i=>i.senderId===data.userId && i.recipientId===m.userId && i.showingId===showing) && ` · ${t("招待済み")}`}</label>)}
@@ -72,6 +73,7 @@ export function ScreeningInvitations({data,onChanged}:{data:SharingResponse;onCh
     {loading ? <p role="status">{t('読み込み中…')}</p> : !invitations.length ? <p className="muted">{t('映画への招待はまだありません。')}</p> : <ul className="screening-invitation-list">
       {invitations.map(invitation=><li key={invitation.id}>
         <strong>{movieTitle(invitation.title)}</strong>
+        <ScreeningFormat format={invitation.format} language={localeCode() === "en-GB" ? "en" : "ja"} />
         <p>{t(invitation.cinemaName)} · <time dateTime={invitation.startsAt}>{date.format(new Date(invitation.startsAt))}</time></p>
         <p>{invitation.senderId===data.userId ? `${t('招待先')}: ${names.get(invitation.recipientId)??''}` : `${t('招待した人')}: ${names.get(invitation.senderId)??''}`}</p>
         {invitation.status==='pending' ? <div className="screening-invitation-actions">

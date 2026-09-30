@@ -74,8 +74,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "cinema-settings",
@@ -149,8 +149,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
-        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "search",
@@ -191,8 +191,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "film",
@@ -233,8 +233,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "booking",
@@ -265,8 +265,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "watchlist",
@@ -307,8 +307,8 @@
             "zoom": 1.8
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "plan",
@@ -360,8 +360,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
-        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "sharing",
@@ -391,8 +391,8 @@
             "zoom": 1.3
           }
         ],
-        "sourceRevision": "54d2a129a9bb3a1ccf949faf25772bbf02d7cd04",
-        "sourceWorkingTreeNote": "Group invitations with themed controls and plan refresh"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "language",
@@ -433,8 +433,8 @@
             "zoom": 1.5
           }
         ],
-        "sourceRevision": "54d2a129a9bb3a1ccf949faf25772bbf02d7cd04",
-        "sourceWorkingTreeNote": "Group invitations with themed controls and plan refresh"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "outro",
@@ -509,8 +509,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "cinema-settings",
@@ -584,8 +584,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
-        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "search",
@@ -626,8 +626,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "film",
@@ -668,8 +668,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "booking",
@@ -700,8 +700,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "watchlist",
@@ -742,8 +742,8 @@
             "zoom": 1.8
           }
         ],
-        "sourceRevision": "bc078224ca8715ef43c892a081a53a1812dfa844",
-        "sourceWorkingTreeNote": "Restore original sliders settings icon and neutral hide wording"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "plan",
@@ -795,8 +795,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "c1c42ed5d5b5e43f0e47ff2c05099cd02d46f8b2",
-        "sourceWorkingTreeNote": "Schedule star beside title; compact More, Watched, Star icons beside film poster; defer external links to More"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "sharing",
@@ -826,8 +826,8 @@
             "zoom": 1.3
           }
         ],
-        "sourceRevision": "54d2a129a9bb3a1ccf949faf25772bbf02d7cd04",
-        "sourceWorkingTreeNote": "Group invitations with themed controls and plan refresh"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "language",
@@ -868,8 +868,8 @@
             "zoom": 1.5
           }
         ],
-        "sourceRevision": "54d2a129a9bb3a1ccf949faf25772bbf02d7cd04",
-        "sourceWorkingTreeNote": "Group invitations with themed controls and plan refresh"
+        "sourceRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+        "sourceWorkingTreeNote": "Check conditional screening-language labels against existing guide scenarios with 2D metadata"
       },
       {
         "name": "outro",

@@ -75,3 +75,10 @@ it('removes the invitation when the sender deletes the plan, keeping unrelated p
   expect(await invitations()).toHaveLength(0);
   expect(store.sqlite.prepare('SELECT * FROM screening_invitations').get()).toBeUndefined();
 });
+
+it('keeps the sender language version visible to the invited member',async()=>{
+  store.sqlite.prepare("UPDATE viewing_plans SET format='字幕 / IMAX' WHERE user_id='alice'").run();
+  await send();
+  const data=await (await onRequestGet(ctx('bob'))).json() as {invitations:{format:string}[]};
+  expect(data.invitations[0].format).toBe('字幕 / IMAX');
+});

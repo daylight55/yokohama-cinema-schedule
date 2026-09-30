@@ -62,11 +62,13 @@ describe("sharing within invitation groups", () => {
   it("shares active users without opt-in, labels every entry, and excludes past plans and unstarred films", async () => {
     const { db, sqlite } = fixture();
     try {
+      sqlite.prepare("UPDATE viewing_plans SET format='吹替 / 2D' WHERE user_id='alice'").run();
       const response = await onRequestGet(context(db));
       const data: SharingResponse = await response.json();
       expect(response.headers.get("cache-control")).toBe("private, no-store");
       expect(data.members.map((m) => m.userId)).toEqual(["alice", "bob"]);
       expect(data.plans).toHaveLength(2);
+      expect(data.plans[0].format).toBe('吹替 / 2D');
       expect(data.plans.map((p) => p.userId)).toEqual(["alice", "bob"]);
       expect(data.plans.map((p) => p.reserved)).toEqual([true, false]);
       expect(data.movies.map((m) => m.movieKey)).toEqual(["film", "film"]);

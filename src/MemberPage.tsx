@@ -1,3 +1,4 @@
+import { ScreeningFormat } from "./ScreeningFormat";
 import { useEffect, useState } from "react";
 import type { MemberPageResponse } from "../shared/member-page";
 import { PageHeader, PageShell } from "./PageLayout";
@@ -5,6 +6,7 @@ import { MemberAvatar } from "./MemberProfile";
 import {
   localize as t,
   localizedDate,
+  localeCode,
   movieTitle,
   registerTitleTranslations,
 } from "./i18n";
@@ -123,6 +125,7 @@ export function MemberActivity({
                         })}
                       >
                         <span>{movieTitle(plan.title)}</span>
+                        <ScreeningFormat format={plan.format} language={localeCode() === "en-GB" ? "en" : "ja"} />
                         <span className="member-plan-meta">
                           <time dateTime={plan.startsAt}>{date.format(new Date(plan.startsAt))}</time>
                           {" · "}{t(plan.cinemaName)}

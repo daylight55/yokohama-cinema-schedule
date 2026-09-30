@@ -65,6 +65,7 @@ interface PlanRow {
 }
 
 interface PlanItemRow {
+  format: string | null;
   plan_id: string;
   showing_id: string;
   sequence: number;
@@ -305,7 +306,8 @@ export async function listMovieMarathonPlans(
   if (rows.length === 0) return [];
   const itemResult = await db
     .prepare(
-      `SELECT * FROM movie_marathon_plan_showings
+      `SELECT p.*, s.format FROM movie_marathon_plan_showings p
+        LEFT JOIN showings s ON s.id=p.showing_id
         WHERE plan_id IN (${rows.map(() => "?").join(", ")})
         ORDER BY plan_id, sequence`,
     )
@@ -324,6 +326,7 @@ export async function listMovieMarathonPlans(
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       bookingUrl: row.booking_url,
+      format: row.format,
       starred: Boolean(row.starred),
       transferMinutes: row.transfer_minutes,
     });

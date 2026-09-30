@@ -26,7 +26,8 @@
           - paragraph: Screen 1 / 2D
           - checkbox "Mark as booked"
           - text: Mark as booked
-          - link "Book on cinema website":
+          - link "Book on cinema website · Your Name.":
             - /url: https://tjoy.jp/yokohama_burg13
+            - text: Book on cinema website
           - button "Remove Your Name. from your plans": Remove from plans
 - button "Switch schedules"

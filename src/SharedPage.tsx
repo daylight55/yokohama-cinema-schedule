@@ -1,3 +1,4 @@
+import { ScreeningFormat } from "./ScreeningFormat";
 import { ScreeningInvitations } from "./ScreeningInvitations";
 import { SharingControls } from "./SharingControls";
 import { MemberProfileLink } from "./MemberProfile";
@@ -15,6 +16,7 @@ import { hashForAppView } from "./lib";
 import {
   localize as t,
   localizedDate,
+  localeCode,
   movieTitle,
   registerTitleTranslations,
 } from "./i18n";
@@ -272,6 +274,7 @@ export function SharedPage({ manage = false, onPlansChanged }: { manage?: boolea
                           {movieTitle(plan.title)}
                         </a>
                         <p>{t(plan.cinemaName)}</p>
+                        <ScreeningFormat format={plan.format} language={localeCode() === "en-GB" ? "en" : "ja"} />
                         <ul
                           className="shared-people"
                           aria-label={t("鑑賞するメンバー")}

@@ -30,6 +30,10 @@ html[data-theme="light"] {
   --reachable: #37bd78;
   --reachable-ink: #062b1a;
   --danger: #c33f55;
+  --subtitle-bg: #e2f0ff;
+  --subtitle-ink: #174773;
+  --dubbed-bg: #fff0cf;
+  --dubbed-ink: #704308;
   --focus-ring: rgb(21 154 107 / 38%);
   --sticky-surface: rgb(255 254 250 / 94%);
   --control-surface: #fff;
@@ -4275,3 +4279,17 @@ html[lang="en"] .brand-wordmark {
 .screening-invitation-list li { min-width: 0; padding-block: 16px; border-top: 1px solid var(--line-soft); overflow-wrap: anywhere; }
 .screening-invitation-list p { margin: 6px 0; }
 .screening-invitations button:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Language version belongs to the showing, alongside its time and booking link. */
+.screening-format-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.screening-language { display: inline-flex; align-items: center; padding: 3px 8px; border: 1px solid currentColor; border-radius: 5px; font-size: 0.8125rem; font-weight: 800; line-height: 1.4; max-width: 100%; overflow-wrap: anywhere; }
+.screening-language.subtitled { color: var(--subtitle-ink); background: var(--subtitle-bg); }
+.screening-language.dubbed { color: var(--dubbed-ink); background: var(--dubbed-bg); }
+.cinema-slot-info > .screening-format-badges { margin-top: 8px; }
+.screening-description > .screening-format-badges { margin-top: 6px; }
+.movie-times a:has(.screening-format-badges) { flex-direction: column; gap: 4px; padding-block: 6px; }
+.movie-times .screening-language { padding: 1px 5px; font-size: 0.75rem; }
+.viewing-plan-timeline .screening-format-badges, .screening-invitation-list .screening-format-badges { margin-block: 8px; }
+
+.movie-list-copy > .screening-format-badges { margin-top: 8px; }
+.plan-timeline article > .screening-format-badges { margin-block: 8px; }

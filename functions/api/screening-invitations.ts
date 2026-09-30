@@ -21,7 +21,7 @@ export const onRequestGet: PagesFunction<PagesEnv,string,AuthContextData> = asyn
   if (!group) return reply({error:'invalid_group'},400);
   const member = await ctx.env.DB.prepare('SELECT 1 FROM sharing_group_members WHERE group_id=? AND user_id=?').bind(group,ctx.data.userId).first();
   if (!member) return reply({error:'forbidden'},403);
-  const rows = await ctx.env.DB.prepare(`SELECT i.id,i.sender_id senderId,i.recipient_id recipientId,i.showing_id showingId,i.status,p.title,p.cinema_name cinemaName,p.starts_at startsAt ${scope} AND i.group_id=? AND (i.sender_id=? OR i.recipient_id=?) ORDER BY p.starts_at,i.created_at,i.id`).bind(group,ctx.data.userId,ctx.data.userId).all<ScreeningInvitation>();
+  const rows = await ctx.env.DB.prepare(`SELECT i.id,i.sender_id senderId,i.recipient_id recipientId,i.showing_id showingId,i.status,p.title,p.cinema_name cinemaName,p.starts_at startsAt,p.format ${scope} AND i.group_id=? AND (i.sender_id=? OR i.recipient_id=?) ORDER BY p.starts_at,i.created_at,i.id`).bind(group,ctx.data.userId,ctx.data.userId).all<ScreeningInvitation>();
   return reply({invitations:rows.results});
 };
 export const onRequestPost: PagesFunction<PagesEnv,string,AuthContextData> = async ctx => {
