@@ -83,9 +83,11 @@
         - link "15:00 · 横浜ブルク13 · サマーウォーズ":
           - /url: "#schedule?date=2026-09-28&movie=%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%A6%E3%82%A9%E3%83%BC%E3%82%BA&showing=guide-0-3"
           - time: 15:00
-      - button "鑑賞済み"
-      - button "作品の設定 · サマーウォーズ"
-      - button "サマーウォーズをスターする"
+      - group "作品の操作 · サマーウォーズ":
+        - button "その他 · サマーウォーズ": その他
+        - button "興味なし"
+        - button "鑑賞済み"
+        - button "サマーウォーズをスターする"
     - listitem:
       - link "君の名は。":
         - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82"
@@ -106,7 +108,9 @@
         - link "12:00 · 横浜ブルク13 · 君の名は。":
           - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-0"
           - time: 12:00
-      - button "鑑賞済み"
-      - button "作品の設定 · 君の名は。"
-      - button "君の名は。をスターする"
+      - group "作品の操作 · 君の名は。":
+        - button "その他 · 君の名は。": その他
+        - button "興味なし"
+        - button "鑑賞済み"
+        - button "君の名は。をスターする"
 - button "スケジュールを切替"

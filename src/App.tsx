@@ -14,6 +14,7 @@ import {
   englishText,
 } from "./i18n";
 import { MoviePage } from "./MoviePage";
+import { MovieActions } from "./MovieActions";
 import { MovieTimes } from "./MovieTimes";
 import { useDateSwipe } from "./useDateSwipe";
 import { useHistoryScroll } from "./useHistoryScroll";
@@ -26,7 +27,6 @@ import {
   CheckCircleIcon,
   ClockIcon,
   CrosshairIcon,
-  SlidersHorizontalIcon,
   FilmSlateIcon,
   HouseLineIcon,
   InfoIcon,
@@ -1926,32 +1926,15 @@ export function App() {
                         {movieTitle(movie.title)}
                       </a>
                     </h2>
-                    {schedule?.preferencesEnabled && (
-                      <button
-                        className="icon-button movie-options-button"
-                        type="button"
-                        aria-label={`${localize("作品の設定")} · ${movieTitle(movie.title)}`}
-                        aria-haspopup="dialog"
-                        onClick={(event) => openMoviePreferenceDialog(
-                          movie,
-                          event.currentTarget.closest<HTMLElement>(".program-block"),
-                        )}
-                      >
-                        <SlidersHorizontalIcon size={22} aria-hidden="true" />
-                      </button>
-                    )}
-                    {localize(
-                      schedule?.preferencesEnabled && (
-                        <FavoriteButton
-                          title={movieTitle(movie.title)}
-                          isStarred={isStarred}
-                          isSaving={savingMovieKeys.has(movie.preferenceKey)}
-                          compact
-                          onClick={() => void toggleMovieStar(movie)}
-                        />
-                      ),
-                    )}
                   </div>
+                  {schedule?.preferencesEnabled && (
+                    <MovieActions className="movie-program-actions" title={movieTitle(movie.title)}
+                      status={movieStatusByKey.get(movie.preferenceKey) ?? null} starred={isStarred}
+                      saving={savingMovieKeys.has(movie.preferenceKey)}
+                      onMore={event => openMoviePreferenceDialog(movie, event.currentTarget.closest<HTMLElement>(".program-block"))}
+                      onStatus={(status, button) => void updateMovieStatus(movie, status, button.closest<HTMLElement>(".program-block"))}
+                      onStar={() => void toggleMovieStar(movie)} />
+                  )}
                   <div
                     className="cinema-strip"
                     data-horizontal-scroll={`cinema:${group.time}:${movie.key}`}
@@ -2601,23 +2584,12 @@ export function App() {
             {preferenceError && <p className="inline-status error" role="alert">{localize(preferenceError)}</p>}
             <MoviePage movieKey={selectedMovieKey} today={today}
               renderActions={movie => schedule?.preferencesEnabled ? (
-                <div className="movie-detail-actions">
-                  <button type="button" className={starredMovieKeys.has(movie.preferenceKey) ? "active" : ""}
-                    aria-pressed={starredMovieKeys.has(movie.preferenceKey)} disabled={savingMovieKeys.has(movie.preferenceKey)}
-                    onClick={() => void toggleMovieStar(movie)}>
-                    <StarIcon size={20} weight={starredMovieKeys.has(movie.preferenceKey) ? "fill" : "regular"} aria-hidden="true" />
-                    {localize("気になる")}
-                  </button>
-                  <button type="button" className={movieStatusByKey.get(movie.preferenceKey) === "watched" ? "active" : ""}
-                    aria-pressed={movieStatusByKey.get(movie.preferenceKey) === "watched"} disabled={savingMovieKeys.has(movie.preferenceKey)}
-                    onClick={() => void updateMovieStatus(movie, "watched", null)}>
-                    <CheckCircleIcon size={20} aria-hidden="true" />{localize("鑑賞済み")}
-                  </button>
-                  <button className="icon-button movie-options-button" type="button" aria-label={localize("作品の設定")}
-                    aria-haspopup="dialog" onClick={() => openMoviePreferenceDialog(movie, null)}>
-                    <SlidersHorizontalIcon size={22} aria-hidden="true" />
-                  </button>
-                </div>
+                <MovieActions className="movie-detail-actions" title={movieTitle(movie.title)}
+                  status={movieStatusByKey.get(movie.preferenceKey) ?? null}
+                  starred={starredMovieKeys.has(movie.preferenceKey)} saving={savingMovieKeys.has(movie.preferenceKey)}
+                  onMore={() => openMoviePreferenceDialog(movie, null)}
+                  onStatus={status => void updateMovieStatus(movie, status, null)}
+                  onStar={() => void toggleMovieStar(movie)} />
               ) : null} />
             </>
           ) : view === "adminCollection" ? (
@@ -3008,20 +2980,11 @@ export function App() {
                                 </div>
                                 {!showAllMovieDates && <MovieTimes showings={movie.showings} language={language} title={movieTitle(movie.title)} />}
                                 {schedule?.preferencesEnabled && (
-                                  <div className="movie-card-actions">
-                                    <button type="button" className={`movie-watched-button${status === "watched" ? " active" : ""}`}
-                                      aria-pressed={status === "watched"} disabled={savingMovieKeys.has(movie.preferenceKey)}
-                                      onClick={event => void updateMovieStatus(movie, "watched", event.currentTarget.closest<HTMLElement>(".movie-list-item"))}>
-                                      <CheckCircleIcon size={18} aria-hidden="true" />{localize("鑑賞済み")}
-                                    </button>
-                                    <button className="icon-button movie-options-button" type="button"
-                                      aria-label={`${localize("作品の設定")} · ${movieTitle(movie.title)}`} aria-haspopup="dialog"
-                                      onClick={event => openMoviePreferenceDialog(movie, event.currentTarget.closest<HTMLElement>(".movie-list-item"))}>
-                                      <SlidersHorizontalIcon size={22} aria-hidden="true" />
-                                    </button>
-                                    <FavoriteButton title={movieTitle(movie.title)} isStarred={isStarred}
-                                      isSaving={savingMovieKeys.has(movie.preferenceKey)} onClick={() => void toggleMovieStar(movie)} />
-                                  </div>
+                                  <MovieActions className="movie-card-actions" title={movieTitle(movie.title)}
+                                    status={status} starred={isStarred} saving={savingMovieKeys.has(movie.preferenceKey)}
+                                    onMore={event => openMoviePreferenceDialog(movie, event.currentTarget.closest<HTMLElement>(".movie-list-item"))}
+                                    onStatus={(status, button) => void updateMovieStatus(movie, status, button.closest<HTMLElement>(".movie-list-item"))}
+                                    onStar={() => void toggleMovieStar(movie)} />
                                 )}
                               </li>
                             );
@@ -3543,45 +3506,6 @@ function CinemaExteriorThumbnail({ cinema }: { cinema: Cinema }) {
       )}
       <figcaption>{localize("Google マップ")}</figcaption>
     </figure>
-  );
-}
-
-function FavoriteButton({
-  title,
-  isStarred,
-  isSaving,
-  compact = false,
-  onClick,
-}: {
-  title: string;
-  isStarred: boolean;
-  isSaving: boolean;
-  compact?: boolean;
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
-}) {
-  return (
-    <button
-      type="button"
-      className={[
-        "favorite-button",
-        isStarred ? "starred" : "",
-        compact ? "compact" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      aria-label={localize(
-        `${movieTitle(title)}を${isStarred ? "スターから外す" : "スターする"}`,
-      )}
-      aria-pressed={isStarred}
-      disabled={isSaving}
-      onClick={onClick}
-    >
-      <StarIcon
-        size={compact ? 18 : 22}
-        weight={isStarred ? "fill" : "regular"}
-        aria-hidden="true"
-      />
-    </button>
   );
 }
 

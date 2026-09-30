@@ -45,9 +45,9 @@
             "image": "ja-01-overview.png",
             "focus": {
               "x": 14,
-              "y": 158.75,
+              "y": 182.75,
               "width": 362,
-              "height": 559.3125
+              "height": 635.3125
             },
             "zoom": 1.05
           },
@@ -56,7 +56,7 @@
             "image": "ja-01-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 242.75,
+              "y": 342.75,
               "width": 288,
               "height": 457.3125
             },
@@ -67,15 +67,15 @@
             "image": "ja-01-more-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 242.75,
+              "y": 342.75,
               "width": 288,
               "height": 457.3125
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
-        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
       },
       {
         "name": "cinema-settings",
@@ -142,15 +142,15 @@
             "image": "ja-02-result.png",
             "focus": {
               "x": 87,
-              "y": 390.75,
+              "y": 342.75,
               "width": 288,
               "height": 308.875
             },
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
-        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
       },
       {
         "name": "search",
@@ -186,11 +186,13 @@
               "x": 14,
               "y": 442.75,
               "width": 362,
-              "height": 204
+              "height": 220
             },
             "zoom": 1.35
           }
-        ]
+        ],
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "film",
@@ -213,7 +215,7 @@
             "image": "ja-04-detail.png",
             "focus": {
               "x": 14,
-              "y": 312.21875,
+              "y": 328.21875,
               "width": 362,
               "height": 369.5625
             },
@@ -230,7 +232,9 @@
             },
             "zoom": 1.25
           }
-        ]
+        ],
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "booking",
@@ -260,7 +264,9 @@
             "zoom": 1.7
           }
         ],
-        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do"
+        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "watchlist",
@@ -271,10 +277,10 @@
             "at": 0,
             "image": "ja-06-star.png",
             "focus": {
-              "x": 323,
+              "x": 299,
               "y": 529.75,
               "width": 44,
-              "height": 44
+              "height": 60
             },
             "zoom": 1.8
           },
@@ -293,14 +299,16 @@
             "at": 5,
             "image": "ja-06-selected.png",
             "focus": {
-              "x": 323,
+              "x": 299,
               "y": 529.75,
               "width": 44,
-              "height": 44
+              "height": 60
             },
             "zoom": 1.8
           }
-        ]
+        ],
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "plan",
@@ -352,8 +360,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
-        "sourceWorkingTreeNote": "Schedule date navigation fixes; recapture plan action above the floating navigator"
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "sharing",
@@ -472,9 +480,9 @@
             "image": "en-01-overview.png",
             "focus": {
               "x": 14,
-              "y": 158.75,
+              "y": 182.75,
               "width": 362,
-              "height": 559.3125
+              "height": 635.3125
             },
             "zoom": 1.05
           },
@@ -483,7 +491,7 @@
             "image": "en-01-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 242.75,
+              "y": 342.75,
               "width": 288,
               "height": 457.3125
             },
@@ -494,15 +502,15 @@
             "image": "en-01-more-cinemas.png",
             "focus": {
               "x": 87,
-              "y": 242.75,
+              "y": 342.75,
               "width": 288,
               "height": 457.3125
             },
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
-        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
       },
       {
         "name": "cinema-settings",
@@ -569,15 +577,15 @@
             "image": "en-02-result.png",
             "focus": {
               "x": 87,
-              "y": 390.75,
+              "y": 342.75,
               "width": 288,
               "height": 308.875
             },
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
-        "sourceWorkingTreeNote": "Schedule header update-status link removed; preserve date across navigator destinations; status swipes added"
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Grouped four movie actions; align program title and action row below sticky search for guide captures"
       },
       {
         "name": "search",
@@ -613,11 +621,13 @@
               "x": 14,
               "y": 435.75,
               "width": 362,
-              "height": 204
+              "height": 220
             },
             "zoom": 1.35
           }
-        ]
+        ],
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "film",
@@ -640,7 +650,7 @@
             "image": "en-04-detail.png",
             "focus": {
               "x": 14,
-              "y": 346.71875,
+              "y": 362.71875,
               "width": 362,
               "height": 363.5625
             },
@@ -657,7 +667,9 @@
             },
             "zoom": 1.25
           }
-        ]
+        ],
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "booking",
@@ -687,7 +699,9 @@
             "zoom": 1.7
           }
         ],
-        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do"
+        "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "watchlist",
@@ -698,10 +712,10 @@
             "at": 0,
             "image": "en-06-star.png",
             "focus": {
-              "x": 323,
+              "x": 299,
               "y": 522.75,
               "width": 44,
-              "height": 44
+              "height": 60
             },
             "zoom": 1.8
           },
@@ -720,14 +734,16 @@
             "at": 5,
             "image": "en-06-selected.png",
             "focus": {
-              "x": 323,
+              "x": 299,
               "y": 522.75,
               "width": 44,
-              "height": 44
+              "height": 60
             },
             "zoom": 1.8
           }
-        ]
+        ],
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "plan",
@@ -779,8 +795,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "373918991a4c002f69b8ffd044422180518cf55e",
-        "sourceWorkingTreeNote": "Schedule date navigation fixes; recapture plan action above the floating navigator"
+        "sourceRevision": "dac57ca963e498efd2aa888896450fa0e6c0bcc7",
+        "sourceWorkingTreeNote": "Unified movie actions: More, Not interested, Watched, Star; grouped row on schedule, film list and detail"
       },
       {
         "name": "sharing",
