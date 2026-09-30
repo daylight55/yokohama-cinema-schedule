@@ -2310,8 +2310,10 @@ export function App() {
                   onClick={() =>
                     void selectMovieStatusFromDialog("not_interested")
                   }
+                  aria-label={localize("上映スケジュールから非表示")}
+                  title={localize("上映スケジュールから非表示")}
                 >
-                  {localize("興味なし")}
+                  {localize("非表示")}
                 </button>
               </div>
               </>}

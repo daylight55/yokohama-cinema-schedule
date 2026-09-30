@@ -1,4 +1,4 @@
-import { CheckCircleIcon, DotsThreeIcon, StarIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon, SlidersHorizontalIcon, StarIcon } from "@phosphor-icons/react";
 import type { MouseEventHandler } from "react";
 import type { MoviePreferenceStatus } from "../shared/types";
 import { localize } from "./i18n";
@@ -16,8 +16,8 @@ export function MovieActions({ title, status, starred, saving, className = "", o
   return (
     <div className={`movie-actions ${className}`} role="group" aria-label={`${localize("作品の操作")} · ${title}`}>
       <button type="button" className="movie-options-button" aria-haspopup="dialog"
-        aria-label={`${localize("その他")} · ${title}`} title={localize("その他")} onClick={onMore}>
-        <DotsThreeIcon size={22} aria-hidden="true" />
+        aria-label={`${localize("作品の設定")} · ${title}`} title={localize("作品の設定")} onClick={onMore}>
+        <SlidersHorizontalIcon size={22} aria-hidden="true" />
       </button>
       <button type="button" className={`movie-status-button movie-watched-button${status === "watched" ? " active" : ""}`}
         aria-label={`${localize("鑑賞済み")} · ${title}`} title={localize("鑑賞済み")}
