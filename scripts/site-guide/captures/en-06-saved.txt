@@ -60,10 +60,10 @@
       - strong:
         - link "Your Name.":
           - /url: "#movie?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&q=Your+Name."
-      - link "Eiga.com":
-        - /url: https://eiga.com/search/?t=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
-      - link "Filmarks":
-        - /url: https://filmarks.com/search/movies?q=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82
+      - group "Film actions · Your Name.":
+        - button "More · Your Name."
+        - button "Watched · Your Name."
+        - 'button "Remove from watchlist: Your Name." [pressed]'
       - navigation "Showtimes":
         - link "12:00 · TOHO Cinemas Kamiooka · Your Name.":
           - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-1"
@@ -74,9 +74,4 @@
         - link "12:00 · Yokohama Burg 13 · Your Name.":
           - /url: "#schedule?date=2026-09-28&movie=%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%82&showing=guide-0-0"
           - time: 12:00
-      - group "Film actions · Your Name.":
-        - button "More · Your Name.": More
-        - button "Not interested"
-        - button "Watched"
-        - 'button "Remove from watchlist: Your Name." [pressed]'
 - button "Switch schedules"

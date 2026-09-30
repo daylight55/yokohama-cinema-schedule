@@ -56,7 +56,13 @@ it('saves interest first, shows only an optional note, and keeps interest after 
   expect(document.querySelector('.favorite-button').getAttribute('aria-pressed')).toBe('true');
   expect(writes).toHaveLength(1);
 });
-it('keeps advanced actions on the settings button and does not change status just by opening it', async () => {
+it('keeps the schedule focused on its star and opens advanced actions from the film detail', async () => {
+  expect(document.querySelector('.program-title .favorite-button')).not.toBeNull();
+  expect(document.querySelector('.program-block .movie-options-button')).toBeNull();
+  expect(document.querySelector('.program-block .movie-actions')).toBeNull();
+  await click('.program-title h2 a');
+  // happy-dom does not deliver native hash navigation within React's act.
+  await act(async () => window.dispatchEvent(new HashChangeEvent('hashchange')));
   await click('.movie-options-button');
   expect(document.querySelector('.movie-preference-actions')?.textContent).toContain('鑑賞済み');
   expect(document.querySelector('.movie-preference-actions')?.textContent).toContain('興味なし');

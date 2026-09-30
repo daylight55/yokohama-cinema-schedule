@@ -1,4 +1,4 @@
-import { CheckCircleIcon, DotsThreeIcon, ProhibitIcon, StarIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon, DotsThreeIcon, StarIcon } from "@phosphor-icons/react";
 import type { MouseEventHandler } from "react";
 import type { MoviePreferenceStatus } from "../shared/types";
 import { localize } from "./i18n";
@@ -16,27 +16,32 @@ export function MovieActions({ title, status, starred, saving, className = "", o
   return (
     <div className={`movie-actions ${className}`} role="group" aria-label={`${localize("作品の操作")} · ${title}`}>
       <button type="button" className="movie-options-button" aria-haspopup="dialog"
-        aria-label={`${localize("その他")} · ${title}`} onClick={onMore}>
+        aria-label={`${localize("その他")} · ${title}`} title={localize("その他")} onClick={onMore}>
         <DotsThreeIcon size={22} aria-hidden="true" />
-        <span>{localize("その他")}</span>
-      </button>
-      <button type="button" className={`movie-status-button movie-not-interested-button${status === "not_interested" ? " active" : ""}`}
-        aria-pressed={status === "not_interested"} disabled={saving}
-        onClick={event => onStatus("not_interested", event.currentTarget)}>
-        <ProhibitIcon size={20} aria-hidden="true" />
-        <span>{localize("興味なし")}</span>
       </button>
       <button type="button" className={`movie-status-button movie-watched-button${status === "watched" ? " active" : ""}`}
+        aria-label={`${localize("鑑賞済み")} · ${title}`} title={localize("鑑賞済み")}
         aria-pressed={status === "watched"} disabled={saving}
         onClick={event => onStatus("watched", event.currentTarget)}>
-        <CheckCircleIcon size={20} aria-hidden="true" />
-        <span>{localize("鑑賞済み")}</span>
+        <CheckCircleIcon size={22} weight={status === "watched" ? "fill" : "regular"} aria-hidden="true" />
       </button>
-      <button type="button" className={`favorite-button${starred ? " starred" : ""}`}
-        aria-label={localize(`${title}を${starred ? "スターから外す" : "スターする"}`)}
-        aria-pressed={starred} disabled={saving} onClick={onStar}>
-        <StarIcon size={22} weight={starred ? "fill" : "regular"} aria-hidden="true" />
-      </button>
+      <MovieStarButton title={title} starred={starred} saving={saving} onClick={onStar} />
     </div>
+  );
+}
+
+export function MovieStarButton({ title, starred, saving, onClick, compact = false }: {
+  title: string;
+  starred: boolean;
+  saving: boolean;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+  compact?: boolean;
+}) {
+  const label = localize(`${title}を${starred ? "スターから外す" : "スターする"}`);
+  return (
+    <button type="button" className={`favorite-button${compact ? " compact" : ""}${starred ? " starred" : ""}`}
+      aria-label={label} title={label} aria-pressed={starred} disabled={saving} onClick={onClick}>
+      <StarIcon size={22} weight={starred ? "fill" : "regular"} aria-hidden="true" />
+    </button>
   );
 }

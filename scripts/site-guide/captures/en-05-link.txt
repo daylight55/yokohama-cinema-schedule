@@ -13,9 +13,8 @@
     - heading "Your Name." [level=1]
     - paragraph: 君の名は。
     - group "Film actions · Your Name.":
-      - button "More · Your Name.": More
-      - button "Not interested"
-      - button "Watched"
+      - button "More · Your Name."
+      - button "Watched · Your Name."
       - 'button "Add to watchlist: Your Name."'
     - navigation "Jump to a screening date":
       - button "Mon 28 Sept"

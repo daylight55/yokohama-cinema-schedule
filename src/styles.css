@@ -1165,8 +1165,8 @@ main {
 }
 
 .favorite-button.compact {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border: 0;
   background: transparent;
 }
@@ -1536,7 +1536,7 @@ main {
   min-width: 0;
   padding-top: 2px;
 }
-.movie-times { grid-column: 1 / -1; grid-row: 3; display: flex; gap: 8px; overflow-x: auto; min-width: 0; padding-block: 4px; }
+.movie-times { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 8px; overflow-x: auto; min-width: 0; padding-block: 4px; }
 .movie-times a { color: var(--text); text-decoration: none; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 62px; padding-inline: 10px; border: 1px solid var(--line); border-radius: 8px; font-variant-numeric: tabular-nums; }
 .cinema-slot:focus { outline: 3px solid var(--accent); outline-offset: -3px; }
 
@@ -4248,20 +4248,16 @@ html[lang="en"] .brand-wordmark {
 
 .account-danger-button:disabled { opacity: .55; cursor: wait; }
 
-.movie-actions { display: grid; grid-template-columns: 44px minmax(44px, 1fr) minmax(44px, 1fr) 44px; gap: 4px; align-items: stretch; width: 100%; max-width: 320px; min-width: 0; }
-.movie-actions > button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; height: auto; min-width: 44px; min-height: 60px; padding: 6px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: .75rem; line-height: 1.2; cursor: pointer; }
+.movie-actions { display: flex; gap: 4px; align-items: center; min-width: 0; }
+.movie-actions > button { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
 .movie-actions > button svg { flex-shrink: 0; }
-.movie-actions > button span { text-box: trim-both cap alphabetic; }
 .movie-actions > button:hover { border-color: var(--accent); color: var(--accent); }
 .movie-actions > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.movie-actions .movie-status-button.active { border-color: var(--accent); color: var(--accent); }
+.movie-actions .movie-status-button.active { color: var(--accent); }
+.movie-actions .favorite-button.starred { color: var(--favorite); }
 .movie-actions > button:disabled { opacity: .55; cursor: wait; }
-.movie-card-actions { grid-column: 1 / -1; grid-row: 2; }
+.movie-card-actions { margin-top: 4px; justify-content: flex-end; }
 .movie-detail-actions { grid-column: 1 / -1; }
-.movie-program-actions { width: calc(100% - 16px); margin: 8px; }
-@media (max-width: 390px) {
-  html[lang="en"] .movie-program-actions .movie-status-button { font-size: .6875rem; }
-}
 .movie-list-item > .movie-image-link { grid-row: 1; }
 
 .screening-invitations { min-width: 0; margin-block: 24px; padding-block: 20px; border-block: 1px solid var(--line); }
