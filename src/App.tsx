@@ -1,6 +1,7 @@
 import { splitScreeningFormat } from "../shared/screening-format";
 import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import { CollectionStatusPage } from "./CollectionStatusPage";
+import { useCollectionCounts } from "./useCollectionCounts";
 import { ScheduleNavigator } from "./ScheduleNavigator";
 import { WatchlistNote } from "./WatchlistNote";
 import { activeMetrics } from "./performanceMetrics";
@@ -194,6 +195,7 @@ export function App() {
   const language = useLanguage();
   const captureLanguageScroll = useLanguageScroll(language);
   const userRole = useUserRole();
+  const collectionCounts = useCollectionCounts(userRole === "admin");
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState("");
   async function changeLanguage(value: "ja" | "en") {
@@ -2349,6 +2351,7 @@ export function App() {
       <main id="main" ref={dateSwipeRef}>
         {localize(
           (view === "schedule" || view === "movies") && (
+            <>
             <nav className="date-nav" aria-label={localize("上映日")}>
               <div ref={dateStripRef} className="date-strip" data-horizontal-scroll="dates">
                 {localize(
@@ -2402,13 +2405,24 @@ export function App() {
                         }
                       >
                         <span>{localize(index === 0 ? "今日" : monthDay)}</span>
-                        <small>{localize(weekday)}</small>
+                        <small>{localize(weekday)}{userRole === "admin" && <span
+                          className="collection-count"
+                          data-needs-check={(collectionCounts?.[date] ?? 0) > 0}
+                          title={language === "en" ? "Cinemas needing a check: failed, unchecked or stale" : "要確認の映画館数：取得エラー・未確認・更新が古い"}
+                          aria-label={collectionCounts?.[date] === undefined
+                            ? (language === "en" ? "Collection status unavailable" : "取得状況を確認できません")
+                            : (language === "en" ? `${collectionCounts[date]} cinemas need checking` : `要確認の映画館 ${collectionCounts[date]}館`)}
+                        >{collectionCounts?.[date] ?? "—"}</span>}</small>
                       </a>
                     );
                   }),
                 )}
               </div>
             </nav>
+              {userRole === "admin" && <a className="collection-count-key" href={hashForAppView("adminCollection", { date: selectedDate })}>
+                {language === "en" ? "Circled numbers: cinemas needing a check" : "丸数字：要確認の映画館数"}
+              </a>}
+            </>
           ),
         )}
 
