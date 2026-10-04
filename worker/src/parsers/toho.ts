@@ -1,5 +1,6 @@
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
 import { moviePreferenceKey } from "../../../shared/movie";
+import { splitScreeningFormat } from "../../../shared/screening-format";
 import type { NormalizedShowing } from "../../../shared/types";
 
 interface TohoShow {
@@ -22,6 +23,7 @@ interface TohoScreen {
 }
 
 interface TohoMovie {
+  ename?: string;
   code?: string;
   name?: string;
   icon?: string;
@@ -59,7 +61,7 @@ export function parseTohoSchedule(
         const title = normalizeJapanese(movie.name ?? "");
         if (!title) continue;
         for (const screen of movie.list ?? []) {
-          const format = [
+          const icons = [
             movie.icon,
             screen.iconNm1,
             screen.iconNm2,
@@ -68,6 +70,17 @@ export function parseTohoSchedule(
             .map((value) => normalizeJapanese(value ?? ""))
             .filter(Boolean)
             .join(" / ");
+          // The official English schedule name carries / SUB or / DUB even
+          // when the Japanese name omits the language version. Match only the
+          // trailing metadata token, never words inside the film title.
+          const explicit = splitScreeningFormat([title, icons].join(" / ")).labels;
+          const englishVersion = normalizeJapanese(movie.ename ?? "")
+            .match(/\/\s*(SUB|DUB)\s*$/i)?.[1]?.toUpperCase();
+          const language = explicit.length
+            ? explicit.map(({ label }) => label)
+            : englishVersion ? [englishVersion === "SUB" ? "字幕" : "吹替"] : [];
+          const format = [...language, splitScreeningFormat(icons).detail]
+            .filter(Boolean).join(" / ");
           for (const show of screen.list ?? []) {
             const start = show.showingStart?.trim() ?? "";
             if (!show.code || !start) continue;
