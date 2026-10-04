@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-09-30T18:35:22.848Z",
-    "baseRevision": "2e51836eb5546e9f8439206deaded43b3edac6d4",
+    "reviewedAt": "2026-10-04T23:49:37.719Z",
+    "baseRevision": "26cbad4184f42c7c8d29b66e2b8afdca954ad6d7",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "日英の9操作場面を現行UIで再撮影し全66枚のPNGのSHA256が更新前と一致。既存の動画で示す上映データは2Dのみのため字幕・吹替の条件付きラベルは表示されず、操作先・位置・可視文言・結果は同じ。配信用ビルドの日英320/390pxでAbout再生・シーク・字幕既定オフを確認。字幕と吹替が同時刻にある専用データでは日英320/390px・明暗テーマの予約先、予定、共有、招待、再読み込み、未詳の回を推測しないこと、横溢れを確認。音声・BGM・台本・字幕・動画は変更なし。"
+    "note": "管理者だけに曜日別の要確認館数を追加。動画の一般メンバー用APIで日英の全9操作場面を実画面から撮影し、全66枚のPNGが既存素材とSHA256一致。操作先・位置・ラベル・結果、日英の台本と字幕は同一で動画再合成は不要。管理者とメンバーを日英320x700/390x844で確認し、日付直接アクセス・再読み込み・通信失敗時の—表示・横溢れなしをverify-collection-counts.mjsで検証。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -61,7 +61,7 @@
     "src/AccountPage.tsx": "a4cb8e1835ea32181a5aab56233e3def8601688265e4bf4aa6bba95c25a3751f",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "f87cd205c6341988664576530e9d827d9af05e0f3299fa1c5d03eda8a894de25",
+    "src/App.tsx": "d52c04d22d79bcf2945dac421115d6095a6f9f353ee28176b42144b481989c18",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "82d442b449100df8fd560d69353f9521e1bb1da317e24ef803edec6611b1daf5",
     "src/MemberPage.tsx": "09c4da2168a83306e844d79ad889391ca6aecaad70a79b82e386a90a3f6ae9dc",
@@ -92,7 +92,8 @@
     "src/main.tsx": "53928de0ba5d6e1f3d5a90cf855ee19c1052bc9640e23d3def54cecb2fd844ba",
     "src/notification-support.ts": "7a0c53122f85e6264b423eb30ce476048b59128edf204cd14b83f96886d4a5a2",
     "src/performanceMetrics.ts": "c7adaff5b009aa609e6fdbb6e0b71a83e5f3f69ed91791bf636b0ae5a4bb73f3",
-    "src/styles.css": "42b4b1bc39fe905112d53075d75f9877a8ce8ade7b8fe16b6d377a1553a396a1",
+    "src/styles.css": "5d1c3a9ae6e12911f4ddaf8045f1576d098b55e8ddc30f2c60c6c49f6b837841",
+    "src/useCollectionCounts.ts": "66399c8ad33f9bd26c3fa2b20ac305e5c31f639f3730cc17ec86336d2570e518",
     "src/useDateSwipe.ts": "9164d4bae92b3a7af857c6a716b9929b3ba6169fc31df3be71ae3460dde812ae",
     "src/useHistoryScroll.ts": "68954795a46a80e2d6dbd34ccf3eb291f43c1bbd519a05f07e8fa314498cb6f3",
     "src/useLanguageScroll.ts": "2ebaf35e4a45db83c518ddd4c9f0c1a6ed61e7a8bebd955d1d3b22958726a8f9",

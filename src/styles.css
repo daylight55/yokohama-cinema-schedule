@@ -451,6 +451,23 @@ main {
   color: #fff;
 }
 
+.day-button small .collection-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 3px;
+  padding: 0 3px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 10px;
+  line-height: 1;
+  vertical-align: middle;
+}
+.collection-count[data-needs-check="true"] { color: var(--text); }
+.collection-count-key { display: block; min-height: 44px; padding: 12px 14px; color: var(--muted); font-size: 11px; }
+
 .day-button.active {
   border-color: var(--accent);
   background: var(--accent);
