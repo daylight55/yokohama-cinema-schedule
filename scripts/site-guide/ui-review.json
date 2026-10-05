@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-05T00:05:09.443Z",
-    "baseRevision": "c493c560947c0beaf7911f28918c3400ebbd6d49",
+    "reviewedAt": "2026-10-05T00:12:06.224Z",
+    "baseRevision": "ae5e516db96b43ed5288264ab32e14380f4faf49",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "最新main側の変更では日英の全9操作場面を実UIで再撮影・再生確認済み。この差分は公式APIの上映回別メタデータ解析とREADME・テストのみで、About動画の日英スケジュール場面が使う固定2Dデモは変わらない。日英overview素材を照合し、字幕・吹替は既存UI部品で表示できるため動画のラベル・配置・操作に差がないことを確認。"
+    "note": "地域候補と映画館一覧をAPIの選択可能な映画館カタログで絞る変更。日英の全9操作場面を現行UIから再撮影して比較し、66枚中64枚のPNGが公開動画の素材とSHA256一致。残る英語planの2枚は既存の短時間Added!トーストの撮影タイミングだけが異なり、地域候補は映らず、ボタン位置・操作結果・台本・字幕・音声は同じことを旧新素材の目視とAX差分で確認。既存撮影素材と動画を維持。verify-area-search.mjsで日英320x700/390x844/1024pxの利用可能地域だけの表示、地域選択・文字入力時の全館検索、日付変更で対象館がない地域の候補削除とすべてへの復帰、検索URL・再読み込み、キーボード・横溢れなしを確認。地域カタログの重複・空・再追加はunit testで確認。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -25,7 +25,7 @@
     "public/brand/hamamubi-icon-v2.svg": "e4633813b1a7e5b2e6761b377c69c39977189e7f4cf5dd9911063fd2dd61ef16",
     "public/brand/hamamubi-icon-wink.svg": "bb535389759f003c615254fc75cf79a62e8781b084b88b8e9fbb4431cef9b67e",
     "public/page-layout.css": "6b88c45ddc7b50c3d35183b617f5918c7ffebe4877417df9bc282a97b7399325",
-    "scripts/site-guide/capture-fixture.mjs": "36a8514952be72a308eeb48edb2ad764bc4d5ee335f6e42893785146adaab9de",
+    "scripts/site-guide/capture-fixture.mjs": "e7ba2fb1724824bf8c31d746eb47c40f918f7c9fe56035626c85e0c3b710ac6d",
     "scripts/site-guide/capture.mjs": "49e80add377f544f55fc804e9d04af8483f9e3aba0d0d38fea91ef8741b79e42",
     "scripts/site-guide/mascot/normal.png": "c1b8966832afd18ec7b91d64bce37cd17a39ebe1c79df2221e2dcc117b7dd7c0",
     "scripts/site-guide/mascot/wink.png": "c38b96fd813e4c5005d856f81fbabc50aeee75aca6455b4c6857c6fb13b78553",
@@ -61,7 +61,7 @@
     "src/AccountPage.tsx": "a4cb8e1835ea32181a5aab56233e3def8601688265e4bf4aa6bba95c25a3751f",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "5a0d89253b64dde5e6676e25c82b56d1561cba64691504af2e5b859d710abfcb",
+    "src/App.tsx": "3da8e24174e7e22d03a372edfe27210d5990a4f6bf1c0e71744f9dee7630da87",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "82d442b449100df8fd560d69353f9521e1bb1da317e24ef803edec6611b1daf5",
     "src/MemberPage.tsx": "09c4da2168a83306e844d79ad889391ca6aecaad70a79b82e386a90a3f6ae9dc",
@@ -88,7 +88,7 @@
     "src/admin-collection.css": "16f809da889c174c298841422cc0a38dc533ee4f5a7d3ce23719104e86d76458",
     "src/dateFormatter.ts": "ff66e27f03717cd54c4ce9677deff512ea6be40111b0b2c579f035b8e09bd38b",
     "src/i18n.ts": "c88ae76904187610f2b44eb02c163dc894e858c4de23a5fe05b6695a73143d3b",
-    "src/lib.ts": "43caab5906bc244e43b0be6bc5aa35c07b0e72d66764eab9cd4e2e94af08b2dd",
+    "src/lib.ts": "da043a421ef671710f890eaa80bfae48ae332c8447d733da9fd3cda995e331c1",
     "src/main.tsx": "53928de0ba5d6e1f3d5a90cf855ee19c1052bc9640e23d3def54cecb2fd844ba",
     "src/notification-support.ts": "7a0c53122f85e6264b423eb30ce476048b59128edf204cd14b83f96886d4a5a2",
     "src/performanceMetrics.ts": "c7adaff5b009aa609e6fdbb6e0b71a83e5f3f69ed91791bf636b0ae5a4bb73f3",

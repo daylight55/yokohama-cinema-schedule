@@ -8,7 +8,7 @@ await mkdir('output/playwright',{recursive:true});
 try {
  for(const language of ['ja','en']) for(const width of [320,390,1024]) {
   const page=await browser.newPage({viewport:{width,height:width===320?700:844}});
-  await installFixture(page,language);
+  await installFixture(page,language,{unavailableCinemaIdsByDate:{'2026-09-29':['toho']}});
   const errors=[]; page.on('pageerror',e=>errors.push(e.message));
   for(const view of ['schedule','movies']) {
    await page.goto(`${base}/#${view}?date=${DATE}`);
@@ -17,7 +17,9 @@ try {
    assert.equal(await page.locator('.schedule-controls .area-strip').count(),0);
    assert.equal(await panel.count(),0);
    await search.click(); await panel.waitFor();
-   assert.equal(await panel.getByRole('button').count(),6);
+   assert.equal(await panel.getByRole('button').count(),3);
+   assert.equal(await panel.getByRole('button',{name:language==='ja'?'戸部':'Tobe',exact:true}).count(),0);
+   assert.equal(await panel.getByRole('button',{name:language==='ja'?'横浜駅':'Yokohama Station',exact:true}).count(),0);
    await panel.getByRole('button',{name:language==='ja'?'上大岡':'Kamiooka',exact:true}).click();
    assert.equal(await panel.count(),0);
    if(view==='schedule') {
@@ -44,6 +46,15 @@ try {
    await page.screenshot({path:`output/playwright/area-search-${language}-${width}-${view}.png`});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   }
+  await page.goto(`${base}/#movies?date=${DATE}`);
+  const search=page.locator('#schedule-search-query'); await search.waitFor();
+  await search.click();
+  await page.locator('.search-area-panel').getByRole('button',{name:language==='ja'?'上大岡':'Kamiooka',exact:true}).click();
+  await page.locator('a.day-button[href="#movies?date=2026-09-29"]').click();
+  await page.waitForFunction(()=>document.querySelector('#schedule-search-query').placeholder.includes(document.documentElement.lang==='en'?'Spider':'スパイダーマン'));
+  await search.click();
+  assert.equal(await page.locator('.search-area-panel').getByRole('button').count(),2);
+  assert.equal(await page.locator('.search-area-panel').getByRole('button',{name:language==='ja'?'上大岡':'Kamiooka',exact:true}).count(),0);
   assert.deepEqual(errors,[]); await page.close();
   console.log(`${language} ${width}: area/search interaction passed`);
  }
