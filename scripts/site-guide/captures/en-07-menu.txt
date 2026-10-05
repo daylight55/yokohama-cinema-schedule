@@ -50,13 +50,6 @@
     - button "Search"
     - status: “Your Name.”
   - region "Filter screenings":
-    - group "Area":
-      - button "All" [pressed]
-      - button "Yokohama Station"
-      - button "Sakuragicho / Minato Mirai"
-      - button "Kannai / Isezakicho"
-      - button "Tobe"
-      - button "Kamiooka"
     - group "Time":
       - button "Upcoming"
       - button "All times" [pressed]
@@ -83,9 +76,7 @@
           - link "Book on cinema website · Your Name. · 12:00 · ブルク13":
             - /url: https://tjoy.jp/yokohama_burg13
             - text: Book
-          - button "Remove Your Name. 12:00 ブルク13 from your plans" [pressed]:
-            - text: Planned
-            - status: Added!
+          - button "Remove Your Name. 12:00 ブルク13 from your plans" [pressed]: Planned
         - listitem:
           - strong: 12:00
           - text: 13:50End

@@ -49,14 +49,7 @@
     - text: 作品名・映画館名
     - searchbox "作品名・映画館名"
     - button "検索"
-  - region "上映の絞り込み":
-    - group "エリア":
-      - button "すべて" [pressed]
-      - button "横浜駅"
-      - button "桜木町・みなとみらい"
-      - button "関内・伊勢佐木町"
-      - button "戸部"
-      - button "上大岡"
+  - region "上映の絞り込み"
   - paragraph: 今日
   - heading "上映中の作品" [level=1]
   - text: 2作品

@@ -267,6 +267,7 @@ export function App() {
   const [showAllMovieDates, setShowAllMovieDates] = useState(
     initialHashState.view === "movies" && initialHashState.date === null,
   );
+  const [areaSearchOpen, setAreaSearchOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState(initialHashState.query);
   const normalizedSearchQuery = normalizeSearchQuery(searchDraft);
   const interactiveSearchQuery = useDeferredValue(normalizedSearchQuery);
@@ -540,6 +541,8 @@ export function App() {
       );
       setShowAllMovieDates(nextShowAllMovieDates);
       setSearchDraft(usesWeeklyDate ? hashState.query : "");
+      setAreaSearchOpen(false);
+      if (hashState.query) setSelectedArea("all");
       setPlannerDate(nextPlannerDate);
       setSelectedMovieKey(nextMovieKey);
       setSelectedShowingId(nextView === "schedule" ? hashState.showing ?? null : null);
@@ -1461,6 +1464,7 @@ export function App() {
 
   const submitScheduleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setAreaSearchOpen(false);
     window.location.hash = hashForAppView(view, {
       date: selectedMovieListDate,
       query: searchDraft,
@@ -2428,7 +2432,11 @@ export function App() {
 
         {localize(
           (view === "schedule" || view === "movies") && (
-            <search className="schedule-search">
+            <search className="schedule-search" onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) setAreaSearchOpen(false);
+            }} onKeyDown={(event) => {
+              if (event.key === "Escape") setAreaSearchOpen(false);
+            }}>
               <form
                 className="schedule-search-form"
                 method="get"
@@ -2445,18 +2453,30 @@ export function App() {
                       type="search"
                       name="q"
                       value={searchDraft}
-                      placeholder={localize("例：スパイダーマン、TOHOシネマズ")}
+                      placeholder={selectedArea === "all"
+                        ? localize("例：スパイダーマン、TOHOシネマズ")
+                        : localize(AREA_OPTIONS.find(area => area.id === selectedArea)!.label)}
+                      aria-expanded={areaSearchOpen && !normalizedSearchQuery}
+                      aria-controls="schedule-area-options"
+                      onFocus={() => setAreaSearchOpen(true)}
+                      onClick={() => setAreaSearchOpen(true)}
                       autoComplete="off"
                       enterKeyHint="search"
-                      onChange={(event) => setSearchDraft(event.target.value)}
+                      onChange={(event) => {
+                        setSearchDraft(event.target.value);
+                        if (normalizeSearchQuery(event.target.value)) {
+                          setSelectedArea("all");
+                          setAreaSearchOpen(false);
+                        } else setAreaSearchOpen(true);
+                      }}
                     />
                     {localize(
-                      normalizedSearchQuery && (
+                      (normalizedSearchQuery || selectedArea !== "all") && (
                         <button
                           className="schedule-search-clear"
                           type="button"
                           aria-label={localize("検索条件を解除")}
-                          onClick={clearScheduleSearch}
+                          onClick={() => { clearScheduleSearch(); setSelectedArea("all"); setAreaSearchOpen(false); }}
                         >
                           <XIcon size={17} aria-hidden="true" />
                         </button>
@@ -2468,6 +2488,35 @@ export function App() {
                   {localize("検索")}
                 </button>
               </form>
+              {areaSearchOpen && !normalizedSearchQuery && (
+                <div className="search-area-panel">
+                  <p>{language === "en" ? "Find by area" : "地域で探す"}</p>
+                  <div
+                    className="search-area-choices"
+                    id="schedule-area-options"
+                    role="group"
+                    aria-label={localize("エリア")}
+                  >
+                    {localize(
+                      AREA_OPTIONS.map((area) => (
+                        <button
+                          key={area.id}
+                          type="button"
+                          className={
+                            selectedArea === area.id
+                              ? "filter-chip active"
+                              : "filter-chip"
+                          }
+                          aria-pressed={selectedArea === area.id}
+                          onClick={() => { setSelectedArea(area.id); setAreaSearchOpen(false); }}
+                        >
+                          {localize(area.label)}
+                        </button>
+                      )),
+                    )}
+                  </div>
+                </div>
+              )}
               {localize(
                 interactiveSearchQuery && (
                   <p className="schedule-search-result" role="status">
@@ -2487,6 +2536,7 @@ export function App() {
               className="schedule-controls"
               aria-label={localize("上映の絞り込み")}
             >
+              {view === "cinemas" && (
               <div
                 className="area-strip"
                 data-horizontal-scroll="areas"
@@ -2511,6 +2561,7 @@ export function App() {
                   )),
                 )}
               </div>
+              )}
 
               {view === "schedule" && selectedDate === dates[0] && (
                 <div className="control-row">

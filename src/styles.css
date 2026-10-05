@@ -4310,3 +4310,21 @@ html[lang="en"] .brand-wordmark {
 
 .movie-list-copy > .screening-format-badges { margin-top: 8px; }
 .plan-timeline article > .screening-format-badges { margin-block: 8px; }
+
+/* Search suggestions share the input's focus scope and dismiss on typing. */
+.schedule-search { position: relative; }
+.search-area-panel {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 14px;
+  top: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface, #17201d);
+  box-shadow: 0 8px 24px #0003;
+}
+.search-area-panel p { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.search-area-choices { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.search-area-choices .filter-chip { min-height: 44px; white-space: normal; }
+@media (max-width: 719px), (any-pointer: coarse) { .schedule-search { position: sticky; } }

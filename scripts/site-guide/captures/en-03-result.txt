@@ -31,14 +31,7 @@
     - button "Clear search"
     - button "Search"
     - status: “Your Name.”
-  - region "Filter screenings":
-    - group "Area":
-      - button "All" [pressed]
-      - button "Yokohama Station"
-      - button "Sakuragicho / Minato Mirai"
-      - button "Kannai / Isezakicho"
-      - button "Tobe"
-      - button "Kamiooka"
+  - region "Filter screenings"
   - paragraph: Today
   - heading "Now showing" [level=1]
   - text: 1 film
