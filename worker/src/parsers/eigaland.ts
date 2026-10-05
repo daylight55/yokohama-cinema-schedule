@@ -9,6 +9,10 @@ interface EigalandShow {
   ticketingUrl?: string;
   purchasable?: boolean;
   screeningFormat?: string | null;
+  /** Eigaland's per-showing language/version label (for example 字幕 or 吹替). */
+  version2?: string | null;
+  /** Additional per-showing label(s), when present. */
+  version3?: string | string[] | null;
 }
 
 interface EigalandHouse {
@@ -49,7 +53,7 @@ export function parseEigalandSchedule(
           startsAt: new Date(show.startTime).toISOString(),
           endsAt: show.endTime ? new Date(show.endTime).toISOString() : null,
           screen: house.houseName ? normalizeJapanese(house.houseName) : null,
-          format: show.screeningFormat ?? detectFormat(movie.movieName),
+          format: eigalandFormat(show, movie.movieName),
           bookingUrl:
             resolveBookingUrl(show.ticketingUrl, fallbackBookingUrl) ??
             fallbackBookingUrl,
@@ -60,6 +64,19 @@ export function parseEigalandSchedule(
   }
 
   return result;
+}
+
+function eigalandFormat(show: EigalandShow, title: string): string | null {
+  const versionLabels = [
+    show.screeningFormat,
+    show.version2,
+    ...(Array.isArray(show.version3) ? show.version3 : [show.version3]),
+  ]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.normalize("NFKC").trim())
+    .filter((value) => value && !/^(?:なし|なし\s*\(|none|n\/a)$/i.test(value));
+  const labels = versionLabels.length ? versionLabels : [detectFormat(title)].filter((value): value is string => Boolean(value));
+  return [...new Set(labels)].join(" / ") || null;
 }
 
 function normalizeJapanese(value: string): string {

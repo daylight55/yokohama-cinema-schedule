@@ -2,6 +2,7 @@ import { load } from "cheerio";
 import { resolveBookingUrl } from "./booking";
 import { jstEndToIso, jstLocalToIso } from "../../../shared/date";
 import { moviePreferenceKey, safeImageUrl } from "../../../shared/movie";
+import { splitScreeningFormat } from "../../../shared/screening-format";
 import type { NormalizedShowing } from "../../../shared/types";
 
 export function parseMovilSchedule(
@@ -29,7 +30,7 @@ export function parseMovilSchedule(
       );
       const screen =
         cleanText(timetable.find(".theatre-num").first().text()) || null;
-      const format = theatreText.match(/\b(2D|3D|4DX|IMAX)\b/i)?.[1] ?? null;
+      const format = detectFormat(`${title} ${theatreText}`);
 
       timetable.find("li.check_date").each((___, showElement) => {
         const show = $(showElement);
@@ -86,4 +87,15 @@ export function parseMovilMovieImages(html: string): Map<string, string> {
 
 function cleanText(value: string): string {
   return value.replace(/\s+/g, " ").trim();
+}
+
+function detectFormat(value: string): string | null {
+  const labels = value
+    .normalize("NFKC")
+    .match(/(?:日本語\s*)?(?:字幕(?:スーパー)?(?:付(?:き)?|版)?|吹(?:き)?替(?:え)?(?:版)?)|\b(?:IMAX|4DX|3D|2D)\b/gi);
+  if (!labels) return null;
+  const { labels: languages, detail } = splitScreeningFormat(
+    [...new Set(labels.map((label) => label.trim()))].join(" / "),
+  );
+  return [...languages.map(({ label }) => label), detail].filter(Boolean).join(" / ") || null;
 }

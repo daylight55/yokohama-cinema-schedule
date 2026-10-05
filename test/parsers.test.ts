@@ -83,6 +83,36 @@ describe("schedule parsers", () => {
     });
   });
 
+  it.each(["jack-and-betty", "cinemarine"])(
+    "captures Eigaland's per-showing subtitle and dubbing metadata for %s",
+    (cinemaId) => {
+      const result = parseEigalandSchedule(
+        [
+          {
+            movieDetail: { movieId: "film", movieName: "同じ邦題" },
+            houseList: [
+              {
+                showList: [
+                  { startTime: "2026-10-05T10:00:00+09:00", version: "2D", version2: "字幕", version3: [] },
+                  { startTime: "2026-10-05T12:00:00+09:00", version: "2D", version2: "吹替", version3: [] },
+                  { startTime: "2026-10-05T14:00:00+09:00", version: "2D", version2: "なし", version3: [] },
+                ],
+              },
+            ],
+          },
+        ],
+        cinemaId,
+        cinemaId,
+        "https://example.com/",
+      );
+      expect(result.map(({ title, format }) => [title, format])).toEqual([
+        ["同じ邦題", "字幕"],
+        ["同じ邦題", "吹替"],
+        ["同じ邦題", null],
+      ]);
+    },
+  );
+
   it("normalizes Movil HTML and handles an after-midnight end", () => {
     const result = parseMovilSchedule(
       `<article class="movie-1">
@@ -105,6 +135,21 @@ describe("schedule parsers", () => {
       endsAt: "2026-07-24T16:50:00.000Z",
       format: "2D",
     });
+  });
+
+  it("keeps subtitle and dubbing labels from Movil titles on each showing", () => {
+    const result = parseMovilSchedule(
+      `<article class="movie-1"><h2>作品（字幕版）</h2>
+        <ul class="timetable"><li class="theatre">シアター1 2D</li>
+          <li class="check_date"><time class="start">10:00</time><time class="end">12:00</time></li>
+        </ul></article>
+       <article class="movie-1"><h2>作品（吹替版）</h2>
+        <ul class="timetable"><li class="theatre">シアター2 2D</li>
+          <li class="check_date"><time class="start">13:00</time><time class="end">15:00</time></li>
+        </ul></article>`,
+      "2026-07-24",
+    );
+    expect(result.map(({ format }) => format)).toEqual(["字幕 / 2D", "吹替 / 2D"]);
   });
 
   it("normalizes T-Joy HTML", () => {
