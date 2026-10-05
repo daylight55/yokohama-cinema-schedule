@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-05T00:12:06.224Z",
-    "baseRevision": "ae5e516db96b43ed5288264ab32e14380f4faf49",
+    "reviewedAt": "2026-10-05T00:26:54.412Z",
+    "baseRevision": "26c448cd1524ac7cc190a8ba9b7677579d8dfad8",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "地域候補と映画館一覧をAPIの選択可能な映画館カタログで絞る変更。日英の全9操作場面を現行UIから再撮影して比較し、66枚中64枚のPNGが公開動画の素材とSHA256一致。残る英語planの2枚は既存の短時間Added!トーストの撮影タイミングだけが異なり、地域候補は映らず、ボタン位置・操作結果・台本・字幕・音声は同じことを旧新素材の目視とAX差分で確認。既存撮影素材と動画を維持。verify-area-search.mjsで日英320x700/390x844/1024pxの利用可能地域だけの表示、地域選択・文字入力時の全館検索、日付変更で対象館がない地域の候補削除とすべてへの復帰、検索URL・再読み込み、キーボード・横溢れなしを確認。地域カタログの重複・空・再追加はunit testで確認。"
+    "note": "リロード直前の履歴状態へ縦横位置・折りたたみ状態を保存し、Navigation Timingがreloadの同一URLだけ描画後に復元。日付なしURL正規化時も履歴の対象URLを同期。配信用ビルドのverify-reload-scroll.mjsで日英320x700/390x844のスケジュール（日付あり/なし）・作品一覧・Aboutをリロードし、700msのデータ取得遅延後も縦横位置・ハッシュ・横溢れなしを確認、新規URLの初期位置も維持。history-scroll unit testで折りたたみ、連続リロード中の未描画状態、別URLへの非復元、URL正規化、既存の戻る・進むと高頻度スクロールの低負荷を確認。動画の全9操作場面を日英の現行UIから再撮影し66枚中64枚PNGが既存とSHA256一致。英語planの残り2枚は既存Added!トーストのタイミングだけの差でAX差分も一致、今回のリロードは動画に映らず配置・ラベル・操作結果・音声・字幕は変わらないため既存動画を維持。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -25,7 +25,7 @@
     "public/brand/hamamubi-icon-v2.svg": "e4633813b1a7e5b2e6761b377c69c39977189e7f4cf5dd9911063fd2dd61ef16",
     "public/brand/hamamubi-icon-wink.svg": "bb535389759f003c615254fc75cf79a62e8781b084b88b8e9fbb4431cef9b67e",
     "public/page-layout.css": "6b88c45ddc7b50c3d35183b617f5918c7ffebe4877417df9bc282a97b7399325",
-    "scripts/site-guide/capture-fixture.mjs": "e7ba2fb1724824bf8c31d746eb47c40f918f7c9fe56035626c85e0c3b710ac6d",
+    "scripts/site-guide/capture-fixture.mjs": "664d313b560696a1488f9857570fa137366cc3c08f3ad3cced33216df49fbf9d",
     "scripts/site-guide/capture.mjs": "49e80add377f544f55fc804e9d04af8483f9e3aba0d0d38fea91ef8741b79e42",
     "scripts/site-guide/mascot/normal.png": "c1b8966832afd18ec7b91d64bce37cd17a39ebe1c79df2221e2dcc117b7dd7c0",
     "scripts/site-guide/mascot/wink.png": "c38b96fd813e4c5005d856f81fbabc50aeee75aca6455b4c6857c6fb13b78553",
@@ -61,7 +61,7 @@
     "src/AccountPage.tsx": "a4cb8e1835ea32181a5aab56233e3def8601688265e4bf4aa6bba95c25a3751f",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "3da8e24174e7e22d03a372edfe27210d5990a4f6bf1c0e71744f9dee7630da87",
+    "src/App.tsx": "d0709b0626c087ed9f6227aecc5b37e98609bdfe705b1e408fc55cc7655f7c39",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "82d442b449100df8fd560d69353f9521e1bb1da317e24ef803edec6611b1daf5",
     "src/MemberPage.tsx": "09c4da2168a83306e844d79ad889391ca6aecaad70a79b82e386a90a3f6ae9dc",
@@ -95,7 +95,7 @@
     "src/styles.css": "a9a68066a5614c4beb890f14e912e711fbca82e511ae2a324222a4086f663b08",
     "src/useCollectionCounts.ts": "66399c8ad33f9bd26c3fa2b20ac305e5c31f639f3730cc17ec86336d2570e518",
     "src/useDateSwipe.ts": "9164d4bae92b3a7af857c6a716b9929b3ba6169fc31df3be71ae3460dde812ae",
-    "src/useHistoryScroll.ts": "68954795a46a80e2d6dbd34ccf3eb291f43c1bbd519a05f07e8fa314498cb6f3",
+    "src/useHistoryScroll.ts": "a3c0ea3589064ac19ae3fd9ee1a2147573ceafcf439037c2049fffd42cca1839",
     "src/useLanguageScroll.ts": "2ebaf35e4a45db83c518ddd4c9f0c1a6ed61e7a8bebd955d1d3b22958726a8f9",
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     "vite.config.ts": "a4864ab280b19522c24def7fa61597ddf6cf01cad88c10343eb430f8c2531963"

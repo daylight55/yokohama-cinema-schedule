@@ -532,6 +532,7 @@ export function App() {
       });
       if (window.location.hash !== canonicalHash) {
         window.history.replaceState(window.history.state, "", canonicalHash);
+        historyScroll.syncEntryURL();
       }
       setView(nextView);
       setSelectedMemberId(nextView === "member" ? hashState.user ?? "" : "");

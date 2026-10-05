@@ -3,19 +3,29 @@ import { useLayoutEffect, useRef } from "react";
 type Snapshot = { x: number; y: number; horizontal: Map<string, number>; open: string[]; focus: string | null };
 /** Scroll state belongs to a history entry, not merely a page or film. */
 export function useHistoryScroll(route: string, ready: boolean) {
+  const entryURL = useRef(location.href);
   const pending = useRef<{ hash: string; snapshot: Snapshot } | null>(null);
   const handledHash = useRef<string | null>(null);
   const restoring = useRef(false);
   useLayoutEffect(() => {
     const entries = new Map<string, Snapshot>();
-    let url = location.href;
-    let id = crypto.randomUUID();
+    let id = history.state?.hamaEntry ?? crypto.randomUUID();
+    const saved = history.state?.hamaReloadScroll;
+    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (navigation?.type === "reload" && saved?.href === entryURL.current &&
+      Number.isFinite(saved.x) && Number.isFinite(saved.y) &&
+      Array.isArray(saved.horizontal) && Array.isArray(saved.open)) {
+      const snapshot: Snapshot = { x: saved.x, y: saved.y,
+        horizontal: new Map(saved.horizontal), open: saved.open, focus: saved.focus ?? null };
+      entries.set(id, snapshot);
+      pending.current = { hash: location.hash, snapshot };
+    }
     const identify = () => history.replaceState({ ...history.state, hamaEntry: id }, "");
     identify();
     const previous = history.scrollRestoration;
     history.scrollRestoration = "manual";
     const currentSnapshot = () => {
-      if (pending.current || restoring.current || location.href !== url) return null;
+      if (pending.current || restoring.current || location.href !== entryURL.current) return null;
       let snapshot = entries.get(id);
       if (!snapshot) {
         snapshot = { x: scrollX, y: scrollY, horizontal: new Map(), open: [], focus: null };
@@ -46,17 +56,34 @@ export function useHistoryScroll(route: string, ready: boolean) {
       }
     };
     const navigate = () => {
-      if (url === location.href) return;
+      if (entryURL.current === location.href) return;
       const next = history.state?.hamaEntry;
       const saved = next && next !== id ? entries.get(next) : null;
       id = next && next !== id ? next : crypto.randomUUID();
-      url = location.href;
+      entryURL.current = location.href;
       identify();
       handledHash.current = null;
       pending.current = saved ? { hash: location.hash, snapshot: saved } : null;
       if (entries.size > 80) entries.delete(entries.keys().next().value!);
     };
+    const persistForReload = () => {
+      // Capture once on departure, keeping mobile scroll events inexpensive.
+      const snapshot = pending.current?.snapshot ?? currentSnapshot();
+      if (!snapshot || location.href !== entryURL.current) return;
+      if (!pending.current && !restoring.current) {
+        capture();
+        for (const el of document.querySelectorAll<HTMLElement>("[data-horizontal-scroll]")) {
+          snapshot.horizontal.set(el.dataset.horizontalScroll!, el.scrollLeft);
+        }
+      }
+      history.replaceState({ ...history.state, hamaReloadScroll: {
+        href: entryURL.current, x: snapshot.x, y: snapshot.y,
+        horizontal: Array.from(snapshot.horizontal), open: snapshot.open, focus: snapshot.focus,
+      } }, "");
+    };
     capture();
+    window.addEventListener("beforeunload", persistForReload);
+    window.addEventListener("pagehide", persistForReload);
     document.addEventListener("scroll", captureScroll, { capture: true, passive: true });
     document.addEventListener("click", capture, true);
     document.addEventListener("toggle", capture, true);
@@ -64,6 +91,8 @@ export function useHistoryScroll(route: string, ready: boolean) {
     window.addEventListener("hashchange", navigate);
     return () => {
       history.scrollRestoration = previous;
+      window.removeEventListener("beforeunload", persistForReload);
+      window.removeEventListener("pagehide", persistForReload);
       document.removeEventListener("scroll", captureScroll, true);
       document.removeEventListener("click", capture, true);
       document.removeEventListener("toggle", capture, true);
@@ -92,5 +121,7 @@ export function useHistoryScroll(route: string, ready: boolean) {
     const frame = requestAnimationFrame(() => { apply(); restoring.current = false; });
     return () => { cancelAnimationFrame(frame); restoring.current = false; };
   }, [route, ready]);
-  return { pending, handledHash };
+  return { pending, handledHash,
+    syncEntryURL: () => { entryURL.current = location.href; },
+  };
 }
