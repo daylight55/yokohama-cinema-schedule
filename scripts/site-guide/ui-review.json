@@ -1,21 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-05T00:01:07.056Z",
-    "baseRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-    "outcome": "recaptured",
-    "scenes": [
-      "schedule",
-      "cinema-settings",
-      "search",
-      "film",
-      "booking",
-      "watchlist",
-      "plan",
-      "sharing",
-      "language"
-    ],
-    "note": "スケジュール・作品一覧の常設地域ボタンを検索バーの地域候補へ移動。日英の全9操作場面を実UIから再撮影し、台本・字幕・音声は保持して再合成。日英の検索・スケジュール場面を静止画で照合し、配信用ビルドで320x700/390x844の日英再生・シーク・字幕既定オフ・手動字幕保持・再読み込み・履歴・横溢れをverify-playback.mjsで検証。verify-area-search.mjsで日英320/390/1024pxの候補開閉・地域選択・入力時の地域解除と全館検索・キーボード・ハッシュ検索と再読み込みを確認。両動画は89秒900x1200/24fps H264で25MiB未満、音声ストリームSHA256が旧版と一致。追加TTS費用なし。"
+    "reviewedAt": "2026-10-05T00:05:09.443Z",
+    "baseRevision": "c493c560947c0beaf7911f28918c3400ebbd6d49",
+    "outcome": "visually-unchanged",
+    "scenes": [],
+    "note": "最新main側の変更では日英の全9操作場面を実UIで再撮影・再生確認済み。この差分は公式APIの上映回別メタデータ解析とREADME・テストのみで、About動画の日英スケジュール場面が使う固定2Dデモは変わらない。日英overview素材を照合し、字幕・吹替は既存UI部品で表示できるため動画のラベル・配置・操作に差がないことを確認。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
