@@ -82,6 +82,7 @@ import type {
 } from "../shared/types";
 import {
   AREA_OPTIONS,
+  getAvailableAreaOptions,
   COLOR_THEME_STORAGE_KEY,
   MOVIE_HIDE_CONFIRMATION,
   appHashStateFromHash,
@@ -595,6 +596,11 @@ export function App() {
         setLoadedScheduleKey(scheduleRequestKey);
         registerTitleTranslations(data.movieTitles ?? []);
         setSchedule(data);
+        setSelectedArea((current) =>
+          getAvailableAreaOptions(data.cinemas).some((area) => area.id === current)
+            ? current
+            : "all",
+        );
         setMovieNotes(new Map(data.preferences.map(p => [p.movieKey,p.comment ?? ""])));
         setStarredMovieKeys(
           new Set(
@@ -721,6 +727,10 @@ export function App() {
   const routeByCinema = useMemo(
     () => new Map(routes.map((route) => [route.cinemaId, route])),
     [routes],
+  );
+  const availableAreaOptions = useMemo(
+    () => getAvailableAreaOptions(schedule?.cinemas ?? []),
+    [schedule?.cinemas],
   );
   const cinemaList = useMemo(
     () =>
@@ -2498,7 +2508,7 @@ export function App() {
                     aria-label={localize("エリア")}
                   >
                     {localize(
-                      AREA_OPTIONS.map((area) => (
+                      availableAreaOptions.map((area) => (
                         <button
                           key={area.id}
                           type="button"
@@ -2544,7 +2554,7 @@ export function App() {
                 aria-label={localize("エリア")}
               >
                 {localize(
-                  AREA_OPTIONS.map((area) => (
+                  availableAreaOptions.map((area) => (
                     <button
                       key={area.id}
                       type="button"

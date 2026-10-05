@@ -195,6 +195,13 @@ export const AREA_OPTIONS: Array<{
   { id: "kamiooka", label: "上大岡" },
 ];
 
+// The API cinema catalog already applies date and access availability.
+// Use the catalog, rather than showings, so collection failures do not hide areas.
+export function getAvailableAreaOptions(cinemas: Pick<Cinema, "area">[]) {
+  const areas = new Set(cinemas.map((cinema) => cinema.area));
+  return AREA_OPTIONS.filter((area) => area.id === "all" || areas.has(area.id));
+}
+
 export const MOVIE_HIDE_CONFIRMATION =
   "上映スケジュールから非表示になりますが、よいですか？";
 

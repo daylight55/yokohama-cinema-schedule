@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { RouteEstimate, Showing } from "../shared/types";
 import {
   COLOR_THEME_STORAGE_KEY,
+  getAvailableAreaOptions,
   MOVIE_HIDE_CONFIRMATION,
   appHashStateFromHash,
   appViewFromHash,
@@ -972,5 +973,22 @@ describe("movie showing dates", () => {
         { startsAt: "2026-07-29T21:00:00.000Z" },
       ]),
     ).toEqual(["2026-07-30", "2026-07-31"]);
+  });
+});
+
+describe("available area options", () => {
+  it("includes only catalog areas, without requiring collected showings", () => {
+    expect(
+      getAvailableAreaOptions([
+        { area: "kamiooka" },
+        { area: "minatomirai" },
+        { area: "minatomirai" },
+      ]).map((area) => area.id),
+    ).toEqual(["all", "minatomirai", "kamiooka"]);
+  });
+  it("keeps all when no cinemas are available and restores available areas", () => {
+    expect(getAvailableAreaOptions([]).map((area) => area.id)).toEqual(["all"]);
+    expect(getAvailableAreaOptions([{ area: "tobe" }]).map((area) => area.id))
+      .toEqual(["all", "tobe"]);
   });
 });
