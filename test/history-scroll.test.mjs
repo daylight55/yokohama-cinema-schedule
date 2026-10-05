@@ -5,9 +5,10 @@ import { createRoot } from "react-dom/client";
 import { useHistoryScroll } from "../src/useHistoryScroll";
 
 let root;
+let scrollState;
 let frame;
 function Page({ route, ready = true, order = ["first", "second"] }) {
-  useHistoryScroll(route, ready);
+  scrollState = useHistoryScroll(route, ready);
   return createElement("main", null,
     ...order.map(key => createElement("div", { key, "data-horizontal-scroll": key },
       createElement("a", { href: "#movie", "data-movie-key": key }, key))),
@@ -31,6 +32,7 @@ beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal("scrollX", 0);
   vi.stubGlobal("scrollY", 0);
+  vi.spyOn(performance, "getEntriesByType").mockReturnValue([{ type: "navigate" }]);
   frame = [];
   vi.stubGlobal("requestAnimationFrame", vi.fn(callback => { frame.push(callback); return frame.length; }));
   vi.stubGlobal("cancelAnimationFrame", vi.fn());
@@ -106,4 +108,56 @@ describe("history scroll capture during mobile flings", () => {
     expect(document.querySelector('[data-horizontal-scroll="first"]').scrollLeft).toBe(340);
     expect(window.scrollTo).toHaveBeenLastCalledWith({ left: 0, top: 700, behavior: "instant" });
   });
+});
+
+async function remount() {
+  await act(async () => root.unmount());
+  root = createRoot(document.getElementById("root"));
+}
+describe("reload scroll restoration", () => {
+  it("restores position and horizontal/collapse state after data loads on reload", async () => {
+    await render("#schedule");
+    scroll("first", 215);
+    document.querySelector("details").open = false;
+    vi.stubGlobal("scrollY", 1688);
+    window.dispatchEvent(new Event("pagehide"));
+    expect(history.state.hamaReloadScroll.y).toBe(1688);
+    await remount();
+    vi.stubGlobal("scrollY", 0);
+    performance.getEntriesByType.mockReturnValue([{ type: "reload" }]);
+    await render("#schedule", { ready: false });
+    expect(window.scrollTo).not.toHaveBeenCalled();
+    await render("#schedule", { ready: true, order: ["second", "first"] });
+    frame.forEach(callback => callback());
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ left: 0, top: 1688, behavior: "instant" });
+    expect(document.querySelector('[data-horizontal-scroll="first"]').scrollLeft).toBe(215);
+    expect(document.querySelector("details").open).toBe(false);
+  });
+  it("does not restore a departure snapshot on a fresh navigation or a different URL", async () => {
+    history.replaceState({ hamaReloadScroll: {href: location.href, x: 0, y: 900, horizontal: [], open: []} }, "");
+    await render("#schedule");
+    expect(window.scrollTo).not.toHaveBeenCalled();
+    await remount();
+    performance.getEntriesByType.mockReturnValue([{ type: "reload" }]);
+    history.replaceState(history.state, "", "#movies");
+    await render("#movies");
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+  it("keeps a pending snapshot when reloading again before data is ready", async () => {
+    history.replaceState({ hamaReloadScroll: {href: location.href, x: 0, y: 900, horizontal: [], open: []} }, "");
+    performance.getEntriesByType.mockReturnValue([{ type: "reload" }]);
+    await render("#schedule", { ready: false });
+    window.dispatchEvent(new Event("pagehide"));
+    expect(history.state.hamaReloadScroll.y).toBe(900);
+  });
+});
+
+it("captures reload position after the app canonicalizes a direct URL", async () => {
+  await render("#schedule");
+  history.replaceState(history.state, "", "#schedule?date=2026-10-05");
+  scrollState.syncEntryURL();
+  vi.stubGlobal("scrollY", 760);
+  window.dispatchEvent(new Event("beforeunload"));
+  expect(history.state.hamaReloadScroll.href).toBe(location.href);
+  expect(history.state.hamaReloadScroll.y).toBe(760);
 });
