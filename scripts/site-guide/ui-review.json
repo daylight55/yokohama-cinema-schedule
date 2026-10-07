@@ -1,21 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-07T05:32:27.544Z",
-    "baseRevision": "01f21e5fb49c99ca5128b52f7df0dc6e43866435",
-    "outcome": "recaptured",
-    "scenes": [
-      "schedule",
-      "cinema-settings",
-      "search",
-      "film",
-      "booking",
-      "watchlist",
-      "plan",
-      "sharing",
-      "language"
-    ],
-    "note": "Removed location registration and current-location refresh; recaptured all nine Japanese and English operation scenes, inspected changed account/schedule frames, and regenerated both videos with byte-identical narration/BGM audio streams. Production build playback, seeking, captions and 320/390px layout passed. No new audio generation."
+    "reviewedAt": "2026-10-07T05:36:25.772Z",
+    "baseRevision": "05ad20553f0a7674067c9f33320c42c728b9edc1",
+    "outcome": "visually-unchanged",
+    "scenes": [],
+    "note": "The nine Japanese and English operation scenes were recaptured and both videos regenerated for location retirement. Final review also clears cinema scroll anchors when manual travel mode or note state changes; none of the captured scenes change those inputs. Existing refreshed footage remains identical for this dependency-only correction. Playback, seek, captions and 320/390px display were verified in the production build."
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -71,7 +61,7 @@
     "src/AccountPage.tsx": "a4cb8e1835ea32181a5aab56233e3def8601688265e4bf4aa6bba95c25a3751f",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "157b2ed72f03123f0f7d19a00799f4de062d6102918a4145202888ba2e46983c",
+    "src/App.tsx": "71836ffe195004aa1096d05952928fcb7c2f2906a68407836b855ce5a1c18ef7",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "82d442b449100df8fd560d69353f9521e1bb1da317e24ef803edec6611b1daf5",
     "src/MemberPage.tsx": "09c4da2168a83306e844d79ad889391ca6aecaad70a79b82e386a90a3f6ae9dc",

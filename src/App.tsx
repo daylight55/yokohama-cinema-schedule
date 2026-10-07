@@ -464,7 +464,7 @@ export function App() {
     const nextTop = pendingAnchor.element.getBoundingClientRect().top;
     window.scrollBy(0, nextTop - pendingAnchor.top);
     pendingCinemaAnchorRef.current = null;
-  }, [cinemaCustomDurations]);
+  }, [cinemaCustomDurations, cinemaTravelModes, cinemaNotes]);
 
   useEffect(() => {
     const updateClock = () => { if (document.visibilityState === "visible") setNow(new Date()); };
