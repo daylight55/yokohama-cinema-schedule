@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-07T07:14:36.511Z",
-    "baseRevision": "40e0252bb452cb95d0c9f32c4e6c87846ee3c1b1",
+    "reviewedAt": "2026-10-07T07:29:45.633Z",
+    "baseRevision": "9a39cab68a229517080b5bdebb079c3aecc6a541",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "管理者モードは管理者ユーザーにのみ表示され、一般メンバーの案内動画の画面・導線・操作結果は変わらない。日英の全9操作場面をoutput/guide/admin-mode-reviewへ確認用撮影し、既存動画素材66枚すべてのピクセル一致を確認。配信用ビルドのAboutで日英の再生・シーク・字幕既定オフ・320x700/390x844表示も確認。管理者モードのオンオフ、直接ハッシュ、再読み込み、履歴、取得停止、メンバー権限は日英320/390/1280pxで別途検証。"
+    "note": "管理者モードは管理者ユーザーにのみ表示し、一般メンバー向け動画の画面・導線・操作結果に変更なし。最新mainの作品プレースホルダーの先頭括弧除去も取り込んだ統合後に、日英の全9操作場面をoutput/guide/admin-mode-reviewへ確認用撮影し、既存動画素材66枚すべてのピクセル一致を確認。配信用ビルドのAboutで日英再生・シーク・字幕既定オフ・320x700/390x844表示を確認済み。管理者モードのオンオフ、直接ハッシュ、再読み込み、履歴、取得停止、メンバー権限は日英320/390/1280pxで検証済み。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -61,7 +61,7 @@
     "src/AccountPage.tsx": "da50829f4bb73bb5e78c70f17327efa83f152af51a7426291160f8c8e1ba18cb",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "432ae2eb9fcf93903e9dc9a7b76212ffe3de9f4872a630b8c594d53a3e32c436",
+    "src/App.tsx": "bc78523527c47d7303e2d1490cfd9fe3a515e55f9e53c80868d6a8fdd2e3c1b3",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "82d442b449100df8fd560d69353f9521e1bb1da317e24ef803edec6611b1daf5",
     "src/MemberPage.tsx": "09c4da2168a83306e844d79ad889391ca6aecaad70a79b82e386a90a3f6ae9dc",

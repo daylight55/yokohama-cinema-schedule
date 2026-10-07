@@ -2818,7 +2818,9 @@ export function App() {
                                         className="movie-image-placeholder"
                                         aria-hidden="true"
                                       >
-                                        {movieTitle(movie.title).slice(0, 1)}
+                                        {movieTitle(movie.title)
+                                          .replace(/^[「『]/u, "")
+                                          .slice(0, 1)}
                                       </div>
                                     ),
                                   )}
