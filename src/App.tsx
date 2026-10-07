@@ -2,6 +2,7 @@ import { splitScreeningFormat } from "../shared/screening-format";
 import { ScreeningFormat, screeningLanguageSuffix } from "./ScreeningFormat";
 import { CollectionStatusPage } from "./CollectionStatusPage";
 import { useCollectionCounts } from "./useCollectionCounts";
+import { useAdminMode } from "./useAdminMode";
 import { ScheduleNavigator } from "./ScheduleNavigator";
 import { WatchlistNote } from "./WatchlistNote";
 import { activeMetrics } from "./performanceMetrics";
@@ -192,7 +193,8 @@ export function App() {
   const language = useLanguage();
   const captureLanguageScroll = useLanguageScroll(language);
   const userRole = useUserRole();
-  const collectionCounts = useCollectionCounts(userRole === "admin");
+  const adminMode = useAdminMode(userRole === "admin");
+  const collectionCounts = useCollectionCounts(adminMode.enabled);
   const [languageSaving, setLanguageSaving] = useState(false);
   const [languageError, setLanguageError] = useState("");
   async function changeLanguage(value: "ja" | "en") {
@@ -2053,7 +2055,7 @@ export function App() {
               <InfoIcon size={20} aria-hidden="true" />
               {localize("このサイトについて")}
             </a>
-            {userRole === "admin" && (
+            {adminMode.enabled && (
               <div className="navigation-admin">
                 <a href="#admin-collection" onClick={closeNavigation} aria-current={view === "adminCollection" ? "page" : undefined}>{language === "en" ? "Schedule synchronization" : "上映情報の同期"}</a>
                 <a
@@ -2295,7 +2297,7 @@ export function App() {
                         }
                       >
                         <span>{localize(index === 0 ? "今日" : monthDay)}</span>
-                        <small>{localize(weekday)}{userRole === "admin" && <span
+                        <small>{localize(weekday)}{adminMode.enabled && <span
                           className="collection-count"
                           data-needs-check={(collectionCounts?.[date] ?? 0) > 0}
                           title={language === "en" ? "Cinemas needing a check: failed, unchecked or stale" : "要確認の映画館数：取得エラー・未確認・更新が古い"}
@@ -2309,7 +2311,7 @@ export function App() {
                 )}
               </div>
             </nav>
-              {userRole === "admin" && <a className="collection-count-key" href={hashForAppView("adminCollection", { date: selectedDate })}>
+              {adminMode.enabled && <a className="collection-count-key" href={hashForAppView("adminCollection", { date: selectedDate })}>
                 {language === "en" ? "Circled numbers: cinemas needing a check" : "丸数字：要確認の映画館数"}
               </a>}
             </>
@@ -2510,6 +2512,14 @@ export function App() {
                   onStar={() => void toggleMovieStar(movie)} />
               ) : null} />
             </>
+          ) : (view === "adminCollection" || view === "adminUsers") && !adminMode.enabled ? (
+            <PageShell className="account-page">
+              <PageHeader eyebrow={localize("管理者")} title={localize("管理者モード")} />
+              <p>{localize(userRole === "admin"
+                ? "管理者モードはオフです。マイページでオンにしてください。"
+                : "管理者のみ利用できます。")}</p>
+              {userRole === "admin" && <a href={hashForAppView("account")}>{localize("管理者モードを設定")}</a>}
+            </PageShell>
           ) : view === "adminCollection" ? (
             <AdminCollectionPage language={language} date={selectedDate} />
           ) : view === "adminUsers" ? (
@@ -2518,6 +2528,7 @@ export function App() {
             <MemberPage key={selectedMemberId} userId={selectedMemberId} />
           ) : view === "account" ? (
             <AccountPage
+              adminMode={userRole === "admin" ? adminMode : undefined}
               scheduleSettings={
                 <section
                   className="account-section account-cinema-settings"

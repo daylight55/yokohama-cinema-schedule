@@ -9,6 +9,7 @@ try {
   for (const language of ['ja','en']) for (const width of [320,390]) for (const role of ['admin','member']) {
     const page = await browser.newPage({viewport:{width,height:width===320?700:844}});
     await installFixture(page,language);
+    await page.addInitScript(() => localStorage.setItem('hamamubi-admin-mode','on'));
     let failed = false, requests = 0;
     await page.route('**/api/account/language', route => route.fulfill({json:{language,userRole:role}}));
     await page.route('**/api/admin/collection', async route => {
