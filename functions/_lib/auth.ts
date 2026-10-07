@@ -114,6 +114,7 @@ export async function createSession(env: PagesEnv): Promise<string> {
 export async function createUserSession(
   env: PagesEnv,
   userId: string,
+  restoreWithdrawnAt?: string,
 ): Promise<{ value: string; maxAge: number }> {
   const ttlDays = Math.min(
     Math.max(Number(env.SESSION_TTL_DAYS ?? "30"), 1),
@@ -125,17 +126,18 @@ export async function createUserSession(
   const now = new Date();
   const expiresAt = new Date(now.getTime() + maxAge * 1000);
   if (!(await accountCanLogin(env.DB, userId, now.toISOString()))) throw new Error("user_disabled");
-  // Called only after credential verification. Restoration and session creation
-  // share a transaction; cookies/session refresh alone can never restore a user.
+  // Ordinary login never restores an account. Only an authenticated, explicitly
+  // confirmed restoration supplies the matching withdrawal timestamp.
   const results = await env.DB.batch([
     env.DB.prepare(`UPDATE users SET status='active',withdrawn_at=NULL,delete_after=NULL,last_login_at=?,updated_at=?
-      WHERE id=? AND ((status='active' AND withdrawn_at IS NULL) OR
-      (status='disabled' AND withdrawn_at IS NOT NULL AND delete_after>?))`)
-      .bind(now.toISOString(), now.toISOString(), userId, now.toISOString()),
+      WHERE id=? AND ((? IS NULL AND status='active' AND withdrawn_at IS NULL) OR
+      (? IS NOT NULL AND status='disabled' AND withdrawn_at=? AND delete_after>?))`)
+      .bind(now.toISOString(), now.toISOString(), userId, restoreWithdrawnAt ?? null,
+        restoreWithdrawnAt ?? null, restoreWithdrawnAt ?? null, now.toISOString()),
     env.DB.prepare(
     `INSERT INTO user_sessions (
        token_hash, user_id, created_at, expires_at, last_used_at
-     ) SELECT ?, id, ?, ?, ? FROM users WHERE id=? AND status='active' AND withdrawn_at IS NULL`,
+     ) SELECT ?, id, ?, ?, ? FROM users WHERE id=? AND status='active' AND withdrawn_at IS NULL AND changes()=1`,
   )
     .bind(
       tokenHash,

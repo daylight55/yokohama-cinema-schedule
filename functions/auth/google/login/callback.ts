@@ -1,7 +1,6 @@
-import { isLanguage } from "../../../../shared/language";
+import { isLanguage, languageCookie } from "../../../../shared/language";
 import { completeGoogleLogin } from "../../../_lib/accounts";
 import {
-  createUserSession,
   LEGACY_USER_ID,
   loginPage,
   resolveSession,
@@ -18,6 +17,7 @@ import {
   parseCookie,
   secureStringEqual,
 } from "../../../_lib/google-oauth";
+import { authenticatedLogin } from "../../../_lib/account-restoration";
 
 interface GoogleUserInfo {
   sub?: string;
@@ -124,13 +124,14 @@ export const onRequestGet: PagesFunction<PagesEnv> = async (context) => {
       inviteToken,
       language,
     );
-    const session = await createUserSession(context.env, user.id);
+    const result = await authenticatedLogin(context.env, user.id, inviteToken ? "#shared" : "#schedule");
     const headers = new Headers({
-      location: new URL(inviteToken ? "/#shared" : "/#schedule", requestUrl.origin).toString(),
+      location: new URL(result.restoreCookie ? "/auth/restore" : inviteToken ? "/#shared" : "/#schedule", requestUrl.origin).toString(),
       "cache-control": "no-store",
       "referrer-policy": "no-referrer",
     });
-    headers.append("set-cookie", sessionCookie(session.value, session.maxAge));
+    headers.append("set-cookie", result.restoreCookie ?? sessionCookie(result.session!.value, result.session!.maxAge));
+    headers.append("set-cookie", languageCookie(language));
     clearOauthCookies(headers, requestUrl);
     return new Response(null, { status: 303, headers });
   } catch (error) {

@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-07T07:29:45.633Z",
-    "baseRevision": "9a39cab68a229517080b5bdebb079c3aecc6a541",
+    "reviewedAt": "2026-10-07T07:46:01.427Z",
+    "baseRevision": "8fc002e39f4c28520dc7c2f4f29fb7bf916997ef",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "管理者モードは管理者ユーザーにのみ表示し、一般メンバー向け動画の画面・導線・操作結果に変更なし。最新mainの作品プレースホルダーの先頭括弧除去も取り込んだ統合後に、日英の全9操作場面をoutput/guide/admin-mode-reviewへ確認用撮影し、既存動画素材66枚すべてのピクセル一致を確認。配信用ビルドのAboutで日英再生・シーク・字幕既定オフ・320x700/390x844表示を確認済み。管理者モードのオンオフ、直接ハッシュ、再読み込み、履歴、取得停止、メンバー権限は日英320/390/1280pxで検証済み。"
+    "note": "退会後の本人認証完了時だけ出す復旧確認を追加。動画にログイン・退会・復旧の場面はなく、新しい英語5項目は既存文言を変更しない。最新main 865c30fの管理者モードを保持した統合後、配信用ビルドで日英9操作場面を撮影しアクセシビリティ情報の差分なしを確認。マイページ場面を既存素材と視覚照合し、一般メンバー向け動画の操作・位置・結果が不変。日英320x700/390x844でAbout再生・シーク・字幕既定オフを確認。既存MP4・字幕・素材を維持。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -41,7 +41,7 @@
     "shared/i18n.ts": "9018ec07ce757bda69653ae54f54eec58e0e0f84f44e22c4a862c9915af19569",
     "shared/invitation-diagnostics.ts": "31c8b7491f6f3bde2f372eee8cd2a5a2b79a15cd343ee045cd21e5bfabec6f74",
     "shared/language.ts": "a5d55807e6936442fa8073ad6a1f4bbfc3508da91b000cdae70bb580123093c1",
-    "shared/locales/en.json": "e8c8b6c668f61a652a745386ab40c54ab514ad76fd24da7d34713f4bcac77fd4",
+    "shared/locales/en.json": "291a26995550c4885a2a4316f4f33305903649a86bd2927520bcbe5627c261c9",
     "shared/maps.ts": "5cc48b2175f6990faa0849d3f9508bf7382a72fb064d38cd74b6f6c3d194aab9",
     "shared/member-page.ts": "397d3fe038a862613d84add5e0a79c2ec6b410ea304b8ada1ab834827b6c43a1",
     "shared/member-profile.ts": "1c311f5b82be07ca822be0342469a38e6a475660502a05fedfdcd6db944a2ca1",

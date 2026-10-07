@@ -1,14 +1,13 @@
-import {
-  createUserSession,
-  sessionCookie,
-} from "../../_lib/auth";
+import { sessionCookie } from "../../_lib/auth";
 import type { PagesEnv } from "../../_lib/env";
 import { authenticatePasskey } from "../../_lib/passkeys";
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
+import { authenticatedLogin } from "../../_lib/account-restoration";
 
 interface VerifyRequest {
   challengeId?: string;
   response?: AuthenticationResponseJSON;
+  returnHash?: string;
 }
 
 export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
@@ -23,12 +22,12 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
       body.challengeId,
       body.response,
     );
-    const session = await createUserSession(context.env, userId);
+    const result = await authenticatedLogin(context.env, userId, body.returnHash);
     return Response.json(
-      { ok: true },
+      { ok: true, ...(result.restoreCookie ? { redirect: "/auth/restore" } : {}) },
       {
         headers: {
-          "set-cookie": sessionCookie(session.value, session.maxAge),
+          "set-cookie": result.restoreCookie ?? sessionCookie(result.session!.value, result.session!.maxAge),
           "cache-control": "no-store",
         },
       },

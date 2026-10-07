@@ -6,6 +6,8 @@ import { onRequestPost as passwordLogin } from "../functions/auth/password/login
 import { onRequestPost as withdrawal } from "../functions/api/account/withdraw";
 import { completeGoogleLogin } from "../functions/_lib/accounts";
 import type { PagesEnv } from "../functions/_lib/env";
+import { authenticatedLogin } from "../functions/_lib/account-restoration";
+import { onRequestGet as restorePage, onRequestPost as restoreAccount } from "../functions/auth/restore";
 const instant = "2026-01-31T01:23:00.000Z";
 function seed() {
   const data = testDatabase();
@@ -21,9 +23,9 @@ describe("account withdrawal lifecycle", () => {
     expect(accountDeletionDeadline(new Date("2024-01-31T01:00:00Z"))).toBe("2024-02-29T01:00:00.000Z");
     expect(accountDeletionDeadline(new Date("2026-12-31T15:30:00Z"))).toBe("2027-01-31T15:30:00.000Z");
   });
-  it("revokes every session, hides the member, retains data and restores only after valid password authentication", async () => {
+  it("revokes sessions and restores only after valid password authentication and explicit confirmation", async () => {
     vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(instant));
-    const { db, sqlite } = seed(); const env = { DB: db } as PagesEnv;
+    const { db, sqlite } = seed(); const env = { DB: db, SESSION_SECRET: "test-restoration-secret" } as PagesEnv;
     try {
       await saveUserPassword(db, "member", "local-lifecycle-test-password");
       const sessions = await Promise.all([createUserSession(env, "member"), createUserSession(env, "member")]);
@@ -38,7 +40,16 @@ describe("account withdrawal lifecycle", () => {
       expect((await attempt("wrong")).status).toBe(401);
       expect(sqlite.prepare("SELECT status FROM users WHERE id='member'").get()?.status).toBe("disabled");
       vi.setSystemTime(new Date("2026-02-28T01:22:59Z"));
-      expect((await attempt("local-lifecycle-test-password")).status).toBe(303);
+      const login = await attempt("local-lifecycle-test-password");
+      expect(login.headers.get("location")).toBe("/auth/restore");
+      expect(sqlite.prepare("SELECT status FROM users WHERE id='member'").get()?.status).toBe("disabled");
+      expect(sqlite.prepare("SELECT count(*) n FROM user_sessions").get()?.n).toBe(0);
+      const confirmation = await restoreAccount({ env, request: new Request("https://example.org/auth/restore", {
+        method: "POST", headers: { origin: "https://example.org", cookie: login.headers.get("set-cookie")!.split(";")[0] },
+        body: new URLSearchParams({ action: "restore" }),
+      }) } as Parameters<typeof restoreAccount>[0]);
+      expect(confirmation.status).toBe(303);
+      expect(confirmation.headers.get("set-cookie")).toContain("yc_session=v2.");
       expect(sqlite.prepare("SELECT status,delete_after,withdrawn_at FROM users WHERE id='member'").get())
         .toEqual({ status:"active",delete_after:null,withdrawn_at:null });
       expect(await purgeExpiredAccounts(db,"2026-03-01T00:00:00Z")).toBe(0);
@@ -69,8 +80,8 @@ describe("account withdrawal lifecycle", () => {
       sqlite.exec("INSERT INTO user_auth_identities VALUES('google','sub','member','member@example.com','now','now')");
       await withdrawAccount(db,"member");
       const user=await completeGoogleLogin(db,{subject:"sub",email:"member@example.com",emailVerified:true},null,"unused");
-      await createUserSession({DB:db} as PagesEnv,user.id);
-      sqlite.exec("UPDATE users SET status='disabled' WHERE id='member'");
+      await expect(createUserSession({DB:db} as PagesEnv,user.id)).rejects.toThrow("user_disabled");
+      sqlite.exec("UPDATE users SET status='disabled',withdrawn_at=NULL,delete_after=NULL WHERE id='member'");
       expect(await accountCanLogin(db,"member")).toBe(false);
       await expect(createUserSession({DB:db} as PagesEnv,"member")).rejects.toThrow("user_disabled");
     } finally {sqlite.close();}
@@ -85,5 +96,73 @@ describe("account withdrawal lifecycle", () => {
       const response=await invoke("https://example.org");expect(response.status).toBe(200);
       expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
     }finally{sqlite.close();}
+  });
+  it("keeps withdrawal and its deadline when visiting or cancelling the confirmation", async () => {
+    const { db, sqlite } = seed(); const env = { DB: db, SESSION_SECRET: "test-restoration-secret" } as PagesEnv;
+    try {
+      const deadline = await withdrawAccount(db, "member");
+      const result = await authenticatedLogin(env, "member", "#account");
+      const cookie = result.restoreCookie!.split(";")[0];
+      expect(result.restoreCookie).toContain("HttpOnly; Secure; SameSite=Lax; Max-Age=600");
+      const request = new Request("https://example.org/auth/restore?lang=en", { headers: { cookie } });
+      expect(await resolveSession(request, env)).toBeNull();
+      const page = await restorePage({ request, env } as Parameters<typeof restorePage>[0]);
+      expect(await page.text()).toContain("Restore your account?");
+      const cancel = await restoreAccount({ env, request: new Request(request.url, {
+        method: "POST", headers: { cookie, origin: "https://example.org" }, body: new URLSearchParams({ action: "cancel" }),
+      }) } as Parameters<typeof restoreAccount>[0]);
+      expect(cancel.headers.get("set-cookie")).toContain("Max-Age=0");
+      expect(sqlite.prepare("SELECT status,delete_after FROM users WHERE id='member'").get()).toEqual({ status: "disabled", delete_after: deadline });
+      expect(sqlite.prepare("SELECT count(*) n FROM user_sessions").get()?.n).toBe(0);
+    } finally { sqlite.close(); }
+  });
+  it("rejects missing/tampered proofs, cross-origin confirmation, and replay after another withdrawal", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(instant));
+    const { db, sqlite } = seed(); const env = { DB: db, SESSION_SECRET: "test-restoration-secret" } as PagesEnv;
+    try {
+      await withdrawAccount(db, "member");
+      const result = await authenticatedLogin(env, "member", "#account");
+      const cookie = result.restoreCookie!.split(";")[0];
+      const confirm = (cookieValue = cookie, origin = "https://example.org") => restoreAccount({ env,
+        request: new Request("https://example.org/auth/restore", { method: "POST", headers: { cookie: cookieValue, origin },
+          body: new URLSearchParams({ action: "restore" }) }),
+      } as Parameters<typeof restoreAccount>[0]);
+      expect((await confirm(cookie, "https://evil.example")).status).toBe(403);
+      for (const bad of ["", `${cookie}tampered`]) expect((await confirm(bad)).headers.get("location")).toBe("/auth/login");
+      expect(sqlite.prepare("SELECT status FROM users WHERE id='member'").get()?.status).toBe("disabled");
+      const success = await confirm();
+      expect(success.headers.get("location")).toBe("/#account");
+      expect(await resolveSession(new Request("https://example.org", { headers: {
+        cookie: success.headers.get("set-cookie")!.split(";")[0],
+      } }), env)).not.toBeNull();
+      expect((await confirm()).headers.get("location")).toBe("/auth/login");
+      expect(sqlite.prepare("SELECT count(*) n FROM user_sessions").get()?.n).toBe(1);
+      vi.setSystemTime(new Date(new Date(instant).getTime() + 1000));
+      await withdrawAccount(db, "member");
+      expect((await confirm()).headers.get("location")).toBe("/auth/login");
+      expect(sqlite.prepare("SELECT status FROM users WHERE id='member'").get()?.status).toBe("disabled");
+    } finally { sqlite.close(); }
+  });
+  it("rejects a stale confirmation, a deletion deadline reached while confirming, and admin suspension", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(instant));
+    const { db, sqlite } = seed(); const env = { DB: db, SESSION_SECRET: "test-restoration-secret" } as PagesEnv;
+    try {
+      const deadline = await withdrawAccount(db, "member");
+      const confirmation = async () => {
+        const result = await authenticatedLogin(env, "member");
+        return new Request("https://example.org/auth/restore", { headers: { cookie: result.restoreCookie!.split(";")[0] } });
+      };
+      const request = await confirmation();
+      vi.setSystemTime(new Date(new Date(instant).getTime() + 600_000));
+      expect((await restorePage({ env, request } as Parameters<typeof restorePage>[0])).status).toBe(303);
+      vi.setSystemTime(new Date(new Date(deadline!).getTime() - 1000));
+      const lastSecond = await confirmation();
+      vi.setSystemTime(new Date(deadline!));
+      expect((await restorePage({ env, request: lastSecond } as Parameters<typeof restorePage>[0])).status).toBe(303);
+      vi.setSystemTime(new Date(instant));
+      sqlite.exec("UPDATE users SET withdrawn_at=NULL,delete_after=NULL WHERE id='member'");
+      expect((await restorePage({ env, request } as Parameters<typeof restorePage>[0])).status).toBe(303);
+      await expect(authenticatedLogin(env, "member")).rejects.toThrow("user_disabled");
+    } finally { sqlite.close(); }
   });
 });

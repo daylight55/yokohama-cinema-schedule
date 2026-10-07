@@ -9,9 +9,16 @@ single D1 batch. Shared data and avatar endpoints already exclude disabled users
 
 The deadline is one calendar month in Japan after withdrawal, at the same local
 time, clamped to the last day of a shorter month. It is not a rolling inactivity
-period for active members. A successful password, Google or passkey login before
-that deadline atomically clears withdrawal fields, restores active status and
-creates a fresh session. Invalid credentials, existing cookies, and administrator
+period for active members. Successful password, Google or passkey authentication
+before that deadline opens a restoration confirmation at `/auth/restore`. It
+issues only a signed, HttpOnly recovery cookie valid for ten minutes, bound to
+the current withdrawal timestamp; it grants no access to private data. Choosing
+Restore and sign in atomically clears withdrawal fields, restores active status
+and creates a fresh session. Cancel and Escape clear the recovery cookie while
+preserving withdrawal and the original deletion deadline. Reusing a consumed
+proof, or a proof from an earlier withdrawal, cannot create a session. The POST
+requires the same origin and rechecks both proof expiry and the deletion deadline.
+Invalid credentials, existing cookies, and administrator
 fallback login do not restore accounts. A normal administrator suspension cannot
 be undone by logging in. Administrator status changes cannot override withdrawal.
 
@@ -32,3 +39,11 @@ past events already exported to the user's external calendar.
 Watch structured `expired_accounts_deleted` Worker logs (count only). Query
 `users WHERE withdrawn_at IS NOT NULL` for pending cleanup. No endpoint permits
 manual bulk deletion or deadline bypass. Ordinary disabled users are never purged.
+
+Validate with `npm run ci:pr` on the CI Node version. The runtime smoke check also
+exercises restoration and D1 batch semantics in workerd. For Japanese/English
+320x700 and 390x844 confirmation, focus, cancel/Escape, restore, reload/history,
+and no-JavaScript fallback, run `node scripts/verify-account-restoration.mjs`;
+set `PLAYWRIGHT_MODULE` if Playwright lives outside the project's dependencies.
+This uses an isolated fixture database and never withdraws a real account.
+No additional migration or mail Worker deployment is needed for this confirmation.

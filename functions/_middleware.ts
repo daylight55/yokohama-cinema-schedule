@@ -63,6 +63,7 @@ export function isPublicAuthPath(pathname: string): boolean {
     pathname === "/auth/invite" ||
     pathname === "/auth/login" ||
     pathname === "/auth/logout" ||
+    pathname === "/auth/restore" ||
     pathname === "/auth/password/login" ||
     pathname === "/auth/passkeys/options" ||
     pathname === "/auth/passkeys/verify" ||
@@ -80,6 +81,7 @@ export function isPublicShellAssetPath(pathname: string): boolean {
     pathname === "/page-layout.css" ||
     pathname === "/site.webmanifest" ||
     pathname === "/login-route.js" ||
+    pathname === "/account-restore.js" ||
     pathname === "/passkey-login.js"
   );
 }
