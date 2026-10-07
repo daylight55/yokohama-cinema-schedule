@@ -39,7 +39,6 @@ import {
   scrollToInitialTimeMarker,
   shouldDefaultExpandScheduleBucket,
   shouldExpandScheduleBucket,
-  shouldShowCurrentLocationRefresh,
   shouldShowScheduleTimeJumps,
 } from "../src/lib";
 
@@ -104,32 +103,6 @@ describe("page navigation scroll targets", () => {
       left: 0,
       behavior: "instant",
     });
-  });
-});
-
-describe("current location refresh visibility", () => {
-  it("shows only on today's schedule", () => {
-    expect(
-      shouldShowCurrentLocationRefresh(
-        "schedule",
-        "2026-08-03",
-        "2026-08-03",
-      ),
-    ).toBe(true);
-    expect(
-      shouldShowCurrentLocationRefresh(
-        "schedule",
-        "2026-08-04",
-        "2026-08-03",
-      ),
-    ).toBe(false);
-    expect(
-      shouldShowCurrentLocationRefresh(
-        "movies",
-        "2026-08-03",
-        "2026-08-03",
-      ),
-    ).toBe(false);
   });
 });
 

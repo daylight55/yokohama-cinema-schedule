@@ -10,29 +10,12 @@ import type {
   MovieMarathonProposal,
   Showing,
 } from "../../shared/types";
-import {
-  applyCustomDuration,
-  buildTransitRoutes,
-  estimateRoute,
-} from "../api/routes";
 import { buildCinemaTransferMinutes } from "./cinema-transfers";
-import {
-  DEFAULT_TRAVEL_MODE,
-  listCinemaTravelPreferences,
-} from "./cinema-travel-preferences";
+import { listCinemaTravelPreferences } from "./cinema-travel-preferences";
 import { listActiveCinemas } from "./cinemas";
-import { requireProfileEncryptionKey, type PagesEnv } from "./env";
+import type { PagesEnv } from "./env";
 import { listMoviePreferences } from "./preferences";
-import {
-  estimateStationWalkFallbacks,
-  listPreferredOriginStationIds,
-  listStationConnections,
-  listStations,
-} from "./stations";
-import {
-  getDepartureLocation,
-  listDepartureStationAccess,
-} from "./user-profile";
+import { listStationConnections } from "./stations";
 
 interface ShowingRow {
   id: string;
@@ -151,94 +134,10 @@ async function homeTravelMinutes(
   cinemas: Cinema[],
   userId: string,
 ): Promise<Map<string, number>> {
-  const departure = await getDepartureLocation(
-    env.DB,
-    requireProfileEncryptionKey(env),
-    userId,
-  );
-  if (!departure) return new Map();
-  const preferences = await listCinemaTravelPreferences(
-    env.DB,
-    cinemas,
-    userId,
-  );
-  const preferenceByCinema = new Map(
-    preferences.map((preference) => [preference.cinemaId, preference]),
-  );
-  const modeByCinema = new Map(
-    preferences.map((preference) => [
-      preference.cinemaId,
-      preference.travelMode,
-    ]),
-  );
-  const transitCinemas = cinemas.filter(
-    (cinema) =>
-      (modeByCinema.get(cinema.id) ?? DEFAULT_TRAVEL_MODE) === "transit",
-  );
-  const [stations, connections, preferredOriginStationIds] =
-    await Promise.all([
-      listStations(env.DB),
-      listStationConnections(env.DB),
-      listPreferredOriginStationIds(env.DB),
-    ]);
-  const stationById = new Map(
-    stations.map((station) => [station.id, station]),
-  );
-  const storedWalks = await listDepartureStationAccess(
-    env.DB,
-    stationById,
-    userId,
-  );
-  const originStations =
-    preferredOriginStationIds.size > 0
-      ? stations.filter((station) =>
-          preferredOriginStationIds.has(station.id),
-        )
-      : stations;
-  const storedWalkByStation = new Map(
-    storedWalks.map((walk) => [walk.station.id, walk]),
-  );
-  const stationWalks = originStations.map(
-    (station) =>
-      storedWalkByStation.get(station.id) ??
-      estimateStationWalkFallbacks(
-      departure.latitude,
-      departure.longitude,
-        [station],
-      )[0],
-  );
-  const transitRoutes = buildTransitRoutes(
-    departure.latitude,
-    departure.longitude,
-    transitCinemas,
-    stationWalks,
-    stations,
-    connections,
-    preferredOriginStationIds,
-  );
-
-  return new Map(
-    cinemas.map((cinema) => {
-      const travelMode =
-        modeByCinema.get(cinema.id) ?? DEFAULT_TRAVEL_MODE;
-      const route =
-        transitRoutes.get(cinema.id) ??
-        estimateRoute(
-          departure.latitude,
-          departure.longitude,
-          cinema,
-          travelMode,
-        );
-      return [
-        cinema.id,
-        applyCustomDuration(
-          route,
-          preferenceByCinema.get(cinema.id)?.customDurationMinutes ??
-            null,
-        ).durationMinutes,
-      ];
-    }),
-  );
+  const preferences = await listCinemaTravelPreferences(env.DB, cinemas, userId);
+  return new Map(preferences.flatMap(({ cinemaId, customDurationMinutes }) =>
+    customDurationMinutes === null ? [] : [[cinemaId, customDurationMinutes]],
+  ));
 }
 
 export async function generateMovieMarathonProposal(

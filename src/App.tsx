@@ -30,7 +30,6 @@ import {
   CalendarDotsIcon,
   CheckCircleIcon,
   ClockIcon,
-  CrosshairIcon,
   FilmSlateIcon,
   HouseLineIcon,
   InfoIcon,
@@ -70,8 +69,6 @@ import type {
   CinemaArea,
   CinemaTravelPreference,
   MoviePreferenceStatus,
-  RouteEstimate,
-  RoutesResponse,
   ScheduleCollapseMinutes,
   ScheduleResponse,
   Showing,
@@ -112,7 +109,6 @@ import {
   SCHEDULE_TIME_PERIODS,
   shouldDefaultExpandScheduleBucket,
   shouldExpandScheduleBucket,
-  shouldShowCurrentLocationRefresh,
   shouldShowScheduleTimeJumps,
   type AppView,
   type ColorTheme,
@@ -287,7 +283,6 @@ export function App() {
   const [loadedScheduleKey, setLoadedScheduleKey] = useState("");
   const [futureOnly, setFutureOnly] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
-  const [routes, setRoutes] = useState<RouteEstimate[]>([]);
   const [view, setView] = useState<AppView>(initialHashState.view);
   const scheduleRequestKey = `${view}:${selectedDate}:${showAllMovieDates}`;
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
@@ -338,7 +333,7 @@ export function App() {
     scheduleCollapseMinutes: 60,
   });
   const [profileState, setProfileState] = useState<
-    "idle" | "saving" | "deleting"
+    "idle" | "deleting"
   >("idle");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [collapsePreferenceState, setCollapsePreferenceState] = useState<
@@ -355,12 +350,6 @@ export function App() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [routeState, setRouteState] = useState<
-    "idle" | "loading" | "ready" | "error"
-  >("idle");
-  const [routeOrigin, setRouteOrigin] =
-    useState<RoutesResponse["origin"]>(null);
-  const [routeUpdatedAt, setRouteUpdatedAt] = useState<string | null>(null);
   const selectedMovieListDate =
     view === "movies" && showAllMovieDates ? null : selectedDate;
   const historyScroll = useHistoryScroll(
@@ -475,7 +464,7 @@ export function App() {
     const nextTop = pendingAnchor.element.getBoundingClientRect().top;
     window.scrollBy(0, nextTop - pendingAnchor.top);
     pendingCinemaAnchorRef.current = null;
-  }, [routes]);
+  }, [cinemaCustomDurations]);
 
   useEffect(() => {
     const updateClock = () => { if (document.visibilityState === "visible") setNow(new Date()); };
@@ -726,8 +715,11 @@ export function App() {
   }, [dates, selectedDate]);
 
   const routeByCinema = useMemo(
-    () => new Map(routes.map((route) => [route.cinemaId, route])),
-    [routes],
+    // Manual minutes support personal timing without collecting coordinates.
+    () => new Map([...cinemaCustomDurations].flatMap(([cinemaId, durationMinutes]) =>
+      durationMinutes === null ? [] : [[cinemaId, { durationMinutes }]],
+    )),
+    [cinemaCustomDurations],
   );
   const availableAreaOptions = useMemo(
     () => getAvailableAreaOptions(schedule?.cinemas ?? []),
@@ -1047,121 +1039,6 @@ export function App() {
     };
   }, [error, loading, selectedDate, timeGroups.length, today, view]);
 
-  const fetchRoutes = useCallback(async () => {
-    setRouteState("loading");
-    try {
-      const response = await fetch("/api/routes", {
-        headers: { accept: "application/json" },
-      });
-      if (!response.ok) throw new Error();
-      const data = (await response.json()) as RoutesResponse;
-      setRoutes(data.routes);
-      setRouteOrigin(data.origin);
-      setRouteUpdatedAt(data.generatedAt);
-      setRouteState(data.originRegistered ? "ready" : "idle");
-    } catch {
-      setRoutes([]);
-      setRouteOrigin(null);
-      setRouteUpdatedAt(null);
-      setRouteState("error");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!userProfile.departureRegistered) {
-      setRoutes([]);
-      setRouteOrigin(null);
-      setRouteUpdatedAt(null);
-      setRouteState("idle");
-      return;
-    }
-    void fetchRoutes();
-  }, [
-    fetchRoutes,
-    userProfile.departureRegistered,
-    userProfile.departureUpdatedAt,
-  ]);
-
-  const fetchCurrentLocationRoutes = async () => {
-    if (!navigator.geolocation || routeState === "loading") return;
-    setRouteState("loading");
-    try {
-      const position = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10_000,
-            maximumAge: 0,
-          });
-        },
-      );
-      const response = await fetch("/api/routes", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }),
-      });
-      if (!response.ok) throw new Error();
-      const data = (await response.json()) as RoutesResponse;
-      setRoutes(data.routes);
-      setRouteOrigin(data.origin);
-      setRouteUpdatedAt(data.generatedAt);
-      setNow(new Date());
-      setRouteState("ready");
-    } catch {
-      setRouteState("error");
-    }
-  };
-
-  const registerDepartureLocation = async () => {
-    setProfileError(null);
-    if (!navigator.geolocation) {
-      setProfileError("このブラウザでは位置情報を利用できません");
-      return;
-    }
-
-    setProfileState("saving");
-    try {
-      const position = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: false,
-            timeout: 10_000,
-            maximumAge: 0,
-          });
-        },
-      );
-      const response = await fetch("/api/profile", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }),
-      });
-      if (!response.ok) throw new Error();
-      const profile = (await response.json()) as UserProfile;
-      setUserProfile(profile);
-      setSchedule((current) =>
-        current ? { ...current, userProfile: profile } : current,
-      );
-    } catch {
-      setProfileError(
-        "ベース出発地点を登録できませんでした。位置情報の許可を確認してください",
-      );
-    } finally {
-      setProfileState("idle");
-    }
-  };
-
   const deleteDepartureProfile = async () => {
     if (!window.confirm(localize("登録したベース出発地点を削除しますか？")))
       return;
@@ -1172,9 +1049,9 @@ export function App() {
       const response = await fetch("/api/profile", { method: "DELETE" });
       if (!response.ok) throw new Error();
       const profile = (await response.json()) as UserProfile;
-      setUserProfile(profile);
+      setUserProfile((current) => ({ ...current, ...profile }));
       setSchedule((current) =>
-        current ? { ...current, userProfile: profile } : current,
+        current ? { ...current, userProfile: { ...current.userProfile, ...profile } } : current,
       );
     } catch {
       setProfileError("ベース出発地点を削除できませんでした");
@@ -1249,7 +1126,7 @@ export function App() {
     anchor: HTMLElement | null,
   ) => {
     if (savingCinemaIds.has(cinemaId)) return;
-    if (userProfile.departureRegistered) rememberCinemaAnchor(anchor);
+    rememberCinemaAnchor(anchor);
     const previousMode = cinemaTravelModes.get(cinemaId) ?? "transit";
     setCinemaPreferenceError(null);
     setCinemaTravelModes((current) => {
@@ -1279,7 +1156,6 @@ export function App() {
         next.set(cinemaId, preference.travelMode);
         return next;
       });
-      if (userProfile.departureRegistered) await fetchRoutes();
     } catch {
       pendingCinemaAnchorRef.current = null;
       setCinemaTravelModes((current) => {
@@ -1350,7 +1226,7 @@ export function App() {
     anchor: HTMLElement | null,
   ) => {
     if (savingCinemaIds.has(cinemaId)) return;
-    if (userProfile.departureRegistered) rememberCinemaAnchor(anchor);
+    rememberCinemaAnchor(anchor);
     const travelMode = cinemaTravelModes.get(cinemaId) ?? "transit";
     setCinemaPreferenceError(null);
     setSavingCinemaIds((current) => new Set(current).add(cinemaId));
@@ -1380,7 +1256,6 @@ export function App() {
         next.set(cinemaId, preference.customDurationMinutes?.toString() ?? "");
         return next;
       });
-      if (userProfile.departureRegistered) await fetchRoutes();
     } catch {
       pendingCinemaAnchorRef.current = null;
       setCinemaPreferenceError("自分の所要時間を保存できませんでした");
@@ -2602,49 +2477,6 @@ export function App() {
               )}
 
               {localize(
-                view !== "movies" &&
-                  userProfile.departureRegistered &&
-                  (routeState === "loading" || routeState === "error") && (
-                    <p
-                      className={[
-                        "inline-status",
-                        routeState === "error" ? "error" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      role="status"
-                    >
-                      {localize(
-                        routeState === "error" ? (
-                          <WarningCircleIcon size={16} aria-hidden="true" />
-                        ) : (
-                          <CheckCircleIcon
-                            size={16}
-                            weight="fill"
-                            aria-hidden="true"
-                          />
-                        ),
-                      )}
-                      {localize(
-                        routeState === "loading"
-                          ? "ベース出発地点からの移動時間を読み込んでいます"
-                          : "ベース出発地点からの移動時間を読み込めませんでした",
-                      )}
-                    </p>
-                  ),
-              )}
-              {localize(
-                view !== "movies" && !userProfile.departureRegistered && (
-                  <a
-                    className="home-profile-link"
-                    href={hashForAppView("account")}
-                  >
-                    <HouseLineIcon size={16} aria-hidden="true" />
-                    {localize("マイページでベース出発地点を登録")}
-                  </a>
-                ),
-              )}
-              {localize(
                 cinemaPreferenceError && (
                   <p className="inline-status error" role="status">
                     <WarningCircleIcon size={16} aria-hidden="true" />
@@ -2770,7 +2602,6 @@ export function App() {
                     state={profileState}
                     collapseState={collapsePreferenceState}
                     error={profileError}
-                    onRegister={() => void registerDepartureLocation()}
                     onDelete={() => void deleteDepartureProfile()}
                     onCollapseChange={(value) =>
                       void saveScheduleCollapsePreference(value)
@@ -3057,7 +2888,6 @@ export function App() {
                     <ul className="cinema-list">
                       {localize(
                         cinemaList.map((cinema) => {
-                          const route = routeByCinema.get(cinema.id);
                           const travelMode =
                             cinemaTravelModes.get(cinema.id) ?? "transit";
                           const customDuration =
@@ -3119,21 +2949,6 @@ export function App() {
                                 />
                               </label>
                               <CinemaExteriorThumbnail cinema={cinema} />
-                              {localize(
-                                route && (
-                                  <div className="cinema-route-actions">
-                                    <strong className="cinema-route-time">
-                                      {localize("約")}
-                                      {localize(route.durationMinutes)}
-                                      {localize("分")}
-                                    </strong>
-                                    <GoogleMapsRouteLink
-                                      cinema={cinema}
-                                      route={route}
-                                    />
-                                  </div>
-                                ),
-                              )}
                               <p className="cinema-address">
                                 {localize(cinema.address)}
                               </p>
@@ -3185,11 +3000,7 @@ export function App() {
                                     min="1"
                                     max="1440"
                                     step="1"
-                                    placeholder={localize(
-                                      route?.calculatedDurationMinutes?.toString() ??
-                                        route?.durationMinutes.toString() ??
-                                        "30",
-                                    )}
+                                    placeholder="30"
                                     value={durationDraft}
                                     disabled={
                                       isSaving ||
@@ -3240,7 +3051,7 @@ export function App() {
                                         )
                                       }
                                     >
-                                      {localize("自動に戻す")}
+                                      {localize("クリア")}
                                     </button>
                                   ),
                                 )}
@@ -3394,15 +3205,7 @@ export function App() {
           dates={dates}
           selectedDate={selectedMovieListDate}
           query={normalizedSearchQuery}
-          locationAction={shouldShowCurrentLocationRefresh(view, selectedDate, today) ? (
-            <button type="button" className="secondary-button" disabled={routeState === "loading"}
-              title={routeOrigin === "current" && routeUpdatedAt ? localize(`最終更新 ${updatedFormatter.format(new Date(routeUpdatedAt))}`) : undefined}
-              onClick={() => void fetchCurrentLocationRoutes()}>
-              <CrosshairIcon size={18} aria-hidden="true" />
-              {localize(routeState === "loading" ? "取得中…" : routeState === "error" ? "移動時間を再取得" : "現在地からの移動時間を調べる")}
-            </button>
-          ) : undefined}
-          locationStatus={routeState === "error" ? localize("移動時間を取得できませんでした。位置情報の許可を確認してください。") : routeOrigin === "current" && routeState === "ready" ? localize("現在地から間に合う上映を更新しました") : undefined}
+
         />
       )}
 
@@ -3570,16 +3373,14 @@ function ProfilePanel({
   state,
   collapseState,
   error,
-  onRegister,
   onDelete,
   onCollapseChange,
 }: {
   enabled: boolean;
   profile: UserProfile;
-  state: "idle" | "saving" | "deleting";
+  state: "idle" | "deleting";
   collapseState: "idle" | "saving" | "saved";
   error: string | null;
-  onRegister: () => void;
   onDelete: () => void;
   onCollapseChange: (value: ScheduleCollapseMinutes) => void;
 }) {
@@ -3635,7 +3436,7 @@ function ProfilePanel({
         )}
       </section>
 
-      <section
+      {profile.departureRegistered && <section
         className="profile-panel profile-location-panel"
         aria-labelledby="departure-profile-title"
       >
@@ -3644,11 +3445,7 @@ function ProfilePanel({
         </div>
         <div className="profile-copy">
           <h2 id="departure-profile-title">
-            {localize(
-              profile.departureRegistered
-                ? "ベース出発地点を登録済み"
-                : "ベース出発地点を登録",
-            )}
+            {localize("ベース出発地点を登録済み")}
           </h2>
           {localize(
             profile.departureUpdatedAt && (
@@ -3661,27 +3458,12 @@ function ProfilePanel({
             ),
           )}
         </div>
-        <button
-          type="button"
-          className="profile-primary-action"
-          disabled={!enabled || isBusy}
-          onClick={onRegister}
-        >
-          <CrosshairIcon size={18} aria-hidden="true" />
-          {localize(
-            state === "saving"
-              ? "登録中"
-              : profile.departureRegistered
-                ? "現在地でベース出発地点を更新"
-                : "現在地をベース出発地点として登録",
-          )}
-        </button>
         {localize(
           profile.departureRegistered && (
             <button
               type="button"
               className="profile-delete-action"
-              disabled={isBusy}
+              disabled={!enabled || isBusy}
               onClick={onDelete}
             >
               <TrashIcon size={15} aria-hidden="true" />
@@ -3698,49 +3480,11 @@ function ProfilePanel({
             </p>
           ),
         )}
-        {localize(
-          error && (
-            <p className="inline-status error" role="status">
-              <WarningCircleIcon size={16} aria-hidden="true" />
-              {localize(error)}
-            </p>
-          ),
-        )}
-      </section>
+      </section>}
+      {error && <p className="inline-status error" role="status">
+        <WarningCircleIcon size={16} aria-hidden="true" />{localize(error)}
+      </p>}
     </>
-  );
-}
-
-function routeTravelLabel(route: RouteEstimate): string {
-  const labels: Record<TravelMode, string> = {
-    walking: "徒歩",
-    transit: "電車",
-    bus: "バス",
-    bicycle: "自転車",
-  };
-  return labels[route.travelMode];
-}
-
-function GoogleMapsRouteLink({
-  cinema,
-  route,
-}: {
-  cinema: Cinema;
-  route: RouteEstimate;
-}) {
-  return (
-    <a
-      className="google-maps-route-link"
-      href={`/api/route-guidance/${encodeURIComponent(cinema.id)}`}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={localize(
-        `${cinema.name}までの${routeTravelLabel(route)}経路をGoogle マップで開く`,
-      )}
-    >
-      {localize("Googleマップで案内")}
-      <ArrowSquareOutIcon size={12} aria-hidden="true" />
-    </a>
   );
 }
 

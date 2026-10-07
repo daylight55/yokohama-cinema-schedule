@@ -628,5 +628,8 @@
   "参加": "Joined",
   "見送り": "Declined",
   "招待済み": "Already invited",
-  "招待取り消し済み": "Cancelled"
+  "招待取り消し済み": "Cancelled",
+  "映画館を調べる": "Explore cinemas",
+  "映画館の住所や地図を確認できます。自分の所要時間は、位置情報を使わず分数で登録できます。": "Find cinema addresses and maps. You can enter your travel time in minutes without sharing your location.",
+  "クリア": "Clear"
 }

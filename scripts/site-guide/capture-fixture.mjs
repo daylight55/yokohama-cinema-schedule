@@ -7,7 +7,8 @@ export async function installFixture(page, language = 'ja', options = {}) {
   let lang = language;
   let preferences = [];
   let plans = [];
-  let cinemaPreferences = [];
+  let cinemaPreferences = options.cinemaPreferences ?? [];
+  let userProfile = {departureRegistered:false,departureUpdatedAt:null,scheduleCollapseMinutes:0,...options.userProfile};
   let screeningInvitations = [];
   const cinemas = [
     {id:'burg',name:'横浜ブルク13',shortName:'ブルク13',area:'minatomirai',areaLabel:'桜木町・みなとみらい',sourceUrl:'https://tjoy.jp/yokohama_burg13'},
@@ -26,7 +27,7 @@ export async function installFixture(page, language = 'ja', options = {}) {
     const title=`Reload test film ${index+1}`;
     showings.push({...showings[0],id:`reload-${index}`,title,movieKey:title});
   }
-  const fixedTime=Date.parse(`${DATE}T10:00:00+09:00`);
+  const fixedTime=Date.parse(options.now ?? `${DATE}T10:00:00+09:00`);
   if(options.nativeNavigationTiming) {
     // Playwright Clock replaces navigation performance entries. Reload tests
     // need the real navigation type, so only freeze Date for these fixtures.
@@ -43,6 +44,11 @@ export async function installFixture(page, language = 'ja', options = {}) {
     const request=route.request(); const url=new URL(request.url()); const path=url.pathname;
     const body=request.postDataJSON(); let result;
     if(path==='/api/account/language') {if(body?.language)lang=body.language; result={language:lang,userRole:'member'};}
+    else if(path==='/api/profile'){
+      if(request.method()==='DELETE')userProfile={...userProfile,departureRegistered:false,departureUpdatedAt:null};
+      else if(request.method()==='PATCH')userProfile={...userProfile,...body};
+      result=userProfile;
+    }
     else if(path==='/api/account')result={user:{id:'guide',email:null,displayEmail:'demo@example.com',role:'member',legacy:false},methods:{google:true,password:false,passkeySupported:false},passkeys:[],users:[],pendingInvites:[],googleConfigured:true};
     else if(path==='/api/account/profile')result={userId:'guide',displayName:lang==='ja'?'はまむび':'Hama',avatarUrl:null,bio:''};
     else if(path==='/api/member-page')result={profile:{userId:'guide',displayName:lang==='ja'?'はまむび':'Hama',avatarUrl:null,bio:''},isSelf:true,movies:preferences,plans:plans.map(p=>({...p,userId:'guide',reserved:!!p.reservedAt})),titles};
@@ -51,7 +57,7 @@ export async function installFixture(page, language = 'ja', options = {}) {
       const date=url.searchParams.get('date')||DATE, through=url.searchParams.get('through')||date;
       const availableCinemas=cinemas.filter(cinema=>!options.unavailableCinemaIdsByDate?.[date]?.includes(cinema.id));
       const availableIds=new Set(availableCinemas.map(cinema=>cinema.id));
-      result={date,generatedAt:`${DATE}T10:00:00+09:00`,lastUpdatedAt:`${DATE}T08:00:00+09:00`,cinemas:availableCinemas,showings:showings.filter(s=>availableIds.has(s.cinemaId)&&s.startsAt.slice(0,10)>=date&&s.startsAt.slice(0,10)<=through),movieTitles:titles,preferences,preferencesEnabled:true,cinemaTravelPreferences:cinemaPreferences,cinemaTravelPreferencesEnabled:options.preferencesEnabled!==false,userProfile:{departureRegistered:false,departureUpdatedAt:null,scheduleCollapseMinutes:0},userProfileEnabled:true,sourceHealth:{healthy:2,total:2}};
+      result={date,generatedAt:`${DATE}T10:00:00+09:00`,lastUpdatedAt:`${DATE}T08:00:00+09:00`,cinemas:availableCinemas,showings:showings.filter(s=>availableIds.has(s.cinemaId)&&s.startsAt.slice(0,10)>=date&&s.startsAt.slice(0,10)<=through),movieTitles:titles,preferences,preferencesEnabled:true,cinemaTravelPreferences:cinemaPreferences,cinemaTravelPreferencesEnabled:options.preferencesEnabled!==false,userProfile,userProfileEnabled:true,sourceHealth:{healthy:2,total:2}};
     }else if(path==='/api/collection-status'){
       const dates=Array.from({length:7},(_,i)=>new Date(Date.parse(`${DATE}T12:00:00Z`)+i*86400000).toISOString().slice(0,10));
       result={generatedAt:`${DATE}T10:00:00+09:00`,dates,cinemas:cinemas.map(cinema=>({...cinema,days:dates.map(date=>({date,status:'published',stale:false,fetchedCount:2,storedCount:2,lastAttemptAt:`${DATE}T08:00:00+09:00`,lastSuccessAt:`${DATE}T08:00:00+09:00`,storedUpdatedAt:`${DATE}T08:00:00+09:00`,issue:null}))}))};

@@ -38,9 +38,6 @@
         - option "None" [selected]
         - option "30 minutes"
         - option "1 hour"
-    - region "Save your starting point":
-      - heading "Save your starting point" [level=2]
-      - button "Save current location as starting point"
     - heading "Google" [level=2]
     - strong: Connected
     - heading "Password" [level=2]

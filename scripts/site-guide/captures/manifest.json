@@ -3,8 +3,8 @@
     "width": 390,
     "height": 700
   },
-  "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-  "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。",
+  "sourceRevision": "01f21e5",
+  "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings.",
   "data": "Demonstration data in the real app; no personal accounts or external writes",
   "languages": {
     "ja": [
@@ -74,8 +74,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "cinema-settings",
@@ -149,8 +149,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "search",
@@ -191,8 +191,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "film",
@@ -233,8 +233,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "booking",
@@ -265,8 +265,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "watchlist",
@@ -307,8 +307,8 @@
             "zoom": 1.8
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "plan",
@@ -360,8 +360,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "sharing",
@@ -391,8 +391,8 @@
             "zoom": 1.3
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "language",
@@ -433,8 +433,8 @@
             "zoom": 1.5
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "outro",
@@ -509,8 +509,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "cinema-settings",
@@ -584,8 +584,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "search",
@@ -626,8 +626,8 @@
             "zoom": 1.35
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "film",
@@ -668,8 +668,8 @@
             "zoom": 1.25
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "booking",
@@ -700,8 +700,8 @@
           }
         ],
         "externalDestination": "https://hlo.tohotheater.jp/net/schedule/066/TNPI2000J01.do",
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "watchlist",
@@ -742,8 +742,8 @@
             "zoom": 1.8
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "plan",
@@ -795,8 +795,8 @@
             "zoom": 1.1
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "sharing",
@@ -826,8 +826,8 @@
             "zoom": 1.3
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "language",
@@ -868,8 +868,8 @@
             "zoom": 1.5
           }
         ],
-        "sourceRevision": "18d9e544fd7b8b2aac48dcb96ec9787d101cc9f0",
-        "sourceWorkingTreeNote": "地域ボタンを検索入力の候補へ移動。文字入力で地域指定を解除。"
+        "sourceRevision": "01f21e5",
+        "sourceWorkingTreeNote": "Remove GPS registration and current-location routing; use manual travel minutes and normal contrast for unreachable screenings."
       },
       {
         "name": "outro",

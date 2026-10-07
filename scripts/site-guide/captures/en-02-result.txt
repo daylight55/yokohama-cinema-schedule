@@ -31,8 +31,6 @@
     - group "Time":
       - button "Upcoming"
       - button "All times" [pressed]
-    - link "Save a starting point in My account":
-      - /url: "#account"
   - paragraph: Today
   - heading "Showtimes" [level=1]
   - text: 2 films4 screenings

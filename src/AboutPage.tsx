@@ -35,9 +35,9 @@ const FEATURES: ReadonlyArray<{
     view: "movies",
   },
   {
-    title: "映画館までの移動を見積もる",
+    title: "映画館を調べる",
     description:
-      "ベース出発地点と移動方法を登録すると、映画館ごとの所要時間や間に合いそうな上映を確認できます。",
+      "映画館の住所や地図を確認できます。自分の所要時間は、位置情報を使わず分数で登録できます。",
     icon: BuildingsIcon,
     view: "cinemas",
   },

@@ -245,3 +245,9 @@ GUIDE_URL=http://127.0.0.1:5195 node scripts/site-guide/verify-screening-formats
 `verify-reload-scroll.mjs` は日英320×700・390×844でスケジュール・作品一覧・Aboutの縦位置と横スクロールを保存してリロードし、データ取得を遅らせても描画後に復元されることを確認します。新規URLへの直接アクセスは従来の初期位置に移動します。
 
 実行には上記と同じ `GUIDE_URL` / `PLAYWRIGHT_MODULE` を指定します。この検証では `capture-fixture.mjs` の `nativeNavigationTiming` オプションでDateだけを固定し、ブラウザの実際のNavigation Timing（reload判定）を維持します。通常の動画撮影は従来のPlaywright Clockを使います。
+
+## 位置情報機能の廃止
+
+現在地の取得・出発地点の登録導線を外し、登録済みの地点がある場合だけ削除操作を残しています。日英の全9操作場面を現行画面で再撮影し、旧登録ボタンが映り込むマイページを含めて更新しました。台本・字幕・承認済みのナレーションとBGMは保持し、`--audio-from-dir public/guide` で再合成しています。
+
+`verify-location-retirement.mjs` は日英・320×700／390×844／1280×900・明暗テーマで、上映カードの濃さ、位置情報要求と経路API呼び出しの不在、保存済み地点の削除、手入力の分数の保存とクリア、再読み込みと履歴操作を確認します。

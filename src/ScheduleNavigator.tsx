@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useRef } from "react";
 import { ArrowsLeftRightIcon, CalendarDotsIcon, FilmSlateIcon, UsersThreeIcon, XIcon } from "@phosphor-icons/react";
 import { hashForAppView, type AppView } from "./lib";
 import { localize as t, localizedDate } from "./i18n";
@@ -10,13 +10,11 @@ const destinations = [
   { view: "viewingPlans", label: "鑑賞予定", Icon: CalendarDotsIcon },
 ] as const;
 
-export function ScheduleNavigator({ view, dates, selectedDate, query, locationAction, locationStatus }: {
+export function ScheduleNavigator({ view, dates, selectedDate, query }: {
   view: AppView;
   dates: string[];
   selectedDate: string | null;
   query: string;
-  locationAction?: ReactNode;
-  locationStatus?: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const close = () => dialogRef.current?.close();
@@ -54,10 +52,7 @@ export function ScheduleNavigator({ view, dates, selectedDate, query, locationAc
             {index === 0 ? t("今日") : localizedDate({ month: "numeric", day: "numeric", weekday: "short" }).format(new Date(`${date}T12:00:00+09:00`))}
           </a>)}
         </nav>
-        {locationAction && <div className="schedule-location-action">
-          {locationAction}
-          {locationStatus && <p role="status">{locationStatus}</p>}
-        </div>}
+
       </div>
     </dialog>
   </>;
