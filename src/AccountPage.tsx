@@ -15,9 +15,11 @@ import { PageHeader, PageShell } from "./PageLayout";
 export function AccountPage({
   profileSettings,
   scheduleSettings,
+  adminMode,
 }: {
   profileSettings?: ReactNode;
   scheduleSettings?: ReactNode;
+  adminMode?: { enabled: boolean; setEnabled: (enabled: boolean) => void };
 }) {
   const [account, setAccount] = useState<AccountResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -172,6 +174,26 @@ export function AccountPage({
         title={localize("マイページ")}
         lead={localize(email ?? "管理者用セッション")}
       />
+
+      {account.user.role === "admin" && adminMode && (
+        <section className="account-section account-admin-mode">
+          <label className="cinema-schedule-toggle">
+            <span>
+              <strong>{localize("管理者モード")}</strong>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={adminMode.enabled}
+              aria-describedby="admin-mode-description"
+              onChange={(event) => adminMode.setEnabled(event.currentTarget.checked)}
+            />
+          </label>
+          <p id="admin-mode-description" className="account-muted">
+            {localize("更新の要確認件数や管理者メニューを表示します。")}
+          </p>
+        </section>
+      )}
 
       {!account.user.legacy && <ProfileEditor />}
       {!account.user.legacy && <MemberActivity />}

@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-07T07:39:43.759Z",
-    "baseRevision": "4c94e60e79336c3e6778b5ec18441b61813f43e4",
+    "reviewedAt": "2026-10-07T07:46:01.427Z",
+    "baseRevision": "8fc002e39f4c28520dc7c2f4f29fb7bf916997ef",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "退会後の本人認証完了時だけ出す復旧確認を追加。動画にログイン・退会・復旧の場面はなく、変更した英語辞書は新規5項目のみで既存文言は不変。配信用ビルドで日英9操作場面を撮影しアクセシビリティ情報に差分なし、マイページ場面を既存素材と視覚照合して操作・位置・結果が不変と確認。日英320x700/390x844でAbout再生・シーク・字幕既定オフを確認。既存MP4・字幕・素材は維持。"
+    "note": "退会後の本人認証完了時だけ出す復旧確認を追加。動画にログイン・退会・復旧の場面はなく、新しい英語5項目は既存文言を変更しない。最新main 865c30fの管理者モードを保持した統合後、配信用ビルドで日英9操作場面を撮影しアクセシビリティ情報の差分なしを確認。マイページ場面を既存素材と視覚照合し、一般メンバー向け動画の操作・位置・結果が不変。日英320x700/390x844でAbout再生・シーク・字幕既定オフを確認。既存MP4・字幕・素材を維持。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -41,7 +41,7 @@
     "shared/i18n.ts": "9018ec07ce757bda69653ae54f54eec58e0e0f84f44e22c4a862c9915af19569",
     "shared/invitation-diagnostics.ts": "31c8b7491f6f3bde2f372eee8cd2a5a2b79a15cd343ee045cd21e5bfabec6f74",
     "shared/language.ts": "a5d55807e6936442fa8073ad6a1f4bbfc3508da91b000cdae70bb580123093c1",
-    "shared/locales/en.json": "fb319fc7c19bea19bc114ec55d972b45eff6d38cd52af7e7d1986ab77e36c2e4",
+    "shared/locales/en.json": "291a26995550c4885a2a4316f4f33305903649a86bd2927520bcbe5627c261c9",
     "shared/maps.ts": "5cc48b2175f6990faa0849d3f9508bf7382a72fb064d38cd74b6f6c3d194aab9",
     "shared/member-page.ts": "397d3fe038a862613d84add5e0a79c2ec6b410ea304b8ada1ab834827b6c43a1",
     "shared/member-profile.ts": "1c311f5b82be07ca822be0342469a38e6a475660502a05fedfdcd6db944a2ca1",
@@ -58,10 +58,10 @@
     "shared/site-guide.json": "9bfff2d9615c9c72ac6653fca0e1ae88514b63e4a53373a24c93347d7bc536d2",
     "shared/types.ts": "b0c9acccc710e7c4665f5f6eb2f36fc494f8806eb5b9935fb2952a95e076f9e5",
     "src/AboutPage.tsx": "be6282190e8360f65b281a140aa25de0751650fda97eee5d84c3b8b11fc0f220",
-    "src/AccountPage.tsx": "a4cb8e1835ea32181a5aab56233e3def8601688265e4bf4aa6bba95c25a3751f",
+    "src/AccountPage.tsx": "da50829f4bb73bb5e78c70f17327efa83f152af51a7426291160f8c8e1ba18cb",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "80f0a9d83ea2fdacb67f591ced31d1044b449878195f3d76422af68d04357460",
+    "src/App.tsx": "bc78523527c47d7303e2d1490cfd9fe3a515e55f9e53c80868d6a8fdd2e3c1b3",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "82d442b449100df8fd560d69353f9521e1bb1da317e24ef803edec6611b1daf5",
     "src/MemberPage.tsx": "09c4da2168a83306e844d79ad889391ca6aecaad70a79b82e386a90a3f6ae9dc",
@@ -93,6 +93,7 @@
     "src/notification-support.ts": "7a0c53122f85e6264b423eb30ce476048b59128edf204cd14b83f96886d4a5a2",
     "src/performanceMetrics.ts": "c7adaff5b009aa609e6fdbb6e0b71a83e5f3f69ed91791bf636b0ae5a4bb73f3",
     "src/styles.css": "b3f092eb194910902fe7bfec7a1ff0037ec6a130b5a25dbe306f3fb2dd75262f",
+    "src/useAdminMode.ts": "a8d3bd4a944414af75336a65a76c86e238e31133788a9bb1bf0283a959a65f50",
     "src/useCollectionCounts.ts": "66399c8ad33f9bd26c3fa2b20ac305e5c31f639f3730cc17ec86336d2570e518",
     "src/useDateSwipe.ts": "9164d4bae92b3a7af857c6a716b9929b3ba6169fc31df3be71ae3460dde812ae",
     "src/useHistoryScroll.ts": "a3c0ea3589064ac19ae3fd9ee1a2147573ceafcf439037c2049fffd42cca1839",
