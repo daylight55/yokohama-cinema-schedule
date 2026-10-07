@@ -31,8 +31,6 @@
     - group "時間":
       - button "これから"
       - button "全時間" [pressed]
-    - link "マイページでベース出発地点を登録":
-      - /url: "#account"
   - paragraph: 今日
   - heading "上映スケジュール" [level=1]
   - text: 2作品6上映

@@ -1,27 +1,15 @@
-import type { RouteOrigin } from "../../shared/types";
+import { locationFeatureUnavailable } from "../_lib/location-feature";
 import {
   requireProfileEncryptionKey,
   type AuthContextData,
   type PagesEnv,
 } from "../_lib/env";
 import {
-  estimateWalksToStations,
-  listPreferredOriginStationIds,
-  listStations,
-} from "../_lib/stations";
-import {
   deleteDepartureLocation,
   getUserProfile,
   isScheduleCollapseMinutes,
-  normalizeDepartureCoordinates,
   saveScheduleCollapseMinutes,
-  saveDepartureLocation,
 } from "../_lib/user-profile";
-
-interface ProfileRequest {
-  latitude?: number;
-  longitude?: number;
-}
 
 interface DisplayPreferenceRequest {
   scheduleCollapseMinutes?: unknown;
@@ -45,7 +33,7 @@ export const onRequestGet: PagesFunction<
       context.data.userId,
     ),
     {
-    headers: { "cache-control": "private, no-store" },
+      headers: { "cache-control": "private, no-store" },
     },
   );
 };
@@ -54,52 +42,7 @@ export const onRequestPost: PagesFunction<
   PagesEnv,
   string,
   AuthContextData
-> = async (context) => {
-  if (context.env.PUBLIC_MODE === "true") return unavailable();
-
-  let body: ProfileRequest;
-  try {
-    body = await context.request.json<ProfileRequest>();
-  } catch {
-    return Response.json({ error: "invalid_json" }, { status: 400 });
-  }
-
-  const departure: RouteOrigin | null = normalizeDepartureCoordinates(
-    body.latitude,
-    body.longitude,
-  );
-  if (!departure) {
-    return Response.json({ error: "invalid_location" }, { status: 400 });
-  }
-
-  const [stations, preferredOriginStationIds] = await Promise.all([
-    listStations(context.env.DB),
-    listPreferredOriginStationIds(context.env.DB),
-  ]);
-  const originStations =
-    preferredOriginStationIds.size > 0
-      ? stations.filter((station) =>
-          preferredOriginStationIds.has(station.id),
-        )
-      : stations;
-  const stationWalks = await estimateWalksToStations(
-    departure.latitude,
-    departure.longitude,
-    originStations,
-    context.env.GOOGLE_MAPS_API_KEY,
-  );
-  const profile = await saveDepartureLocation(
-    context.env.DB,
-    requireProfileEncryptionKey(context.env),
-    departure,
-    stationWalks,
-    context.data.userId,
-  );
-
-  return Response.json(profile, {
-    headers: { "cache-control": "private, no-store" },
-  });
-};
+> = async () => locationFeatureUnavailable();
 
 export const onRequestPatch: PagesFunction<
   PagesEnv,

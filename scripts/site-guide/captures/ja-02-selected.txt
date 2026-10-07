@@ -38,9 +38,6 @@
         - option "なし" [selected]
         - option "30分"
         - option "1時間"
-    - region "ベース出発地点を登録":
-      - heading "ベース出発地点を登録" [level=2]
-      - button "現在地をベース出発地点として登録"
     - heading "Google" [level=2]
     - strong: 連携済み
     - heading "パスワード" [level=2]

@@ -48,7 +48,7 @@ export const onRequest: PagesFunction<
   secured.headers.set("referrer-policy", "strict-origin-when-cross-origin");
   secured.headers.set(
     "permissions-policy",
-    "camera=(), microphone=(), geolocation=(self)",
+    "camera=(), microphone=(), geolocation=()",
   );
   secured.headers.set("x-content-type-options", "nosniff");
   secured.headers.set("x-frame-options", "DENY");

@@ -66,14 +66,6 @@ export function getAppPageScrollTarget(
   return "top";
 }
 
-export function shouldShowCurrentLocationRefresh(
-  view: AppView,
-  selectedDate: string,
-  today: string,
-): boolean {
-  return view === "schedule" && selectedDate === today;
-}
-
 export function shouldShowScheduleTimeJumps(
   view: AppView,
   selectedDate: string,
@@ -279,7 +271,7 @@ const MAX_REACHABILITY_WINDOW_MINUTES = 90;
 export function isShowingReachable(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
-  routeByCinema: Map<string, RouteEstimate>,
+  routeByCinema: Map<string, Pick<RouteEstimate, "durationMinutes">>,
   arrivalMarginMinutes = DEFAULT_ARRIVAL_MARGIN_MINUTES,
   marginToleranceMinutes = DEFAULT_MARGIN_TOLERANCE_MINUTES,
 ): boolean {
@@ -304,7 +296,7 @@ export type ShowingReachability =
 export function getShowingReachability(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
-  routeByCinema: Map<string, RouteEstimate>,
+  routeByCinema: Map<string, Pick<RouteEstimate, "durationMinutes">>,
   arrivalMarginMinutes = DEFAULT_ARRIVAL_MARGIN_MINUTES,
   marginToleranceMinutes = DEFAULT_MARGIN_TOLERANCE_MINUTES,
 ): ShowingReachability {
@@ -343,7 +335,7 @@ export function getShowingReachability(
 export function isShowingUnreachable(
   showing: Pick<Showing, "startsAt" | "cinemaId">,
   now: Date,
-  routeByCinema: Map<string, RouteEstimate>,
+  routeByCinema: Map<string, Pick<RouteEstimate, "durationMinutes">>,
   arrivalMarginMinutes = DEFAULT_ARRIVAL_MARGIN_MINUTES,
   marginToleranceMinutes = DEFAULT_MARGIN_TOLERANCE_MINUTES,
 ): boolean {
@@ -399,7 +391,7 @@ export function scheduleProgramClassName({
 export function getScheduleMoviePresentation(
   showings: Showing[],
   now: Date,
-  routeByCinema: Map<string, RouteEstimate>,
+  routeByCinema: Map<string, Pick<RouteEstimate, "durationMinutes">>,
 ): ScheduleMoviePresentation {
   const presentationShowings = showings.map((showing) => {
     const reachability = getShowingReachability(showing, now, routeByCinema);
