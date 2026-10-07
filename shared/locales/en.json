@@ -1,4 +1,8 @@
 {
+  "管理者モード": "Administrator mode",
+  "更新の要確認件数や管理者メニューを表示します。": "Show update warnings and administrator menus.",
+  "管理者モードはオフです。マイページでオンにしてください。": "Administrator mode is off. Turn it on in My account.",
+  "管理者モードを設定": "Set administrator mode",
   "今から観られる上映を探す": "Find your next screening",
   "横浜周辺の上映を時間順にまとめ、今日の現在時刻から観られる作品を見つけられます。": "Browse Yokohama screenings by time and find a film you can catch today.",
   "観たい作品を整理する": "Organize your watchlist",

@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-07T05:36:25.772Z",
-    "baseRevision": "05ad20553f0a7674067c9f33320c42c728b9edc1",
+    "reviewedAt": "2026-10-07T07:14:36.511Z",
+    "baseRevision": "40e0252bb452cb95d0c9f32c4e6c87846ee3c1b1",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "The nine Japanese and English operation scenes were recaptured and both videos regenerated for location retirement. Final review also clears cinema scroll anchors when manual travel mode or note state changes; none of the captured scenes change those inputs. Existing refreshed footage remains identical for this dependency-only correction. Playback, seek, captions and 320/390px display were verified in the production build."
+    "note": "管理者モードは管理者ユーザーにのみ表示され、一般メンバーの案内動画の画面・導線・操作結果は変わらない。日英の全9操作場面をoutput/guide/admin-mode-reviewへ確認用撮影し、既存動画素材66枚すべてのピクセル一致を確認。配信用ビルドのAboutで日英の再生・シーク・字幕既定オフ・320x700/390x844表示も確認。管理者モードのオンオフ、直接ハッシュ、再読み込み、履歴、取得停止、メンバー権限は日英320/390/1280pxで別途検証。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -41,7 +41,7 @@
     "shared/i18n.ts": "9018ec07ce757bda69653ae54f54eec58e0e0f84f44e22c4a862c9915af19569",
     "shared/invitation-diagnostics.ts": "31c8b7491f6f3bde2f372eee8cd2a5a2b79a15cd343ee045cd21e5bfabec6f74",
     "shared/language.ts": "a5d55807e6936442fa8073ad6a1f4bbfc3508da91b000cdae70bb580123093c1",
-    "shared/locales/en.json": "49635ee080e233a55f7b2ad2e526f0109df1c9ae0438a084afe201869ed894a7",
+    "shared/locales/en.json": "e8c8b6c668f61a652a745386ab40c54ab514ad76fd24da7d34713f4bcac77fd4",
     "shared/maps.ts": "5cc48b2175f6990faa0849d3f9508bf7382a72fb064d38cd74b6f6c3d194aab9",
     "shared/member-page.ts": "397d3fe038a862613d84add5e0a79c2ec6b410ea304b8ada1ab834827b6c43a1",
     "shared/member-profile.ts": "1c311f5b82be07ca822be0342469a38e6a475660502a05fedfdcd6db944a2ca1",
@@ -58,10 +58,10 @@
     "shared/site-guide.json": "9bfff2d9615c9c72ac6653fca0e1ae88514b63e4a53373a24c93347d7bc536d2",
     "shared/types.ts": "b0c9acccc710e7c4665f5f6eb2f36fc494f8806eb5b9935fb2952a95e076f9e5",
     "src/AboutPage.tsx": "be6282190e8360f65b281a140aa25de0751650fda97eee5d84c3b8b11fc0f220",
-    "src/AccountPage.tsx": "a4cb8e1835ea32181a5aab56233e3def8601688265e4bf4aa6bba95c25a3751f",
+    "src/AccountPage.tsx": "da50829f4bb73bb5e78c70f17327efa83f152af51a7426291160f8c8e1ba18cb",
     "src/AdminCollectionPage.tsx": "e20188db27b8dcc239d214e5781acde84d8177cfd885990342ec1f70a72e7a9f",
     "src/AdminUsersPage.tsx": "eb67aee484cea2915e3b6c8b155d2905859e91cdf54e22048b2c165fd6a157fb",
-    "src/App.tsx": "71836ffe195004aa1096d05952928fcb7c2f2906a68407836b855ce5a1c18ef7",
+    "src/App.tsx": "432ae2eb9fcf93903e9dc9a7b76212ffe3de9f4872a630b8c594d53a3e32c436",
     "src/AvatarCropper.tsx": "8c1d1568e1ab43874b652210d8371233e060d1919790042849a3c63916d71d4a",
     "src/CollectionStatusPage.tsx": "82d442b449100df8fd560d69353f9521e1bb1da317e24ef803edec6611b1daf5",
     "src/MemberPage.tsx": "09c4da2168a83306e844d79ad889391ca6aecaad70a79b82e386a90a3f6ae9dc",
@@ -93,6 +93,7 @@
     "src/notification-support.ts": "7a0c53122f85e6264b423eb30ce476048b59128edf204cd14b83f96886d4a5a2",
     "src/performanceMetrics.ts": "c7adaff5b009aa609e6fdbb6e0b71a83e5f3f69ed91791bf636b0ae5a4bb73f3",
     "src/styles.css": "b3f092eb194910902fe7bfec7a1ff0037ec6a130b5a25dbe306f3fb2dd75262f",
+    "src/useAdminMode.ts": "a8d3bd4a944414af75336a65a76c86e238e31133788a9bb1bf0283a959a65f50",
     "src/useCollectionCounts.ts": "66399c8ad33f9bd26c3fa2b20ac305e5c31f639f3730cc17ec86336d2570e518",
     "src/useDateSwipe.ts": "9164d4bae92b3a7af857c6a716b9929b3ba6169fc31df3be71ae3460dde812ae",
     "src/useHistoryScroll.ts": "a3c0ea3589064ac19ae3fd9ee1a2147573ceafcf439037c2049fffd42cca1839",
