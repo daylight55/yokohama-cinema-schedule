@@ -1,11 +1,11 @@
 {
   "version": 1,
   "review": {
-    "reviewedAt": "2026-10-07T07:16:40.774Z",
-    "baseRevision": "40e0252bb452cb95d0c9f32c4e6c87846ee3c1b1",
+    "reviewedAt": "2026-10-07T07:39:43.759Z",
+    "baseRevision": "4c94e60e79336c3e6778b5ec18441b61813f43e4",
     "outcome": "visually-unchanged",
     "scenes": [],
-    "note": "Only the movie-list fallback initial removes an opening Japanese corner quote (「 or 『). Compared Japanese and English guide movie-list screens before and after: pixel-identical for 君の名は。 / Your Name. Inspected the published Japanese and English film-scene frames and confirmed the displayed 君 / Y initials remain identical; search, film and watchlist interactions and layout are unaffected. Verified quoted and unquoted titles, existing posters, 320/390px layout, direct detail URLs, reload and browser history with the real app."
+    "note": "退会後の本人認証完了時だけ出す復旧確認を追加。動画にログイン・退会・復旧の場面はなく、変更した英語辞書は新規5項目のみで既存文言は不変。配信用ビルドで日英9操作場面を撮影しアクセシビリティ情報に差分なし、マイページ場面を既存素材と視覚照合して操作・位置・結果が不変と確認。日英320x700/390x844でAbout再生・シーク・字幕既定オフを確認。既存MP4・字幕・素材は維持。"
   },
   "inputs": {
     "functions/api/account/index.ts": "085c0819af70bea0bca9cb65ba0d4aa68135b1e076ef0d605be63ade26d1cbfb",
@@ -41,7 +41,7 @@
     "shared/i18n.ts": "9018ec07ce757bda69653ae54f54eec58e0e0f84f44e22c4a862c9915af19569",
     "shared/invitation-diagnostics.ts": "31c8b7491f6f3bde2f372eee8cd2a5a2b79a15cd343ee045cd21e5bfabec6f74",
     "shared/language.ts": "a5d55807e6936442fa8073ad6a1f4bbfc3508da91b000cdae70bb580123093c1",
-    "shared/locales/en.json": "49635ee080e233a55f7b2ad2e526f0109df1c9ae0438a084afe201869ed894a7",
+    "shared/locales/en.json": "fb319fc7c19bea19bc114ec55d972b45eff6d38cd52af7e7d1986ab77e36c2e4",
     "shared/maps.ts": "5cc48b2175f6990faa0849d3f9508bf7382a72fb064d38cd74b6f6c3d194aab9",
     "shared/member-page.ts": "397d3fe038a862613d84add5e0a79c2ec6b410ea304b8ada1ab834827b6c43a1",
     "shared/member-profile.ts": "1c311f5b82be07ca822be0342469a38e6a475660502a05fedfdcd6db944a2ca1",

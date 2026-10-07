@@ -35,10 +35,12 @@ if (button instanceof HTMLButtonElement && supported) {
         body: JSON.stringify({
           challengeId: payload.challengeId,
           response: credential.toJSON(),
+          returnHash: allowedReturnHash(),
         }),
       });
       if (!verifyResponse.ok) throw new Error("verification_failed");
-      window.location.assign(`/${allowedReturnHash()}`);
+      const result = await verifyResponse.json();
+      window.location.assign(result.redirect === "/auth/restore" ? result.redirect : `/${allowedReturnHash()}`);
     } catch (error) {
       if (
         !(error instanceof DOMException) ||

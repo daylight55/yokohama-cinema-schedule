@@ -5,7 +5,6 @@ import {
   authenticationRetryAfter,
   burnPasswordVerification,
   clearAuthenticationFailures,
-  createUserSession,
   findUserByEmail,
   loginPage,
   normalizeEmail,
@@ -15,6 +14,7 @@ import {
 } from "../../_lib/auth";
 import type { PagesEnv } from "../../_lib/env";
 import { normalizeReturnHash } from "../login";
+import { authenticatedLogin } from "../../_lib/account-restoration";
 
 export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   const contentType = context.request.headers.get("content-type") ?? "";
@@ -64,14 +64,14 @@ export const onRequestPost: PagesFunction<PagesEnv> = async (context) => {
   }
 
   await clearAuthenticationFailures(context.env.DB, rateKey);
-  let session;
-  try { session = await createUserSession(context.env, user.id); }
+  let result;
+  try { result = await authenticatedLogin(context.env, user.id, returnHash); }
   catch { return loginPage(true, returnHash, false, "メールアドレスまたはパスワードを確認してください。", "", requestLanguage(context.request)); }
   return new Response(null, {
     status: 303,
     headers: {
-      location: returnHash ? `/${returnHash}` : "/",
-      "set-cookie": sessionCookie(session.value, session.maxAge),
+      location: result.restoreCookie ? "/auth/restore" : returnHash ? `/${returnHash}` : "/",
+      "set-cookie": result.restoreCookie ?? sessionCookie(result.session!.value, result.session!.maxAge),
       "cache-control": "no-store",
     },
   });

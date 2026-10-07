@@ -154,6 +154,8 @@ describe("private site authentication", () => {
   });
 
   it("keeps only login and OAuth callback endpoints public", () => {
+    expect(isPublicAuthPath("/auth/restore")).toBe(true);
+    expect(isPublicShellAssetPath("/account-restore.js")).toBe(true);
     expect(isPublicAuthPath("/auth/google/login/start")).toBe(true);
     expect(isPublicAuthPath("/auth/google/login/callback")).toBe(true);
     expect(isPublicAuthPath("/auth/google/callback")).toBe(true);
