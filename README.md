@@ -581,7 +581,7 @@ npx wrangler d1 execute yokohama-cinema-schedule --remote --config worker/wrangl
 運用者はWranglerログイン後に、当日から7日以内の1日だけを本番D1へ再取得できます。
 
 ```bash
-node scripts/refresh-date.mjs 2026-10-02
+node scripts/refresh-date.mjs 2026-10-21 --source tjoy-yokohama --source yokohama-burg13
 ```
 
 このコマンドはCloudflareの一時的なリモート開発環境から本番D1とBrowser Runを利用します。
