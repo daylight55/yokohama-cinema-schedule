@@ -186,6 +186,7 @@ export async function validateSourceMovieTitles(
     groups.set(row.movieKey, group);
   }
   const dateErrors = new Map<string, string>();
+  const dateIssues = new Map<string, Set<string>>();
   const accepted: NormalizedShowing[] = [];
   const statements: D1PreparedStatement[] = [];
   const candidates: Array<{
@@ -205,11 +206,13 @@ export async function validateSourceMovieTitles(
     reason: string,
     nextCheck: string | null = null,
   ) => {
-    for (const row of group)
-      dateErrors.set(
-        todayInJst(new Date(row.startsAt)),
-        `Movie title requires review: ${id} (${reason})`,
-      );
+    for (const row of group) {
+      const date = todayInJst(new Date(row.startsAt));
+      const issues = dateIssues.get(date) ?? new Set<string>();
+      issues.add(`Movie title requires review: ${id} (${reason})`);
+      dateIssues.set(date, issues);
+      dateErrors.set(date, [...issues].slice(0, 8).join(" / ") + (issues.size > 8 ? ` / ${issues.size - 8} more issues` : ""));
+    }
     for (const observed of new Set(
       group.map((row) => row.sourceTitle ?? row.title),
     )) {
@@ -274,7 +277,8 @@ export async function validateSourceMovieTitles(
             error instanceof Error &&
             /^detail_http_(404|410)$/.test(error.message);
           if (!missing) budget.stop(sourceId);
-          problem = missing ? "detail_not_found" : "detail_unavailable";
+          const detailReason = error instanceof Error && /^(?:detail_http_\d{3}|detail_identity_mismatch|invalid_detail_title|empty_detail_response|detail_response_too_large)$/.test(error.message) ? error.message : null;
+          problem = missing ? "detail_not_found" : `detail_unavailable${detailReason ? `:${detailReason}` : ""}`;
           nextCheck = new Date(
             Date.parse(now) + (missing ? 24 : 6) * 3600_000,
           ).toISOString();
@@ -317,9 +321,9 @@ export async function validateSourceMovieTitles(
   const firstDate = rows.map(row => todayInJst(new Date(row.startsAt))).sort()[0];
   const comparisonStart = firstDate ? new Date(`${firstDate}T00:00:00+09:00`).toISOString() : now;
   const existing = await db
-    .prepare("SELECT DISTINCT s.source_id,s.movie_key,s.title,c.source_url FROM showings s JOIN cinemas c ON c.id=s.source_id WHERE s.starts_at >= ?")
+    .prepare("SELECT DISTINCT s.source_id,s.source_movie_id,s.movie_key,s.title,c.source_url FROM showings s JOIN cinemas c ON c.id=s.source_id WHERE s.starts_at >= ?")
     .bind(comparisonStart)
-    .all<{ source_id: string; movie_key: string; title: string; source_url: string }>();
+    .all<{ source_id: string; source_movie_id: string | null; movie_key: string; title: string; source_url: string }>();
   const verified = await db
     .prepare(
       "SELECT source_id,observed_title,canonical_title,evidence_url FROM source_movie_identity WHERE verification='official'",
@@ -330,6 +334,7 @@ export async function validateSourceMovieTitles(
       canonical_title: string;
       evidence_url: string | null;
     }>();
+  const storedScreeningAliases = new Map<string, string>();
   if (screening) {
     const catalog = [
       ...existing.results.map(row => ({ sourceId: row.source_id, title: row.title, evidenceUrl: row.source_url })),
@@ -346,6 +351,20 @@ export async function validateSourceMovieTitles(
         candidate.screeningMatched = true;
       }
       if (match.status === "held") candidate.heldReason = match.reason;
+    }
+    // A plain incoming title can collide with an already stored event label at
+    // another cinema. Classify those participants too, without rewriting them.
+    for (const row of existing.results) {
+      const affected = candidates.filter(candidate =>
+        canonicalMovieKey(moviePreferenceKey(candidate.title)) === canonicalMovieKey(moviePreferenceKey(row.title)) &&
+        comparable(candidate.title) !== comparable(row.title));
+      if (!affected.length) continue;
+      const match = await screening.match({
+        sourceId: row.source_id, sourceMovieId: row.source_movie_id ?? `legacy:${row.movie_key}`,
+        observedTitles: [row.title], officialTitle: row.title, evidenceUrl: row.source_url,
+      }, catalog);
+      if (match.status === "matched") storedScreeningAliases.set(JSON.stringify([row.source_id, comparable(row.title)]), match.title);
+      if (match.status === "held") for (const candidate of affected) candidate.heldReason ??= match.reason;
     }
   }
   const aliases = new Map<string, string>();
@@ -366,6 +385,7 @@ export async function validateSourceMovieTitles(
       );
     }
   }
+  for (const [key, title] of storedScreeningAliases) aliases.set(key, title);
   const titlesByKey = new Map<string, Set<string>>();
   for (const row of existing.results) {
     // Historical rows may still store a cinema ID or format-specific key.

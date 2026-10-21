@@ -230,6 +230,60 @@ describe("Jev screening identity", () => {
 });
 
 describe("special screening ingestion", () => {
+  it("resolves another cinema's stored event label when the incoming title is already plain", async () => {
+    const { db, sqlite } = testDatabase();
+    try {
+      seed(sqlite);
+      const storedTitle = `【抱っこdeシネマ】${film}`;
+      sqlite
+        .prepare(
+          "INSERT INTO showings(id,source_id,cinema_id,movie_key,title,starts_at,booking_url,fetched_at,source_movie_id) VALUES('event','toho-kamiooka','toho-kamiooka',?,?,'2026-10-21T02:00:00Z','https://example.com','before','event-id')",
+        )
+        .run(film, storedTitle);
+      const ai = model();
+      const result = await validateSourceMovieTitles(
+        db,
+        input.sourceId,
+        [{ ...showing, title: film, sourceTitle: film }],
+        new MovieIdentityBudget(),
+        async () => film,
+        new ScreeningIdentityMatcher(db, ai),
+      );
+      expect(result.dateErrors.size).toBe(0);
+      expect(result.showings[0].title).toBe(film);
+      expect(ai.decide.mock.calls[0][0].listing.sourceId).toBe("toho-kamiooka");
+      expect(
+        sqlite
+          .prepare("SELECT title,fetched_at FROM showings WHERE id='event'")
+          .get(),
+      ).toMatchObject({ title: storedTitle, fetched_at: "before" });
+    } finally {
+      sqlite.close();
+    }
+  });
+  it("reports every rejected identity on an affected date instead of hiding earlier failures", async () => {
+    const { db, sqlite } = testDatabase();
+    try {
+      seed(sqlite);
+      const result = await validateSourceMovieTitles(
+        db,
+        input.sourceId,
+        [showing, { ...showing, movieKey: "C4975", title: "汝、星のごとく" }],
+        new MovieIdentityBudget(),
+        async () => {
+          throw new Error("detail_http_403");
+        },
+      );
+      expect(result.dateErrors.get("2026-10-21")).toContain(
+        "C4859 (detail_unavailable:detail_http_403)",
+      );
+      expect(result.dateErrors.get("2026-10-21")).toContain(
+        "C4975 (detail_budget_exhausted)",
+      );
+    } finally {
+      sqlite.close();
+    }
+  });
   function seed(sqlite: ReturnType<typeof testDatabase>["sqlite"]) {
     for (const id of [input.sourceId, "toho-kamiooka"])
       sqlite
