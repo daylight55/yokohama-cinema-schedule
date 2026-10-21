@@ -8,6 +8,7 @@ import { purgeExpiredAccounts } from "../../shared/account-lifecycle";
 import { refreshSynopses, workersSynopsisModel } from "./synopsis-research";
 import { validBearer } from "./request-auth";
 import { MovieIdentityBudget, validateSourceMovieTitles } from "./movie-identity";
+import { ScreeningIdentityMatcher, workersScreeningModel } from "./screening-identity";
 import { SourceAccessBudget } from "./source-access";
 import { CINEMAS } from "../../shared/cinemas";
 import { activeDatesForCinema } from "../../shared/cinema-availability";
@@ -291,6 +292,9 @@ async function runRefreshBatch(
   }
   const releaseDateByTitle = await loadMovieReleaseDates(env.DB);
   const identityBudget = new MovieIdentityBudget();
+  const screening = new ScreeningIdentityMatcher(env.DB, env.AI ? workersScreeningModel(env.AI) : {
+    async decide() { throw new Error("screening_ai_binding_missing"); },
+  });
 
   const activeCinemaWindows = await listActiveCinemaWindows(env.DB, dates[0]);
   const sourceIds = SOURCE_BATCH_IDS[batch];
@@ -314,6 +318,8 @@ async function runRefreshBatch(
         env.DB, source.id,
         fetched.showings.filter(showing => sourceDates.includes(todayInJst(new Date(showing.startsAt)))),
         identityBudget,
+        undefined,
+        screening,
       );
       for (const [date, error] of validated.dateErrors) fetched.dateErrors.set(date,error);
       const showings = deduplicate(

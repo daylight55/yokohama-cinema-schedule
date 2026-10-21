@@ -4,23 +4,10 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseRefreshTargets, selectRefreshSources } from "./lib/refresh-targets.mjs";
 import { unstable_dev, unstable_readConfig } from "wrangler";
 
-const date = process.argv[2];
-const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
-const last = new Date(Date.parse(`${today}T00:00:00Z`) + 6 * 86400000)
-  .toISOString()
-  .slice(0, 10);
-if (
-  !/^\d{4}-\d{2}-\d{2}$/.test(date ?? "") ||
-  date < today ||
-  date > last ||
-  new Date(date).toISOString().slice(0, 10) !== date
-) {
-  throw new Error(
-    `Usage: node scripts/refresh-date.mjs YYYY-MM-DD (within ${today} to ${last}). Writes production D1.`,
-  );
-}
+const {date, ids: requestedSources} = parseRefreshTargets(process.argv.slice(2));
 const source = unstable_readConfig({ config: "worker/wrangler.jsonc" });
 const directory = await mkdtemp(join(tmpdir(), "hama-refresh-date-"));
 let worker;
@@ -51,6 +38,7 @@ export default { async fetch(request, env) {
         remote: true,
       })),
       browser: { binding: "BROWSER", remote: true },
+      ai: { binding: "AI", remote: true },
       vars: { SCHEDULE_DAYS: "7" },
     }),
   );
@@ -68,8 +56,9 @@ export default { async fetch(request, env) {
     },
   });
   const sources = await (await worker.fetch()).json();
+  const selectedSources = selectRefreshSources(sources, requestedSources);
   let failed = 0;
-  for (const { batch, id } of sources) {
+  for (const { batch, id } of selectedSources) {
     // No outer retries. SourceAccessBudget still bounds failures within each cinema.
     const response = await worker.fetch(`/?batch=${batch}&source=${id}`, {
       method: "POST",
