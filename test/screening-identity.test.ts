@@ -305,6 +305,47 @@ describe("special screening ingestion", () => {
       sqlite.close();
     }
   });
+  it("also checks official schedule labels from non-T-Joy cinemas without upgrading their verification", async () => {
+    const { db, sqlite } = testDatabase();
+    try {
+      seed(sqlite);
+      const ai = model();
+      const result = await validateSourceMovieTitles(
+        db,
+        "aeon-minatomirai",
+        [
+          {
+            ...showing,
+            sourceId: "aeon-minatomirai",
+            cinemaId: "aeon-minatomirai",
+          },
+        ],
+        new MovieIdentityBudget(),
+        async () => {
+          throw new Error("not a T-Joy detail");
+        },
+        new ScreeningIdentityMatcher(db, ai),
+      );
+      expect(result.dateErrors.size).toBe(0);
+      expect(result.showings[0]).toMatchObject({
+        title: film,
+        format: "【特別音響上映】",
+      });
+      expect(
+        sqlite
+          .prepare(
+            "SELECT verification,canonical_title FROM source_movie_identity WHERE source_id='aeon-minatomirai'",
+          )
+          .get(),
+      ).toMatchObject({
+        verification: "observed",
+        canonical_title: showing.title,
+      });
+      expect(ai.decide).toHaveBeenCalledTimes(2);
+    } finally {
+      sqlite.close();
+    }
+  });
   it("holds an affected day on unavailable Jev and preserves the existing published data", async () => {
     const { db, sqlite } = testDatabase();
     try {

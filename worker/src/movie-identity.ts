@@ -6,6 +6,7 @@ import {
 } from "../../shared/movie-title-corrections";
 import { movieDisplayTitle, moviePreferenceKey } from "../../shared/movie";
 import type { NormalizedShowing } from "../../shared/types";
+import { CINEMAS } from "../../shared/cinemas";
 import type { ScreeningIdentityMatcher } from "./screening-identity";
 
 const TJOY_ORIGINS: Readonly<Record<string, string>> = {
@@ -196,6 +197,7 @@ export async function validateSourceMovieTitles(
     verification: "official" | "observed";
     rows: NormalizedShowing[];
     heldReason?: string;
+    screeningMatched?: boolean;
   }> = [];
   const reject = (
     id: string,
@@ -279,6 +281,7 @@ export async function validateSourceMovieTitles(
         }
       }
     } else {
+      evidence = CINEMAS.find(cinema => cinema.id === sourceId)?.sourceUrl ?? null;
       problem =
         observedTitles.size > 1
           ? "conflicting_source_titles"
@@ -333,12 +336,15 @@ export async function validateSourceMovieTitles(
       ...verified.results.filter(row => row.evidence_url).map(row => ({ sourceId: row.source_id, title: row.canonical_title, evidenceUrl: row.evidence_url! })),
     ];
     for (const candidate of candidates) {
-      if (candidate.verification !== "official" || !candidate.evidence) continue;
+      if (!candidate.evidence) continue;
       const match = await screening.match({
         sourceId, sourceMovieId: candidate.id, observedTitles: candidate.observed.split("\n"),
         officialTitle: candidate.officialTitle, evidenceUrl: candidate.evidence,
       }, catalog);
-      if (match.status === "matched") candidate.title = match.title;
+      if (match.status === "matched") {
+        candidate.title = match.title;
+        candidate.screeningMatched = true;
+      }
       if (match.status === "held") candidate.heldReason = match.reason;
     }
   }
@@ -346,7 +352,7 @@ export async function validateSourceMovieTitles(
   for (const row of [
     ...verified.results,
     ...candidates
-      .filter((c) => c.verification === "official" && !c.heldReason)
+      .filter((c) => (c.verification === "official" || c.screeningMatched) && !c.heldReason)
       .map((c) => ({
         source_id: sourceId,
         observed_title: `${c.observed}\n${c.officialTitle}`,
